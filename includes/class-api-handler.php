@@ -544,83 +544,102 @@ Guidelines:
 		$tool_buf        = [];
 		$error           = null;
 
-		/*
-		 * WordPress HTTP API ( wp_remote_post ) cannot stream Server-Sent Events —
-		 * it buffers the entire response before returning. Raw cURL is the only way
-		 * to forward SSE chunks to the browser in real-time. The non-streaming paths
-		 * in this plugin ( call_anthropic, call_moonshot ) use wp_remote_post.
-		 */
-		// phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_init,WordPress.WP.AlternativeFunctions.curl_curl_setopt_array,WordPress.WP.AlternativeFunctions.curl_curl_exec,WordPress.WP.AlternativeFunctions.curl_curl_getinfo,WordPress.WP.AlternativeFunctions.curl_curl_errno,WordPress.WP.AlternativeFunctions.curl_curl_error,WordPress.WP.AlternativeFunctions.curl_curl_close
-		$ch = curl_init( 'https://api.moonshot.ai/v1/chat/completions' );
-		curl_setopt_array( $ch, [
-			CURLOPT_POST           => true,
-			CURLOPT_POSTFIELDS     => wp_json_encode( $payload ),
-			CURLOPT_HTTPHEADER     => [
-				'Authorization: Bearer ' . $api_key,
-				'Content-Type: application/json',
-			],
-			CURLOPT_TIMEOUT        => 60,
-			CURLOPT_RETURNTRANSFER => false,
-			CURLOPT_WRITEFUNCTION  => function ( $ch, $raw ) use ( &$collected_text, &$tool_buf, &$error, &$raw_body ) {
-				$raw_body .= $raw;
+		$write_callback = function ( $ch, $raw ) use ( &$collected_text, &$tool_buf, &$error, &$raw_body ) {
+			$raw_body .= $raw;
 
-				// A single curl write may contain multiple SSE lines.
-				foreach ( explode( "\n", $raw ) as $line ) {
-					$line = trim( $line );
-					if ( ! str_starts_with( $line, 'data: ' ) ) {
-						continue;
-					}
-
-					$json = substr( $line, 6 );
-					if ( $json === '[DONE]' ) {
-						continue;
-					}
-
-					$chunk = json_decode( $json, true );
-					if ( ! is_array( $chunk ) ) {
-						continue;
-					}
-
-					// Error embedded inside the SSE stream.
-					if ( isset( $chunk['error'] ) ) {
-						$error = $chunk['error']['message'] ?? __( 'Moonshot API error.', 'maya-ai-shopping-assistant-for-woocommerce' );
-						return strlen( $raw );
-					}
-
-					$delta = $chunk['choices'][0]['delta'] ?? [];
-
-					// ── Text chunk ──
-					if ( ! empty( $delta['content'] ) ) {
-						$collected_text .= $delta['content'];
-						$this->sse_send( 'chunk', [ 'content' => $delta['content'] ] );
-					}
-
-					// ── Tool call fragments (may arrive across multiple chunks) ──
-					foreach ( $delta['tool_calls'] ?? [] as $tc ) {
-						$idx = $tc['index'] ?? 0;
-						if ( ! isset( $tool_buf[ $idx ] ) ) {
-							$tool_buf[ $idx ] = [ 'id' => '', 'name' => '', 'arguments' => '' ];
-						}
-						if ( ! empty( $tc['id'] ) )                    $tool_buf[ $idx ]['id']        = $tc['id'];
-						if ( ! empty( $tc['function']['name'] ) )      $tool_buf[ $idx ]['name']      = $tc['function']['name'];
-						if ( ! empty( $tc['function']['arguments'] ) ) $tool_buf[ $idx ]['arguments'] .= $tc['function']['arguments'];
-					}
+			// A single write may contain multiple SSE lines.
+			foreach ( explode( "\n", $raw ) as $line ) {
+				$line = trim( $line );
+				if ( ! str_starts_with( $line, 'data: ' ) ) {
+					continue;
 				}
 
-				return strlen( $raw );
-			},
-		] );
+				$json = substr( $line, 6 );
+				if ( $json === '[DONE]' ) {
+					continue;
+				}
 
-		curl_exec( $ch );
+				$chunk = json_decode( $json, true );
+				if ( ! is_array( $chunk ) ) {
+					continue;
+				}
 
-		$http_code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+				// Error embedded inside the SSE stream.
+				if ( isset( $chunk['error'] ) ) {
+					$error = $chunk['error']['message'] ?? __( 'Moonshot API error.', 'maya-ai-shopping-assistant-for-woocommerce' );
+					return strlen( $raw );
+				}
 
-		if ( ! $error && curl_errno( $ch ) ) {
-			$error = curl_error( $ch );
+				$delta = $chunk['choices'][0]['delta'] ?? [];
+
+				// ── Text chunk ──
+				if ( ! empty( $delta['content'] ) ) {
+					$collected_text .= $delta['content'];
+					$this->sse_send( 'chunk', [ 'content' => $delta['content'] ] );
+				}
+
+				// ── Tool call fragments (may arrive across multiple chunks) ──
+				foreach ( $delta['tool_calls'] ?? [] as $tc ) {
+					$idx = $tc['index'] ?? 0;
+					if ( ! isset( $tool_buf[ $idx ] ) ) {
+						$tool_buf[ $idx ] = [ 'id' => '', 'name' => '', 'arguments' => '' ];
+					}
+					if ( ! empty( $tc['id'] ) )                    $tool_buf[ $idx ]['id']        = $tc['id'];
+					if ( ! empty( $tc['function']['name'] ) )      $tool_buf[ $idx ]['name']      = $tc['function']['name'];
+					if ( ! empty( $tc['function']['arguments'] ) ) $tool_buf[ $idx ]['arguments'] .= $tc['function']['arguments'];
+				}
+			}
+
+			return strlen( $raw );
+		};
+
+		/*
+		 * wp_remote_post() buffers the full response by default, which would defeat
+		 * streaming. The documented http_api_curl hook lets us inject a write
+		 * callback on the underlying cURL handle so SSE chunks reach the browser
+		 * as they arrive, while the request still goes through the WordPress HTTP
+		 * API for SSL/proxy/header handling.
+		 *
+		 * See https://developer.wordpress.org/reference/hooks/http_api_curl/.
+		 */
+		$stream_marker = '_mayaai_moonshot_stream';
+
+		$curl_hook = function ( $handle, $r ) use ( $stream_marker, $write_callback ) {
+			if ( empty( $r[ $stream_marker ] ) ) {
+				return;
+			}
+			// phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_setopt
+			curl_setopt( $handle, CURLOPT_WRITEFUNCTION, $write_callback );
+			curl_setopt( $handle, CURLOPT_RETURNTRANSFER, false );
+			// phpcs:enable
+		};
+
+		add_action( 'http_api_curl', $curl_hook, 10, 2 );
+
+		$response = wp_remote_post(
+			'https://api.moonshot.ai/v1/chat/completions',
+			[
+				'timeout'       => 60,
+				'headers'       => [
+					'Authorization' => 'Bearer ' . $api_key,
+					'Content-Type'  => 'application/json',
+				],
+				'body'          => wp_json_encode( $payload ),
+				$stream_marker  => true,
+			]
+		);
+
+		remove_action( 'http_api_curl', $curl_hook, 10 );
+
+		if ( is_wp_error( $response ) ) {
+			$error     = $error ?? $response->get_error_message();
+			$http_code = 0;
+		} else {
+			$http_code = wp_remote_retrieve_response_code( $response );
 		}
 
 		// Non-200 with no SSE error parsed → plain JSON error body (e.g. 401 auth failures).
-		if ( ! $error && $http_code !== 200 ) {
+		if ( ! $error && 200 !== $http_code ) {
 			$body  = json_decode( $raw_body, true );
 			$error = $body['error']['message'] ?? sprintf(
 				/* translators: %d: HTTP status code from the Moonshot API */
@@ -628,9 +647,6 @@ Guidelines:
 				$http_code
 			);
 		}
-
-		curl_close( $ch );
-		// phpcs:enable
 
 		// Parse accumulated tool call argument JSON strings.
 		$tool_calls = [];
