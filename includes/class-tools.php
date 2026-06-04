@@ -4,7 +4,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Executes WooCommerce tool calls on behalf of the AI agent.
  */
-final class Mayaai_Tools {
+final class Fahad_AI_Tools {
 
 	private static $instance = null;
 
@@ -40,7 +40,7 @@ final class Mayaai_Tools {
 				return [
 					'error' => sprintf(
 						/* translators: %s: name of the unknown tool requested by the AI */
-						__( 'Unknown tool: %s', 'maya-ai-shopping-assistant-for-woocommerce' ),
+						__( 'Unknown tool: %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 						$name
 					),
 				];
@@ -80,7 +80,7 @@ final class Mayaai_Tools {
 			return [
 				'found'    => 0,
 				'products' => [],
-				'message'  => __( 'No products found matching your search.', 'maya-ai-shopping-assistant-for-woocommerce' ),
+				'message'  => __( 'No products found matching your search.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -95,7 +95,7 @@ final class Mayaai_Tools {
 		$product    = wc_get_product( $product_id );
 
 		if ( ! $product || ! $product->is_visible() ) {
-			return [ 'error' => __( 'Product not found.', 'maya-ai-shopping-assistant-for-woocommerce' ) ];
+			return [ 'error' => __( 'Product not found.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ];
 		}
 
 		$data = [
@@ -146,7 +146,7 @@ final class Mayaai_Tools {
 		if ( ! $product || ! $product->is_visible() ) {
 			return [
 				'success' => false,
-				'error'   => __( 'Product not found.', 'maya-ai-shopping-assistant-for-woocommerce' ),
+				'error'   => __( 'Product not found.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -155,7 +155,7 @@ final class Mayaai_Tools {
 				'success' => false,
 				'error'   => sprintf(
 					/* translators: %s: product name */
-					__( '%s is currently out of stock.', 'maya-ai-shopping-assistant-for-woocommerce' ),
+					__( '%s is currently out of stock.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 					$product->get_name()
 				),
 			];
@@ -168,7 +168,7 @@ final class Mayaai_Tools {
 				'success'       => true,
 				'message'       => sprintf(
 					/* translators: 1: quantity, 2: product name */
-					__( 'Added %1$dx %2$s to your cart.', 'maya-ai-shopping-assistant-for-woocommerce' ),
+					__( 'Added %1$dx %2$s to your cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 					$quantity,
 					$product->get_name()
 				),
@@ -181,7 +181,7 @@ final class Mayaai_Tools {
 
 		return [
 			'success' => false,
-			'error'   => __( 'Could not add to cart. The product may require a variation to be selected.', 'maya-ai-shopping-assistant-for-woocommerce' ),
+			'error'   => __( 'Could not add to cart. The product may require a variation to be selected.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 		];
 	}
 
@@ -191,7 +191,7 @@ final class Mayaai_Tools {
 		if ( $cart->is_empty() ) {
 			return [
 				'empty'   => true,
-				'message' => __( 'Your cart is empty.', 'maya-ai-shopping-assistant-for-woocommerce' ),
+				'message' => __( 'Your cart is empty.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -226,7 +226,7 @@ final class Mayaai_Tools {
 		if ( empty( $key ) ) {
 			return [
 				'success' => false,
-				'error'   => __( 'Cart item key is required.', 'maya-ai-shopping-assistant-for-woocommerce' ),
+				'error'   => __( 'Cart item key is required.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -235,7 +235,7 @@ final class Mayaai_Tools {
 		if ( ! isset( $cart_contents[ $key ] ) ) {
 			return [
 				'success' => false,
-				'error'   => __( 'Item not found in cart.', 'maya-ai-shopping-assistant-for-woocommerce' ),
+				'error'   => __( 'Item not found in cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -246,7 +246,7 @@ final class Mayaai_Tools {
 				'success'   => true,
 				'message'   => sprintf(
 					/* translators: %s: product name */
-					__( 'Removed %s from your cart.', 'maya-ai-shopping-assistant-for-woocommerce' ),
+					__( 'Removed %s from your cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 					$product_name
 				),
 				'new_total' => wp_strip_all_tags( WC()->cart->get_cart_total() ),
@@ -255,7 +255,7 @@ final class Mayaai_Tools {
 
 		return [
 			'success' => false,
-			'error'   => __( 'Could not remove the item.', 'maya-ai-shopping-assistant-for-woocommerce' ),
+			'error'   => __( 'Could not remove the item.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 		];
 	}
 

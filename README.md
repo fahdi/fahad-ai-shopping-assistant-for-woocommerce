@@ -1,4 +1,4 @@
-# Maya AI Shopping Assistant for WooCommerce
+# Fahad AI Shopping Assistant for WooCommerce
 
 An AI-powered shopping assistant for WooCommerce. Customers can search products, get recommendations, and manage their cart through a natural chat interface — without leaving the page.
 
@@ -38,10 +38,10 @@ Supports **Anthropic Claude** and **Moonshot AI (Kimi K2)** with real-time strea
 
 ## Installation
 
-1. Download `maya-ai-shopping-assistant-for-woocommerce-1.0.3.zip` from [Releases](https://github.com/fahdi/maya-ai-shopping-assistant-for-woocommerce/releases)
+1. Download `fahad-ai-shopping-assistant-for-woocommerce-1.0.4.zip` from [Releases](https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce/releases)
 2. In WordPress admin go to **Plugins → Add New → Upload Plugin**
 3. Upload the zip and activate
-4. Go to **Settings → Maya AI Assistant**
+4. Go to **Settings → Fahad AI Assistant**
 5. Select your provider, enter your API key, save
 6. The chat widget appears on all frontend pages automatically
 
@@ -65,8 +65,8 @@ Supports **Anthropic Claude** and **Moonshot AI (Kimi K2)** with real-time strea
 
 The plugin registers two REST endpoints:
 
-- `POST /wp-json/mayaai/v1/message` — standard request/response (Anthropic)
-- `POST /wp-json/mayaai/v1/stream` — Server-Sent Events streaming (Moonshot)
+- `POST /wp-json/fahad-ai/v1/message` — standard request/response (Anthropic)
+- `POST /wp-json/fahad-ai/v1/stream` — Server-Sent Events streaming (Moonshot)
 
 Each request runs an **agentic loop**: the AI can call WooCommerce tools multiple times before returning a final response. Tool results feed back into the next API call automatically.
 

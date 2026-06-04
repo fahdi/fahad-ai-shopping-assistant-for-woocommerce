@@ -1,11 +1,11 @@
-# Maya AI Shopping Assistant for WooCommerce — Developer Knowledge Base
+# Fahad AI Shopping Assistant for WooCommerce — Developer Knowledge Base
 
-Plugin folder: `maya-ai-shopping-assistant-for-woocommerce/`
-Main file: `maya-ai-shopping-assistant-for-woocommerce.php`
-GitHub: https://github.com/fahdi/maya-ai-shopping-assistant-for-woocommerce
+Plugin folder: `fahad-ai-shopping-assistant-for-woocommerce/`
+Main file: `fahad-ai-shopping-assistant-for-woocommerce.php`
+GitHub: https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
 Current version: 1.0.3
-Slug (WP.org): `maya-ai-shopping-assistant-for-woocommerce` (pending approval)
-Text domain: `maya-ai-shopping-assistant-for-woocommerce` (must equal slug)
+Slug (WP.org): `fahad-ai-shopping-assistant-for-woocommerce` (pending approval)
+Text domain: `fahad-ai-shopping-assistant-for-woocommerce` (must equal slug)
 
 ---
 
@@ -13,31 +13,31 @@ Text domain: `maya-ai-shopping-assistant-for-woocommerce` (must equal slug)
 
 | Concept | Pattern | Examples |
 |---|---|---|
-| PHP constants | `MAYAAI_*` | `MAYAAI_VERSION`, `MAYAAI_PATH`, `MAYAAI_URL` |
-| PHP classes | `Mayaai_*` | `Mayaai_Chatbot`, `Mayaai_API_Handler`, `Mayaai_Tools` |
-| PHP functions | `mayaai_*` | `mayaai_settings_page` |
-| Option keys | `mayaai_*` | `mayaai_provider`, `mayaai_anthropic_api_key` |
-| Nonce action | `mayaai_settings` |
-| Submit button name | `mayaai_save` |
-| JS handle (script/style) | `mayaai-chatbot`, `mayaai-admin` |
-| JS localized var | `window.mayaaiChatbot` |
-| REST namespace | `mayaai/v1` |
-| HTML root id | `mayaai-chatbot-root` |
-| Admin tbody ids | `mayaai-anthropic`, `mayaai-moonshot` |
+| PHP constants | `FAHAD_AI_*` | `FAHAD_AI_VERSION`, `FAHAD_AI_PATH`, `FAHAD_AI_URL` |
+| PHP classes | `Fahad_AI_*` | `Fahad_AI_Chatbot`, `Fahad_AI_API_Handler`, `Fahad_AI_Tools` |
+| PHP functions | `fahad_ai_*` | `fahad_ai_settings_page` |
+| Option keys | `fahad_ai_*` | `fahad_ai_provider`, `fahad_ai_anthropic_api_key` |
+| Nonce action | `fahad_ai_settings` |
+| Submit button name | `fahad_ai_save` |
+| JS handle (script/style) | `fahad-ai-chatbot`, `fahad-ai-admin` |
+| JS localized var | `window.fahadAiChatbot` |
+| REST namespace | `fahad-ai/v1` |
+| HTML root id | `fahad-ai-chatbot-root` |
+| Admin tbody ids | `fahad-ai-anthropic`, `fahad-ai-moonshot` |
 
-The `MAYAAI` / `mayaai_` prefix derives from **M**aya **AI** Shopping Assistant for **W**ooCommerce. It's 6 characters, distinct, and uses no common words — passes WP.org's "at least 4 chars, distinct and unique" prefix requirement.
+The `FAHAD_AI` / `fahad_ai_` prefix derives from the plugin display name **Fahad AI Shopping Assistant for WooCommerce**. It's 7 characters, distinct, and uses no common words — passes WP.org's "at least 4 chars, distinct and unique" prefix requirement.
 
 ---
 
 ## File Structure
 
 ```
-maya-ai-shopping-assistant-for-woocommerce/
-├── maya-ai-shopping-assistant-for-woocommerce.php   # Bootstrap: header, Mayaai_Chatbot class, REST routes
+fahad-ai-shopping-assistant-for-woocommerce/
+├── fahad-ai-shopping-assistant-for-woocommerce.php   # Bootstrap: header, Fahad_AI_Chatbot class, REST routes
 ├── includes/
-│   ├── class-api-handler.php                         # Mayaai_API_Handler — agents, API calls, SSE streaming, tools specs
-│   ├── class-tools.php                               # Mayaai_Tools — WooCommerce operations executed by the AI
-│   └── admin-settings.php                            # mayaai_settings_page() — provider, keys, widget config
+│   ├── class-api-handler.php                         # Fahad_AI_API_Handler — agents, API calls, SSE streaming, tools specs
+│   ├── class-tools.php                               # Fahad_AI_Tools — WooCommerce operations executed by the AI
+│   └── admin-settings.php                            # fahad_ai_settings_page() — provider, keys, widget config
 ├── assets/
 │   ├── js/chatbot.js                                 # Frontend widget — vanilla JS, no dependencies
 │   ├── js/admin-settings.js                          # Admin provider toggle (extracted from inline <script>)
@@ -64,11 +64,11 @@ maya-ai-shopping-assistant-for-woocommerce/
 **Anthropic (non-streaming):**
 ```
 JS sendRegular()
-  → POST /wp-json/mayaai/v1/message
-    → Mayaai_API_Handler::handle_message()
+  → POST /wp-json/fahad-ai/v1/message
+    → Fahad_AI_API_Handler::handle_message()
       → run_anthropic_agent()         # loop: tool_use → end_turn
         → call_anthropic()            # wp_remote_post to api.anthropic.com
-        → Mayaai_Tools::execute()     # WooCommerce operations
+        → Fahad_AI_Tools::execute()     # WooCommerce operations
       → returns { message, messages }
   ← JS appendMessage('bot', reply)
      renderMarkdown() applied
@@ -77,12 +77,12 @@ JS sendRegular()
 **Moonshot (SSE streaming):**
 ```
 JS sendStreaming()
-  → POST /wp-json/mayaai/v1/stream
-    → Mayaai_API_Handler::handle_stream()      # bypasses WP REST buffering
+  → POST /wp-json/fahad-ai/v1/stream
+    → Fahad_AI_API_Handler::handle_stream()      # bypasses WP REST buffering
       → run_stream_agent()                      # loop: stream → execute tools → stream again
         → stream_one_turn()                     # raw cURL — only way to do SSE
           → emits SSE: chunk / tool / error
-        → Mayaai_Tools::execute()               # between turns
+        → Fahad_AI_Tools::execute()               # between turns
       → emits SSE: done
   ← JS reads ReadableStream, parses SSE events
      'chunk' → append text (plain)
@@ -108,7 +108,7 @@ reviewers understand the necessity.
 - **Auth header:** `x-api-key: {key}`
 - **Tool format:** `input_schema` (JSON Schema inside `tools` array)
 - **Tool loop:** response `stop_reason === 'tool_use'` → execute → append `tool_result` → repeat
-- **Option key:** `mayaai_anthropic_api_key`
+- **Option key:** `fahad_ai_anthropic_api_key`
 - **Models:** `claude-haiku-4-5-20251001`, `claude-sonnet-4-6`, `claude-opus-4-6`
 - **Content filtering:** Haiku is aggressive — if "Output blocked by content filtering policy" appears, switch to Sonnet
 
@@ -120,13 +120,13 @@ reviewers understand the necessity.
 - **System message:** prepended as first message (`role: system`) — not a top-level field
 - **Tool loop:** `finish_reason === 'tool_calls'` → execute → append `tool` role message → repeat
 - **Streaming:** SSE with `stream: true`, delta chunks, `[DONE]` sentinel
-- **Option key:** `mayaai_moonshot_api_key`
+- **Option key:** `fahad_ai_moonshot_api_key`
 
 ---
 
 ## WooCommerce Tools
 
-Five tools are defined in `Mayaai_API_Handler::tool_specs()` (canonical) and mapped to two formats:
+Five tools are defined in `Fahad_AI_API_Handler::tool_specs()` (canonical) and mapped to two formats:
 - `get_anthropic_tools()` → uses `input_schema`
 - `get_openai_tools()` → uses `parameters` + `type: "function"`
 
@@ -165,19 +165,19 @@ is applied on `done` to the final assembled `fullText`.
 
 ## WordPress Options
 
-All stored under the `mayaai_` prefix:
+All stored under the `fahad_ai_` prefix:
 
 | Option | Default | Description |
 |---|---|---|
-| `mayaai_provider` | `anthropic` | `anthropic` or `moonshot` |
-| `mayaai_anthropic_api_key` | `''` | Anthropic key (sk-ant-…) |
-| `mayaai_anthropic_model` | `claude-haiku-4-5-20251001` | Claude model ID |
-| `mayaai_moonshot_api_key` | `''` | Moonshot key (sk-…) |
-| `mayaai_moonshot_model` | `kimi-k2-thinking-turbo` | Kimi model ID |
-| `mayaai_bot_name` | `Store Assistant` | Widget header name |
-| `mayaai_greeting` | `Hi! How can I help you today?` | First bot message |
-| `mayaai_system_prompt` | `''` | Custom prompt appended to default |
-| `mayaai_accent_color` | `#2563eb` | Widget header/button color |
+| `fahad_ai_provider` | `anthropic` | `anthropic` or `moonshot` |
+| `fahad_ai_anthropic_api_key` | `''` | Anthropic key (sk-ant-…) |
+| `fahad_ai_anthropic_model` | `claude-haiku-4-5-20251001` | Claude model ID |
+| `fahad_ai_moonshot_api_key` | `''` | Moonshot key (sk-…) |
+| `fahad_ai_moonshot_model` | `kimi-k2-thinking-turbo` | Kimi model ID |
+| `fahad_ai_bot_name` | `Store Assistant` | Widget header name |
+| `fahad_ai_greeting` | `Hi! How can I help you today?` | First bot message |
+| `fahad_ai_system_prompt` | `''` | Custom prompt appended to default |
+| `fahad_ai_accent_color` | `#2563eb` | Widget header/button color |
 
 All options are deleted by `uninstall.php` when the plugin is removed.
 
@@ -187,7 +187,7 @@ All options are deleted by `uninstall.php` when the plugin is removed.
 
 `assets/js/chatbot.js` — vanilla JS, no dependencies, IIFE-wrapped.
 
-**Config injected via `wp_localize_script` as `window.mayaaiChatbot`:**
+**Config injected via `wp_localize_script` as `window.fahadAiChatbot`:**
 - `apiUrl`, `streamUrl`, `provider`, `nonce`
 - `botName`, `greeting`, `accentColor`
 - `i18n` — translatable strings for all UI labels, error messages, and tool status labels
@@ -209,26 +209,26 @@ All options are deleted by `uninstall.php` when the plugin is removed.
 
 ## Admin Settings
 
-Located in `includes/admin-settings.php` — `mayaai_settings_page()`.
+Located in `includes/admin-settings.php` — `fahad_ai_settings_page()`.
 
-Page hook: `settings_page_maya-ai-shopping-assistant-for-woocommerce`
-The main plugin's `enqueue_admin_assets()` checks for this hook string before enqueueing `mayaai-admin` (the provider toggle script).
+Page hook: `settings_page_fahad-ai-shopping-assistant-for-woocommerce`
+The main plugin's `enqueue_admin_assets()` checks for this hook string before enqueueing `fahad-ai-admin` (the provider toggle script).
 
-Form fields use `mayaai_settings` nonce and `mayaai_save` submit button name. All `$_POST` reads pass through `wp_unslash()` and the appropriate sanitize callback.
+Form fields use `fahad_ai_settings` nonce and `fahad_ai_save` submit button name. All `$_POST` reads pass through `wp_unslash()` and the appropriate sanitize callback.
 
-The provider toggle JS (extracted from a previously-inline `<script>` block to satisfy WP.org review) lives in `assets/js/admin-settings.js`. It binds a `change` listener on the `#provider` select and toggles `#mayaai-anthropic` / `#mayaai-moonshot` visibility.
+The provider toggle JS (extracted from a previously-inline `<script>` block to satisfy WP.org review) lives in `assets/js/admin-settings.js`. It binds a `change` listener on the `#provider` select and toggles `#fahad-ai-anthropic` / `#fahad-ai-moonshot` visibility.
 
 ---
 
 ## REST API
 
-**Namespace:** `mayaai/v1`
+**Namespace:** `fahad-ai/v1`
 **Authentication:** `X-WP-Nonce` header with `wp_rest` action nonce
 
 | Endpoint | Method | Handler | Used by |
 |---|---|---|---|
-| `/message` | POST | `Mayaai_API_Handler::handle_message()` | Anthropic provider |
-| `/stream` | POST | `Mayaai_API_Handler::handle_stream()` | Moonshot provider |
+| `/message` | POST | `Fahad_AI_API_Handler::handle_message()` | Anthropic provider |
+| `/stream` | POST | `Fahad_AI_API_Handler::handle_stream()` | Moonshot provider |
 
 `handle_stream()` bypasses WordPress REST buffering via:
 ```php
@@ -247,19 +247,19 @@ header( 'X-Accel-Buffering: no' );  // disables nginx buffering
 
 ## Internationalization
 
-Every user-facing string is wrapped in a gettext function with the `maya-ai-shopping-assistant-for-woocommerce` text domain.
+Every user-facing string is wrapped in a gettext function with the `fahad-ai-shopping-assistant-for-woocommerce` text domain.
 
 **PHP:**
 - `__()` / `esc_html__()` / `esc_html_e()` / `esc_attr_e()` — labels, headings, settings page
 - `sprintf( __( '... %s ...', '...' ), $var )` — error messages with dynamic content (with `/* translators: */` comments)
-- `Mayaai_API_Handler` — all `WP_Error` messages, including HTTP error formatters
-- `Mayaai_Tools` — all tool result messages (success, error, hint)
+- `Fahad_AI_API_Handler` — all `WP_Error` messages, including HTTP error formatters
+- `Fahad_AI_Tools` — all tool result messages (success, error, hint)
 
 **JS:**
-- All UI labels, ARIA labels, placeholders, error messages, and tool status labels are passed via `wp_localize_script` as `mayaaiChatbot.i18n.*`
+- All UI labels, ARIA labels, placeholders, error messages, and tool status labels are passed via `wp_localize_script` as `fahadAiChatbot.i18n.*`
 - The JS file uses `i18n.foo || 'fallback English'` to be defensive against missing keys
 
-**Text domain matching:** WP.org review requires the text domain to exactly match the plugin slug. Both are `maya-ai-shopping-assistant-for-woocommerce`.
+**Text domain matching:** WP.org review requires the text domain to exactly match the plugin slug. Both are `fahad-ai-shopping-assistant-for-woocommerce`.
 
 ---
 
@@ -270,13 +270,13 @@ Every user-facing string is wrapped in a gettext function with the `maya-ai-shop
 **Coverage:** 36 tests, 117 assertions
 
 **Class refs in tests:**
-- `Mayaai_API_Handler::class` (was `WC_AI_Chatbot_API_Handler`)
-- `Mayaai_Tools::class` (was `WC_AI_Chatbot_Tools`)
-- Reflection on `Mayaai_*::$instance` to reset singletons between tests
+- `Fahad_AI_API_Handler::class` (was `WC_AI_Chatbot_API_Handler`)
+- `Fahad_AI_Tools::class` (was `WC_AI_Chatbot_Tools`)
+- Reflection on `Fahad_AI_*::$instance` to reset singletons between tests
 
 **Running tests (Local by Flywheel PHP):**
 ```bash
-cd /Users/isupercoder/websites/woocommerce-demo/app/public/wp-content/plugins/maya-ai-shopping-assistant-for-woocommerce
+cd /Users/isupercoder/websites/woocommerce-demo/app/public/wp-content/plugins/fahad-ai-shopping-assistant-for-woocommerce
 vendor/bin/phpunit --testdox
 ```
 
@@ -284,30 +284,33 @@ vendor/bin/phpunit --testdox
 
 ## WordPress.org Distribution
 
-**Status:** Pending review. Submitted as `wc-ai-chatbot` (Apr 13, 2026), pended on Apr 23 with name/prefix issues. Renamed to "Maya AI Shopping Assistant for WooCommerce" on Apr 28 — slug change request submitted with v1.0.3 upload.
+**Status:** Pending review. Submission history:
+- Apr 13, 2026: submitted as `wc-ai-chatbot` ("AI Chatbot for WooCommerce") — pended Apr 23 with name/prefix/cURL/i18n issues
+- Apr 27, 2026: v1.0.3 uploaded as "Maya AI Shopping Assistant for WooCommerce" — naming rejected Apr 30 and again May 3 ("Maya looks like a brand, not clearly tied to the owner account")
+- May 17, 2026: author proposed `fahad-ai-shopping-assistant-for-woocommerce`
+- May 20, 2026: reviewer accepted the new name; flagged remaining issues: raw cURL in `class-api-handler.php` and text-domain mismatch (still `maya-ai-…`)
+- v1.0.4: final rename to `Fahad AI Shopping Assistant for WooCommerce` + cURL replaced with `wp_remote_post()` + `http_api_curl` hook
 
-**v1.0.3 Plugin Check fixes:**
-- Plugin name renamed (was too generic, collided with existing plugins)
-- Slug change requested explicitly in upload comment + email reply
-- All `wc_*` / `WC_*` prefixes replaced with `mayaai_*` / `MAYAAI_*` / `Mayaai_*`
-- `Requires Plugins: woocommerce` header added
-- Inline `<script>` in admin settings replaced with externally-enqueued `assets/js/admin-settings.js`
-- All user-facing strings wrapped in gettext functions; JS strings passed via `wp_localize_script.i18n`
-- Text domain matches slug exactly (per past TableCrafter review feedback)
+**v1.0.4 Plugin Check fixes:**
+- Renamed to the WP.org-reserved slug `fahad-ai-shopping-assistant-for-woocommerce` end-to-end (display name, file name, constants, classes, options, REST namespace, JS handles, localized object, text domain)
+- Replaced raw cURL in Moonshot SSE streaming with `wp_remote_post()` + `http_api_curl` hook
+- `Requires Plugins: woocommerce` header (from v1.0.3, retained)
+- Inline `<script>` in admin settings replaced with externally-enqueued `assets/js/admin-settings.js` (from v1.0.3, retained)
+- Text domain matches the new slug exactly
 
 **Building a release zip:**
 ```bash
 cd /Users/isupercoder/Code/github
-zip -r maya-ai-shopping-assistant-for-woocommerce-1.0.3.zip maya-ai-shopping-assistant-for-woocommerce \
-  --exclude "maya-ai-shopping-assistant-for-woocommerce/.git/*" \
-  --exclude "maya-ai-shopping-assistant-for-woocommerce/vendor/*" \
-  --exclude "maya-ai-shopping-assistant-for-woocommerce/tests/*" \
-  --exclude "maya-ai-shopping-assistant-for-woocommerce/composer.json" \
-  --exclude "maya-ai-shopping-assistant-for-woocommerce/phpunit.xml" \
-  --exclude "maya-ai-shopping-assistant-for-woocommerce/phpunit.xml.bak" \
-  --exclude "maya-ai-shopping-assistant-for-woocommerce/.phpunit.result.cache" \
-  --exclude "maya-ai-shopping-assistant-for-woocommerce/.gitignore" \
-  --exclude "maya-ai-shopping-assistant-for-woocommerce/CLAUDE.md"
+zip -r fahad-ai-shopping-assistant-for-woocommerce-1.0.3.zip fahad-ai-shopping-assistant-for-woocommerce \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/.git/*" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/vendor/*" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/tests/*" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/composer.json" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/phpunit.xml" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/phpunit.xml.bak" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/.phpunit.result.cache" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/.gitignore" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/CLAUDE.md"
 ```
 
 **Reply to WP.org reviewer pattern (from past EventCrafter/LeadCrafter approvals):**

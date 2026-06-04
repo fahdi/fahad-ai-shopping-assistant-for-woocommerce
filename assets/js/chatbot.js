@@ -1,8 +1,8 @@
-/* Maya AI Shopping Assistant — vanilla JS, no dependencies */
+/* Fahad AI Shopping Assistant — vanilla JS, no dependencies */
 (function () {
 	'use strict';
 
-	const cfg = window.mayaaiChatbot;
+	const cfg = window.fahadAiChatbot;
 	if (!cfg) return;
 
 	// ── Accent colour ─────────────────────────────────────────────────────────
@@ -33,7 +33,7 @@
 	let busy    = false;
 
 	// ── Build widget HTML ─────────────────────────────────────────────────────
-	const root = document.getElementById('mayaai-chatbot-root');
+	const root = document.getElementById('fahad-ai-chatbot-root');
 	if (!root) return;
 
 	root.innerHTML = `

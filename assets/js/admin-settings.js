@@ -1,10 +1,10 @@
-/* Maya AI Shopping Assistant — admin settings provider toggle */
+/* Fahad AI Shopping Assistant — admin settings provider toggle */
 (function () {
 	'use strict';
 
 	function toggle(val) {
-		var anthropic = document.getElementById('mayaai-anthropic');
-		var moonshot  = document.getElementById('mayaai-moonshot');
+		var anthropic = document.getElementById('fahad-ai-anthropic');
+		var moonshot  = document.getElementById('fahad-ai-moonshot');
 		if (anthropic) anthropic.style.display = val === 'anthropic' ? '' : 'none';
 		if (moonshot)  moonshot.style.display  = val === 'moonshot'  ? '' : 'none';
 	}

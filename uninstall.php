@@ -1,25 +1,25 @@
 <?php
 /**
  * Fired when the plugin is uninstalled.
- * Removes all options stored by Maya AI Shopping Assistant for WooCommerce.
+ * Removes all options stored by Fahad AI Shopping Assistant for WooCommerce.
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-$mayaai_options = [
-	'mayaai_provider',
-	'mayaai_anthropic_api_key',
-	'mayaai_anthropic_model',
-	'mayaai_moonshot_api_key',
-	'mayaai_moonshot_model',
-	'mayaai_bot_name',
-	'mayaai_greeting',
-	'mayaai_system_prompt',
-	'mayaai_accent_color',
+$fahad_ai_options = [
+	'fahad_ai_provider',
+	'fahad_ai_anthropic_api_key',
+	'fahad_ai_anthropic_model',
+	'fahad_ai_moonshot_api_key',
+	'fahad_ai_moonshot_model',
+	'fahad_ai_bot_name',
+	'fahad_ai_greeting',
+	'fahad_ai_system_prompt',
+	'fahad_ai_accent_color',
 ];
 
-foreach ( $mayaai_options as $mayaai_option ) {
-	delete_option( $mayaai_option );
+foreach ( $fahad_ai_options as $fahad_ai_option ) {
+	delete_option( $fahad_ai_option );
 }
