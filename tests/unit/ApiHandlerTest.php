@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Mayaai_API_Handler.
+ * Unit tests for Fahad_AI_API_Handler.
  *
  * Covers:
  *  - sanitize_messages()  — input validation & sanitization
@@ -37,10 +37,10 @@ class ApiHandlerTest extends TestCase {
         parent::tearDown();
     }
 
-    private function handler(): Mayaai_API_Handler {
-        $ref = new ReflectionProperty( Mayaai_API_Handler::class, 'instance' );
+    private function handler(): Fahad_AI_API_Handler {
+        $ref = new ReflectionProperty( Fahad_AI_API_Handler::class, 'instance' );
         $ref->setValue( null, null );
-        return Mayaai_API_Handler::instance();
+        return Fahad_AI_API_Handler::instance();
     }
 
     // ── sanitize_messages ─────────────────────────────────────────────────────

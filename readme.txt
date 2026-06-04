@@ -1,10 +1,10 @@
-=== Maya AI Shopping Assistant for WooCommerce ===
+=== Fahad AI Shopping Assistant for WooCommerce ===
 Contributors: fahdi
 Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ AI-powered shopping assistant for WooCommerce. Answers customer questions and ma
 
 == Description ==
 
-Maya AI Shopping Assistant adds an intelligent shopping assistant widget to your WooCommerce store. Customers can ask questions about products, get personalised recommendations, and add items to their cart — all through a natural conversational interface.
+Fahad AI Shopping Assistant adds an intelligent shopping assistant widget to your WooCommerce store. Customers can ask questions about products, get personalised recommendations, and add items to their cart — all through a natural conversational interface.
 
 **Supported AI providers:**
 
@@ -44,9 +44,9 @@ Only conversation history and product data relevant to the current session are t
 
 == Installation ==
 
-1. Upload the `maya-ai-shopping-assistant-for-woocommerce` folder to `/wp-content/plugins/`
+1. Upload the `fahad-ai-shopping-assistant-for-woocommerce` folder to `/wp-content/plugins/`
 2. Activate the plugin through the **Plugins** menu in WordPress
-3. Navigate to **Settings → Maya AI Assistant**
+3. Navigate to **Settings → Fahad AI Assistant**
 4. Choose your AI provider (Anthropic or Moonshot AI)
 5. Enter your API key
 6. Configure the bot name, greeting message, and accent color
@@ -85,11 +85,12 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
-= 1.0.3 =
-* Renamed plugin to "Maya AI Shopping Assistant for WooCommerce" — new distinctive identifier
+= 1.0.4 =
+* Renamed plugin to "Fahad AI Shopping Assistant for WooCommerce" with the `fahad-ai-shopping-assistant-for-woocommerce` slug (final name approved by the WordPress.org Plugin Directory)
+* All option keys, constants, classes, REST namespace, JS handles, and the text domain migrated to the `fahad_ai_` / `fahad-ai-` prefix
+* Replaced raw cURL in the Moonshot streaming path with `wp_remote_post()` plus the documented `http_api_curl` hook for the SSE write callback
 * Added `Requires Plugins: woocommerce` header for WordPress 6.5+ dependency check
 * Replaced inline `<script>` block in admin settings with a properly enqueued JS file
-* All option keys, constants, classes, and the REST namespace migrated to the `mayaai` prefix
 
 = 1.0.2 =
 * Renamed display name to "AI Chatbot for WooCommerce"
@@ -112,5 +113,5 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Upgrade Notice ==
 
-= 1.0.3 =
-Existing v1.0.2 users: option keys have been renamed from `wc_ai_chatbot_*` to `mayaai_*`. Settings will need to be re-entered after upgrade.
+= 1.0.4 =
+Existing v1.0.2 users: option keys have been renamed from `wc_ai_chatbot_*` to `fahad_ai_*`. Settings will need to be re-entered after upgrade.

@@ -1,5 +1,5 @@
 {
-    "name": "fahdi/maya-ai-shopping-assistant-for-woocommerce",
+    "name": "fahdi/fahad-ai-shopping-assistant-for-woocommerce",
     "description": "AI-powered WooCommerce shopping assistant",
     "type": "wordpress-plugin",
     "require": {
@@ -12,7 +12,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Mayaai\\Tests\\": "tests/"
+            "FahadAi\\Tests\\": "tests/"
         }
     },
     "config": {

@@ -1,0 +1,168 @@
+<?php
+/**
+ * Plugin Name: Fahad AI Shopping Assistant for WooCommerce
+ * Plugin URI:  https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
+ * Description: AI-powered shopping assistant for WooCommerce — answers questions and manages the cart using Claude or Kimi K2.
+ * Version:     1.0.4
+ * Author:      Fahdi Murtaza
+ * Author URI:  https://github.com/fahdi
+ * License:     GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: fahad-ai-shopping-assistant-for-woocommerce
+ * Domain Path: /languages
+ * Requires at least: 6.0
+ * Tested up to:      6.9
+ * Requires PHP:      7.4
+ * Requires Plugins:  woocommerce
+ * WC requires at least: 7.0
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+define( 'FAHAD_AI_VERSION', '1.0.4' );
+define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
+define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
+
+require_once FAHAD_AI_PATH . 'includes/class-tools.php';
+require_once FAHAD_AI_PATH . 'includes/class-api-handler.php';
+require_once FAHAD_AI_PATH . 'includes/admin-settings.php';
+
+final class Fahad_AI_Chatbot {
+
+	private static $instance = null;
+
+	public static function instance(): self {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	private function __construct() {
+		add_action( 'rest_api_init',         [ $this, 'register_routes' ] );
+		add_action( 'wp_enqueue_scripts',    [ $this, 'enqueue_assets' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+		add_action( 'wp_footer',             [ $this, 'render_widget' ] );
+		add_action( 'admin_menu',            [ $this, 'add_admin_menu' ] );
+	}
+
+	public function register_routes(): void {
+		register_rest_route( 'fahad-ai/v1', '/message', [
+			'methods'             => 'POST',
+			'callback'            => [ Fahad_AI_API_Handler::instance(), 'handle_message' ],
+			'permission_callback' => [ $this, 'check_nonce' ],
+		] );
+		register_rest_route( 'fahad-ai/v1', '/stream', [
+			'methods'             => 'POST',
+			'callback'            => [ Fahad_AI_API_Handler::instance(), 'handle_stream' ],
+			'permission_callback' => [ $this, 'check_nonce' ],
+		] );
+	}
+
+	public function check_nonce( WP_REST_Request $request ): bool {
+		$nonce = $request->get_header( 'X-WP-Nonce' );
+		return false !== wp_verify_nonce( $nonce, 'wp_rest' );
+	}
+
+	private function has_api_key(): bool {
+		$provider = get_option( 'fahad_ai_provider', 'anthropic' );
+		$key      = ( 'moonshot' === $provider )
+			? get_option( 'fahad_ai_moonshot_api_key', '' )
+			: get_option( 'fahad_ai_anthropic_api_key', '' );
+		return ! empty( $key );
+	}
+
+	public function enqueue_assets(): void {
+		if ( ! $this->has_api_key() ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'fahad-ai-chatbot',
+			FAHAD_AI_URL . 'assets/css/chatbot.css',
+			[],
+			FAHAD_AI_VERSION
+		);
+
+		wp_enqueue_script(
+			'fahad-ai-chatbot',
+			FAHAD_AI_URL . 'assets/js/chatbot.js',
+			[],
+			FAHAD_AI_VERSION,
+			true
+		);
+
+		wp_localize_script( 'fahad-ai-chatbot', 'fahadAiChatbot', [
+			'apiUrl'      => rest_url( 'fahad-ai/v1/message' ),
+			'streamUrl'   => rest_url( 'fahad-ai/v1/stream' ),
+			'provider'    => get_option( 'fahad_ai_provider', 'anthropic' ),
+			'nonce'       => wp_create_nonce( 'wp_rest' ),
+			'botName'     => get_option( 'fahad_ai_bot_name', __( 'Store Assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ) ),
+			'greeting'    => get_option( 'fahad_ai_greeting', __( 'Hi! How can I help you today?', 'fahad-ai-shopping-assistant-for-woocommerce' ) ),
+			'accentColor' => get_option( 'fahad_ai_accent_color', '#2563eb' ),
+			'i18n'        => [
+				'openChat'           => __( 'Open chat assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'closeChat'          => __( 'Close chat', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'sendMessage'        => __( 'Send message', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'yourMessage'        => __( 'Your message', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'chatDialogLabel'    => __( 'Chat with store assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'placeholder'        => __( 'Ask me anything…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'connectionError'    => __( 'Connection error. Please try again.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'genericError'       => __( 'Something went wrong. Please try again.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'noResponseStream'   => __( 'No response received. Please try again.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'noResponseRegular'  => __( 'No response. Please try again.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'toolWorking'        => __( 'Working…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'toolSearchProducts' => __( 'Searching products…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'toolGetDetails'     => __( 'Getting product details…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'toolAddToCart'      => __( 'Adding to cart…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'toolViewCart'       => __( 'Checking your cart…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'toolRemoveFromCart' => __( 'Removing from cart…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			],
+		] );
+	}
+
+	public function enqueue_admin_assets( string $hook ): void {
+		if ( 'settings_page_fahad-ai-shopping-assistant-for-woocommerce' !== $hook ) {
+			return;
+		}
+
+		wp_enqueue_script(
+			'fahad-ai-admin',
+			FAHAD_AI_URL . 'assets/js/admin-settings.js',
+			[],
+			FAHAD_AI_VERSION,
+			true
+		);
+	}
+
+	public function render_widget(): void {
+		if ( ! $this->has_api_key() ) {
+			return;
+		}
+		echo '<div id="fahad-ai-chatbot-root"></div>';
+	}
+
+	public function add_admin_menu(): void {
+		add_options_page(
+			esc_html__( 'Fahad AI Shopping Assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			esc_html__( 'Fahad AI Assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'manage_options',
+			'fahad-ai-shopping-assistant-for-woocommerce',
+			'fahad_ai_settings_page'
+		);
+	}
+}
+
+add_action( 'plugins_loaded', function () {
+	if ( ! class_exists( 'WooCommerce' ) ) {
+		add_action( 'admin_notices', function () {
+			echo '<div class="notice notice-error"><p><strong>' .
+				esc_html__( 'Fahad AI Shopping Assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ) .
+				'</strong> ' .
+				esc_html__( 'requires WooCommerce to be active.', 'fahad-ai-shopping-assistant-for-woocommerce' ) .
+				'</p></div>';
+		} );
+		return;
+	}
+	Fahad_AI_Chatbot::instance();
+} );
