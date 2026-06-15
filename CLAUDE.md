@@ -3,7 +3,8 @@
 Plugin folder: `fahad-ai-shopping-assistant-for-woocommerce/`
 Main file: `fahad-ai-shopping-assistant-for-woocommerce.php`
 GitHub: https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
-Current version: 1.0.3
+Current version: 1.0.6
+Requires: WordPress 6.0+ (tested up to 7.0), PHP 8.0+, WooCommerce active
 Slug (WP.org): `fahad-ai-shopping-assistant-for-woocommerce` (pending approval)
 Text domain: `fahad-ai-shopping-assistant-for-woocommerce` (must equal slug)
 
@@ -223,12 +224,24 @@ The provider toggle JS (extracted from a previously-inline `<script>` block to s
 ## REST API
 
 **Namespace:** `fahad-ai/v1`
-**Authentication:** `X-WP-Nonce` header with `wp_rest` action nonce
+**Gate:** `Fahad_AI_Chatbot::authorize_request()` (the `permission_callback` for both routes)
 
 | Endpoint | Method | Handler | Used by |
 |---|---|---|---|
 | `/message` | POST | `Fahad_AI_API_Handler::handle_message()` | Anthropic provider |
 | `/stream` | POST | `Fahad_AI_API_Handler::handle_stream()` | Moonshot provider |
+
+**Why these endpoints are public + rate limited (security invariant — do not regress):**
+Both endpoints are intentionally public so guests can use the assistant. The `wp_rest`
+nonce is exposed to every visitor, so it is CSRF protection, not authorization. WP.org
+review (2026-06-12) flagged that a nonce alone does not protect endpoints that trigger
+billable AI calls and modify the cart. `authorize_request()` therefore does two things:
+1. `wp_verify_nonce( …, 'wp_rest' )` → `WP_Error` 403 on failure (CSRF).
+2. `is_rate_limited()` → `WP_Error` 429 when the caller exceeds the window.
+
+`is_rate_limited()` is a transient-backed fixed window keyed on user id (logged in) or
+`REMOTE_ADDR` (guests; never `X-Forwarded-For`). Defaults 20 req / 60s, filterable via
+`fahad_ai_rate_limit` and `fahad_ai_rate_window`. Keep both the nonce and the rate limit.
 
 `handle_stream()` bypasses WordPress REST buffering via:
 ```php
@@ -290,6 +303,9 @@ vendor/bin/phpunit --testdox
 - May 17, 2026: author proposed `fahad-ai-shopping-assistant-for-woocommerce`
 - May 20, 2026: reviewer accepted the new name; flagged remaining issues: raw cURL in `class-api-handler.php` and text-domain mismatch (still `maya-ai-…`)
 - v1.0.4: final rename to `Fahad AI Shopping Assistant for WooCommerce` + cURL replaced with `wp_remote_post()` + `http_api_curl` hook
+- v1.0.5: "Tested up to" raised to WordPress 7.0
+- Jun 12, 2026: reviewer flagged the last open issue — `check_nonce` is not meaningful authorization for the public `/message` and `/stream` endpoints (billable AI + cart mutation)
+- v1.0.6: replaced `check_nonce` with `authorize_request()` (nonce + per-client rate limiting), raised `Requires PHP` to 8.0 to match the typed code
 
 **v1.0.4 Plugin Check fixes:**
 - Renamed to the WP.org-reserved slug `fahad-ai-shopping-assistant-for-woocommerce` end-to-end (display name, file name, constants, classes, options, REST namespace, JS handles, localized object, text domain)
@@ -301,15 +317,17 @@ vendor/bin/phpunit --testdox
 **Building a release zip:**
 ```bash
 cd /Users/isupercoder/Code/github
-zip -r fahad-ai-shopping-assistant-for-woocommerce-1.0.3.zip fahad-ai-shopping-assistant-for-woocommerce \
+zip -r fahad-ai-shopping-assistant-for-woocommerce-1.0.6.zip fahad-ai-shopping-assistant-for-woocommerce \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/.git/*" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/vendor/*" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/tests/*" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/composer.json" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/composer.lock" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/phpunit.xml" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/phpunit.xml.bak" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/.phpunit.result.cache" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/.gitignore" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/README.md" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/CLAUDE.md"
 ```
 

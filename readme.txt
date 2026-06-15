@@ -3,8 +3,8 @@ Contributors: fahdi
 Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
-Requires PHP: 7.4
-Stable tag: 1.0.5
+Requires PHP: 8.0
+Stable tag: 1.0.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -85,6 +85,10 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 1.0.6 =
+* Security: the `/message` and `/stream` REST endpoints now enforce per-client rate limiting alongside the existing nonce check, capping how many billable AI calls and cart changes a single visitor can trigger
+* Raised the minimum PHP requirement to 8.0 to match the typed code already in use
+
 = 1.0.5 =
 * Bumped "Tested up to" to WordPress 7.0
 
@@ -115,6 +119,9 @@ The conversation history (user messages and assistant replies) and the results o
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 1.0.6 =
+Security and compatibility update: adds rate limiting to the chat endpoints and raises the minimum PHP version to 8.0.
 
 = 1.0.4 =
 Existing v1.0.2 users: option keys have been renamed from `wc_ai_chatbot_*` to `fahad_ai_*`. Settings will need to be re-entered after upgrade.

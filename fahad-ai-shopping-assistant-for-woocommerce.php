@@ -3,7 +3,7 @@
  * Plugin Name: Fahad AI Shopping Assistant for WooCommerce
  * Plugin URI:  https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
  * Description: AI-powered shopping assistant for WooCommerce — answers questions and manages the cart using Claude or Kimi K2.
- * Version:     1.0.5
+ * Version:     1.0.6
  * Author:      Fahdi Murtaza
  * Author URI:  https://github.com/fahdi
  * License:     GPL v2 or later
@@ -12,14 +12,14 @@
  * Domain Path: /languages
  * Requires at least: 6.0
  * Tested up to:      7.0
- * Requires PHP:      7.4
+ * Requires PHP:      8.0
  * Requires Plugins:  woocommerce
  * WC requires at least: 7.0
  */
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FAHAD_AI_VERSION', '1.0.5' );
+define( 'FAHAD_AI_VERSION', '1.0.6' );
 define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -50,18 +50,91 @@ final class Fahad_AI_Chatbot {
 		register_rest_route( 'fahad-ai/v1', '/message', [
 			'methods'             => 'POST',
 			'callback'            => [ Fahad_AI_API_Handler::instance(), 'handle_message' ],
-			'permission_callback' => [ $this, 'check_nonce' ],
+			'permission_callback' => [ $this, 'authorize_request' ],
 		] );
 		register_rest_route( 'fahad-ai/v1', '/stream', [
 			'methods'             => 'POST',
 			'callback'            => [ Fahad_AI_API_Handler::instance(), 'handle_stream' ],
-			'permission_callback' => [ $this, 'check_nonce' ],
+			'permission_callback' => [ $this, 'authorize_request' ],
 		] );
 	}
 
-	public function check_nonce( WP_REST_Request $request ): bool {
+	/**
+	 * Gate the chat endpoints.
+	 *
+	 * These endpoints are intentionally public: a storefront assistant must
+	 * answer guests who are not logged in. The nonce alone is therefore not an
+	 * authorization boundary (it is exposed to every visitor), so it is paired
+	 * with per-client rate limiting. The nonce still blocks cross-origin/CSRF
+	 * abuse; the rate limit caps how many billable AI calls and cart mutations
+	 * any single client can trigger, which is the concern raised in review.
+	 *
+	 * @return true|WP_Error
+	 */
+	public function authorize_request( WP_REST_Request $request ) {
 		$nonce = $request->get_header( 'X-WP-Nonce' );
-		return false !== wp_verify_nonce( $nonce, 'wp_rest' );
+
+		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
+			return new WP_Error(
+				'fahad_ai_invalid_nonce',
+				__( 'Invalid or expired security token. Please reload the page and try again.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				[ 'status' => 403 ]
+			);
+		}
+
+		if ( $this->is_rate_limited() ) {
+			return new WP_Error(
+				'fahad_ai_rate_limited',
+				__( 'Too many requests. Please wait a moment and try again.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				[ 'status' => 429 ]
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Fixed-window per-client rate limit backed by a transient.
+	 *
+	 * Keyed on the remote IP (logged-in users get a per-user key so they are
+	 * not lumped together behind a shared NAT). Defaults: 20 requests / 60s,
+	 * both overridable via the `fahad_ai_rate_limit` / `fahad_ai_rate_window`
+	 * filters. Returns true when the caller has exhausted its window.
+	 */
+	private function is_rate_limited(): bool {
+		$limit  = (int) apply_filters( 'fahad_ai_rate_limit', 20 );
+		$window = (int) apply_filters( 'fahad_ai_rate_window', MINUTE_IN_SECONDS );
+
+		if ( $limit <= 0 ) {
+			return false;
+		}
+
+		$user_id = get_current_user_id();
+		$bucket  = $user_id > 0 ? 'u' . $user_id : 'ip' . $this->client_ip();
+		$key     = 'fahad_ai_rl_' . md5( $bucket );
+
+		$count = (int) get_transient( $key );
+
+		if ( $count >= $limit ) {
+			return true;
+		}
+
+		set_transient( $key, $count + 1, $window );
+
+		return false;
+	}
+
+	/**
+	 * Best-effort client IP. Uses REMOTE_ADDR only — proxy headers such as
+	 * X-Forwarded-For are spoofable and must not be trusted for a security
+	 * control. Unresolvable addresses share one bucket.
+	 */
+	private function client_ip(): string {
+		$ip = isset( $_SERVER['REMOTE_ADDR'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) )
+			: '';
+
+		return filter_var( $ip, FILTER_VALIDATE_IP ) ? $ip : 'unknown';
 	}
 
 	private function has_api_key(): bool {
