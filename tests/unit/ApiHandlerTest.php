@@ -520,4 +520,125 @@ class ApiHandlerTest extends TestCase {
             ],
         ] ) );
     }
+
+    // ── tool_result_comparison() — comparison-table payload (issue #13) ────────
+    // A comparison is a DIFFERENT shape from the flat card list (aligned columns +
+    // attribute rows). It is surfaced as its OWN `comparison` payload, mirroring how
+    // cards are surfaced, and a comparison-shaped result deliberately emits NO cards
+    // (so the widget shows one comparison table, not a table plus redundant cards).
+
+    private function tool_result_comparison( string $tool, array $result ): array {
+        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'tool_result_comparison' );
+        return $method->invoke( $this->handler(), $tool, $result );
+    }
+
+    /** A comparison-shaped result (products[] + aligned attributes[]) → a comparison payload. */
+    public function test_comparison_result_maps_to_comparison_payload(): void {
+        $comparison = $this->tool_result_comparison( 'compare_products', [
+            'found'    => 2,
+            'products' => [
+                [ 'id' => 10, 'name' => 'Tee A', 'price' => '$19.99', 'in_stock' => true,  'url' => 'http://x/p/10', 'image' => 'http://x/a.jpg', 'rating' => 4.5, 'review_count' => 10 ],
+                [ 'id' => 11, 'name' => 'Tee B', 'price' => '$24.99', 'in_stock' => false, 'url' => 'http://x/p/11', 'image' => 'http://x/b.jpg', 'rating' => 4.0, 'review_count' => 5 ],
+            ],
+            'attributes' => [
+                [ 'name' => 'Material', 'values' => [ 10 => 'Cotton', 11 => 'Linen' ] ],
+                [ 'name' => 'Color',    'values' => [ 10 => 'Blue',   11 => 'Red' ] ],
+            ],
+        ] );
+
+        // Columns: one normalized card per compared product (trusted server fields).
+        $this->assertArrayHasKey( 'products', $comparison );
+        $this->assertCount( 2, $comparison['products'] );
+        $this->assertSame( 10, $comparison['products'][0]['id'] );
+        $this->assertSame( 'Tee A', $comparison['products'][0]['name'] );
+        $this->assertTrue( $comparison['products'][0]['in_stock'] );
+        $this->assertFalse( $comparison['products'][1]['in_stock'] );
+        $this->assertSame( 4.5, $comparison['products'][0]['rating'] );
+
+        // Rows: the aligned attribute table, value per product id.
+        $this->assertArrayHasKey( 'attributes', $comparison );
+        $this->assertCount( 2, $comparison['attributes'] );
+        $this->assertSame( 'Material', $comparison['attributes'][0]['name'] );
+        $this->assertSame( 'Cotton', $comparison['attributes'][0]['values'][10] );
+        $this->assertSame( 'Linen',  $comparison['attributes'][0]['values'][11] );
+    }
+
+    /** A comparison with no shared attributes still surfaces (empty attribute rows). */
+    public function test_comparison_result_with_no_attributes_still_maps(): void {
+        $comparison = $this->tool_result_comparison( 'compare_products', [
+            'found'      => 2,
+            'products'   => [
+                [ 'id' => 10, 'name' => 'Mug A', 'price' => '$8.00', 'in_stock' => true ],
+                [ 'id' => 11, 'name' => 'Mug B', 'price' => '$9.00', 'in_stock' => true ],
+            ],
+            'attributes' => [],
+        ] );
+
+        $this->assertCount( 2, $comparison['products'] );
+        $this->assertSame( [], $comparison['attributes'] );
+    }
+
+    /** Non-comparison tool results → no comparison payload. */
+    public function test_non_comparison_tools_produce_no_comparison(): void {
+        // A plain search result (products[] but NO aligned attributes[]) is cards,
+        // not a comparison.
+        $this->assertSame( [], $this->tool_result_comparison( 'search_products', [
+            'found'    => 1,
+            'products' => [ [ 'id' => 10, 'name' => 'Sneakers', 'price' => 'Rs90', 'in_stock' => true ] ],
+        ] ) );
+        // Cart / category / error results are never comparisons either.
+        $this->assertSame( [], $this->tool_result_comparison( 'add_to_cart', [ 'success' => true ] ) );
+        $this->assertSame( [], $this->tool_result_comparison( 'list_categories', [
+            'categories' => [ [ 'name' => 'Shoes', 'slug' => 'shoes', 'count' => 12 ] ],
+        ] ) );
+        // A graceful comparison error (no products[]) is not a comparison payload.
+        $this->assertSame( [], $this->tool_result_comparison( 'compare_products', [ 'error' => 'need two' ] ) );
+    }
+
+    /** A single-product result is not a comparison (needs at least two columns). */
+    public function test_single_product_result_is_not_a_comparison(): void {
+        $this->assertSame( [], $this->tool_result_comparison( 'compare_products', [
+            'found'      => 1,
+            'products'   => [ [ 'id' => 10, 'name' => 'Solo', 'price' => '$5.00', 'in_stock' => true ] ],
+            'attributes' => [],
+        ] ) );
+    }
+
+    /**
+     * A comparison-shaped result emits NO product cards: the widget renders ONE
+     * comparison table from the comparison payload, not a table plus a redundant run
+     * of cards for the same products.
+     */
+    public function test_comparison_shaped_result_emits_no_cards(): void {
+        $cards = $this->tool_result_cards( 'compare_products', [
+            'found'      => 2,
+            'products'   => [
+                [ 'id' => 10, 'name' => 'Tee A', 'price' => '$19.99', 'in_stock' => true ],
+                [ 'id' => 11, 'name' => 'Tee B', 'price' => '$24.99', 'in_stock' => true ],
+            ],
+            'attributes' => [
+                [ 'name' => 'Material', 'values' => [ 10 => 'Cotton', 11 => 'Linen' ] ],
+            ],
+        ] );
+
+        $this->assertSame( [], $cards );
+    }
+
+    /**
+     * Existing card emission is unchanged: a plain products[] result (no aligned
+     * attributes[]) still maps to cards — the comparison detection must not steal
+     * the search/best-seller card path.
+     */
+    public function test_plain_products_result_still_maps_to_cards_after_comparison_added(): void {
+        $cards = $this->tool_result_cards( 'search_products', [
+            'found'    => 2,
+            'products' => [
+                [ 'id' => 10, 'name' => 'Sneakers', 'price' => 'Rs90', 'in_stock' => true ],
+                [ 'id' => 11, 'name' => 'Bottle',   'price' => 'Rs35', 'in_stock' => false ],
+            ],
+        ] );
+
+        $this->assertCount( 2, $cards );
+        $this->assertSame( 10, $cards[0]['id'] );
+    }
 }

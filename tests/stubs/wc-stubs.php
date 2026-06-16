@@ -70,6 +70,14 @@ if ( ! class_exists( 'WC_Product' ) ) {
         public function get_available_variations(): array { return []; }
         public function get_average_rating(): string      { return '0'; }
         public function get_review_count(): int           { return 0; }
+        // Product attributes (issue #13: comparison). get_attributes() returns the
+        // WC_Product_Attribute[] map keyed by attribute name; get_attribute( $name )
+        // returns the product's comma-separated DISPLAY value for that attribute (''
+        // when absent). Declared so the comparison tool can read them and the eval
+        // harness's makePartial() product mock falls through to a safe empty default
+        // for fixtures that set no attributes, like the rating getters above.
+        public function get_attributes(): array            { return []; }
+        public function get_attribute( string $name ): string { return ''; }
         // Recommendations (issue #16): merchant-curated relation IDs. Declared so the
         // eval harness's makePartial() product mock (tests/eval/EvalHarness.php) can
         // fall through to a safe empty default when a fixture does not set them, the

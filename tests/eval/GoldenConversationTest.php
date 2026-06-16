@@ -126,6 +126,18 @@ final class GoldenConversationTest extends TestCase {
 			);
 		}
 
+		// 4b. Comparison-table assertions (issue #13). A comparison is surfaced as
+		// its own aligned payload (products columns + attribute rows), NOT as product
+		// cards, so it is asserted separately from min_cards/max_cards.
+		if ( array_key_exists( 'min_comparison_products', $expect ) ) {
+			$columns = $run['comparison']['products'] ?? [];
+			$this->assertGreaterThanOrEqual(
+				$expect['min_comparison_products'],
+				count( $columns ),
+				sprintf( '[%s] expected at least %d comparison columns', $fixture['name'], $expect['min_comparison_products'] )
+			);
+		}
+
 		// 5. Final answer assertions.
 		if ( ! empty( $expect['answer_not_empty'] ) ) {
 			$this->assertNotSame( '', trim( $run['answer'] ), sprintf( '[%s] answer is empty', $fixture['name'] ) );
@@ -421,6 +433,55 @@ final class GoldenConversationTest extends TestCase {
 		$add = $run['tool_results'][1] ?? [];
 		$this->assertFalse( $add['success'] ?? true );
 		$this->assertStringContainsString( 'out of stock', strtolower( $add['error'] ?? '' ) );
+	}
+
+	// =========================================================================
+	// Comparison END-TO-END (issue #13)
+	// =========================================================================
+
+	/**
+	 * Drive the comparison golden conversation through the REAL loop and assert on
+	 * the SURFACED comparison payload (not just the scripted answer): the loop must
+	 * surface a `comparison` with one normalized column per product (trusted server
+	 * fields from WooCommerce) and an ALIGNED attribute table — each attribute lined
+	 * up with a value for every compared product — and it must emit NO product cards
+	 * (a comparison renders as one table, not a table plus redundant cards).
+	 *
+	 * The shared fixture runner already asserts the tool-call order, the ids passed,
+	 * the comparison column count and grounding; this dedicated test reaches into the
+	 * surfaced comparison to prove the aligned attribute rows are real and correct
+	 * end-to-end through the loop.
+	 */
+	public function test_comparison_surfaces_aligned_table_end_to_end(): void {
+		$fixture = require __DIR__ . '/fixtures/compare.php';
+
+		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_woocommerce( $fixture['wc'] );
+		EvalHarness::script_transport( $fixture['script'] );
+
+		$run = EvalHarness::run( 'anthropic', $fixture['messages'] );
+
+		$this->assertFalse( is_wp_error( $run['result'] ) );
+
+		// 1. The loop surfaced a comparison with two product columns; no cards.
+		$comparison = $run['comparison'];
+		$this->assertNotEmpty( $comparison, 'no comparison payload was surfaced' );
+		$this->assertCount( 2, $comparison['products'] );
+		$this->assertSame( [], $run['products'], 'a comparison must not also emit product cards' );
+
+		// 2. Columns carry trusted, normalized product fields (real names + prices).
+		$names = array_column( $comparison['products'], 'name' );
+		$this->assertContains( 'Trail Runner', $names );
+		$this->assertContains( 'Summit Pro', $names );
+
+		// 3. Aligned attribute table: each attribute row has a value for BOTH products.
+		$rows = array_column( $comparison['attributes'], null, 'name' );
+		$this->assertArrayHasKey( 'Waterproof', $rows );
+		$this->assertSame( 'No',  $rows['Waterproof']['values'][401] );
+		$this->assertSame( 'Yes', $rows['Waterproof']['values'][402] );
+		$this->assertArrayHasKey( 'Weight', $rows );
+		$this->assertSame( '280g', $rows['Weight']['values'][401] );
+		$this->assertSame( '340g', $rows['Weight']['values'][402] );
 	}
 
 	// =========================================================================

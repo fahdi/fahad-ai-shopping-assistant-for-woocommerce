@@ -211,6 +211,14 @@ final class Fahad_AI_Chatbot {
 				'ratingLabel'        => __( 'Rated %1$s out of 5 (%2$d reviews)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'productsGroupLabel' => __( 'Recommended products', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'productsIntro'      => __( 'Here are some products that might help:', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				// Comparison table (issue #13).
+				'comparisonLabel'    => __( 'Product comparison', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'comparisonCaption'  => __( 'Side-by-side comparison of the selected products', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'comparisonProduct'  => __( 'Product', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'comparisonPrice'    => __( 'Price', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'comparisonRating'   => __( 'Rating', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'comparisonStock'    => __( 'Availability', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'comparisonIntro'    => __( 'Here is how they compare:', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			],
 		] );
 	}

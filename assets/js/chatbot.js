@@ -241,8 +241,9 @@
 
 			// Create the bot bubble we'll stream into.
 			const bubble = appendEmptyBotBubble();
-			let   fullText      = '';
-			let   productsShown = false;
+			let   fullText        = '';
+			let   productsShown   = false;
+			let   comparisonShown = false;
 
 			const reader  = res.body.getReader();
 			const decoder = new TextDecoder();
@@ -283,11 +284,22 @@
 								productsShown = true;
 								break;
 
+							case 'comparison':
+								// Comparison table (issue #13): its own SSE event,
+								// mirroring 'products'. Renders a table, not cards.
+								renderComparison(event);
+								comparisonShown = true;
+								break;
+
 							case 'done':
 								bubble.classList.remove('chatbot-tool-status');
 								if (fullText) {
 									bubble.innerHTML = renderMarkdown(fullText);
 									history.push({ role: 'assistant', content: fullText });
+								} else if (comparisonShown) {
+									const intro = i18n.comparisonIntro || 'Here is how they compare:';
+									bubble.textContent = intro;
+									history.push({ role: 'assistant', content: intro });
 								} else if (productsShown) {
 									const intro = i18n.productsIntro || 'Here are some products that might help:';
 									bubble.textContent = intro;
@@ -347,6 +359,13 @@
 				renderProductCards(data.products);
 			}
 
+			// Comparison table (issue #13): a comparison is surfaced as its own
+			// payload (aligned columns + attribute rows) and renders as a table, not
+			// product cards — the two are mutually exclusive server-side.
+			if (data.comparison && Array.isArray(data.comparison.products) && data.comparison.products.length) {
+				renderComparison(data.comparison);
+			}
+
 			history = Array.isArray(data.messages) ? data.messages : [...history, { role: 'assistant', content: reply }];
 
 		} catch {
@@ -403,6 +422,195 @@
 
 	function isHttpUrl(value) {
 		return typeof value === 'string' && /^https?:\/\//.test(value);
+	}
+
+	// ── Comparison table (issue #13) ────────────────────────────────────────────
+	// Rendered from the server-supplied comparison payload (sourced from WooCommerce,
+	// not model text), so fields are trusted — but we still build via DOM APIs and set
+	// text with textContent, never innerHTML. The result is a REAL <table> with header
+	// cells (scope="col" for the product columns, scope="row" for each attribute) so it
+	// is announced as a data table by assistive tech (WCAG 1.3.1); the View/Add controls
+	// are standard links/buttons and so are keyboard operable (WCAG 2.1.1). On narrow
+	// screens the table scrolls horizontally inside its container rather than breaking
+	// the layout (the wrapper is focusable + labelled so it is keyboard scrollable).
+	function renderComparison(comparison) {
+		const products = Array.isArray(comparison.products) ? comparison.products.filter(p => p && p.name) : [];
+		if (products.length < 2) return; // a comparison needs at least two columns.
+
+		const attributes = Array.isArray(comparison.attributes) ? comparison.attributes : [];
+
+		const wrap = document.createElement('div');
+		wrap.className = 'chatbot-msg bot chatbot-cards-msg';
+
+		// Scrollable, labelled, focusable region so the (potentially wide) table can be
+		// reached and scrolled with the keyboard on small screens.
+		const scroller = document.createElement('div');
+		scroller.className = 'chatbot-compare-scroll';
+		scroller.setAttribute('role', 'region');
+		scroller.setAttribute('aria-label', i18n.comparisonLabel || 'Product comparison');
+		scroller.tabIndex = 0;
+
+		const table = document.createElement('table');
+		table.className = 'chatbot-compare';
+
+		const caption = document.createElement('caption');
+		caption.className = 'chatbot-compare-caption';
+		caption.textContent = i18n.comparisonCaption || 'Side-by-side comparison of the selected products';
+		table.appendChild(caption);
+
+		// ── Header: a corner cell + one column header per product (the product name,
+		// linked when a URL is present). scope="col" ties each data cell to its product.
+		const thead = document.createElement('thead');
+		const headRow = document.createElement('tr');
+
+		const corner = document.createElement('td');
+		corner.className = 'chatbot-compare-corner';
+		// A presentational empty corner — hidden from AT so it does not announce a
+		// meaningless empty header.
+		corner.setAttribute('aria-hidden', 'true');
+		headRow.appendChild(corner);
+
+		products.forEach(p => {
+			const th = document.createElement('th');
+			th.scope = 'col';
+			th.className = 'chatbot-compare-col';
+			const url = isHttpUrl(p.url) ? p.url : '';
+			const nameEl = document.createElement(url ? 'a' : 'span');
+			nameEl.className = 'chatbot-compare-name';
+			nameEl.textContent = p.name || '';
+			if (url) { nameEl.href = url; nameEl.target = '_blank'; nameEl.rel = 'noopener'; }
+			th.appendChild(nameEl);
+			headRow.appendChild(th);
+		});
+
+		thead.appendChild(headRow);
+		table.appendChild(thead);
+
+		const tbody = document.createElement('tbody');
+
+		// Row builder: a row-header (attribute/field name, scope="row") + one cell per
+		// product. `cellFn(product)` returns the cell's content (string or a Node).
+		function addRow(label, cellFn) {
+			const tr = document.createElement('tr');
+			const rh = document.createElement('th');
+			rh.scope = 'row';
+			rh.className = 'chatbot-compare-rowhead';
+			rh.textContent = label;
+			tr.appendChild(rh);
+			products.forEach(p => {
+				const td = document.createElement('td');
+				td.className = 'chatbot-compare-cell';
+				const content = cellFn(p);
+				if (content instanceof Node) {
+					td.appendChild(content);
+				} else {
+					td.textContent = content == null ? '' : String(content);
+				}
+				tr.appendChild(td);
+			});
+			tbody.appendChild(tr);
+		}
+
+		// Core trusted fields first (price, rating, availability), then the aligned
+		// attribute rows. These come straight from WooCommerce via the comparison tool.
+		addRow(i18n.comparisonPrice || 'Price', p => {
+			if (p.on_sale && p.regular_price && p.sale_price) {
+				const span = document.createElement('span');
+				const was = document.createElement('span');
+				was.className = 'was';
+				was.textContent = p.regular_price;
+				span.appendChild(was);
+				span.appendChild(document.createTextNode(p.sale_price));
+				return span;
+			}
+			return p.price || '';
+		});
+
+		// Rating: show "avg (count)" only when reviewed; otherwise an em dash so the
+		// column stays aligned (no empty cell ambiguity).
+		addRow(i18n.comparisonRating || 'Rating', p => {
+			const count = Number(p.review_count) || 0;
+			if (count <= 0) return '—';
+			const avg = Math.max(0, Math.min(5, Number(p.rating) || 0)).toFixed(1);
+			return avg + ' (' + count + ')';
+		});
+
+		addRow(i18n.comparisonStock || 'Availability', p => {
+			const span = document.createElement('span');
+			span.className = 'chatbot-card-stock' + (p.in_stock ? '' : ' out');
+			const icon = document.createElement('span');
+			icon.className = 'chatbot-card-stock-icon';
+			icon.setAttribute('aria-hidden', 'true');
+			icon.textContent = p.in_stock ? '✓ ' : '✕ ';
+			span.appendChild(icon);
+			span.appendChild(document.createTextNode(
+				p.in_stock ? (i18n.inStock || 'In stock') : (i18n.outOfStock || 'Out of stock')
+			));
+			return span;
+		});
+
+		attributes.forEach(row => {
+			if (!row || !row.name) return;
+			const values = row.values || {};
+			addRow(row.name, p => {
+				const v = values[p.id];
+				return (v === undefined || v === null || v === '') ? '—' : String(v);
+			});
+		});
+
+		// ── Actions row: View / Add per product, keyboard operable like the cards.
+		const actionsRow = document.createElement('tr');
+		const actionsHead = document.createElement('th');
+		actionsHead.scope = 'row';
+		actionsHead.className = 'chatbot-compare-rowhead';
+		actionsHead.textContent = i18n.comparisonProduct || 'Product';
+		// The actions row's row-header is decorative relative to the buttons below it;
+		// keep it labelled for AT but visually it just anchors the row.
+		actionsRow.appendChild(actionsHead);
+
+		products.forEach(p => {
+			const td = document.createElement('td');
+			td.className = 'chatbot-compare-cell chatbot-compare-actions';
+
+			const url = isHttpUrl(p.url) ? p.url : '';
+			if (url) {
+				const view = document.createElement('a');
+				view.className = 'chatbot-card-view';
+				view.href = url;
+				view.target = '_blank';
+				view.rel = 'noopener';
+				view.textContent = i18n.viewProduct || 'View';
+				if (p.name) {
+					view.setAttribute('aria-label', fmt(i18n.viewProductNamed || 'View %s', p.name));
+				}
+				td.appendChild(view);
+			}
+
+			if (p.in_stock) {
+				const add = document.createElement('button');
+				add.type = 'button';
+				add.className = 'chatbot-card-add';
+				add.textContent = i18n.addToCart || 'Add to cart';
+				if (p.name) {
+					add.setAttribute('aria-label', fmt(i18n.addToCartNamed || 'Add %s to cart', p.name));
+				}
+				add.addEventListener('click', () => {
+					if (busy) return;
+					input.value = 'Please add ' + (p.name || '') + ' to my cart';
+					sendMessage();
+				});
+				td.appendChild(add);
+			}
+
+			actionsRow.appendChild(td);
+		});
+
+		tbody.appendChild(actionsRow);
+		table.appendChild(tbody);
+		scroller.appendChild(table);
+		wrap.appendChild(scroller);
+		msgs.appendChild(wrap);
+		scrollToBottom();
 	}
 
 	// Build the star-rating element for a card, or null when the product has no

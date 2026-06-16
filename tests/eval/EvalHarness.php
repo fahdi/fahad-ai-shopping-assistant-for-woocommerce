@@ -159,6 +159,19 @@ final class EvalHarness {
 		// them without every product fixture having to declare rating data.
 		$p->shouldReceive( 'get_average_rating' )->andReturn( (string) ( $spec['rating'] ?? '0' ) );
 		$p->shouldReceive( 'get_review_count' )->andReturn( (int) ( $spec['review_count'] ?? 0 ) );
+		// Attributes (issue #13: comparison): a fixture's `attributes` is a
+		// name => display-value map. get_attributes() is keyed by attribute name in
+		// WooCommerce (the keys are all the comparison tool enumerates), and
+		// get_attribute( $name ) returns the product's display value (or '' when
+		// absent) — the two-call shape the tool reads. Defaults to no attributes so
+		// non-comparison fixtures are unchanged.
+		$attributes = (array) ( $spec['attributes'] ?? [] );
+		$p->shouldReceive( 'get_attributes' )->andReturn(
+			array_combine( array_keys( $attributes ), array_keys( $attributes ) ) ?: []
+		);
+		$p->shouldReceive( 'get_attribute' )->andReturnUsing(
+			static fn( $name ) => (string) ( $attributes[ $name ] ?? '' )
+		);
 		return $p;
 	}
 
@@ -434,6 +447,8 @@ final class EvalHarness {
 	 *     @type array   $tool_results Ordered tool result arrays (parallel to $tool_calls).
 	 *     @type string  $answer       The final answer text ('' on WP_Error).
 	 *     @type array   $products     The product cards the loop surfaced.
+	 *     @type array   $comparison   The comparison-table payload the loop surfaced (issue #13),
+	 *                                  or [] when the conversation produced no comparison.
 	 * }
 	 */
 	public static function run( string $provider, array $messages ): array {
@@ -448,10 +463,15 @@ final class EvalHarness {
 		$tool_results = [];
 		$answer       = '';
 		$products     = [];
+		$comparison   = [];
 
 		if ( is_array( $result ) ) {
-			$answer   = (string) ( $result['message'] ?? '' );
-			$products = $result['products'] ?? [];
+			$answer     = (string) ( $result['message'] ?? '' );
+			$products   = $result['products'] ?? [];
+			// The agent loop surfaces a comparison table the same way it surfaces
+			// product cards (issue #13) — capture it so a fixture can assert the
+			// comparison was produced end-to-end through the real loop.
+			$comparison = $result['comparison'] ?? [];
 			[ $tool_calls, $tool_results ] = ( 'moonshot' === $provider )
 				? self::trace_moonshot( $result['messages'] ?? [] )
 				: self::trace_anthropic( $result['messages'] ?? [] );
@@ -463,6 +483,7 @@ final class EvalHarness {
 			'tool_results' => $tool_results,
 			'answer'       => $answer,
 			'products'     => $products,
+			'comparison'   => $comparison,
 		];
 	}
 

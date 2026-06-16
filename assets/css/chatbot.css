@@ -536,6 +536,106 @@ a.chatbot-card-title:hover {
 	font-weight: 700;
 }
 
+/* ── Comparison table (issue #13) ──────────────────────────────────────────────
+   A real <table> rendered side-by-side. The scroll wrapper keeps a wide table from
+   breaking the narrow chat panel: it scrolls horizontally on small screens and is a
+   focusable, labelled region so it is keyboard-scrollable (WCAG 2.1.1 / 1.4.10). */
+.chatbot-compare-scroll {
+	width:           100%;
+	max-width:       100%;
+	overflow-x:      auto;
+	-webkit-overflow-scrolling: touch;
+	border:          1px solid var(--chatbot-border);
+	border-radius:   12px;
+	background:      #fff;
+}
+
+/* Accent-independent dark focus ring so the scrollable region's focus is always
+   perceivable (WCAG 2.4.7), matching the card controls. */
+.chatbot-compare-scroll:focus-visible {
+	outline:        2px solid #1a1a1a;
+	outline-offset: 2px;
+	box-shadow:     0 0 0 4px #ffffff;
+}
+
+.chatbot-compare {
+	border-collapse: collapse;
+	width:           100%;
+	/* Give each column room; the wrapper scrolls if the total exceeds the panel. */
+	min-width:       max-content;
+	font-size:       12px;
+	line-height:     1.4;
+	color:           var(--chatbot-text);
+}
+
+/* Caption conveys the table's purpose to AT; visually small and muted. */
+.chatbot-compare-caption {
+	caption-side:  top;
+	text-align:    left;
+	padding:       8px 10px 6px;
+	font-size:     11px;
+	font-weight:   600;
+	color:         var(--chatbot-muted);
+}
+
+.chatbot-compare th,
+.chatbot-compare td {
+	padding:       7px 10px;
+	text-align:    left;
+	vertical-align: top;
+	border-bottom: 1px solid var(--chatbot-border);
+	/* Keep cells from collapsing too narrow while still allowing wrap on long values. */
+	min-width:     84px;
+}
+
+/* Column headers (the products) — emphasised, with a subtle fill. The row headers
+   (attribute names) sit in the first column, also emphasised. */
+.chatbot-compare thead th,
+.chatbot-compare-corner {
+	background:    var(--chatbot-bot-bubble);
+	font-weight:   600;
+}
+
+.chatbot-compare-rowhead {
+	background:    var(--chatbot-bot-bubble);
+	font-weight:   600;
+	white-space:   nowrap;
+}
+
+.chatbot-compare-name {
+	color:           var(--chatbot-text);
+	text-decoration: none;
+	font-weight:     600;
+	word-break:      break-word;
+}
+
+a.chatbot-compare-name {
+	color: var(--chatbot-accent);
+}
+
+a.chatbot-compare-name:hover {
+	text-decoration: underline;
+}
+
+.chatbot-compare-cell .was {
+	margin-right:    6px;
+	font-weight:     400;
+	color:           var(--chatbot-muted);
+	text-decoration: line-through;
+}
+
+/* Actions cell: stack the View / Add controls so they stay tappable in a narrow
+   column. They reuse the card button styles (.chatbot-card-view / -add). */
+.chatbot-compare-actions {
+	white-space: normal;
+}
+
+.chatbot-compare-actions .chatbot-card-view,
+.chatbot-compare-actions .chatbot-card-add {
+	display:     inline-block;
+	margin:      2px 4px 2px 0;
+}
+
 /* ── Reduced motion safety net ────────────────────────────────────────────────
    Non-essential transitions/animations are opt-in via the no-preference queries
    above; this scoped catch-all neutralises anything that slips through (e.g. a

@@ -57,9 +57,10 @@ final class Fahad_AI_API_Handler {
 	// =========================================================================
 
 	private function run_anthropic_agent( array $messages ): array|WP_Error {
-		$tools = Fahad_AI_Tools::instance();
-		$max   = 8;
-		$cards = [];
+		$tools      = Fahad_AI_Tools::instance();
+		$max        = 8;
+		$cards      = [];
+		$comparison = [];
 
 		for ( $i = 0; $i < $max; $i++ ) {
 			$response = $this->call_anthropic( $messages );
@@ -80,7 +81,7 @@ final class Fahad_AI_API_Handler {
 						$text .= $block['text'];
 					}
 				}
-				return [ 'message' => trim( $text ), 'messages' => $messages, 'products' => $cards ];
+				return [ 'message' => trim( $text ), 'messages' => $messages, 'products' => $cards, 'comparison' => $comparison ];
 			}
 
 			if ( 'tool_use' === $stop_reason ) {
@@ -92,6 +93,7 @@ final class Fahad_AI_API_Handler {
 					}
 					$result         = $tools->execute( $block['name'], $block['input'] ?? [] );
 					$cards          = array_merge( $cards, $this->tool_result_cards( $block['name'], $result ) );
+					$comparison     = $this->tool_result_comparison( $block['name'], $result ) ?: $comparison;
 					$tool_results[] = [
 						'type'        => 'tool_result',
 						'tool_use_id' => $block['id'],
@@ -160,9 +162,10 @@ final class Fahad_AI_API_Handler {
 	// =========================================================================
 
 	private function run_moonshot_agent( array $messages ): array|WP_Error {
-		$tools = Fahad_AI_Tools::instance();
-		$max   = 8;
-		$cards = [];
+		$tools      = Fahad_AI_Tools::instance();
+		$max        = 8;
+		$cards      = [];
+		$comparison = [];
 
 		// Moonshot uses a system message as the first entry, not a top-level field.
 		$with_system = array_merge(
@@ -187,9 +190,10 @@ final class Fahad_AI_API_Handler {
 
 			if ( 'stop' === $finish_reason ) {
 				return [
-					'message'  => trim( $msg['content'] ?? '' ),
-					'messages' => $messages,   // returned to client (no system msg)
-					'products' => $cards,
+					'message'    => trim( $msg['content'] ?? '' ),
+					'messages'   => $messages,   // returned to client (no system msg)
+					'products'   => $cards,
+					'comparison' => $comparison,
 				];
 			}
 
@@ -198,8 +202,9 @@ final class Fahad_AI_API_Handler {
 					$name  = $call['function']['name']      ?? '';
 					$input = json_decode( $call['function']['arguments'] ?? '{}', true ) ?? [];
 
-					$result = $tools->execute( $name, $input );
-					$cards  = array_merge( $cards, $this->tool_result_cards( $name, $result ) );
+					$result     = $tools->execute( $name, $input );
+					$cards      = array_merge( $cards, $this->tool_result_cards( $name, $result ) );
+					$comparison = $this->tool_result_comparison( $name, $result ) ?: $comparison;
 
 					$tool_msg = [
 						'role'         => 'tool',
@@ -379,6 +384,13 @@ Guidelines:
 	 * @param array  $result The tool result array.
 	 */
 	private function tool_result_cards( string $tool, array $result ): array {
+		// A comparison-shaped result is surfaced as its own `comparison` payload
+		// (tool_result_comparison) and renders as a single side-by-side table — it
+		// must NOT also emit a redundant run of product cards for the same products.
+		if ( $this->is_comparison_result( $result ) ) {
+			return [];
+		}
+
 		if ( ! empty( $result['products'] ) && is_array( $result['products'] ) ) {
 			return array_values( array_filter( array_map( [ $this, 'normalize_card' ], $result['products'] ) ) );
 		}
@@ -389,6 +401,106 @@ Guidelines:
 		}
 
 		return [];
+	}
+
+	/**
+	 * Build the comparison-table payload the widget renders, from a tool result.
+	 *
+	 * CONVENTION over configuration, exactly like tool_result_cards(): emission keys
+	 * off the SHAPE of the result, not the tool's name, so any tool returning an
+	 * aligned comparison (products[] + an `attributes` row list) surfaces a
+	 * comparison table without this method being taught its name. A non-comparison
+	 * result (plain cards, cart action, error, …) yields an empty array.
+	 *
+	 * The payload is:
+	 *   {
+	 *     products:   [ <normalized card>, … ],   // one column per compared product
+	 *     attributes: [ { name, values: { <product_id>: <value>, … } }, … ]  // rows
+	 *   }
+	 *
+	 * The columns reuse normalize_card() so the product fields (id/name/price/stock/
+	 * url/image/rating) match the regular product cards and carry the View/Add
+	 * affordances; the attribute rows pass through (sanitized) as the table body.
+	 *
+	 * Card/column data comes straight from WooCommerce (via the tools), never from
+	 * model-generated text, so the widget can trust these fields — same invariant as
+	 * the product cards.
+	 *
+	 * @param string $tool   Name of the tool that produced the result (unused;
+	 *                        emission is by result shape, see above).
+	 * @param array  $result The tool result array.
+	 * @return array Comparison payload, or [] when the result is not a comparison.
+	 */
+	private function tool_result_comparison( string $tool, array $result ): array {
+		if ( ! $this->is_comparison_result( $result ) ) {
+			return [];
+		}
+
+		$products = array_values( array_filter( array_map( [ $this, 'normalize_card' ], $result['products'] ) ) );
+
+		// Defence in depth: a comparison needs at least two real columns. If
+		// normalization dropped malformed product entries below two, do not surface a
+		// degenerate one-column "table".
+		if ( count( $products ) < 2 ) {
+			return [];
+		}
+
+		return [
+			'products'   => $products,
+			'attributes' => $this->normalize_comparison_attributes( $result['attributes'] ),
+		];
+	}
+
+	/**
+	 * Whether a tool result is comparison-shaped: a products[] list of at least two
+	 * entries AND an aligned `attributes` row list (which is what distinguishes a
+	 * comparison from a plain card result — search/best-sellers have products[] but
+	 * no `attributes` key). The attributes list may be empty (products with no shared
+	 * attributes still compare on name/price/etc.), so its mere presence as an array
+	 * alongside ≥2 products is the signal.
+	 */
+	private function is_comparison_result( array $result ): bool {
+		return isset( $result['attributes'] )
+			&& is_array( $result['attributes'] )
+			&& ! empty( $result['products'] )
+			&& is_array( $result['products'] )
+			&& count( $result['products'] ) >= 2;
+	}
+
+	/**
+	 * Reduce the aligned attribute rows to the trusted shape the widget renders:
+	 * a list of { name, values: { product_id => string } }. Rows without a usable
+	 * name are dropped; each value is cast to a string. The product-id keys are kept
+	 * as-is so the widget can line each value up under its product column.
+	 *
+	 * @param mixed $attributes The raw `attributes` value from the tool result.
+	 * @return array<int, array{name:string, values: array<int,string>}>
+	 */
+	private function normalize_comparison_attributes( $attributes ): array {
+		if ( ! is_array( $attributes ) ) {
+			return [];
+		}
+
+		$rows = [];
+		foreach ( $attributes as $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+			$name = trim( (string) ( $row['name'] ?? '' ) );
+			if ( '' === $name ) {
+				continue;
+			}
+			$values = [];
+			foreach ( (array) ( $row['values'] ?? [] ) as $pid => $value ) {
+				$values[ (int) $pid ] = (string) $value;
+			}
+			$rows[] = [
+				'name'   => $name,
+				'values' => $values,
+			];
+		}
+
+		return $rows;
 	}
 
 	/**
@@ -601,6 +713,15 @@ Guidelines:
 				$cards = $this->tool_result_cards( $tc['name'], $result );
 				if ( ! empty( $cards ) ) {
 					$this->sse_send( 'products', [ 'products' => $cards ] );
+				}
+
+				// Comparison table (issue #13): surfaced as its own SSE event,
+				// mirroring the `products` event above. A comparison-shaped result
+				// emits no cards (see tool_result_cards), so the two are mutually
+				// exclusive — the widget renders the comparison table here.
+				$comparison = $this->tool_result_comparison( $tc['name'], $result );
+				if ( ! empty( $comparison ) ) {
+					$this->sse_send( 'comparison', $comparison );
 				}
 
 				$api_msgs[] = [
