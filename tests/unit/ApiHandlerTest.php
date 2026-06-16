@@ -232,6 +232,76 @@ class ApiHandlerTest extends TestCase {
         }
     }
 
+    // ── get_system_prompt() — passes through the fahad_ai_system_prompt filter ──
+    // (issue #20: cross-session memory injects a compact preferences block here,
+    // WITHOUT editing the agent-loop methods — the only change to the handler is the
+    // apply_filters() wrap. These tests prove the filter is applied and that the
+    // default prompt is unchanged when no filter modifies it.)
+
+    private function get_system_prompt(): string {
+        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' );
+        return $method->invoke( $this->handler() );
+    }
+
+    public function test_system_prompt_passes_through_the_filter(): void {
+        // A hooked modification on `fahad_ai_system_prompt` must be reflected in the
+        // returned prompt — this is the seam the memory pack uses to append prefs.
+        Functions\when( 'apply_filters' )->alias(
+            static fn( $hook, $value = null ) =>
+                'fahad_ai_system_prompt' === $hook ? $value . "\n\n[INJECTED BLOCK]" : $value
+        );
+
+        $prompt = $this->get_system_prompt();
+
+        $this->assertStringContainsString( '[INJECTED BLOCK]', $prompt );
+        // The base prompt is still present — the filter APPENDS, it does not replace.
+        $this->assertStringContainsString( 'shopping assistant', $prompt );
+    }
+
+    public function test_system_prompt_is_applied_with_the_documented_hook_name(): void {
+        $applied_hooks = [];
+        Functions\when( 'apply_filters' )->alias(
+            static function ( $hook, $value = null ) use ( &$applied_hooks ) {
+                $applied_hooks[] = $hook;
+                return $value;
+            }
+        );
+
+        $this->get_system_prompt();
+
+        $this->assertContains( 'fahad_ai_system_prompt', $applied_hooks );
+    }
+
+    public function test_system_prompt_is_unchanged_when_no_filter_modifies_it(): void {
+        // With apply_filters passing the value straight through (the WordPress default
+        // when nothing is hooked), the default prompt text is emitted verbatim.
+        Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
+
+        $prompt = $this->get_system_prompt();
+
+        $this->assertStringContainsString( 'You are a helpful shopping assistant for Test Store', $prompt );
+        $this->assertStringContainsString( 'Currency: $', $prompt );
+        // No injected block when nothing hooks the filter.
+        $this->assertStringNotContainsString( '[INJECTED BLOCK]', $prompt );
+    }
+
+    public function test_custom_system_prompt_option_still_passes_through_the_filter(): void {
+        // An admin-set custom prompt short-circuits the default text but must STILL go
+        // through the filter, so memory injection works regardless of a custom prompt.
+        Functions\when( 'get_option' )->alias(
+            fn( $key, $default = '' ) => 'fahad_ai_system_prompt' === $key ? 'Custom store prompt.' : $default
+        );
+        Functions\when( 'apply_filters' )->alias(
+            static fn( $hook, $value = null ) =>
+                'fahad_ai_system_prompt' === $hook ? $value . ' [PREFS]' : $value
+        );
+
+        $prompt = $this->get_system_prompt();
+
+        $this->assertStringContainsString( 'Custom store prompt.', $prompt );
+        $this->assertStringContainsString( '[PREFS]', $prompt );
+    }
+
     // ── moonshot_base_url() region selection ──────────────────────────────────
 
     private function moonshot_base_url(): string {

@@ -325,13 +325,26 @@ final class Fahad_AI_API_Handler {
 	private function get_system_prompt(): string {
 		$custom = get_option( 'fahad_ai_system_prompt', '' );
 		if ( ! empty( $custom ) ) {
-			return $custom;
+			/**
+			 * Filter the system prompt sent to the model (issue #20).
+			 *
+			 * Lets feature packs APPEND compact, clearly-labelled context to the prompt
+			 * for the current request WITHOUT editing the agent-loop methods. The
+			 * cross-session-memory pack (Fahad_AI_Memory_Tools) uses this to append a
+			 * bounded preferences block for a logged-in, opted-in customer. Hooks must
+			 * APPEND (never replace) and keep additions small (storage hygiene). Applied
+			 * to BOTH the admin's custom prompt and the default prompt, so injection
+			 * works regardless of configuration.
+			 *
+			 * @param string $prompt The system prompt that will be sent to the model.
+			 */
+			return apply_filters( 'fahad_ai_system_prompt', $custom );
 		}
 
 		$store_name = get_bloginfo( 'name' );
 		$currency   = get_woocommerce_currency_symbol();
 
-		return "You are a helpful shopping assistant for {$store_name}. Help customers find products, answer questions, and manage their cart.
+		$prompt = "You are a helpful shopping assistant for {$store_name}. Help customers find products, answer questions, and manage their cart.
 
 Currency: {$currency}
 
@@ -352,6 +365,9 @@ Guidelines:
 - Use view_cart when the customer asks about their cart or before checkout.
 - Keep responses concise and friendly.
 - For order status, account issues, or returns, direct the customer to the store's support team.";
+
+		/** This filter is documented above (for the custom-prompt branch). */
+		return apply_filters( 'fahad_ai_system_prompt', $prompt );
 	}
 
 	// =========================================================================
