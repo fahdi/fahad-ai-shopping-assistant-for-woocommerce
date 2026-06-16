@@ -212,4 +212,33 @@ class ApiHandlerTest extends TestCase {
                 "Tool '{$spec['name']}' has empty description" );
         }
     }
+
+    // ── moonshot_base_url() region selection ──────────────────────────────────
+
+    private function moonshot_base_url(): string {
+        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'moonshot_base_url' );
+        return $method->invoke( $this->handler() );
+    }
+
+    public function test_base_url_defaults_to_global(): void {
+        // setUp stubs get_option() to return the supplied default, so the
+        // region resolves to 'global' when the option is unset.
+        $this->assertSame( 'https://api.moonshot.ai', $this->moonshot_base_url() );
+    }
+
+    public function test_base_url_uses_china_endpoint_when_region_is_china(): void {
+        Functions\when( 'get_option' )->alias(
+            fn( $key, $default = '' ) => 'fahad_ai_moonshot_region' === $key ? 'china' : $default
+        );
+
+        $this->assertSame( 'https://api.moonshot.cn', $this->moonshot_base_url() );
+    }
+
+    public function test_base_url_uses_global_endpoint_for_any_non_china_value(): void {
+        Functions\when( 'get_option' )->alias(
+            fn( $key, $default = '' ) => 'fahad_ai_moonshot_region' === $key ? 'global' : $default
+        );
+
+        $this->assertSame( 'https://api.moonshot.ai', $this->moonshot_base_url() );
+    }
 }

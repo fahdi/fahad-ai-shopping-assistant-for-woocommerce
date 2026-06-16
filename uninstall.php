@@ -14,6 +14,7 @@ $fahad_ai_options = [
 	'fahad_ai_anthropic_model',
 	'fahad_ai_moonshot_api_key',
 	'fahad_ai_moonshot_model',
+	'fahad_ai_moonshot_region',
 	'fahad_ai_bot_name',
 	'fahad_ai_greeting',
 	'fahad_ai_system_prompt',

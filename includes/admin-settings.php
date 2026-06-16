@@ -11,7 +11,8 @@ function fahad_ai_settings_page(): void {
 		update_option( 'fahad_ai_anthropic_api_key', sanitize_text_field( wp_unslash( $_POST['anthropic_api_key'] ?? '' ) ) );
 		update_option( 'fahad_ai_anthropic_model',   sanitize_text_field( wp_unslash( $_POST['anthropic_model']   ?? 'claude-haiku-4-5-20251001' ) ) );
 		update_option( 'fahad_ai_moonshot_api_key',  sanitize_text_field( wp_unslash( $_POST['moonshot_api_key']  ?? '' ) ) );
-		update_option( 'fahad_ai_moonshot_model',    sanitize_text_field( wp_unslash( $_POST['moonshot_model']    ?? 'kimi-k2-thinking-turbo' ) ) );
+		update_option( 'fahad_ai_moonshot_model',    sanitize_text_field( wp_unslash( $_POST['moonshot_model']    ?? 'kimi-k2.6' ) ) );
+		update_option( 'fahad_ai_moonshot_region',   'china' === ( $_POST['moonshot_region'] ?? 'global' ) ? 'china' : 'global' );
 		update_option( 'fahad_ai_bot_name',          sanitize_text_field( wp_unslash( $_POST['bot_name']          ?? 'Store Assistant' ) ) );
 		update_option( 'fahad_ai_greeting',          sanitize_textarea_field( wp_unslash( $_POST['greeting']      ?? 'Hi! How can I help you today?' ) ) );
 		update_option( 'fahad_ai_system_prompt',     sanitize_textarea_field( wp_unslash( $_POST['system_prompt'] ?? '' ) ) );
@@ -24,7 +25,8 @@ function fahad_ai_settings_page(): void {
 	$anthropic_key   = get_option( 'fahad_ai_anthropic_api_key', '' );
 	$anthropic_model = get_option( 'fahad_ai_anthropic_model',   'claude-haiku-4-5-20251001' );
 	$moonshot_key    = get_option( 'fahad_ai_moonshot_api_key',  '' );
-	$moonshot_model  = get_option( 'fahad_ai_moonshot_model',    'kimi-k2-thinking-turbo' );
+	$moonshot_model  = get_option( 'fahad_ai_moonshot_model',    'kimi-k2.6' );
+	$moonshot_region = get_option( 'fahad_ai_moonshot_region',   'global' );
 	$bot_name        = get_option( 'fahad_ai_bot_name',          'Store Assistant' );
 	$greeting        = get_option( 'fahad_ai_greeting',          'Hi! How can I help you today?' );
 	$system_prompt   = get_option( 'fahad_ai_system_prompt',     '' );
@@ -88,6 +90,18 @@ function fahad_ai_settings_page(): void {
 				<!-- Moonshot / Kimi fields -->
 				<tbody id="fahad-ai-moonshot" style="<?php echo 'moonshot' !== $provider ? 'display:none' : ''; ?>">
 					<tr>
+						<th scope="row"><label for="moonshot_region"><?php esc_html_e( 'Moonshot Region', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+						<td>
+							<select id="moonshot_region" name="moonshot_region">
+								<option value="global" <?php selected( $moonshot_region, 'global' ); ?>><?php esc_html_e( 'Global — api.moonshot.ai (rest of world)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+								<option value="china"  <?php selected( $moonshot_region, 'china' );  ?>><?php esc_html_e( 'China — api.moonshot.cn', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+							</select>
+							<p class="description">
+								<?php esc_html_e( 'Choose the platform your API key was issued on. Keys and available models are not shared between the global and China platforms.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							</p>
+						</td>
+					</tr>
+					<tr>
 						<th scope="row"><label for="moonshot_api_key"><?php esc_html_e( 'Moonshot API Key', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 						<td>
 							<input type="password" id="moonshot_api_key" name="moonshot_api_key"
@@ -95,9 +109,10 @@ function fahad_ai_settings_page(): void {
 							<p class="description">
 								<?php
 								printf(
-									/* translators: %s: URL to Moonshot platform */
-									esc_html__( 'Get your key from %s.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-									'<a href="https://platform.moonshot.ai" target="_blank" rel="noopener">platform.moonshot.ai</a>'
+									/* translators: 1: URL to global Moonshot platform, 2: URL to China Moonshot platform */
+									esc_html__( 'Get your key from %1$s (global) or %2$s (China).', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+									'<a href="https://platform.moonshot.ai" target="_blank" rel="noopener">platform.moonshot.ai</a>',
+									'<a href="https://platform.moonshot.cn" target="_blank" rel="noopener">platform.moonshot.cn</a>'
 								);
 								?>
 							</p>
@@ -108,11 +123,10 @@ function fahad_ai_settings_page(): void {
 						<td>
 							<select id="moonshot_model" name="moonshot_model">
 								<optgroup label="<?php esc_attr_e( 'Kimi K2', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>">
-									<option value="kimi-k2-thinking-turbo" <?php selected( $moonshot_model, 'kimi-k2-thinking-turbo' ); ?>><?php esc_html_e( 'kimi-k2-thinking-turbo — Reasoning, fast (recommended)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-									<option value="kimi-k2-thinking"       <?php selected( $moonshot_model, 'kimi-k2-thinking' );       ?>><?php esc_html_e( 'kimi-k2-thinking — Reasoning, full', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-									<option value="kimi-k2.5"              <?php selected( $moonshot_model, 'kimi-k2.5' );              ?>><?php esc_html_e( 'kimi-k2.5 — Latest, vision + reasoning', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-									<option value="kimi-k2-0905-preview"   <?php selected( $moonshot_model, 'kimi-k2-0905-preview' );   ?>>kimi-k2-0905-preview</option>
-									<option value="kimi-k2-turbo-preview"  <?php selected( $moonshot_model, 'kimi-k2-turbo-preview' );  ?>>kimi-k2-turbo-preview</option>
+									<option value="kimi-k2.6"              <?php selected( $moonshot_model, 'kimi-k2.6' );              ?>><?php esc_html_e( 'kimi-k2.6 — Latest, general (recommended)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="kimi-k2.5"              <?php selected( $moonshot_model, 'kimi-k2.5' );              ?>><?php esc_html_e( 'kimi-k2.5 — General', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="kimi-k2-thinking-turbo" <?php selected( $moonshot_model, 'kimi-k2-thinking-turbo' ); ?>><?php esc_html_e( 'kimi-k2-thinking-turbo — Reasoning (availability varies by region)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="kimi-k2-thinking"       <?php selected( $moonshot_model, 'kimi-k2-thinking' );       ?>><?php esc_html_e( 'kimi-k2-thinking — Reasoning (availability varies by region)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
 								</optgroup>
 								<optgroup label="<?php esc_attr_e( 'Moonshot V1', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>">
 									<option value="moonshot-v1-auto"  <?php selected( $moonshot_model, 'moonshot-v1-auto' );  ?>><?php esc_html_e( 'moonshot-v1-auto — Auto context', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
@@ -121,6 +135,9 @@ function fahad_ai_settings_page(): void {
 									<option value="moonshot-v1-128k"  <?php selected( $moonshot_model, 'moonshot-v1-128k' );  ?>>moonshot-v1-128k</option>
 								</optgroup>
 							</select>
+							<p class="description">
+								<?php esc_html_e( 'Available models depend on your region and key. If you get a "model not found" error, pick another model.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							</p>
 						</td>
 					</tr>
 				</tbody>

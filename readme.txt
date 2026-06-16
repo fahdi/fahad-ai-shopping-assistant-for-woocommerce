@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -85,6 +85,11 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 1.0.7 =
+* Added a Moonshot Region setting (Global api.moonshot.ai / China api.moonshot.cn) so keys issued on either platform work without editing code
+* Fixed Moonshot streaming: replies and errors now render reliably instead of an empty bubble. The streaming request uses a dedicated cURL handle because the `http_api_curl` write-callback override could let the upstream response bypass the handler and corrupt the SSE stream on some PHP/cURL builds
+* Updated the default Kimi model to `kimi-k2.6` and refreshed the model list (the previous default was not available on the global platform)
+
 = 1.0.6 =
 * Security: the `/message` and `/stream` REST endpoints now enforce per-client rate limiting alongside the existing nonce check, capping how many billable AI calls and cart changes a single visitor can trigger
 * Raised the minimum PHP requirement to 8.0 to match the typed code already in use
@@ -119,6 +124,9 @@ The conversation history (user messages and assistant replies) and the results o
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 1.0.7 =
+Fixes Moonshot streaming returning a blank reply and adds a Global/China region selector for Moonshot API keys.
 
 = 1.0.6 =
 Security and compatibility update: adds rate limiting to the chat endpoints and raises the minimum PHP version to 8.0.

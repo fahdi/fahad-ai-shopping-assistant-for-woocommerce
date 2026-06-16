@@ -221,7 +221,7 @@ final class Fahad_AI_API_Handler {
 			return new WP_Error( 'no_api_key', __( 'Moonshot API key is not configured.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 500 ] );
 		}
 
-		$model = get_option( 'fahad_ai_moonshot_model', 'moonshot-v1-32k' );
+		$model = get_option( 'fahad_ai_moonshot_model', 'kimi-k2.6' );
 
 		$payload = [
 			'model'      => $model,
@@ -230,7 +230,7 @@ final class Fahad_AI_API_Handler {
 			'tools'      => $this->get_openai_tools(),
 		];
 
-		$response = wp_remote_post( 'https://api.moonshot.ai/v1/chat/completions', [
+		$response = wp_remote_post( $this->moonshot_base_url() . '/v1/chat/completions', [
 			'timeout' => 30,
 			'headers' => [
 				'Authorization' => 'Bearer ' . $api_key,
@@ -256,6 +256,19 @@ final class Fahad_AI_API_Handler {
 		}
 
 		return $body;
+	}
+
+	/**
+	 * Base URL for the Moonshot API, selected by the configured region.
+	 * Moonshot runs two independent platforms with separate keys and model
+	 * catalogues: the global endpoint (api.moonshot.ai) and the China
+	 * endpoint (api.moonshot.cn). A key issued on one is rejected by the other.
+	 */
+	private function moonshot_base_url(): string {
+		$region = get_option( 'fahad_ai_moonshot_region', 'global' );
+		return 'china' === $region
+			? 'https://api.moonshot.cn'
+			: 'https://api.moonshot.ai';
 	}
 
 	// =========================================================================
@@ -529,7 +542,7 @@ Guidelines:
 	 */
 	private function stream_one_turn( array $messages ): array {
 		$api_key = get_option( 'fahad_ai_moonshot_api_key', '' );
-		$model   = get_option( 'fahad_ai_moonshot_model', 'moonshot-v1-32k' );
+		$model   = get_option( 'fahad_ai_moonshot_model', 'kimi-k2.6' );
 
 		$payload = [
 			'model'      => $model,
@@ -594,48 +607,41 @@ Guidelines:
 		};
 
 		/*
-		 * wp_remote_post() buffers the full response by default, which would defeat
-		 * streaming. The documented http_api_curl hook lets us inject a write
-		 * callback on the underlying cURL handle so SSE chunks reach the browser
-		 * as they arrive, while the request still goes through the WordPress HTTP
-		 * API for SSL/proxy/header handling.
-		 *
-		 * See https://developer.wordpress.org/reference/hooks/http_api_curl/.
+		 * SSE streaming needs the response body delivered to us incrementally.
+		 * wp_remote_post() buffers the whole body, and overriding the cURL write
+		 * callback through the http_api_curl hook is not honoured reliably across
+		 * PHP/cURL builds (the WordPress transport sets its own write handler, so
+		 * the upstream bytes can leak straight to output and corrupt the SSE
+		 * framing). A dedicated cURL handle gives us a deterministic write
+		 * callback, which is required for real streaming.
 		 */
-		$stream_marker = '_fahad_ai_moonshot_stream';
+		if ( ! function_exists( 'curl_init' ) ) {
+			return [ '', [], __( 'Live streaming requires the PHP cURL extension.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ];
+		}
 
-		$curl_hook = function ( $handle, $r ) use ( $stream_marker, $write_callback ) {
-			if ( empty( $r[ $stream_marker ] ) ) {
-				return;
-			}
-			// phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_setopt
-			curl_setopt( $handle, CURLOPT_WRITEFUNCTION, $write_callback );
-			curl_setopt( $handle, CURLOPT_RETURNTRANSFER, false );
-			// phpcs:enable
-		};
+		// phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_init, WordPress.WP.AlternativeFunctions.curl_curl_setopt, WordPress.WP.AlternativeFunctions.curl_curl_exec, WordPress.WP.AlternativeFunctions.curl_curl_errno, WordPress.WP.AlternativeFunctions.curl_curl_error, WordPress.WP.AlternativeFunctions.curl_curl_getinfo, WordPress.WP.AlternativeFunctions.curl_curl_close
+		$ch = curl_init();
+		curl_setopt( $ch, CURLOPT_URL, $this->moonshot_base_url() . '/v1/chat/completions' );
+		curl_setopt( $ch, CURLOPT_POST, true );
+		curl_setopt( $ch, CURLOPT_POSTFIELDS, wp_json_encode( $payload ) );
+		curl_setopt( $ch, CURLOPT_HTTPHEADER, [
+			'Authorization: Bearer ' . $api_key,
+			'Content-Type: application/json',
+			'Accept: text/event-stream',
+		] );
+		curl_setopt( $ch, CURLOPT_TIMEOUT, 60 );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, false );
+		curl_setopt( $ch, CURLOPT_WRITEFUNCTION, $write_callback );
+		curl_exec( $ch );
+		$curl_errno = curl_errno( $ch );
+		$curl_error = curl_error( $ch );
+		$http_code  = (int) curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+		curl_close( $ch );
+		// phpcs:enable
 
-		add_action( 'http_api_curl', $curl_hook, 10, 2 );
-
-		$response = wp_remote_post(
-			'https://api.moonshot.ai/v1/chat/completions',
-			[
-				'timeout'       => 60,
-				'headers'       => [
-					'Authorization' => 'Bearer ' . $api_key,
-					'Content-Type'  => 'application/json',
-				],
-				'body'          => wp_json_encode( $payload ),
-				$stream_marker  => true,
-			]
-		);
-
-		remove_action( 'http_api_curl', $curl_hook, 10 );
-
-		if ( is_wp_error( $response ) ) {
-			$error     = $error ?? $response->get_error_message();
-			$http_code = 0;
-		} else {
-			$http_code = wp_remote_retrieve_response_code( $response );
+		// Transport-level failure (DNS, TLS, timeout) with no SSE error parsed.
+		if ( ! $error && $curl_errno ) {
+			$error = $curl_error !== '' ? $curl_error : __( 'Live streaming connection failed.', 'fahad-ai-shopping-assistant-for-woocommerce' );
 		}
 
 		// Non-200 with no SSE error parsed → plain JSON error body (e.g. 401 auth failures).

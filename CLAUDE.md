@@ -3,7 +3,7 @@
 Plugin folder: `fahad-ai-shopping-assistant-for-woocommerce/`
 Main file: `fahad-ai-shopping-assistant-for-woocommerce.php`
 GitHub: https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
-Current version: 1.0.6
+Current version: 1.0.7
 Requires: WordPress 6.0+ (tested up to 7.0), PHP 8.0+, WooCommerce active
 Slug (WP.org): `fahad-ai-shopping-assistant-for-woocommerce` (pending approval)
 Text domain: `fahad-ai-shopping-assistant-for-woocommerce` (must equal slug)
@@ -92,13 +92,20 @@ JS sendStreaming()
      'error' → show message
 ```
 
-### Why raw cURL for streaming
+### Why a dedicated cURL handle for streaming
 
 `wp_remote_post()` buffers the entire response before returning. SSE requires
 writing chunks to the browser as they arrive. The two non-streaming paths
 (`call_anthropic`, `call_moonshot`) both use `wp_remote_post()` correctly.
-The cURL block has `phpcs:disable/enable` with this explanation so WP.org
-reviewers understand the necessity.
+
+v1.0.4–1.0.6 tried to keep streaming inside `wp_remote_post()` by overriding the
+cURL write callback through the `http_api_curl` hook. That proved unreliable:
+on some PHP/cURL builds the WordPress transport's own write handler wins, so the
+upstream body bypasses our callback and prints straight to output — prepended to
+our `data:` line, it broke SSE framing and the client rendered an empty bubble.
+v1.0.7 drives a dedicated `curl_init()` handle in `stream_one_turn()` so the
+write callback is deterministic. The cURL block has `phpcs:disable/enable` with
+this explanation so WP.org reviewers understand the necessity.
 
 ---
 
@@ -114,9 +121,10 @@ reviewers understand the necessity.
 - **Content filtering:** Haiku is aggressive — if "Output blocked by content filtering policy" appears, switch to Sonnet
 
 ### Moonshot AI (Kimi K2)
-- **Endpoint:** `https://api.moonshot.ai/v1/chat/completions` (NOT `.cn` — international platform)
+- **Endpoint:** `{base}/v1/chat/completions`, where `{base}` comes from `moonshot_base_url()` — `https://api.moonshot.ai` (Global) or `https://api.moonshot.cn` (China), selected by the `fahad_ai_moonshot_region` option
+- **Two platforms:** Global and China are independent — a key issued on one is rejected by the other (401), and their model catalogues differ
 - **Auth header:** `Authorization: Bearer {key}`
-- **API keys from:** https://platform.moonshot.ai
+- **API keys from:** https://platform.moonshot.ai (Global) or https://platform.moonshot.cn (China)
 - **Tool format:** OpenAI-compatible (`parameters`, `type: "function"`)
 - **System message:** prepended as first message (`role: system`) — not a top-level field
 - **Tool loop:** `finish_reason === 'tool_calls'` → execute → append `tool` role message → repeat
@@ -174,7 +182,8 @@ All stored under the `fahad_ai_` prefix:
 | `fahad_ai_anthropic_api_key` | `''` | Anthropic key (sk-ant-…) |
 | `fahad_ai_anthropic_model` | `claude-haiku-4-5-20251001` | Claude model ID |
 | `fahad_ai_moonshot_api_key` | `''` | Moonshot key (sk-…) |
-| `fahad_ai_moonshot_model` | `kimi-k2-thinking-turbo` | Kimi model ID |
+| `fahad_ai_moonshot_model` | `kimi-k2.6` | Kimi model ID |
+| `fahad_ai_moonshot_region` | `global` | `global` (api.moonshot.ai) or `china` (api.moonshot.cn) |
 | `fahad_ai_bot_name` | `Store Assistant` | Widget header name |
 | `fahad_ai_greeting` | `Hi! How can I help you today?` | First bot message |
 | `fahad_ai_system_prompt` | `''` | Custom prompt appended to default |
@@ -280,7 +289,7 @@ Every user-facing string is wrapped in a gettext function with the `fahad-ai-sho
 
 **Runner:** `vendor/bin/phpunit --testdox`
 **Stack:** PHPUnit 10.5 + Brain\Monkey 2.x + Mockery 1.x
-**Coverage:** 36 tests, 117 assertions
+**Coverage:** 39 tests, 120 assertions
 
 **Class refs in tests:**
 - `Fahad_AI_API_Handler::class` (was `WC_AI_Chatbot_API_Handler`)
@@ -306,6 +315,7 @@ vendor/bin/phpunit --testdox
 - v1.0.5: "Tested up to" raised to WordPress 7.0
 - Jun 12, 2026: reviewer flagged the last open issue — `check_nonce` is not meaningful authorization for the public `/message` and `/stream` endpoints (billable AI + cart mutation)
 - v1.0.6: replaced `check_nonce` with `authorize_request()` (nonce + per-client rate limiting), raised `Requires PHP` to 8.0 to match the typed code
+- v1.0.7: added the `fahad_ai_moonshot_region` setting (Global/China endpoint select); reverted the Moonshot streaming path to a dedicated `curl_init()` handle after the `http_api_curl` hook proved unreliable (leaked the upstream body and corrupted SSE framing → blank replies); fixed the default Kimi model (`kimi-k2-thinking-turbo` was unavailable on the global platform) to `kimi-k2.6`
 
 **v1.0.4 Plugin Check fixes:**
 - Renamed to the WP.org-reserved slug `fahad-ai-shopping-assistant-for-woocommerce` end-to-end (display name, file name, constants, classes, options, REST namespace, JS handles, localized object, text domain)
@@ -317,7 +327,7 @@ vendor/bin/phpunit --testdox
 **Building a release zip:**
 ```bash
 cd /Users/isupercoder/Code/github
-zip -r fahad-ai-shopping-assistant-for-woocommerce-1.0.6.zip fahad-ai-shopping-assistant-for-woocommerce \
+zip -r fahad-ai-shopping-assistant-for-woocommerce-1.0.7.zip fahad-ai-shopping-assistant-for-woocommerce \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/.git/*" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/vendor/*" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/tests/*" \
