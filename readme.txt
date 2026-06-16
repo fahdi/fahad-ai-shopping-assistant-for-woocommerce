@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 1.0.7
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -85,6 +85,11 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 1.1.0 =
+* New: product results now render as rich visual cards in the chat — product photo, price (with sale price), stock status, a short description, and View / Add to cart buttons
+* Product search and details now return the product image and a clean price; card data is sourced from WooCommerce (not AI text) so it is always accurate
+* The assistant gives a short intro instead of repeating every product's details in text, since the cards show them
+
 = 1.0.7 =
 * Added a Moonshot Region setting (Global api.moonshot.ai / China api.moonshot.cn) so keys issued on either platform work without editing code
 * Fixed Moonshot streaming: replies and errors now render reliably instead of an empty bubble. The streaming request uses a dedicated cURL handle because the `http_api_curl` write-callback override could let the upstream response bypass the handler and corrupt the SSE stream on some PHP/cURL builds
@@ -124,6 +129,9 @@ The conversation history (user messages and assistant replies) and the results o
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Product results now appear as rich cards with photo, price, stock, and Add-to-cart buttons.
 
 = 1.0.7 =
 Fixes Moonshot streaming returning a blank reply and adds a Global/China region selector for Moonshot API keys.

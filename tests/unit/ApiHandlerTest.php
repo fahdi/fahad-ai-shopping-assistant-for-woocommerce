@@ -241,4 +241,63 @@ class ApiHandlerTest extends TestCase {
 
         $this->assertSame( 'https://api.moonshot.ai', $this->moonshot_base_url() );
     }
+
+    // ── tool_result_cards() — product card payload for the widget ─────────────
+
+    private function tool_result_cards( string $tool, array $result ): array {
+        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'tool_result_cards' );
+        return $method->invoke( $this->handler(), $tool, $result );
+    }
+
+    public function test_search_products_result_maps_to_cards(): void {
+        $cards = $this->tool_result_cards( 'search_products', [
+            'found'    => 2,
+            'products' => [
+                [ 'id' => 10, 'name' => 'Sneakers', 'price' => 'Rs90', 'in_stock' => true,  'image' => 'http://x/a.jpg', 'url' => 'http://x/p/10' ],
+                [ 'id' => 11, 'name' => 'Bottle',   'price' => 'Rs35', 'in_stock' => false, 'image' => 'http://x/b.jpg', 'url' => 'http://x/p/11' ],
+            ],
+        ] );
+
+        $this->assertCount( 2, $cards );
+        $this->assertSame( 10, $cards[0]['id'] );
+        $this->assertSame( 'Sneakers', $cards[0]['name'] );
+        $this->assertTrue( $cards[0]['in_stock'] );
+        $this->assertFalse( $cards[1]['in_stock'] );
+        $this->assertSame( 'http://x/a.jpg', $cards[0]['image'] );
+    }
+
+    public function test_get_product_details_result_maps_to_single_card(): void {
+        $cards = $this->tool_result_cards( 'get_product_details', [
+            'id'                => 42,
+            'name'              => 'Headphones',
+            'price'             => 'Rs150',
+            'in_stock'          => true,
+            'short_description' => 'Noise-cancelling',
+            'image'             => 'http://x/h.jpg',
+            'url'               => 'http://x/p/42',
+        ] );
+
+        $this->assertCount( 1, $cards );
+        $this->assertSame( 42, $cards[0]['id'] );
+        $this->assertSame( 'Noise-cancelling', $cards[0]['short_description'] );
+    }
+
+    public function test_non_product_tools_produce_no_cards(): void {
+        $this->assertSame( [], $this->tool_result_cards( 'add_to_cart', [ 'success' => true ] ) );
+        $this->assertSame( [], $this->tool_result_cards( 'view_cart', [ 'empty' => true ] ) );
+        $this->assertSame( [], $this->tool_result_cards( 'search_products', [ 'found' => 0, 'products' => [] ] ) );
+    }
+
+    public function test_card_without_id_or_name_is_dropped(): void {
+        $cards = $this->tool_result_cards( 'search_products', [
+            'products' => [
+                [ 'name' => 'No ID' ],
+                [ 'id' => 5 ],
+                [ 'id' => 7, 'name' => 'Valid' ],
+            ],
+        ] );
+
+        $this->assertCount( 1, $cards );
+        $this->assertSame( 7, $cards[0]['id'] );
+    }
 }

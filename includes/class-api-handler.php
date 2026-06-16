@@ -59,6 +59,7 @@ final class Fahad_AI_API_Handler {
 	private function run_anthropic_agent( array $messages ): array|WP_Error {
 		$tools = Fahad_AI_Tools::instance();
 		$max   = 8;
+		$cards = [];
 
 		for ( $i = 0; $i < $max; $i++ ) {
 			$response = $this->call_anthropic( $messages );
@@ -79,7 +80,7 @@ final class Fahad_AI_API_Handler {
 						$text .= $block['text'];
 					}
 				}
-				return [ 'message' => trim( $text ), 'messages' => $messages ];
+				return [ 'message' => trim( $text ), 'messages' => $messages, 'products' => $cards ];
 			}
 
 			if ( 'tool_use' === $stop_reason ) {
@@ -90,6 +91,7 @@ final class Fahad_AI_API_Handler {
 						continue;
 					}
 					$result         = $tools->execute( $block['name'], $block['input'] ?? [] );
+					$cards          = array_merge( $cards, $this->tool_result_cards( $block['name'], $result ) );
 					$tool_results[] = [
 						'type'        => 'tool_result',
 						'tool_use_id' => $block['id'],
@@ -160,6 +162,7 @@ final class Fahad_AI_API_Handler {
 	private function run_moonshot_agent( array $messages ): array|WP_Error {
 		$tools = Fahad_AI_Tools::instance();
 		$max   = 8;
+		$cards = [];
 
 		// Moonshot uses a system message as the first entry, not a top-level field.
 		$with_system = array_merge(
@@ -186,6 +189,7 @@ final class Fahad_AI_API_Handler {
 				return [
 					'message'  => trim( $msg['content'] ?? '' ),
 					'messages' => $messages,   // returned to client (no system msg)
+					'products' => $cards,
 				];
 			}
 
@@ -195,6 +199,7 @@ final class Fahad_AI_API_Handler {
 					$input = json_decode( $call['function']['arguments'] ?? '{}', true ) ?? [];
 
 					$result = $tools->execute( $name, $input );
+					$cards  = array_merge( $cards, $this->tool_result_cards( $name, $result ) );
 
 					$tool_msg = [
 						'role'         => 'tool',
@@ -380,11 +385,14 @@ final class Fahad_AI_API_Handler {
 
 Currency: {$currency}
 
+Product display — important:
+- After you call search_products or get_product_details, the storefront automatically shows the matching products to the customer as visual cards (photo, name, price, stock, and View / Add to cart buttons). Do NOT list each product's price, description, link, or image in your text — the cards already show all of that.
+- Instead, write a short friendly intro or recommendation (one or two sentences). You may highlight or compare a couple of options in words, but never repeat the full product list as text.
+
 Linking rules — follow exactly:
-- Always format product names as markdown links using the url field from tool results: [Product Name](url)
 - After a successful add_to_cart, always end your reply with these two links on the same line: [View Cart](cart_url) · [Checkout](checkout_url) — replace cart_url and checkout_url with the actual values from the tool result.
 - When the customer asks to check out or go to checkout, include: [Proceed to Checkout](checkout_url) — using the checkout_url from view_cart or add_to_cart results.
-- Only use markdown for product names and cart/checkout links — no other markdown formatting.
+- Use markdown only for the cart/checkout links above — no other markdown formatting.
 
 Guidelines:
 - Always use search_products or get_product_details before recommending a product — never invent product details.
@@ -392,6 +400,52 @@ Guidelines:
 - Use view_cart when the customer asks about their cart or before checkout.
 - Keep responses concise and friendly.
 - For order status, account issues, or returns, direct the customer to the store's support team.";
+	}
+
+	// =========================================================================
+	// Product cards (surfaced to the widget for rich rendering)
+	// =========================================================================
+
+	/**
+	 * Build the product-card payload the widget renders, from a tool result.
+	 *
+	 * Card data comes straight from WooCommerce (via Fahad_AI_Tools), never from
+	 * model-generated text, so the widget can trust these fields. Returns an
+	 * empty array for tools that do not produce cards.
+	 */
+	private function tool_result_cards( string $tool, array $result ): array {
+		if ( 'search_products' === $tool && ! empty( $result['products'] ) && is_array( $result['products'] ) ) {
+			return array_values( array_filter( array_map( [ $this, 'normalize_card' ], $result['products'] ) ) );
+		}
+
+		if ( 'get_product_details' === $tool && ! empty( $result['id'] ) ) {
+			$card = $this->normalize_card( $result );
+			return $card ? [ $card ] : [];
+		}
+
+		return [];
+	}
+
+	/**
+	 * Reduce a product summary/detail array to the card fields the widget uses.
+	 */
+	private function normalize_card( array $p ): array {
+		if ( empty( $p['id'] ) || empty( $p['name'] ) ) {
+			return [];
+		}
+
+		return [
+			'id'                => (int) $p['id'],
+			'name'              => (string) $p['name'],
+			'price'             => (string) ( $p['price'] ?? '' ),
+			'regular_price'     => (string) ( $p['regular_price'] ?? '' ),
+			'sale_price'        => isset( $p['sale_price'] ) ? (string) $p['sale_price'] : null,
+			'on_sale'           => ! empty( $p['on_sale'] ),
+			'in_stock'          => ! isset( $p['in_stock'] ) || (bool) $p['in_stock'],
+			'short_description' => (string) ( $p['short_description'] ?? $p['description'] ?? '' ),
+			'image'             => (string) ( $p['image'] ?? '' ),
+			'url'               => (string) ( $p['url'] ?? '' ),
+		];
 	}
 
 	// =========================================================================
@@ -521,7 +575,13 @@ Guidelines:
 			// Execute each tool and append results.
 			foreach ( $tool_calls as $tc ) {
 				$this->sse_send( 'tool', [ 'name' => $tc['name'] ] );
-				$result     = $tools->execute( $tc['name'], $tc['input'] );
+				$result = $tools->execute( $tc['name'], $tc['input'] );
+
+				$cards = $this->tool_result_cards( $tc['name'], $result );
+				if ( ! empty( $cards ) ) {
+					$this->sse_send( 'products', [ 'products' => $cards ] );
+				}
+
 				$api_msgs[] = [
 					'role'         => 'tool',
 					'tool_call_id' => $tc['id'],

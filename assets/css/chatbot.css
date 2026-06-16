@@ -264,3 +264,125 @@
 .chatbot-bubble .chatbot-link:hover {
 	opacity: 0.8;
 }
+
+/* ── Product cards ─────────────────────────────────────────────────────────── */
+.chatbot-cards-msg {
+	max-width: 100%;
+	width:     100%;
+}
+
+.chatbot-products {
+	display:        flex;
+	flex-direction: column;
+	gap:            8px;
+	width:          100%;
+}
+
+.chatbot-card {
+	display:       flex;
+	gap:           10px;
+	padding:       10px;
+	border:        1px solid var(--chatbot-border);
+	border-radius: 12px;
+	background:    #fff;
+}
+
+.chatbot-card-img {
+	width:         64px;
+	height:        64px;
+	flex-shrink:   0;
+	border-radius: 8px;
+	object-fit:    cover;
+	background:    var(--chatbot-bot-bubble);
+}
+
+.chatbot-card-body {
+	flex:           1;
+	min-width:      0;
+	display:        flex;
+	flex-direction: column;
+	gap:            3px;
+}
+
+.chatbot-card-title {
+	font-weight:     600;
+	font-size:       14px;
+	line-height:     1.3;
+	color:           var(--chatbot-text);
+	text-decoration: none;
+	word-break:      break-word;
+}
+
+a.chatbot-card-title:hover {
+	color: var(--chatbot-accent);
+}
+
+.chatbot-card-price {
+	font-size:   13px;
+	font-weight: 600;
+	color:       var(--chatbot-text);
+}
+
+.chatbot-card-price .was {
+	margin-right:    6px;
+	font-weight:     400;
+	color:           var(--chatbot-muted);
+	text-decoration: line-through;
+}
+
+.chatbot-card-stock {
+	font-size: 11px;
+	color:     #15803d;
+}
+
+.chatbot-card-stock.out {
+	color: #b91c1c;
+}
+
+.chatbot-card-desc {
+	font-size:           12px;
+	line-height:         1.4;
+	color:               var(--chatbot-muted);
+	display:             -webkit-box;
+	-webkit-line-clamp:  2;
+	line-clamp:          2;
+	-webkit-box-orient:  vertical;
+	overflow:            hidden;
+}
+
+.chatbot-card-actions {
+	display:     flex;
+	gap:         8px;
+	margin-top:  5px;
+}
+
+.chatbot-card-view,
+.chatbot-card-add {
+	font-size:       12px;
+	font-weight:     500;
+	padding:         5px 12px;
+	border-radius:   7px;
+	cursor:          pointer;
+	text-decoration: none;
+	line-height:     1.4;
+}
+
+.chatbot-card-view {
+	color:      var(--chatbot-accent);
+	background: transparent;
+	border:     1px solid var(--chatbot-border);
+}
+
+.chatbot-card-view:hover {
+	border-color: var(--chatbot-accent);
+}
+
+.chatbot-card-add {
+	color:      #fff;
+	background: var(--chatbot-accent);
+	border:     1px solid var(--chatbot-accent);
+}
+
+.chatbot-card-add:hover {
+	background: var(--chatbot-accent-dark);
+}
