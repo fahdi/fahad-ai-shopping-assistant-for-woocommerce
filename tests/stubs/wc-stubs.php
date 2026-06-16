@@ -82,5 +82,32 @@ if ( ! class_exists( 'WC_Cart' ) ) {
         public function get_cart_contents_count(): int    { return 0; }
         public function get_cart_subtotal(): string       { return '$0.00'; }
         public function get_cart_total(): string          { return '$0.00'; }
+        public function apply_coupon( string $code ): bool { return false; }
+    }
+}
+
+// Coupon stub so the coupon tools (issue #14) can be unit tested with per-instance
+// Mockery mocks (Mockery::mock( WC_Coupon::class )). Only the getters the tools
+// read are declared; real behaviour is mocked. NOTE: WC_Discounts is intentionally
+// NOT stubbed here — the cart-applicability test overloads it (overload: requires
+// the class to be undefined), so leaving it absent is deliberate.
+if ( ! class_exists( 'WC_Coupon' ) ) {
+    class WC_Coupon {
+        public function __construct( $data = '' ) {}
+        public function get_id(): int                       { return 0; }
+        public function get_code(): string                  { return ''; }
+        public function get_status(): string                { return 'publish'; }
+        public function get_discount_type(): string         { return 'fixed_cart'; }
+        public function get_amount(): string                { return '0'; }
+        public function get_description(): string            { return ''; }
+        public function get_date_expires()                  { return null; }
+        public function get_usage_limit(): int              { return 0; }
+        public function get_usage_count(): int              { return 0; }
+        public function get_usage_limit_per_user(): int     { return 0; }
+        public function get_used_by(): array                { return []; }
+        public function get_minimum_amount(): string        { return ''; }
+        public function get_maximum_amount(): string        { return ''; }
+        public function get_product_ids(): array            { return []; }
+        public function get_product_categories(): array     { return []; }
     }
 }
