@@ -9,6 +9,7 @@ Supports **Anthropic Claude** and **Moonshot AI (Kimi K2)** with real-time strea
 ## Features
 
 - **Natural language shopping** — customers describe what they want, the AI finds it
+- **Rich product cards** — results show as cards with photo, price (incl. sale), stock, short description, and View / Add to cart buttons
 - **Full cart control** — add, view, and remove items through conversation
 - **Two AI providers** — Anthropic Claude or Moonshot AI (Kimi K2), switchable from the admin
 - **Global & China Moonshot platforms** — pick the region your Moonshot key was issued on (`api.moonshot.ai` or `api.moonshot.cn`)
@@ -101,7 +102,7 @@ vendor/bin/phpunit --testdox
 The test suite uses [PHPUnit 10](https://phpunit.de), [Brain\Monkey](https://brain-wp.github.io/BrainMonkey/) for WordPress function mocking, and [Mockery](http://docs.mockery.io) for WooCommerce object mocking.
 
 ```
-39 tests, 120 assertions — all passing
+43 tests, 134 assertions — all passing
 ```
 
 ---

@@ -25,6 +25,8 @@ class ToolsTest extends TestCase {
             'wp_json_encode'      => fn( $d ) => json_encode( $d ),
             'wc_price'            => fn( $p ) => '$' . $p,
             'wp_strip_all_tags'   => fn( $s ) => strip_tags( (string) $s ),
+            'wp_get_attachment_image_url' => fn() => '',
+            'wc_placeholder_img_src'      => fn() => 'http://example.com/placeholder.png',
             'get_permalink'       => fn( $id ) => 'http://example.com/?p=' . $id,
             'wc_get_cart_url'     => fn() => 'http://example.com/cart',
             'wc_get_checkout_url' => fn() => 'http://example.com/checkout',
@@ -327,6 +329,7 @@ class ToolsTest extends TestCase {
         $p->shouldReceive( 'get_short_description' )->andReturn( '' );
         $p->shouldReceive( 'get_sku' )->andReturn( '' );
         $p->shouldReceive( 'get_stock_quantity' )->andReturn( 10 );
+        $p->shouldReceive( 'get_image_id' )->andReturn( 0 );
         return $p;
     }
 }

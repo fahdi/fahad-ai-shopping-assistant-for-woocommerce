@@ -101,15 +101,17 @@ final class Fahad_AI_Tools {
 		$data = [
 			'id'                => $product->get_id(),
 			'name'              => $product->get_name(),
-			'price'             => wc_price( $product->get_price() ),
-			'regular_price'     => wc_price( $product->get_regular_price() ),
-			'sale_price'        => $product->is_on_sale() ? wc_price( $product->get_sale_price() ) : null,
+			'price'             => $this->plain_price( $product->get_price() ),
+			'regular_price'     => $this->plain_price( $product->get_regular_price() ),
+			'sale_price'        => $product->is_on_sale() ? $this->plain_price( $product->get_sale_price() ) : null,
+			'on_sale'           => $product->is_on_sale(),
 			'description'       => wp_strip_all_tags( $product->get_description() ),
 			'short_description' => wp_strip_all_tags( $product->get_short_description() ),
 			'sku'               => $product->get_sku(),
 			'in_stock'          => $product->is_in_stock(),
 			'stock_qty'         => $product->get_stock_quantity(),
 			'type'              => $product->get_type(),
+			'image'             => $this->product_image_url( $product ),
 			'url'               => get_permalink( $product->get_id() ),
 			'categories'        => wp_list_pluck(
 				get_the_terms( $product_id, 'product_cat' ) ?: [],
@@ -125,7 +127,7 @@ final class Fahad_AI_Tools {
 					$variations[] = [
 						'variation_id' => $v->get_id(),
 						'attributes'   => $var['attributes'],
-						'price'        => wc_price( $v->get_price() ),
+						'price'        => $this->plain_price( $v->get_price() ),
 						'in_stock'     => $v->is_in_stock(),
 					];
 				}
@@ -267,11 +269,35 @@ final class Fahad_AI_Tools {
 		return [
 			'id'                => $product->get_id(),
 			'name'              => $product->get_name(),
-			'price'             => wc_price( $product->get_price() ),
+			'price'             => $this->plain_price( $product->get_price() ),
+			'regular_price'     => $this->plain_price( $product->get_regular_price() ),
+			'sale_price'        => $product->is_on_sale() ? $this->plain_price( $product->get_sale_price() ) : null,
 			'on_sale'           => $product->is_on_sale(),
 			'in_stock'          => $product->is_in_stock(),
 			'short_description' => wp_strip_all_tags( $product->get_short_description() ),
+			'image'             => $this->product_image_url( $product ),
 			'url'               => get_permalink( $product->get_id() ),
 		];
+	}
+
+	/**
+	 * Thumbnail URL for the product, falling back to the WooCommerce placeholder.
+	 */
+	private function product_image_url( WC_Product $product ): string {
+		$image_id = $product->get_image_id();
+		$url      = $image_id ? wp_get_attachment_image_url( $image_id, 'woocommerce_thumbnail' ) : '';
+		return $url ? $url : wc_placeholder_img_src( 'woocommerce_thumbnail' );
+	}
+
+	/**
+	 * Format a raw price into a plain display string (currency symbol, no HTML).
+	 * `wc_price()` returns markup with HTML entities; the AI and the widget cards
+	 * both want a clean string like "₨90.00".
+	 */
+	private function plain_price( $price ): string {
+		if ( '' === $price || null === $price ) {
+			return '';
+		}
+		return trim( html_entity_decode( wp_strip_all_tags( wc_price( $price ) ), ENT_QUOTES, 'UTF-8' ) );
 	}
 }

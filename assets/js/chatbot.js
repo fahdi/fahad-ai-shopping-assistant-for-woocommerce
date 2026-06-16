@@ -134,7 +134,8 @@
 
 			// Create the bot bubble we'll stream into.
 			const bubble = appendEmptyBotBubble();
-			let   fullText = '';
+			let   fullText      = '';
+			let   productsShown = false;
 
 			const reader  = res.body.getReader();
 			const decoder = new TextDecoder();
@@ -170,14 +171,23 @@
 								bubble.classList.add('chatbot-tool-status');
 								break;
 
+							case 'products':
+								renderProductCards(event.products);
+								productsShown = true;
+								break;
+
 							case 'done':
 								bubble.classList.remove('chatbot-tool-status');
-								if (!fullText) {
-									bubble.textContent = i18n.noResponseStream || 'No response received. Please try again.';
-									history.pop();
-								} else {
+								if (fullText) {
 									bubble.innerHTML = renderMarkdown(fullText);
 									history.push({ role: 'assistant', content: fullText });
+								} else if (productsShown) {
+									const intro = i18n.productsIntro || 'Here are some products that might help:';
+									bubble.textContent = intro;
+									history.push({ role: 'assistant', content: intro });
+								} else {
+									bubble.textContent = i18n.noResponseStream || 'No response received. Please try again.';
+									history.pop();
 								}
 								break;
 
@@ -226,6 +236,10 @@
 			const reply = data.message || (i18n.noResponseRegular || 'No response. Please try again.');
 			appendMessage('bot', reply);
 
+			if (Array.isArray(data.products) && data.products.length) {
+				renderProductCards(data.products);
+			}
+
 			history = Array.isArray(data.messages) ? data.messages : [...history, { role: 'assistant', content: reply }];
 
 		} catch {
@@ -252,6 +266,116 @@
 		msgs.appendChild(div);
 		scrollToBottom();
 		return div;
+	}
+
+	// ── Product cards ─────────────────────────────────────────────────────────
+	// Rendered from server-supplied product data (sourced from WooCommerce, not
+	// model text), so fields are trusted — but we still build via DOM APIs and
+	// set text with textContent, never innerHTML.
+	function renderProductCards(products) {
+		if (!Array.isArray(products) || !products.length) return;
+
+		const wrap = document.createElement('div');
+		wrap.className = 'chatbot-msg bot chatbot-cards-msg';
+
+		const list = document.createElement('div');
+		list.className = 'chatbot-products';
+
+		products.forEach(p => {
+			if (p && p.name) list.appendChild(buildCard(p));
+		});
+
+		wrap.appendChild(list);
+		msgs.appendChild(wrap);
+		scrollToBottom();
+	}
+
+	function isHttpUrl(value) {
+		return typeof value === 'string' && /^https?:\/\//.test(value);
+	}
+
+	function buildCard(p) {
+		const card = document.createElement('div');
+		card.className = 'chatbot-card';
+
+		if (isHttpUrl(p.image)) {
+			const img = document.createElement('img');
+			img.className = 'chatbot-card-img';
+			img.src       = p.image;
+			img.alt       = p.name || '';
+			img.loading   = 'lazy';
+			// Hide gracefully if the image (e.g. a missing placeholder) fails to load.
+			img.addEventListener('error', () => img.remove());
+			card.appendChild(img);
+		}
+
+		const body = document.createElement('div');
+		body.className = 'chatbot-card-body';
+
+		const url   = isHttpUrl(p.url) ? p.url : '';
+		const title = document.createElement(url ? 'a' : 'span');
+		title.className = 'chatbot-card-title';
+		title.textContent = p.name || '';
+		if (url) { title.href = url; title.target = '_blank'; title.rel = 'noopener'; }
+		body.appendChild(title);
+
+		const price = document.createElement('div');
+		price.className = 'chatbot-card-price';
+		if (p.on_sale && p.regular_price && p.sale_price) {
+			const was = document.createElement('span');
+			was.className = 'was';
+			was.textContent = p.regular_price;
+			price.appendChild(was);
+			price.appendChild(document.createTextNode(p.sale_price));
+		} else if (p.price) {
+			price.textContent = p.price;
+		}
+		if (price.childNodes.length) body.appendChild(price);
+
+		const stock = document.createElement('div');
+		stock.className = 'chatbot-card-stock' + (p.in_stock ? '' : ' out');
+		stock.textContent = p.in_stock
+			? (i18n.inStock || 'In stock')
+			: (i18n.outOfStock || 'Out of stock');
+		body.appendChild(stock);
+
+		if (p.short_description) {
+			const desc = document.createElement('div');
+			desc.className = 'chatbot-card-desc';
+			desc.textContent = p.short_description;
+			body.appendChild(desc);
+		}
+
+		const actions = document.createElement('div');
+		actions.className = 'chatbot-card-actions';
+
+		if (url) {
+			const view = document.createElement('a');
+			view.className = 'chatbot-card-view';
+			view.href = url;
+			view.target = '_blank';
+			view.rel = 'noopener';
+			view.textContent = i18n.viewProduct || 'View';
+			actions.appendChild(view);
+		}
+
+		if (p.in_stock) {
+			const add = document.createElement('button');
+			add.type = 'button';
+			add.className = 'chatbot-card-add';
+			add.textContent = i18n.addToCart || 'Add to cart';
+			add.addEventListener('click', () => {
+				if (busy) return;
+				input.value = 'Please add ' + (p.name || '') + ' to my cart';
+				sendMessage();
+			});
+			actions.appendChild(add);
+		}
+
+		if (actions.childNodes.length) body.appendChild(actions);
+
+		card.appendChild(body);
+		return card;
 	}
 
 	// Safely render markdown links and bold from AI responses.

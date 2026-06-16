@@ -3,7 +3,7 @@
 Plugin folder: `fahad-ai-shopping-assistant-for-woocommerce/`
 Main file: `fahad-ai-shopping-assistant-for-woocommerce.php`
 GitHub: https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
-Current version: 1.0.7
+Current version: 1.1.0
 Requires: WordPress 6.0+ (tested up to 7.0), PHP 8.0+, WooCommerce active
 Slug (WP.org): `fahad-ai-shopping-assistant-for-woocommerce` (pending approval)
 Text domain: `fahad-ai-shopping-assistant-for-woocommerce` (must equal slug)
@@ -262,6 +262,7 @@ header( 'X-Accel-Buffering: no' );  // disables nginx buffering
 **SSE event types emitted:**
 - `chunk` → `{ type, content }` — text delta
 - `tool` → `{ type, name }` — tool executing (shows status label in UI)
+- `products` → `{ type, products }` — product cards from a search/details tool (widget renders cards)
 - `error` → `{ type, message }` — error, streaming aborted
 - `done` → `{ type }` — all turns complete
 
@@ -289,7 +290,7 @@ Every user-facing string is wrapped in a gettext function with the `fahad-ai-sho
 
 **Runner:** `vendor/bin/phpunit --testdox`
 **Stack:** PHPUnit 10.5 + Brain\Monkey 2.x + Mockery 1.x
-**Coverage:** 39 tests, 120 assertions
+**Coverage:** 43 tests, 134 assertions
 
 **Class refs in tests:**
 - `Fahad_AI_API_Handler::class` (was `WC_AI_Chatbot_API_Handler`)
@@ -316,6 +317,7 @@ vendor/bin/phpunit --testdox
 - Jun 12, 2026: reviewer flagged the last open issue — `check_nonce` is not meaningful authorization for the public `/message` and `/stream` endpoints (billable AI + cart mutation)
 - v1.0.6: replaced `check_nonce` with `authorize_request()` (nonce + per-client rate limiting), raised `Requires PHP` to 8.0 to match the typed code
 - v1.0.7: added the `fahad_ai_moonshot_region` setting (Global/China endpoint select); reverted the Moonshot streaming path to a dedicated `curl_init()` handle after the `http_api_curl` hook proved unreliable (leaked the upstream body and corrupted SSE framing → blank replies); fixed the default Kimi model (`kimi-k2-thinking-turbo` was unavailable on the global platform) to `kimi-k2.6`
+- v1.1.0: product results render as rich cards in the widget. Tools (`format_product_summary`, `get_product_details`) now return a product `image` and a plain-text `price`. The handler emits card data to the client via `tool_result_cards()` — a `products` SSE event on the stream path and a `products` array on the non-stream response. The client (`renderProductCards`/`buildCard`) builds cards via DOM APIs from this trusted server data (not model text). System prompt updated so the model gives a short intro instead of restating product details.
 
 **v1.0.4 Plugin Check fixes:**
 - Renamed to the WP.org-reserved slug `fahad-ai-shopping-assistant-for-woocommerce` end-to-end (display name, file name, constants, classes, options, REST namespace, JS handles, localized object, text domain)
@@ -327,7 +329,7 @@ vendor/bin/phpunit --testdox
 **Building a release zip:**
 ```bash
 cd /Users/isupercoder/Code/github
-zip -r fahad-ai-shopping-assistant-for-woocommerce-1.0.7.zip fahad-ai-shopping-assistant-for-woocommerce \
+zip -r fahad-ai-shopping-assistant-for-woocommerce-1.1.0.zip fahad-ai-shopping-assistant-for-woocommerce \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/.git/*" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/vendor/*" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/tests/*" \
