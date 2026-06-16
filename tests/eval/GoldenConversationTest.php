@@ -18,6 +18,7 @@
  */
 
 use Brain\Monkey;
+use Brain\Monkey\Functions;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
 
@@ -147,6 +148,78 @@ final class GoldenConversationTest extends TestCase {
 				sprintf( "[%s] answer is not grounded:\n - %s", $fixture['name'], implode( "\n - ", $violations ) )
 			);
 		}
+	}
+
+	// =========================================================================
+	// Tool-extensibility ACCEPTANCE (end-to-end through the REAL loop)
+	// =========================================================================
+
+	/**
+	 * A third-party tool registered via the `fahad_ai_register_tools` filter is
+	 * advertised to the model AND invoked by the REAL agent loop when the model
+	 * calls it — proving an add-on can extend the agent without forking core.
+	 *
+	 * This is the eval-level analogue of ToolRegistryTest's unit extension test:
+	 * the unit test exercises the registry in isolation; here the custom tool runs
+	 * through Fahad_AI_API_Handler::run_anthropic_agent() against the scripted
+	 * transport, exactly like a built-in tool.
+	 *
+	 * A declarative fixture file cannot install the apply_filters stub itself, so
+	 * this lives as a dedicated test (the shared fixture runner is left untouched).
+	 */
+	public function test_filter_registered_tool_runs_end_to_end(): void {
+		$invoked_with = null;
+
+		// Register a custom "track_order" tool via the public extension filter.
+		Functions\when( 'apply_filters' )->alias(
+			function ( $hook, $value = null ) use ( &$invoked_with ) {
+				if ( 'fahad_ai_register_tools' === $hook && is_array( $value ) ) {
+					$value[] = [
+						'name'        => 'track_order',
+						'description' => 'Look up the delivery status of an order by its ID.',
+						'parameters'  => [
+							'type'       => 'object',
+							'properties' => [
+								'order_id' => [ 'type' => 'integer', 'description' => 'The order ID' ],
+							],
+							'required'   => [ 'order_id' ],
+						],
+						'callback'    => function ( array $input ) use ( &$invoked_with ): array {
+							$invoked_with = $input;
+							return [ 'order_id' => $input['order_id'] ?? 0, 'status' => 'Shipped' ];
+						},
+					];
+				}
+				return $value;
+			}
+		);
+
+		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_woocommerce( [] );
+		EvalHarness::script_transport( [
+			// Turn 1: the model calls the third-party tool.
+			EvalHarness::anthropic_tool_turn( [
+				[ 'name' => 'track_order', 'input' => [ 'order_id' => 7 ] ],
+			] ),
+			// Turn 2: final answer grounded in the tool result.
+			EvalHarness::anthropic_text_turn( 'Your order #7 has Shipped.' ),
+		] );
+
+		$run = EvalHarness::run( 'anthropic', [
+			[ 'role' => 'user', 'content' => 'where is my order 7?' ],
+		] );
+
+		// The loop completed and actually invoked the custom callback.
+		$this->assertFalse( is_wp_error( $run['result'] ) );
+		$this->assertSame( [ 'order_id' => 7 ], $invoked_with, 'custom tool callback was not invoked by the real loop' );
+
+		// The loop recorded the custom tool call + its result in the transcript.
+		$names = array_map( static fn( $c ) => $c['name'], $run['tool_calls'] );
+		$this->assertSame( [ 'track_order' ], $names );
+		$this->assertSame( 'Shipped', $run['tool_results'][0]['status'] );
+
+		// And the model's answer reflects the tool result.
+		$this->assertStringContainsString( 'Shipped', $run['answer'] );
 	}
 
 	// =========================================================================

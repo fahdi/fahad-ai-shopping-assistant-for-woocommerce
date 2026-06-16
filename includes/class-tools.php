@@ -18,33 +18,94 @@ final class Fahad_AI_Tools {
 	private function __construct() {}
 
 	/**
-	 * Route a tool call by name to the appropriate method.
+	 * Built-in tool definitions for the registry.
+	 *
+	 * Each entry colocates the spec (name/description/parameters fed to the LLM)
+	 * with its callback. The callbacks are closures bound to this instance so the
+	 * implementation methods can stay private. The registry merges these with any
+	 * tools added via the `fahad_ai_register_tools` filter.
+	 *
+	 * @return array<int, array{name: string, description: string, parameters: array, callback: callable}>
+	 */
+	public function builtin_definitions(): array {
+		return [
+			[
+				'name'        => 'search_products',
+				'description' => 'Search for products by name, category, or price range. Use this before recommending products.',
+				'parameters'  => [
+					'type'       => 'object',
+					'properties' => [
+						'query'     => [ 'type' => 'string',  'description' => 'Search term' ],
+						'category'  => [ 'type' => 'string',  'description' => 'Category slug or name' ],
+						'min_price' => [ 'type' => 'number',  'description' => 'Minimum price' ],
+						'max_price' => [ 'type' => 'number',  'description' => 'Maximum price' ],
+						'limit'     => [ 'type' => 'integer', 'description' => 'Max results (default 5, max 10)' ],
+					],
+				],
+				'callback'    => fn( array $input ) => $this->search_products( $input ),
+			],
+			[
+				'name'        => 'get_product_details',
+				'description' => 'Get full details for a product — description, price, stock, variations.',
+				'parameters'  => [
+					'type'       => 'object',
+					'properties' => [
+						'product_id' => [ 'type' => 'integer', 'description' => 'The WooCommerce product ID' ],
+					],
+					'required' => [ 'product_id' ],
+				],
+				'callback'    => fn( array $input ) => $this->get_product_details( $input ),
+			],
+			[
+				'name'        => 'add_to_cart',
+				'description' => "Add a product to the customer's shopping cart.",
+				'parameters'  => [
+					'type'       => 'object',
+					'properties' => [
+						'product_id'   => [ 'type' => 'integer', 'description' => 'Product ID to add' ],
+						'quantity'     => [ 'type' => 'integer', 'description' => 'Quantity (default 1)' ],
+						'variation_id' => [ 'type' => 'integer', 'description' => 'Variation ID for variable products' ],
+					],
+					'required' => [ 'product_id' ],
+				],
+				'callback'    => fn( array $input ) => $this->add_to_cart( $input ),
+			],
+			[
+				'name'        => 'view_cart',
+				'description' => "View the current contents of the customer's cart, totals, and checkout URL.",
+				'parameters'  => [
+					'type'       => 'object',
+					'properties' => new stdClass(),
+				],
+				'callback'    => fn( array $input ) => $this->view_cart(),
+			],
+			[
+				'name'        => 'remove_from_cart',
+				'description' => "Remove an item from the cart using its cart_item_key (from view_cart).",
+				'parameters'  => [
+					'type'       => 'object',
+					'properties' => [
+						'cart_item_key' => [ 'type' => 'string', 'description' => 'Cart item key from view_cart or add_to_cart' ],
+					],
+					'required' => [ 'cart_item_key' ],
+				],
+				'callback'    => fn( array $input ) => $this->remove_from_cart( $input ),
+			],
+		];
+	}
+
+	/**
+	 * Route a tool call by name to the appropriate handler.
+	 *
+	 * Public entry point used by the agent loop. Delegates to the tool registry
+	 * so built-in and third-party (filter-registered) tools dispatch uniformly.
 	 *
 	 * @param string $name  Tool name.
-	 * @param array  $input Tool input from Claude.
+	 * @param array  $input Tool input from the model.
 	 * @return array Result to send back as tool_result content.
 	 */
 	public function execute( string $name, array $input ): array {
-		switch ( $name ) {
-			case 'search_products':
-				return $this->search_products( $input );
-			case 'get_product_details':
-				return $this->get_product_details( $input );
-			case 'add_to_cart':
-				return $this->add_to_cart( $input );
-			case 'view_cart':
-				return $this->view_cart();
-			case 'remove_from_cart':
-				return $this->remove_from_cart( $input );
-			default:
-				return [
-					'error' => sprintf(
-						/* translators: %s: name of the unknown tool requested by the AI */
-						__( 'Unknown tool: %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-						$name
-					),
-				];
-		}
+		return Fahad_AI_Tool_Registry::instance()->dispatch( $name, $input );
 	}
 
 	// -------------------------------------------------------------------------

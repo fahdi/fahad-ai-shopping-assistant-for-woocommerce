@@ -28,6 +28,10 @@ final class EvalHarness {
 	public static function reset_singletons(): void {
 		( new ReflectionProperty( Fahad_AI_API_Handler::class, 'instance' ) )->setValue( null, null );
 		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
+		// The registry caches its (filtered) tool list on the instance; resetting
+		// it ensures a registry built in one eval case (e.g. one that registers a
+		// custom tool via the filter) cannot leak into the next.
+		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 	}
 
 	private static function handler(): Fahad_AI_API_Handler {

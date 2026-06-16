@@ -281,68 +281,13 @@ final class Fahad_AI_API_Handler {
 	// =========================================================================
 
 	/**
-	 * Canonical tool spec (used to derive both formats).
+	 * Canonical tool spec (used to derive both provider formats).
+	 *
+	 * Sourced from the tool registry so built-in AND third-party
+	 * (filter-registered) tools are advertised to the model uniformly.
 	 */
 	public function tool_specs(): array {
-		return [
-			[
-				'name'        => 'search_products',
-				'description' => 'Search for products by name, category, or price range. Use this before recommending products.',
-				'parameters'  => [
-					'type'       => 'object',
-					'properties' => [
-						'query'     => [ 'type' => 'string',  'description' => 'Search term' ],
-						'category'  => [ 'type' => 'string',  'description' => 'Category slug or name' ],
-						'min_price' => [ 'type' => 'number',  'description' => 'Minimum price' ],
-						'max_price' => [ 'type' => 'number',  'description' => 'Maximum price' ],
-						'limit'     => [ 'type' => 'integer', 'description' => 'Max results (default 5, max 10)' ],
-					],
-				],
-			],
-			[
-				'name'        => 'get_product_details',
-				'description' => 'Get full details for a product — description, price, stock, variations.',
-				'parameters'  => [
-					'type'       => 'object',
-					'properties' => [
-						'product_id' => [ 'type' => 'integer', 'description' => 'The WooCommerce product ID' ],
-					],
-					'required' => [ 'product_id' ],
-				],
-			],
-			[
-				'name'        => 'add_to_cart',
-				'description' => "Add a product to the customer's shopping cart.",
-				'parameters'  => [
-					'type'       => 'object',
-					'properties' => [
-						'product_id'   => [ 'type' => 'integer', 'description' => 'Product ID to add' ],
-						'quantity'     => [ 'type' => 'integer', 'description' => 'Quantity (default 1)' ],
-						'variation_id' => [ 'type' => 'integer', 'description' => 'Variation ID for variable products' ],
-					],
-					'required' => [ 'product_id' ],
-				],
-			],
-			[
-				'name'        => 'view_cart',
-				'description' => "View the current contents of the customer's cart, totals, and checkout URL.",
-				'parameters'  => [
-					'type'       => 'object',
-					'properties' => new stdClass(),
-				],
-			],
-			[
-				'name'        => 'remove_from_cart',
-				'description' => "Remove an item from the cart using its cart_item_key (from view_cart).",
-				'parameters'  => [
-					'type'       => 'object',
-					'properties' => [
-						'cart_item_key' => [ 'type' => 'string', 'description' => 'Cart item key from view_cart or add_to_cart' ],
-					],
-					'required' => [ 'cart_item_key' ],
-				],
-			],
-		];
+		return Fahad_AI_Tool_Registry::instance()->specs();
 	}
 
 	private function get_anthropic_tools(): array {
