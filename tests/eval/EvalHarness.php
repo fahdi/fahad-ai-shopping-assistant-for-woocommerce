@@ -24,13 +24,19 @@ final class EvalHarness {
 	/**
 	 * Reset the API handler + tools singletons so each case starts clean.
 	 * Mirrors the ApiHandlerTest / ToolsTest reflection reset of $instance.
+	 *
+	 * Deliberately resets only the registry singleton INSTANCE (clearing its
+	 * per-instance cached tool list so a custom tool registered via the filter in
+	 * one case cannot leak into the next). It does NOT clear the registry's static
+	 * pack-provider list: first-party feature packs (the catalog pack, …)
+	 * self-register once at bootstrap via register_pack() and must remain
+	 * registered across cases, so every golden conversation can exercise them with
+	 * no per-test wiring. The next get_tools() rebuilds the list from built-ins +
+	 * those static packs + the filter.
 	 */
 	public static function reset_singletons(): void {
 		( new ReflectionProperty( Fahad_AI_API_Handler::class, 'instance' ) )->setValue( null, null );
 		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		// The registry caches its (filtered) tool list on the instance; resetting
-		// it ensures a registry built in one eval case (e.g. one that registers a
-		// custom tool via the filter) cannot leak into the next.
 		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 	}
 
@@ -88,32 +94,6 @@ final class EvalHarness {
 			'get_the_terms'               => fn() => [],
 			'rest_ensure_response'        => fn( $d ) => $d,
 		] );
-	}
-
-	/**
-	 * Register the always-on feature tool packs through the extensibility filter,
-	 * mirroring the plugin bootstrap (which instantiates each pack so its
-	 * add_filter runs). Stubs apply_filters( 'fahad_ai_register_tools', … ) to
-	 * push the built-ins through each pack's real register() callback, so the
-	 * REAL catalog tools (get_top_products / list_categories) are dispatchable in
-	 * the agent loop exactly as in production.
-	 *
-	 * Idempotent and self-contained: callers do not need to pre-register anything.
-	 * A test that wants to register an ADDITIONAL bespoke tool (e.g. the #22/#25
-	 * dedicated tests) installs its own apply_filters alias instead of calling
-	 * this.
-	 */
-	public static function register_feature_tools(): void {
-		$catalog = new Fahad_AI_Catalog_Tools();
-
-		Functions\when( 'apply_filters' )->alias(
-			static function ( $hook, $value = null ) use ( $catalog ) {
-				if ( 'fahad_ai_register_tools' === $hook && is_array( $value ) ) {
-					return $catalog->register( $value );
-				}
-				return $value;
-			}
-		);
 	}
 
 	// =========================================================================

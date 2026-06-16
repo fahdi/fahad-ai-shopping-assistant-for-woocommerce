@@ -32,10 +32,39 @@ defined( 'ABSPATH' ) || exit;
  *
  * Invalid entries are silently skipped, and a throwing callback is isolated so a
  * misbehaving add-on cannot fatal the request.
+ *
+ * FIRST-PARTY FEATURE PACKS — drop-in tool modules shipped with the plugin
+ * (catalog, shipping, …) — use a deterministic, WordPress-filter-free path:
+ * register_pack(). A pack lives in its own file under includes/tools/ and
+ * self-registers a provider at file scope:
+ *
+ *     Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Catalog_Tools', 'register' ] );
+ *
+ * where the provider is a callable `fn( array $tools ): array` that appends its
+ * definitions. The bootstrap (and the test bootstrap) glob-require every file in
+ * includes/tools/, so a NEW pack drops in with NO edits to the bootstrap, the
+ * test bootstrap, or any shared registry wiring — just a new file. get_tools()
+ * layers the sources in order: built-ins → first-party packs → the third-party
+ * filter. Pack providers are stored STATICALLY so they survive a singleton
+ * instance reset (only the built/validated tool LIST is cached per instance).
  */
 final class Fahad_AI_Tool_Registry {
 
 	private static $instance = null;
+
+	/**
+	 * First-party feature-pack providers, in registration order. Each is a
+	 * callable `fn( array $tools ): array` that appends its tool definitions.
+	 *
+	 * STATIC on purpose: packs self-register once when their file is loaded, and
+	 * the registration must outlive a reset of the singleton instance (the eval
+	 * harness and unit suites reset $instance between cases). If this were stored
+	 * on the instance, every feature pack would disappear after the first reset.
+	 * Only the built/validated tool LIST below is per-instance.
+	 *
+	 * @var array<int, callable>
+	 */
+	private static array $pack_providers = [];
 
 	/**
 	 * Cached, validated tool list (name => entry). Null until first build.
@@ -53,6 +82,27 @@ final class Fahad_AI_Tool_Registry {
 	}
 
 	private function __construct() {}
+
+	/**
+	 * Register a first-party feature-pack tool provider.
+	 *
+	 * Called once per pack at file load (see the includes/tools/ directory). The
+	 * provider receives the running tool list and returns it with its own tools
+	 * appended:
+	 *
+	 *     Fahad_AI_Tool_Registry::register_pack(
+	 *         fn( array $tools ) => array_merge( $tools, $my_entries )
+	 *     );
+	 *
+	 * Providers run in registration order, AFTER the built-ins and BEFORE the
+	 * `fahad_ai_register_tools` filter, so third parties can still override. The
+	 * provider list is static and survives a singleton instance reset.
+	 *
+	 * @param callable $provider fn( array $tools ): array
+	 */
+	public static function register_pack( callable $provider ): void {
+		self::$pack_providers[] = $provider;
+	}
 
 	/**
 	 * Tool SPECS for the LLM — name/description/parameters only, never the
@@ -130,9 +180,14 @@ final class Fahad_AI_Tool_Registry {
 	/**
 	 * Lazily build (once) and return the validated tool map keyed by name.
 	 *
-	 * Seeds the five built-ins in code, then runs the registration filter so
-	 * third parties can append/modify, then validates. The result is cached on
-	 * the instance.
+	 * Layers the sources in order:
+	 *   1. the five built-ins (seeded in code),
+	 *   2. every first-party feature pack registered via register_pack(), in
+	 *      registration order,
+	 *   3. the `fahad_ai_register_tools` filter (third-party add-ons).
+	 *
+	 * Then validates. The result is cached on the instance (per-instance, so a
+	 * reset rebuilds it), while the pack providers themselves are static.
 	 *
 	 * @return array<string, array>
 	 */
@@ -141,7 +196,14 @@ final class Fahad_AI_Tool_Registry {
 			return $this->tools;
 		}
 
-		$builtins = Fahad_AI_Tools::instance()->builtin_definitions();
+		$tools = Fahad_AI_Tools::instance()->builtin_definitions();
+
+		// First-party feature packs (deterministic, not via the WP filter) so they
+		// are picked up identically in production and tests.
+		foreach ( self::$pack_providers as $provider ) {
+			$next  = $provider( $tools );
+			$tools = is_array( $next ) ? $next : $tools;
+		}
 
 		/**
 		 * Filter the list of agent tools.
@@ -152,11 +214,11 @@ final class Fahad_AI_Tool_Registry {
 		 * the tool input array and returning a result array). Invalid entries are
 		 * skipped; later entries with a duplicate name override earlier ones.
 		 *
-		 * @param array $builtins The built-in tool definitions.
+		 * @param array $tools The built-in + first-party-pack tool definitions.
 		 */
-		$tools = apply_filters( 'fahad_ai_register_tools', $builtins );
+		$filtered = apply_filters( 'fahad_ai_register_tools', $tools );
 
-		$this->tools = $this->validate( is_array( $tools ) ? $tools : $builtins );
+		$this->tools = $this->validate( is_array( $filtered ) ? $filtered : $tools );
 
 		return $this->tools;
 	}
@@ -207,5 +269,17 @@ final class Fahad_AI_Tool_Registry {
 	 */
 	public function reset(): void {
 		$this->tools = null;
+	}
+
+	/**
+	 * Clear the static first-party pack-provider list.
+	 *
+	 * Test support only: lets a test that asserts on the bare built-in set + the
+	 * third-party filter run against a registry with no feature packs, then
+	 * restore the original providers afterwards. Production never calls this —
+	 * packs self-register once at file load and stay for the request lifetime.
+	 */
+	public static function reset_packs(): void {
+		self::$pack_providers = [];
 	}
 }

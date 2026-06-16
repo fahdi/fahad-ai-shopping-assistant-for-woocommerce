@@ -6,11 +6,13 @@ defined( 'ABSPATH' ) || exit;
  *
  * This is the FIRST feature tool pack and the reference pattern every later
  * feature follows: a self-contained class, in its own file under
- * includes/tools/, that registers its tools through the public
- * `fahad_ai_register_tools` filter rather than being baked into
- * Fahad_AI_Tools::builtin_definitions(). The plugin bootstrap require_once's
- * this file and instantiates the class; the constructor hooks register().
- * Dogfooding the extensibility hook this way keeps features modular and lets
+ * includes/tools/, that DROPS IN with no other wiring. The file self-registers a
+ * provider at the bottom via Fahad_AI_Tool_Registry::register_pack(); the plugin
+ * bootstrap (and the test bootstrap) simply glob-require everything in
+ * includes/tools/, so adding a new pack means adding ONLY a new file here — no
+ * edits to the bootstrap, the test bootstrap, or the eval harness. The registry
+ * layers packs after the built-ins and before the third-party
+ * `fahad_ai_register_tools` filter. Keeping features modular this way lets
  * separate features be built in parallel without touching the core tool list.
  *
  * Tools provided:
@@ -29,23 +31,17 @@ defined( 'ABSPATH' ) || exit;
 final class Fahad_AI_Catalog_Tools {
 
 	/**
-	 * Hook tool registration onto the extensibility filter.
-	 *
-	 * The constructor only wires the filter (no work at construction time); the
-	 * registry fires `fahad_ai_register_tools` lazily on first use and register()
-	 * appends this pack's tools then.
-	 */
-	public function __construct() {
-		add_filter( 'fahad_ai_register_tools', [ $this, 'register' ] );
-	}
-
-	/**
 	 * Append the catalog tools to the registry's tool list.
+	 *
+	 * Registered as a pack provider (see the register_pack() call at file scope):
+	 * the registry calls this with the running tool list when it lazily builds.
+	 * Static because the pack holds no per-instance state — its tools just call
+	 * WooCommerce functions and the shared Fahad_AI_Tools formatter singleton.
 	 *
 	 * @param array $tools Existing tool definitions.
 	 * @return array Tools with the catalog tools appended.
 	 */
-	public function register( array $tools ): array {
+	public static function register( array $tools ): array {
 		$tools[] = [
 			'name'        => 'get_top_products',
 			'description' => 'List the store best-sellers — the products with the most total sales. Use this when the customer asks what is popular, trending, or your best sellers. Returns products that render as visual cards. Optionally narrow to a category.',
@@ -56,7 +52,7 @@ final class Fahad_AI_Catalog_Tools {
 					'category' => [ 'type' => 'string',  'description' => 'Optional category slug or name to limit best-sellers to.' ],
 				],
 			],
-			'callback'    => fn( array $input ) => $this->get_top_products( $input ),
+			'callback'    => fn( array $input ) => self::get_top_products( $input ),
 		];
 
 		$tools[] = [
@@ -68,7 +64,7 @@ final class Fahad_AI_Catalog_Tools {
 					'include_empty' => [ 'type' => 'boolean', 'description' => 'Include categories with no products (default false).' ],
 				],
 			],
-			'callback'    => fn( array $input ) => $this->list_categories( $input ),
+			'callback'    => fn( array $input ) => self::list_categories( $input ),
 		];
 
 		return $tools;
@@ -85,7 +81,7 @@ final class Fahad_AI_Catalog_Tools {
 	 * product is the canonical card summary — so the convention-based card
 	 * emission in the API handler surfaces them as cards automatically.
 	 */
-	private function get_top_products( array $input ): array {
+	private static function get_top_products( array $input ): array {
 		$args = [
 			'status'   => 'publish',
 			'limit'    => min( max( 1, (int) ( $input['limit'] ?? 5 ) ), 10 ),
@@ -126,7 +122,7 @@ final class Fahad_AI_Catalog_Tools {
 	 * list them too. Returns a category list — deliberately NOT a products[] array
 	 * — so it does not render as product cards.
 	 */
-	private function list_categories( array $input ): array {
+	private static function list_categories( array $input ): array {
 		$terms = get_terms( [
 			'taxonomy'   => 'product_cat',
 			'hide_empty' => empty( $input['include_empty'] ),
@@ -155,3 +151,8 @@ final class Fahad_AI_Catalog_Tools {
 		];
 	}
 }
+
+// Self-register this feature pack the moment the file is loaded. The bootstrap
+// (and the test bootstrap) glob-require includes/tools/*.php, so dropping this
+// file in is the ONLY wiring needed — no bootstrap or harness edits.
+Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Catalog_Tools', 'register' ] );

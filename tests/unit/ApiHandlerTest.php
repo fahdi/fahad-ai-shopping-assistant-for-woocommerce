@@ -16,9 +16,27 @@ class ApiHandlerTest extends TestCase {
 
     use MockeryPHPUnitIntegration;
 
+    /**
+     * Snapshot of the registry's static first-party pack providers, restored in
+     * tearDown. The tool_specs() contract tests below assert on the BARE built-in
+     * set (exactly five tools). Feature packs (the catalog pack, …) self-register
+     * into that static list at file load, so we clear it for the duration of each
+     * test — proving the built-in contract independent of however many packs ship —
+     * and restore it afterwards so other suites keep their packs.
+     *
+     * @var array<int, callable>
+     */
+    private array $pack_snapshot = [];
+
     protected function setUp(): void {
         parent::setUp();
         Monkey\setUp();
+
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        Fahad_AI_Tool_Registry::reset_packs();
+        // Clear any registry list cached by a previous test so the next build sees
+        // the now-empty pack list (the built-in contract, not packs).
+        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
         // Note: sanitize_textarea_field is intentionally NOT stubbed here.
         // Tests that need pass-through behaviour add it individually;
@@ -33,6 +51,7 @@ class ApiHandlerTest extends TestCase {
     }
 
     protected function tearDown(): void {
+        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }

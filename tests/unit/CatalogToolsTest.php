@@ -7,15 +7,12 @@
  * reset via reflection.
  *
  * The two catalog tools (get_top_products, list_categories) are NOT built-ins —
- * they register themselves through the `fahad_ai_register_tools` filter, exactly
- * like a third-party add-on. To exercise that registration genuinely (rather than
- * inlining tool entries by hand) every test:
- *   1. instantiates Fahad_AI_Catalog_Tools so its constructor's add_filter() runs,
- *      and
- *   2. stubs apply_filters( 'fahad_ai_register_tools', … ) to invoke the SAME
- *      public register() callback the constructor hooked.
- * Tools are then dispatched through Fahad_AI_Tool_Registry::instance()->dispatch(),
- * so the production registration + dispatch path is what is under test.
+ * they ship as a drop-in feature pack that self-registers a provider via
+ * Fahad_AI_Tool_Registry::register_pack() at file load. To exercise that
+ * registration genuinely (rather than inlining tool entries by hand) every test
+ * registers the catalog pack's real provider through register_pack(), then
+ * dispatches through Fahad_AI_Tool_Registry::instance()->dispatch() — so the
+ * production registration + merge + dispatch path is what is under test.
  */
 
 use Brain\Monkey;
@@ -27,9 +24,21 @@ class CatalogToolsTest extends TestCase {
 
     use MockeryPHPUnitIntegration;
 
+    /**
+     * Snapshot of the registry's static pack providers, restored in tearDown so a
+     * test here neither inherits another suite's packs nor leaks the catalog pack
+     * we register for our own cases. (Pack providers are static so they survive a
+     * singleton instance reset — see Fahad_AI_Tool_Registry::register_pack.)
+     *
+     * @var array<int, callable>
+     */
+    private array $pack_snapshot = [];
+
     protected function setUp(): void {
         parent::setUp();
         Monkey\setUp();
+
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         // Tool-layer stubs (mirror ToolsTest::setUp) so the shared product
         // formatter the catalog tools reuse can run against mocked products.
@@ -50,32 +59,26 @@ class CatalogToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
+        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
 
     /**
-     * Fresh registry whose filtered tool list includes the catalog tools.
+     * Fresh registry whose built tool list includes the catalog tools.
      *
-     * Resets the Tools + registry singletons, instantiates Fahad_AI_Catalog_Tools
-     * (so its add_filter() runs and is recorded by Brain\Monkey), then stubs
-     * apply_filters to push the built-ins through that instance's real register()
-     * callback — exactly what WordPress would do when the registry fires the hook.
+     * Resets the Tools + registry singletons, then registers the catalog pack's
+     * REAL provider via register_pack() — exactly what the pack's file-scope
+     * self-registration does in production. We register it explicitly (after
+     * clearing the static list) so the test is hermetic and order-independent
+     * regardless of what other suites do to the shared provider list.
      */
     private function registry(): Fahad_AI_Tool_Registry {
         ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
         ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        $catalog = new Fahad_AI_Catalog_Tools();
-
-        Functions\when( 'apply_filters' )->alias(
-            static function ( $hook, $value = null ) use ( $catalog ) {
-                if ( 'fahad_ai_register_tools' === $hook && is_array( $value ) ) {
-                    return $catalog->register( $value );
-                }
-                return $value;
-            }
-        );
+        Fahad_AI_Tool_Registry::reset_packs();
+        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Catalog_Tools', 'register' ] );
 
         return Fahad_AI_Tool_Registry::instance();
     }
@@ -98,7 +101,7 @@ class CatalogToolsTest extends TestCase {
 
     // ── registration ──────────────────────────────────────────────────────────
 
-    public function test_catalog_tools_are_registered_via_the_filter(): void {
+    public function test_catalog_tools_are_registered_via_register_pack(): void {
         $names = array_column( $this->registry()->specs(), 'name' );
 
         $this->assertContains( 'get_top_products', $names );

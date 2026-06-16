@@ -20,9 +20,28 @@ class ToolRegistryTest extends TestCase {
 
     use MockeryPHPUnitIntegration;
 
+    /**
+     * Snapshot of the registry's static first-party pack providers, captured in
+     * setUp and restored in tearDown.
+     *
+     * Pack providers live in a STATIC list (so they survive a singleton instance
+     * reset — that is the whole point of register_pack). Feature packs such as the
+     * catalog pack self-register into that list at file load. These isolation
+     * tests assert on the exact built-in tool set + the third-party filter path, so
+     * they must run against a registry with NO first-party packs. We clear the list
+     * for each test and restore the original afterwards, so we neither see the
+     * globally-registered packs nor permanently drop them for other suites.
+     *
+     * @var array<int, callable>
+     */
+    private array $pack_snapshot = [];
+
     protected function setUp(): void {
         parent::setUp();
         Monkey\setUp();
+
+        $this->pack_snapshot = $this->snapshot_packs();
+        Fahad_AI_Tool_Registry::reset_packs();
 
         // Mirror the tool-layer stubs ToolsTest uses, so a real built-in tool
         // (search_products) can execute through dispatch().
@@ -43,8 +62,20 @@ class ToolRegistryTest extends TestCase {
     }
 
     protected function tearDown(): void {
+        $this->restore_packs( $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
+    }
+
+    /** Read the registry's static pack-provider list via reflection. */
+    private function snapshot_packs(): array {
+        $prop = new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' );
+        return (array) $prop->getValue();
+    }
+
+    /** Restore the registry's static pack-provider list via reflection. */
+    private function restore_packs( array $providers ): void {
+        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $providers );
     }
 
     /**
@@ -180,6 +211,144 @@ class ToolRegistryTest extends TestCase {
         // Built-ins still present alongside the new tool.
         $this->assertContains( 'search_products', $names );
         $this->assertCount( 6, $names );
+    }
+
+    // ── first-party packs: register_pack() (drop-in feature packs) ────────────
+
+    /**
+     * A feature pack registers its tools by handing the registry a PROVIDER — a
+     * callable `fn( array $tools ): array` that appends its definitions. This is
+     * the deterministic, WordPress-filter-free path feature packs (catalog,
+     * shipping, …) use so they are picked up identically in production and tests.
+     *
+     * A tool registered via register_pack() must be advertised to the model via
+     * specs() (callback hidden) AND be dispatchable, exactly like a built-in.
+     */
+    public function test_register_pack_tool_is_advertised_and_dispatchable(): void {
+        $invoked = false;
+
+        Fahad_AI_Tool_Registry::register_pack(
+            static function ( array $tools ) use ( &$invoked ): array {
+                $tools[] = [
+                    'name'        => 'pack_tool',
+                    'description' => 'A tool contributed by a first-party feature pack.',
+                    'parameters'  => [
+                        'type'       => 'object',
+                        'properties' => [
+                            'q' => [ 'type' => 'string', 'description' => 'A query' ],
+                        ],
+                    ],
+                    'callback'    => static function ( array $input ) use ( &$invoked ): array {
+                        $invoked = true;
+                        return [ 'ok' => true, 'q' => $input['q'] ?? '' ];
+                    },
+                ];
+                return $tools;
+            }
+        );
+
+        $registry = $this->registry();
+
+        // 1. Advertised to the model (no callback leaked), alongside the built-ins.
+        $names = array_column( $registry->specs(), 'name' );
+        $this->assertContains( 'pack_tool', $names );
+        $this->assertContains( 'search_products', $names );
+        $this->assertCount( 6, $names );
+        $spec = array_column( $registry->specs(), null, 'name' )['pack_tool'];
+        $this->assertArrayNotHasKey( 'callback', $spec );
+
+        // 2. Dispatchable: the pack's callback runs and its result is returned.
+        $result = $registry->dispatch( 'pack_tool', [ 'q' => 'hi' ] );
+        $this->assertTrue( $invoked, 'pack tool callback was not invoked' );
+        $this->assertSame( 'hi', $result['q'] );
+    }
+
+    /**
+     * Pack providers are registered statically and must SURVIVE a reset of the
+     * registry singleton instance. The eval harness and the unit suites reset the
+     * instance between cases (to clear the per-instance cached tool list); if that
+     * reset dropped the registered packs, every feature pack would vanish after the
+     * first reset. This guards the exact invariant from the refactor: providers are
+     * static (survive instance reset); only the built tool LIST is per-instance.
+     */
+    public function test_registered_packs_survive_a_singleton_instance_reset(): void {
+        Fahad_AI_Tool_Registry::register_pack(
+            static function ( array $tools ): array {
+                $tools[] = [
+                    'name'        => 'durable_pack_tool',
+                    'description' => 'Should still be present after an instance reset.',
+                    'parameters'  => [ 'type' => 'object', 'properties' => new stdClass() ],
+                    'callback'    => static fn( array $input ): array => [ 'ok' => true ],
+                ];
+                return $tools;
+            }
+        );
+
+        // First build, then blow away the instance (NOT the static provider list).
+        $this->assertContains( 'durable_pack_tool', array_column( $this->registry()->specs(), 'name' ) );
+        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+
+        // A brand-new instance must rebuild its list and STILL include the pack.
+        $names = array_column( Fahad_AI_Tool_Registry::instance()->specs(), 'name' );
+        $this->assertContains( 'durable_pack_tool', $names, 'pack provider was lost on singleton reset' );
+    }
+
+    /**
+     * The first-party pack path and the third-party `fahad_ai_register_tools`
+     * filter must COEXIST: a tool from each is present and dispatchable in the same
+     * registry. This proves the refactor layered packs in front of the filter
+     * without breaking the established add-on extension point.
+     */
+    public function test_first_party_pack_and_third_party_filter_coexist(): void {
+        $pack_ran   = false;
+        $filter_ran = false;
+
+        // First-party pack contributes pack_tool.
+        Fahad_AI_Tool_Registry::register_pack(
+            static function ( array $tools ) use ( &$pack_ran ): array {
+                $tools[] = [
+                    'name'        => 'pack_tool',
+                    'description' => 'First-party pack tool.',
+                    'parameters'  => [ 'type' => 'object', 'properties' => new stdClass() ],
+                    'callback'    => static function ( array $input ) use ( &$pack_ran ): array {
+                        $pack_ran = true;
+                        return [ 'source' => 'pack' ];
+                    },
+                ];
+                return $tools;
+            }
+        );
+
+        // Third-party add-on contributes wallet_balance via the public filter.
+        Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) use ( &$filter_ran ) {
+            if ( 'fahad_ai_register_tools' === $hook ) {
+                $tools[] = [
+                    'name'        => 'wallet_balance',
+                    'description' => 'Third-party wallet balance.',
+                    'parameters'  => [ 'type' => 'object', 'properties' => new stdClass() ],
+                    'callback'    => function ( array $input ) use ( &$filter_ran ): array {
+                        $filter_ran = true;
+                        return [ 'source' => 'filter' ];
+                    },
+                ];
+            }
+            return $tools;
+        } );
+
+        $registry = $this->registry();
+
+        // Both tools advertised next to the five built-ins (5 + 2 = 7).
+        $names = array_column( $registry->specs(), 'name' );
+        $this->assertContains( 'pack_tool', $names );
+        $this->assertContains( 'wallet_balance', $names );
+        $this->assertContains( 'search_products', $names );
+        $this->assertCount( 7, $names );
+
+        // Both are independently dispatchable.
+        $this->assertSame( 'pack', $registry->dispatch( 'pack_tool', [] )['source'] );
+        $this->assertSame( 'filter', $registry->dispatch( 'wallet_balance', [] )['source'] );
+        $this->assertTrue( $pack_ran, 'first-party pack callback did not run' );
+        $this->assertTrue( $filter_ran, 'third-party filter callback did not run' );
     }
 
     // ── validation: malformed third-party entries are skipped ────────────────

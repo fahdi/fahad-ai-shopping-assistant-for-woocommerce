@@ -67,14 +67,13 @@ final class GoldenConversationTest extends TestCase {
 		EvalHarness::stub_woocommerce( $fixture['wc'] ?? [] );
 		EvalHarness::script_transport( $fixture['script'] ?? [] );
 
-		// Register the always-on feature tool packs through the extensibility
-		// filter, exactly as the plugin bootstrap does in production, so fixtures
-		// can exercise filter-registered tools (e.g. get_top_products) without
-		// each one installing its own apply_filters stub. A declarative fixture
-		// cannot wire the filter itself; doing it here keeps the catalog tools
-		// available to every golden conversation while built-ins flow through
-		// unchanged.
-		EvalHarness::register_feature_tools();
+		// Feature tool packs need NO per-test wiring here: each pack
+		// (e.g. the catalog pack providing get_top_products) self-registers via
+		// Fahad_AI_Tool_Registry::register_pack() when the test bootstrap
+		// glob-loads includes/tools/*.php, and those static providers survive the
+		// per-case singleton reset in reset_singletons(). So every golden
+		// conversation can exercise pack tools exactly as in production, with
+		// built-ins and the third-party filter still flowing through unchanged.
 
 		// 2. Drive the real agent loop.
 		$run = EvalHarness::run( $provider, $fixture['messages'] ?? [] );
