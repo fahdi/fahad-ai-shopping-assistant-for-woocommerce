@@ -215,6 +215,97 @@ class ToolsTest extends TestCase {
         $this->assertSame( 0, $summary['review_count'] );
     }
 
+    // ── get_product_details: variations (issue #12) ────────────────────────────
+
+    public function test_get_product_details_surfaces_readable_variations(): void {
+        // Global taxonomy attributes (pa_size / pa_color): get_available_variations
+        // returns term *slugs*; the tool must present them as human-readable labels.
+        Functions\when( 'wc_attribute_label' )->alias(
+            fn( $name ) => [ 'pa_size' => 'Size', 'pa_color' => 'Color' ][ $name ] ?? ucfirst( $name )
+        );
+        Functions\when( 'taxonomy_exists' )->justReturn( true );
+        Functions\when( 'get_term_by' )->alias(
+            fn( $by, $value, $tax ) => (object) [ 'name' => ucfirst( (string) $value ) ]
+        );
+
+        $parent    = $this->mockVariableProduct( 5, 'Cotton Tee', '20.00' );
+        $variation = $this->mockVariation( 51, '25.00', true );
+
+        $parent->shouldReceive( 'get_available_variations' )->andReturn( [
+            [
+                'variation_id' => 51,
+                'attributes'   => [ 'attribute_pa_size' => 'large', 'attribute_pa_color' => 'blue' ],
+            ],
+        ] );
+
+        Functions\when( 'wc_get_product' )->alias(
+            fn( $id ) => 5 === (int) $id ? $parent : ( 51 === (int) $id ? $variation : false )
+        );
+
+        $result = $this->tools()->execute( 'get_product_details', [ 'product_id' => 5 ] );
+
+        $this->assertArrayHasKey( 'variations', $result );
+        $this->assertCount( 1, $result['variations'] );
+
+        $v = $result['variations'][0];
+        $this->assertSame( 51, $v['variation_id'] );
+        // Human-readable attribute summary built from slugs.
+        $this->assertSame( 'Size: Large, Color: Blue', $v['label'] );
+        // Variation-level price + stock are surfaced.
+        $this->assertSame( '$25.00', $v['price'] );
+        $this->assertTrue( $v['in_stock'] );
+        // Raw attributes map is retained for the model.
+        $this->assertArrayHasKey( 'attributes', $v );
+    }
+
+    public function test_get_product_details_variation_label_falls_back_to_custom_attribute_values(): void {
+        // Custom (non-taxonomy) product attributes: the value is already a display
+        // value, not a slug — taxonomy_exists is false, so no term lookup happens.
+        Functions\when( 'wc_attribute_label' )->alias( fn( $name ) => ucfirst( str_replace( '-', ' ', $name ) ) );
+        Functions\when( 'taxonomy_exists' )->justReturn( false );
+
+        $parent    = $this->mockVariableProduct( 6, 'Mug', '8.00' );
+        $variation = $this->mockVariation( 61, '8.00', true );
+
+        $parent->shouldReceive( 'get_available_variations' )->andReturn( [
+            [
+                'variation_id' => 61,
+                'attributes'   => [ 'attribute_finish' => 'Matte' ],
+            ],
+        ] );
+
+        Functions\when( 'wc_get_product' )->alias(
+            fn( $id ) => 6 === (int) $id ? $parent : ( 61 === (int) $id ? $variation : false )
+        );
+
+        $result = $this->tools()->execute( 'get_product_details', [ 'product_id' => 6 ] );
+
+        $this->assertSame( 'Finish: Matte', $result['variations'][0]['label'] );
+    }
+
+    public function test_get_product_details_variation_reports_out_of_stock(): void {
+        Functions\when( 'wc_attribute_label' )->alias( fn( $name ) => ucfirst( $name ) );
+        Functions\when( 'taxonomy_exists' )->justReturn( false );
+
+        $parent       = $this->mockVariableProduct( 7, 'Hoodie', '40.00' );
+        $inStockVar   = $this->mockVariation( 71, '40.00', true );
+        $outOfStockVar = $this->mockVariation( 72, '40.00', false );
+
+        $parent->shouldReceive( 'get_available_variations' )->andReturn( [
+            [ 'variation_id' => 71, 'attributes' => [ 'attribute_size' => 'M' ] ],
+            [ 'variation_id' => 72, 'attributes' => [ 'attribute_size' => 'L' ] ],
+        ] );
+
+        Functions\when( 'wc_get_product' )->alias( function ( $id ) use ( $parent, $inStockVar, $outOfStockVar ) {
+            return [ 7 => $parent, 71 => $inStockVar, 72 => $outOfStockVar ][ (int) $id ] ?? false;
+        } );
+
+        $result = $this->tools()->execute( 'get_product_details', [ 'product_id' => 7 ] );
+
+        $this->assertTrue( $result['variations'][0]['in_stock'] );
+        $this->assertFalse( $result['variations'][1]['in_stock'] );
+    }
+
     // ── add_to_cart ───────────────────────────────────────────────────────────
 
     public function test_add_to_cart_success_returns_cart_urls(): void {
@@ -284,6 +375,74 @@ class ToolsTest extends TestCase {
         $result = $this->tools()->execute( 'add_to_cart', [ 'product_id' => 10 ] );
 
         $this->assertTrue( $result['success'] );
+    }
+
+    // ── add_to_cart: variations (issue #12) ────────────────────────────────────
+
+    public function test_add_to_cart_adds_the_chosen_variation(): void {
+        // Parent is a variable product; the customer chose variation 51. add_to_cart
+        // must pass the variation_id through to WC and honor the VARIATION's stock,
+        // not the parent's.
+        $parent    = $this->mockVariableProduct( 5, 'Cotton Tee', '20.00' );
+        $variation = $this->mockVariation( 51, '25.00', true );
+
+        Functions\when( 'wc_get_product' )->alias(
+            fn( $id ) => 5 === (int) $id ? $parent : ( 51 === (int) $id ? $variation : false )
+        );
+
+        $mockCart = Mockery::mock( WC_Cart::class );
+        // The variation id is forwarded as the 3rd arg.
+        $mockCart->shouldReceive( 'add_to_cart' )
+            ->once()
+            ->with( 5, 1, 51 )
+            ->andReturn( 'cart_key_var' );
+        $mockCart->shouldReceive( 'get_cart_total' )->andReturn( '$25.00' );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+
+        $result = $this->tools()->execute( 'add_to_cart', [ 'product_id' => 5, 'variation_id' => 51 ] );
+
+        $this->assertTrue( $result['success'] );
+        $this->assertSame( 'cart_key_var', $result['cart_item_key'] );
+    }
+
+    public function test_add_to_cart_rejects_out_of_stock_variation(): void {
+        // The parent product is in stock, but the *chosen variation* is not.
+        // The add must be rejected on the variation's stock, not the parent's.
+        $parent    = $this->mockVariableProduct( 5, 'Cotton Tee', '20.00' );
+        $variation = $this->mockVariation( 52, '25.00', false );
+
+        Functions\when( 'wc_get_product' )->alias(
+            fn( $id ) => 5 === (int) $id ? $parent : ( 52 === (int) $id ? $variation : false )
+        );
+
+        // The cart must never be touched when the variation is out of stock.
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldNotReceive( 'add_to_cart' );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+
+        $result = $this->tools()->execute( 'add_to_cart', [ 'product_id' => 5, 'variation_id' => 52 ] );
+
+        $this->assertFalse( $result['success'] );
+        $this->assertStringContainsString( 'out of stock', strtolower( $result['error'] ) );
+    }
+
+    public function test_add_to_cart_rejects_variation_not_belonging_to_product(): void {
+        // A variation_id that does not resolve (or is unrelated) must be rejected
+        // rather than silently added against the wrong parent.
+        $parent = $this->mockVariableProduct( 5, 'Cotton Tee', '20.00' );
+
+        Functions\when( 'wc_get_product' )->alias(
+            fn( $id ) => 5 === (int) $id ? $parent : false
+        );
+
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldNotReceive( 'add_to_cart' );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+
+        $result = $this->tools()->execute( 'add_to_cart', [ 'product_id' => 5, 'variation_id' => 999 ] );
+
+        $this->assertFalse( $result['success'] );
+        $this->assertArrayHasKey( 'error', $result );
     }
 
     // ── view_cart ─────────────────────────────────────────────────────────────
@@ -381,5 +540,51 @@ class ToolsTest extends TestCase {
         $p->shouldReceive( 'get_average_rating' )->andReturn( '4.5' )->byDefault();
         $p->shouldReceive( 'get_review_count' )->andReturn( 8 )->byDefault();
         return $p;
+    }
+
+    /**
+     * A variable parent product mock. get_available_variations() is intentionally
+     * NOT stubbed here so each test declares the exact variation set it needs.
+     */
+    private function mockVariableProduct( int $id, string $name, string $price ): WC_Product {
+        $p = Mockery::mock( WC_Product::class );
+        $p->shouldReceive( 'get_id' )->andReturn( $id );
+        $p->shouldReceive( 'get_name' )->andReturn( $name );
+        $p->shouldReceive( 'get_price' )->andReturn( $price );
+        $p->shouldReceive( 'get_regular_price' )->andReturn( $price );
+        $p->shouldReceive( 'get_sale_price' )->andReturn( '' );
+        $p->shouldReceive( 'is_on_sale' )->andReturn( false );
+        $p->shouldReceive( 'is_visible' )->andReturn( true )->byDefault();
+        $p->shouldReceive( 'is_in_stock' )->andReturn( true )->byDefault();
+        $p->shouldReceive( 'get_type' )->andReturn( 'variable' );
+        $p->shouldReceive( 'is_type' )->with( 'variable' )->andReturn( true );
+        $p->shouldReceive( 'get_description' )->andReturn( '' );
+        $p->shouldReceive( 'get_short_description' )->andReturn( '' );
+        $p->shouldReceive( 'get_sku' )->andReturn( '' );
+        $p->shouldReceive( 'get_stock_quantity' )->andReturn( 10 );
+        $p->shouldReceive( 'get_image_id' )->andReturn( 0 );
+        $p->shouldReceive( 'get_average_rating' )->andReturn( '0' )->byDefault();
+        $p->shouldReceive( 'get_review_count' )->andReturn( 0 )->byDefault();
+        return $p;
+    }
+
+    /**
+     * A single variation (child) product mock with its own price + stock state and
+     * a parent id so add_to_cart can verify the variation belongs to the product.
+     */
+    private function mockVariation( int $id, string $price, bool $inStock, int $parentId = 5 ): WC_Product {
+        $v = Mockery::mock( WC_Product::class );
+        $v->shouldReceive( 'get_id' )->andReturn( $id );
+        $v->shouldReceive( 'get_name' )->andReturn( 'Variation ' . $id );
+        $v->shouldReceive( 'get_price' )->andReturn( $price );
+        $v->shouldReceive( 'get_regular_price' )->andReturn( $price );
+        $v->shouldReceive( 'get_sale_price' )->andReturn( '' );
+        $v->shouldReceive( 'is_on_sale' )->andReturn( false );
+        $v->shouldReceive( 'is_in_stock' )->andReturn( $inStock );
+        $v->shouldReceive( 'is_visible' )->andReturn( true )->byDefault();
+        $v->shouldReceive( 'get_type' )->andReturn( 'variation' );
+        $v->shouldReceive( 'is_type' )->with( 'variable' )->andReturn( false );
+        $v->shouldReceive( 'get_parent_id' )->andReturn( $parentId )->byDefault();
+        return $v;
     }
 }

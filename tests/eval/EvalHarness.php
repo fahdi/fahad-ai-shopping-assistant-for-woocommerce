@@ -105,7 +105,15 @@ final class EvalHarness {
 	 * ToolsTest::mockProduct but data-driven so fixtures stay declarative.
 	 *
 	 * @param array $spec { id, name, price, regular_price?, sale_price?, on_sale?,
-	 *                      in_stock?, visible?, short_description?, type? }
+	 *                      in_stock?, visible?, short_description?, type?,
+	 *                      parent_id?, variations? }
+	 *
+	 * Variations (issue #12): a variable product carries a `variations` list, each
+	 * entry [ variation_id, attributes, price?, in_stock? ]. The list is exposed via
+	 * get_available_variations() (the raw [ variation_id, attributes ] shape WC
+	 * returns); stub_woocommerce() additionally registers each variation as its own
+	 * wc_get_product( variation_id ) child so add_to_cart can read the variation's
+	 * price/stock and verify its parent. `parent_id` marks a variation child.
 	 */
 	public static function mock_product( array $spec ): WC_Product {
 		$id    = (int) ( $spec['id'] ?? 0 );
@@ -134,7 +142,18 @@ final class EvalHarness {
 		$p->shouldReceive( 'get_sku' )->andReturn( (string) ( $spec['sku'] ?? '' ) );
 		$p->shouldReceive( 'get_stock_quantity' )->andReturn( (int) ( $spec['stock_qty'] ?? 10 ) );
 		$p->shouldReceive( 'get_image_id' )->andReturn( 0 );
-		$p->shouldReceive( 'get_available_variations' )->andReturn( [] );
+		$p->shouldReceive( 'get_parent_id' )->andReturn( (int) ( $spec['parent_id'] ?? 0 ) );
+		// Variations (issue #12): expose the raw [ variation_id, attributes ] shape
+		// get_available_variations() returns. Variations default to none so a simple
+		// product fixture stays unchanged.
+		$variations = array_map(
+			static fn( $v ) => [
+				'variation_id' => (int) ( $v['variation_id'] ?? 0 ),
+				'attributes'   => (array) ( $v['attributes'] ?? [] ),
+			],
+			$spec['variations'] ?? []
+		);
+		$p->shouldReceive( 'get_available_variations' )->andReturn( $variations );
 		// Ratings (issue #11): default to the stub base values unless the fixture
 		// overrides them, so format_product_summary / get_product_details can read
 		// them without every product fixture having to declare rating data.
@@ -169,11 +188,42 @@ final class EvalHarness {
 		// wc_get_product → mock by id, or false when absent.
 		$by_id = [];
 		foreach ( $data['product_by_id'] ?? [] as $id => $spec ) {
-			$by_id[ (int) $id ] = self::mock_product( $spec + [ 'id' => (int) $id ] );
+			$parent_id           = (int) $id;
+			$by_id[ $parent_id ] = self::mock_product( $spec + [ 'id' => $parent_id ] );
+
+			// Variations (issue #12): register each variation child as its OWN
+			// wc_get_product( variation_id ) result so add_to_cart can read the
+			// variation's price/stock and verify it belongs to this parent. The child
+			// carries its own price/stock and a parent_id pointing back to the parent.
+			foreach ( $spec['variations'] ?? [] as $v ) {
+				$variation_id = (int) ( $v['variation_id'] ?? 0 );
+				if ( $variation_id <= 0 ) {
+					continue;
+				}
+				$by_id[ $variation_id ] = self::mock_product( [
+					'id'        => $variation_id,
+					'name'      => ( $spec['name'] ?? '' ) . ' (' . $variation_id . ')',
+					'price'     => $v['price'] ?? ( $spec['price'] ?? '0' ),
+					'in_stock'  => $v['in_stock'] ?? true,
+					'type'      => 'variation',
+					'parent_id' => $parent_id,
+				] );
+			}
 		}
 		Functions\when( 'wc_get_product' )->alias(
 			static fn( $id ) => $by_id[ (int) $id ] ?? false
 		);
+
+		// Attribute-label helpers (issue #12): get_product_details turns each
+		// variation's raw attribute map into a readable label via these. The eval
+		// fixtures use custom (non-taxonomy) attributes whose values are already
+		// display-ready, so taxonomy_exists is false and no term lookup runs; the
+		// label de-prefixes "attribute_" and title-cases the attribute name.
+		Functions\when( 'wc_attribute_label' )->alias(
+			static fn( $name ) => ucwords( str_replace( [ 'pa_', '_', '-' ], [ '', ' ', ' ' ], (string) $name ) )
+		);
+		Functions\when( 'taxonomy_exists' )->justReturn( false );
+		Functions\when( 'get_term_by' )->justReturn( false );
 
 		// WC()->cart behaviour.
 		$cart_cfg = $data['cart'] ?? [];

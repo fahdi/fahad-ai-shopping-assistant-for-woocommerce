@@ -343,6 +343,7 @@ Guidelines:
 - Always use search_products or get_product_details before recommending a product — never invent product details.
 - When asked about ratings or reviews, use get_product_reviews and summarise only the returned reviews — never invent reviews, quotes, ratings, or sentiment.
 - When a customer wants to buy something, confirm the product, then use add_to_cart.
+- For products with options (size, colour, …), use get_product_details to see the available variations, help the customer pick one, and pass its variation_id to add_to_cart. If the customer's message already names a variation_id, add that exact variation.
 - Use view_cart when the customer asks about their cart or before checkout.
 - Keep responses concise and friendly.
 - For order status, account issues, or returns, direct the customer to the store's support team.";
@@ -398,7 +399,7 @@ Guidelines:
 			return [];
 		}
 
-		return [
+		$card = [
 			'id'                => (int) $p['id'],
 			'name'              => (string) $p['name'],
 			'price'             => (string) ( $p['price'] ?? '' ),
@@ -414,7 +415,58 @@ Guidelines:
 			// tools/add-ons that return a product shape without rating data.
 			'rating'            => round( (float) ( $p['rating'] ?? 0 ), 2 ),
 			'review_count'      => (int) ( $p['review_count'] ?? 0 ),
+			// Variations (issue #12): defaults for the common (non-variable) case so
+			// every card has a stable shape. Overwritten below when the product is a
+			// variable product that actually has selectable variations.
+			'is_variable'       => false,
 		];
+
+		// Carry a COMPACT variations list for variable products so the widget can
+		// render an option selector and add the chosen variation. Only attach it
+		// when there is at least one well-formed variation — a "variable" product
+		// with no selectable options renders like a plain card (is_variable false).
+		$variations = $this->normalize_card_variations( $p['variations'] ?? [] );
+		if ( ! empty( $variations ) ) {
+			$card['is_variable'] = true;
+			$card['variations']  = $variations;
+		}
+
+		return $card;
+	}
+
+	/**
+	 * Reduce a product's variation list (from get_product_details) to the compact
+	 * shape the widget renders: variation_id, label, price, in_stock. Entries
+	 * without a usable id or label are dropped so the widget never offers an option
+	 * it cannot add to the cart.
+	 *
+	 * @param mixed $variations The raw `variations` value from the tool result.
+	 * @return array<int, array{variation_id:int, label:string, price:string, in_stock:bool}>
+	 */
+	private function normalize_card_variations( $variations ): array {
+		if ( ! is_array( $variations ) ) {
+			return [];
+		}
+
+		$out = [];
+		foreach ( $variations as $v ) {
+			if ( ! is_array( $v ) ) {
+				continue;
+			}
+			$id    = (int) ( $v['variation_id'] ?? 0 );
+			$label = trim( (string) ( $v['label'] ?? '' ) );
+			if ( $id <= 0 || '' === $label ) {
+				continue;
+			}
+			$out[] = [
+				'variation_id' => $id,
+				'label'        => $label,
+				'price'        => (string) ( $v['price'] ?? '' ),
+				'in_stock'     => ! isset( $v['in_stock'] ) || (bool) $v['in_stock'],
+			];
+		}
+
+		return $out;
 	}
 
 	// =========================================================================

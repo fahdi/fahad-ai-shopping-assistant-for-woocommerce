@@ -361,6 +361,114 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( 7, $cards[0]['id'] );
     }
 
+    // ── variations on the card payload (issue #12) ────────────────────────────
+    // A variable product's card carries an is_variable flag and a COMPACT
+    // variations list (variation_id, label, price, in_stock) so the widget can
+    // render a selector and add the chosen variation. Non-variable products are
+    // unchanged: no variations key, is_variable false.
+
+    public function test_card_carries_variations_for_variable_product(): void {
+        $cards = $this->tool_result_cards( 'get_product_details', [
+            'id'         => 42,
+            'name'       => 'Cotton Tee',
+            'price'      => '$20.00',
+            'in_stock'   => true,
+            'type'       => 'variable',
+            'variations' => [
+                [
+                    'variation_id' => 51,
+                    'label'        => 'Size: Large, Color: Blue',
+                    'attributes'   => [ 'attribute_pa_size' => 'large', 'attribute_pa_color' => 'blue' ],
+                    'price'        => '$25.00',
+                    'in_stock'     => true,
+                ],
+                [
+                    'variation_id' => 52,
+                    'label'        => 'Size: Small, Color: Red',
+                    'attributes'   => [ 'attribute_pa_size' => 'small', 'attribute_pa_color' => 'red' ],
+                    'price'        => '$22.00',
+                    'in_stock'     => false,
+                ],
+            ],
+        ] );
+
+        $this->assertCount( 1, $cards );
+        $this->assertTrue( $cards[0]['is_variable'] );
+        $this->assertArrayHasKey( 'variations', $cards[0] );
+        $this->assertCount( 2, $cards[0]['variations'] );
+
+        // Compact shape: only the fields the widget needs.
+        $v = $cards[0]['variations'][0];
+        $this->assertSame( 51, $v['variation_id'] );
+        $this->assertSame( 'Size: Large, Color: Blue', $v['label'] );
+        $this->assertSame( '$25.00', $v['price'] );
+        $this->assertTrue( $v['in_stock'] );
+        $this->assertSame( [ 'variation_id', 'label', 'price', 'in_stock' ], array_keys( $v ) );
+
+        // Out-of-stock variation is carried (the widget decides how to present it),
+        // with its own stock flag.
+        $this->assertFalse( $cards[0]['variations'][1]['in_stock'] );
+    }
+
+    public function test_card_for_non_variable_product_has_no_variations(): void {
+        $cards = $this->tool_result_cards( 'get_product_details', [
+            'id'       => 10,
+            'name'     => 'Simple Mug',
+            'price'    => '$8.00',
+            'in_stock' => true,
+            'type'     => 'simple',
+        ] );
+
+        $this->assertCount( 1, $cards );
+        $this->assertFalse( $cards[0]['is_variable'] );
+        $this->assertArrayNotHasKey( 'variations', $cards[0] );
+    }
+
+    public function test_search_card_without_type_is_not_variable(): void {
+        // search_products summaries carry no `type`/`variations`; their cards must
+        // default to non-variable so the existing card payload is unchanged.
+        $cards = $this->tool_result_cards( 'search_products', [
+            'products' => [
+                [ 'id' => 10, 'name' => 'Sneakers', 'price' => 'Rs90', 'in_stock' => true ],
+            ],
+        ] );
+
+        $this->assertFalse( $cards[0]['is_variable'] );
+        $this->assertArrayNotHasKey( 'variations', $cards[0] );
+    }
+
+    public function test_card_variations_drop_entries_missing_id_or_label(): void {
+        // Defence in depth: a malformed variation entry (no id, or no label) is
+        // dropped so the widget never renders an option it cannot add.
+        $cards = $this->tool_result_cards( 'get_product_details', [
+            'id'         => 42,
+            'name'       => 'Cotton Tee',
+            'type'       => 'variable',
+            'variations' => [
+                [ 'label' => 'No id', 'price' => '$1.00', 'in_stock' => true ],
+                [ 'variation_id' => 0, 'label' => 'Zero id', 'price' => '$1.00', 'in_stock' => true ],
+                [ 'variation_id' => 55, 'label' => 'Valid', 'price' => '$5.00', 'in_stock' => true ],
+            ],
+        ] );
+
+        $this->assertCount( 1, $cards[0]['variations'] );
+        $this->assertSame( 55, $cards[0]['variations'][0]['variation_id'] );
+    }
+
+    public function test_variable_product_with_no_variations_is_not_marked_variable(): void {
+        // A "variable" type that yields an empty variations list (all options gone)
+        // should not advertise a selector — is_variable false, no variations key.
+        $cards = $this->tool_result_cards( 'get_product_details', [
+            'id'         => 42,
+            'name'       => 'Cotton Tee',
+            'type'       => 'variable',
+            'variations' => [],
+        ] );
+
+        $this->assertFalse( $cards[0]['is_variable'] );
+        $this->assertArrayNotHasKey( 'variations', $cards[0] );
+    }
+
     // ── convention-based card emission (issue #15) ────────────────────────────
     // Card emission keys off the RESULT SHAPE, not the tool name, so any current
     // or future product tool (get_top_products, recommendations, …) renders cards

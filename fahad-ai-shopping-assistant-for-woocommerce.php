@@ -200,6 +200,13 @@ final class Fahad_AI_Chatbot {
 				'addToCartNamed'     => __( 'Add %s to cart', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'inStock'            => __( 'In stock', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'outOfStock'         => __( 'Out of stock', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				// Variation selector (issue #12).
+				/* translators: %s is the product name. Accessible label for a variable product's option <select>. */
+				'chooseOptionFor'    => __( 'Choose an option for %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'chooseOption'       => __( 'Choose an option…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				/* translators: %s is a variation label, e.g. "Size: Large, Color: Blue". Appended to a sold-out option. */
+				'variationOutOfStock' => __( '%s (out of stock)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'selectOptionFirst'  => __( 'Please choose an option first.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				/* translators: 1: average rating out of 5 (e.g. 4.5), 2: number of reviews. Accessible label for a product card's star rating. */
 				'ratingLabel'        => __( 'Rated %1$s out of 5 (%2$d reviews)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'productsGroupLabel' => __( 'Recommended products', 'fahad-ai-shopping-assistant-for-woocommerce' ),
