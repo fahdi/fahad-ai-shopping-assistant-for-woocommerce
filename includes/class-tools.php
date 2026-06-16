@@ -326,7 +326,19 @@ final class Fahad_AI_Tools {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	private function format_product_summary( WC_Product $product ): array {
+	/**
+	 * Reduce a WC_Product to the canonical card-shaped summary the widget
+	 * renders (id, name, price, regular_price, sale_price, on_sale, in_stock,
+	 * short_description, image, url).
+	 *
+	 * PUBLIC and shared on purpose: this is the single source of truth for how a
+	 * product becomes card data. The built-in search_products uses it, and
+	 * filter-registered product tools (best-sellers, recommendations, …) MUST
+	 * reuse it instead of re-deriving these fields, so every product card stays
+	 * consistent and the convention-based card emission in
+	 * Fahad_AI_API_Handler::tool_result_cards() keeps working uniformly.
+	 */
+	public function format_product_summary( WC_Product $product ): array {
 		return [
 			'id'                => $product->get_id(),
 			'name'              => $product->get_name(),

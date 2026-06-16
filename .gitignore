@@ -4,6 +4,7 @@ composer.lock
 
 # PHPUnit
 .phpunit.cache/
+.phpunit.result.cache
 phpunit.xml.bak
 
 # OS

@@ -300,4 +300,56 @@ class ApiHandlerTest extends TestCase {
         $this->assertCount( 1, $cards );
         $this->assertSame( 7, $cards[0]['id'] );
     }
+
+    // ── convention-based card emission (issue #15) ────────────────────────────
+    // Card emission keys off the RESULT SHAPE, not the tool name, so any current
+    // or future product tool (get_top_products, recommendations, …) renders cards
+    // without tool_result_cards() being taught its name.
+
+    public function test_new_tool_with_products_array_maps_to_cards(): void {
+        // A tool name tool_result_cards() has never heard of, returning the same
+        // products[] shape search_products does → cards, by convention.
+        $cards = $this->tool_result_cards( 'get_top_products', [
+            'found'    => 2,
+            'products' => [
+                [ 'id' => 21, 'name' => 'Best Seller A', 'price' => 'Rs90', 'in_stock' => true,  'image' => 'http://x/a.jpg', 'url' => 'http://x/p/21' ],
+                [ 'id' => 22, 'name' => 'Best Seller B', 'price' => 'Rs35', 'in_stock' => false, 'image' => 'http://x/b.jpg', 'url' => 'http://x/p/22' ],
+            ],
+        ] );
+
+        $this->assertCount( 2, $cards );
+        $this->assertSame( 21, $cards[0]['id'] );
+        $this->assertSame( 'Best Seller A', $cards[0]['name'] );
+        $this->assertTrue( $cards[0]['in_stock'] );
+        $this->assertFalse( $cards[1]['in_stock'] );
+    }
+
+    public function test_new_tool_with_single_product_shape_maps_to_one_card(): void {
+        // A single product-shaped result (has id AND name) from any tool → one card.
+        $cards = $this->tool_result_cards( 'some_future_product_tool', [
+            'id'                => 99,
+            'name'              => 'Single Product',
+            'price'             => 'Rs10',
+            'in_stock'          => true,
+            'short_description' => 'Just one',
+            'image'             => 'http://x/s.jpg',
+            'url'               => 'http://x/p/99',
+        ] );
+
+        $this->assertCount( 1, $cards );
+        $this->assertSame( 99, $cards[0]['id'] );
+        $this->assertSame( 'Single Product', $cards[0]['name'] );
+        $this->assertSame( 'Just one', $cards[0]['short_description'] );
+    }
+
+    public function test_new_tool_with_non_product_result_yields_no_cards(): void {
+        // A non-product result (no products[], not product-shaped) from a tool the
+        // method does not know → no cards. This is what keeps list_categories
+        // (a category list, not products) from rendering as product cards.
+        $this->assertSame( [], $this->tool_result_cards( 'list_categories', [
+            'categories' => [
+                [ 'name' => 'Shoes', 'slug' => 'shoes', 'count' => 12 ],
+            ],
+        ] ) );
+    }
 }
