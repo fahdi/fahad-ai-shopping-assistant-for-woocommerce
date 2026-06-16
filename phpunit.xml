@@ -4,6 +4,9 @@
     <testsuite name="unit">
       <directory>tests/unit</directory>
     </testsuite>
+    <testsuite name="eval">
+      <directory>tests/eval</directory>
+    </testsuite>
   </testsuites>
   <source>
     <include>
