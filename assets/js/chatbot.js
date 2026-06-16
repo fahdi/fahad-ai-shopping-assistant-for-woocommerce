@@ -54,6 +54,16 @@
 		return String(template).replace('%s', value);
 	}
 
+	// Substitute positional printf placeholders (%1$s, %2$d, …) used by accessible
+	// labels that interpolate more than one value (e.g. the rating label). Falls
+	// back to leaving an unmatched placeholder untouched.
+	function fmtPositional(template, args) {
+		return String(template).replace(/%(\d+)\$[sd]/g, (m, n) => {
+			const v = args[Number(n) - 1];
+			return v === undefined ? m : String(v);
+		});
+	}
+
 	// ── State ─────────────────────────────────────────────────────────────────
 	let history = [];
 	let busy    = false;
@@ -392,6 +402,56 @@
 		return typeof value === 'string' && /^https?:\/\//.test(value);
 	}
 
+	// Build the star-rating element for a card, or null when the product has no
+	// reviews (review_count <= 0) so the rating is hidden entirely. Data is
+	// server-supplied from WooCommerce (get_average_rating / get_review_count), so
+	// the values are trusted; we still build via DOM APIs and never innerHTML.
+	function buildRating(p) {
+		const count = Number(p.review_count) || 0;
+		if (count <= 0) return null;
+
+		// Clamp the average to 0–5; render fractional values precisely with a clipped
+		// overlay of filled stars over a base of empty stars (no half-star glyph,
+		// which fonts render inconsistently — only the common ★/☆ are used).
+		const avg     = Math.max(0, Math.min(5, Number(p.rating) || 0));
+		const display = avg.toFixed(1);            // e.g. "4.5" — shown to sighted users
+		const pct     = (avg / 5) * 100;
+
+		const wrap = document.createElement('div');
+		wrap.className = 'chatbot-card-rating';
+		// Announce the whole rating as one labelled image so AT reads "Rated 4.5 out
+		// of 5 (24 reviews)" instead of a run of star characters (WCAG 1.1.1).
+		wrap.setAttribute('role', 'img');
+		wrap.setAttribute('aria-label', fmtPositional(i18n.ratingLabel || 'Rated %1$s out of 5 (%2$d reviews)', [display, count]));
+
+		// Visual stars — decorative (the label above conveys the meaning).
+		const stars = document.createElement('span');
+		stars.className = 'chatbot-card-stars';
+		stars.setAttribute('aria-hidden', 'true');
+
+		const empty = document.createElement('span');
+		empty.className = 'chatbot-card-stars-empty';
+		empty.textContent = '★★★★★';
+		stars.appendChild(empty);
+
+		const filled = document.createElement('span');
+		filled.className = 'chatbot-card-stars-filled';
+		filled.textContent = '★★★★★';
+		filled.style.width = pct + '%';
+		stars.appendChild(filled);
+
+		wrap.appendChild(stars);
+
+		// Visible "4.5 (24)" companion text for sighted users.
+		const meta = document.createElement('span');
+		meta.className = 'chatbot-card-rating-text';
+		meta.setAttribute('aria-hidden', 'true');
+		meta.textContent = display + ' (' + count + ')';
+		wrap.appendChild(meta);
+
+		return wrap;
+	}
+
 	function buildCard(p) {
 		const card = document.createElement('div');
 		card.className = 'chatbot-card';
@@ -418,6 +478,12 @@
 		title.textContent = p.name || '';
 		if (url) { title.href = url; title.target = '_blank'; title.rel = 'noopener'; }
 		body.appendChild(title);
+
+		// Ratings (issue #11): show ★avg (count) only when the product has reviews.
+		// When there are none, the rating element is omitted entirely (no "0 stars"
+		// or empty widget), so an unreviewed product simply shows no rating.
+		const rating = buildRating(p);
+		if (rating) body.appendChild(rating);
 
 		const price = document.createElement('div');
 		price.className = 'chatbot-card-price';

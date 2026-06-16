@@ -174,6 +174,8 @@ final class Fahad_AI_Tools {
 			'type'              => $product->get_type(),
 			'image'             => $this->product_image_url( $product ),
 			'url'               => get_permalink( $product->get_id() ),
+			'rating'            => round( (float) $product->get_average_rating(), 2 ),
+			'review_count'      => (int) $product->get_review_count(),
 			'categories'        => wp_list_pluck(
 				get_the_terms( $product_id, 'product_cat' ) ?: [],
 				'name'
@@ -329,7 +331,7 @@ final class Fahad_AI_Tools {
 	/**
 	 * Reduce a WC_Product to the canonical card-shaped summary the widget
 	 * renders (id, name, price, regular_price, sale_price, on_sale, in_stock,
-	 * short_description, image, url).
+	 * short_description, image, url, rating, review_count).
 	 *
 	 * PUBLIC and shared on purpose: this is the single source of truth for how a
 	 * product becomes card data. The built-in search_products uses it, and
@@ -350,6 +352,8 @@ final class Fahad_AI_Tools {
 			'short_description' => wp_strip_all_tags( $product->get_short_description() ),
 			'image'             => $this->product_image_url( $product ),
 			'url'               => get_permalink( $product->get_id() ),
+			'rating'            => round( (float) $product->get_average_rating(), 2 ),
+			'review_count'      => (int) $product->get_review_count(),
 		];
 	}
 

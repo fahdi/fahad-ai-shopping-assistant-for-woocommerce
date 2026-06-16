@@ -112,7 +112,13 @@ final class EvalHarness {
 		$name  = (string) ( $spec['name'] ?? '' );
 		$price = (string) ( $spec['price'] ?? '0' );
 
-		$p = Mockery::mock( WC_Product::class );
+		// Partial mock: explicitly-stubbed getters below win, while any getter a
+		// fixture/tool reads but does not stub falls through to the WC_Product stub
+		// base class (tests/stubs/wc-stubs.php) instead of throwing. This keeps the
+		// factory forward-compatible — a tool that starts reading a new product
+		// getter (e.g. get_average_rating / get_review_count for ratings) gets the
+		// stub's safe default with no per-fixture wiring.
+		$p = Mockery::mock( WC_Product::class )->makePartial();
 		$p->shouldReceive( 'get_id' )->andReturn( $id );
 		$p->shouldReceive( 'get_name' )->andReturn( $name );
 		$p->shouldReceive( 'get_price' )->andReturn( $price );
@@ -129,6 +135,11 @@ final class EvalHarness {
 		$p->shouldReceive( 'get_stock_quantity' )->andReturn( (int) ( $spec['stock_qty'] ?? 10 ) );
 		$p->shouldReceive( 'get_image_id' )->andReturn( 0 );
 		$p->shouldReceive( 'get_available_variations' )->andReturn( [] );
+		// Ratings (issue #11): default to the stub base values unless the fixture
+		// overrides them, so format_product_summary / get_product_details can read
+		// them without every product fixture having to declare rating data.
+		$p->shouldReceive( 'get_average_rating' )->andReturn( (string) ( $spec['rating'] ?? '0' ) );
+		$p->shouldReceive( 'get_review_count' )->andReturn( (int) ( $spec['review_count'] ?? 0 ) );
 		return $p;
 	}
 
@@ -139,6 +150,10 @@ final class EvalHarness {
 	 *   - product_by_id:   map of id => spec returned by wc_get_product().
 	 *   - cart:            [ add_returns => string|false, total => string, items => [...] ]
 	 *                      controls add_to_cart / view_cart behaviour.
+	 *   - reviews:         list of review specs for the reviews tool (issue #11),
+	 *                      each [ author, rating, content, date ], returned (newest
+	 *                      first, bounded by the query's `number`) from get_comments()
+	 *                      with the per-review `rating` read via get_comment_meta().
 	 *
 	 * @param array $data Fixture's 'wc' block.
 	 */
@@ -171,6 +186,48 @@ final class EvalHarness {
 		$cart->shouldReceive( 'get_cart_contents_count' )->andReturn( $cart_cfg['count'] ?? count( $cart_cfg['items'] ?? [] ) );
 		$cart->shouldReceive( 'remove_cart_item' )->andReturn( $cart_cfg['remove_returns'] ?? true );
 		Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $cart ] );
+
+		// Reviews (issue #11): the reviews tool reads approved review comments via
+		// get_comments() (per-review rating via get_comment_meta) and shortens each
+		// body with wp_trim_words / formats the date with mysql2date. Drive all four
+		// from the fixture's declarative `reviews` list so a reviews golden
+		// conversation needs no per-test stub wiring — exactly like products/cart.
+		$reviews = [];
+		foreach ( $data['reviews'] ?? [] as $i => $r ) {
+			$reviews[] = (object) [
+				'comment_ID'      => $r['id'] ?? ( $i + 1 ),
+				'comment_author'  => $r['author'] ?? '',
+				'comment_content' => $r['content'] ?? '',
+				'comment_date'    => $r['date'] ?? '',
+				'__rating'        => (string) ( $r['rating'] ?? '' ),
+			];
+		}
+		Functions\when( 'get_comments' )->alias(
+			static function ( $args = [] ) use ( $reviews ) {
+				$number = (int) ( $args['number'] ?? 0 );
+				return ( $number > 0 ) ? array_slice( $reviews, 0, $number ) : $reviews;
+			}
+		);
+		Functions\when( 'get_comment_meta' )->alias(
+			static function ( $comment_id, $key = '', $single = false ) use ( $reviews ) {
+				foreach ( $reviews as $r ) {
+					if ( (int) $r->comment_ID === (int) $comment_id ) {
+						return $r->__rating;
+					}
+				}
+				return '';
+			}
+		);
+		Functions\when( 'wp_trim_words' )->alias(
+			static function ( $text, $num = 55, $more = null ) {
+				$words = preg_split( '/\s+/', trim( (string) $text ), -1, PREG_SPLIT_NO_EMPTY );
+				if ( count( $words ) <= $num ) {
+					return implode( ' ', $words );
+				}
+				return implode( ' ', array_slice( $words, 0, $num ) ) . ( $more ?? '…' );
+			}
+		);
+		Functions\when( 'mysql2date' )->alias( static fn( $format, $date ) => $date );
 	}
 
 	// =========================================================================
