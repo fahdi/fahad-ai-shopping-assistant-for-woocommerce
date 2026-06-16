@@ -191,9 +191,14 @@ final class Fahad_AI_Chatbot {
 				'toolViewCart'       => __( 'Checking your cart…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'toolRemoveFromCart' => __( 'Removing from cart…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'viewProduct'        => __( 'View', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				/* translators: %s is the product name. Accessible label for the card's View link. */
+				'viewProductNamed'   => __( 'View %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'addToCart'          => __( 'Add to cart', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				/* translators: %s is the product name. Accessible label for the card's Add-to-cart button. */
+				'addToCartNamed'     => __( 'Add %s to cart', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'inStock'            => __( 'In stock', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'outOfStock'         => __( 'Out of stock', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'productsGroupLabel' => __( 'Recommended products', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'productsIntro'      => __( 'Here are some products that might help:', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			],
 		] );
