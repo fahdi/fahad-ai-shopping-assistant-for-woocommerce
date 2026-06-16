@@ -167,6 +167,54 @@ class ToolsTest extends TestCase {
         $this->assertArrayHasKey( 'error', $result );
     }
 
+    // ── rating fields on the card payload (issue #11) ───────────────────────────
+
+    public function test_search_product_summary_includes_rating_and_review_count(): void {
+        $product = $this->mockProduct( 7, 'T-Shirt', '29.99' );
+        Functions\when( 'wc_get_products' )->justReturn( [ $product ] );
+
+        $summary = $this->tools()->execute( 'search_products', [ 'query' => 'shirt' ] )['products'][0];
+
+        $this->assertArrayHasKey( 'rating', $summary );
+        $this->assertArrayHasKey( 'review_count', $summary );
+        $this->assertSame( 4.5, $summary['rating'] );
+        $this->assertSame( 8, $summary['review_count'] );
+    }
+
+    public function test_get_product_details_includes_rating_and_review_count(): void {
+        $product = $this->mockProduct( 5, 'Sneakers', '89.99' );
+        Functions\when( 'wc_get_product' )->justReturn( $product );
+
+        $result = $this->tools()->execute( 'get_product_details', [ 'product_id' => 5 ] );
+
+        $this->assertArrayHasKey( 'rating', $result );
+        $this->assertArrayHasKey( 'review_count', $result );
+        $this->assertSame( 4.5, $result['rating'] );
+        $this->assertSame( 8, $result['review_count'] );
+    }
+
+    public function test_product_with_no_reviews_reports_zero_rating_and_count(): void {
+        $product = Mockery::mock( WC_Product::class );
+        $product->shouldReceive( 'get_id' )->andReturn( 9 );
+        $product->shouldReceive( 'get_name' )->andReturn( 'Brand New Item' );
+        $product->shouldReceive( 'get_price' )->andReturn( '10' );
+        $product->shouldReceive( 'get_regular_price' )->andReturn( '10' );
+        $product->shouldReceive( 'get_sale_price' )->andReturn( '' );
+        $product->shouldReceive( 'is_on_sale' )->andReturn( false );
+        $product->shouldReceive( 'is_visible' )->andReturn( true );
+        $product->shouldReceive( 'is_in_stock' )->andReturn( true );
+        $product->shouldReceive( 'get_short_description' )->andReturn( '' );
+        $product->shouldReceive( 'get_image_id' )->andReturn( 0 );
+        $product->shouldReceive( 'get_average_rating' )->andReturn( '0' );
+        $product->shouldReceive( 'get_review_count' )->andReturn( 0 );
+        Functions\when( 'wc_get_products' )->justReturn( [ $product ] );
+
+        $summary = $this->tools()->execute( 'search_products', [ 'query' => 'new' ] )['products'][0];
+
+        $this->assertSame( 0.0, $summary['rating'] );
+        $this->assertSame( 0, $summary['review_count'] );
+    }
+
     // ── add_to_cart ───────────────────────────────────────────────────────────
 
     public function test_add_to_cart_success_returns_cart_urls(): void {
@@ -330,6 +378,8 @@ class ToolsTest extends TestCase {
         $p->shouldReceive( 'get_sku' )->andReturn( '' );
         $p->shouldReceive( 'get_stock_quantity' )->andReturn( 10 );
         $p->shouldReceive( 'get_image_id' )->andReturn( 0 );
+        $p->shouldReceive( 'get_average_rating' )->andReturn( '4.5' )->byDefault();
+        $p->shouldReceive( 'get_review_count' )->andReturn( 8 )->byDefault();
         return $p;
     }
 }

@@ -301,6 +301,47 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( 'Noise-cancelling', $cards[0]['short_description'] );
     }
 
+    // ── rating fields pass through to the card (issue #11) ─────────────────────
+
+    public function test_card_carries_rating_and_review_count(): void {
+        $cards = $this->tool_result_cards( 'search_products', [
+            'products' => [
+                [ 'id' => 10, 'name' => 'Sneakers', 'price' => 'Rs90', 'in_stock' => true, 'rating' => 4.5, 'review_count' => 12 ],
+            ],
+        ] );
+
+        $this->assertCount( 1, $cards );
+        $this->assertSame( 4.5, $cards[0]['rating'] );
+        $this->assertSame( 12, $cards[0]['review_count'] );
+    }
+
+    public function test_card_defaults_rating_fields_to_zero_when_absent(): void {
+        // Tools that never set rating (or an add-on returning a bare product shape)
+        // still produce a well-formed card: numeric zero, not missing/null.
+        $cards = $this->tool_result_cards( 'some_future_product_tool', [
+            'id'    => 99,
+            'name'  => 'No Rating Product',
+            'price' => 'Rs10',
+        ] );
+
+        $this->assertCount( 1, $cards );
+        $this->assertSame( 0.0, $cards[0]['rating'] );
+        $this->assertSame( 0, $cards[0]['review_count'] );
+    }
+
+    public function test_card_casts_rating_fields_to_numeric(): void {
+        // Defence in depth: even if a string sneaks in, the card emits numbers so
+        // the widget can compare review_count > 0 reliably.
+        $cards = $this->tool_result_cards( 'search_products', [
+            'products' => [
+                [ 'id' => 10, 'name' => 'Sneakers', 'rating' => '3.7', 'review_count' => '4' ],
+            ],
+        ] );
+
+        $this->assertSame( 3.7, $cards[0]['rating'] );
+        $this->assertSame( 4, $cards[0]['review_count'] );
+    }
+
     public function test_non_product_tools_produce_no_cards(): void {
         $this->assertSame( [], $this->tool_result_cards( 'add_to_cart', [ 'success' => true ] ) );
         $this->assertSame( [], $this->tool_result_cards( 'view_cart', [ 'empty' => true ] ) );

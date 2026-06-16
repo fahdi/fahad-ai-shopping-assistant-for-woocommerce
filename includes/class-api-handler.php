@@ -341,6 +341,7 @@ Linking rules — follow exactly:
 
 Guidelines:
 - Always use search_products or get_product_details before recommending a product — never invent product details.
+- When asked about ratings or reviews, use get_product_reviews and summarise only the returned reviews — never invent reviews, quotes, ratings, or sentiment.
 - When a customer wants to buy something, confirm the product, then use add_to_cart.
 - Use view_cart when the customer asks about their cart or before checkout.
 - Keep responses concise and friendly.
@@ -408,6 +409,11 @@ Guidelines:
 			'short_description' => (string) ( $p['short_description'] ?? $p['description'] ?? '' ),
 			'image'             => (string) ( $p['image'] ?? '' ),
 			'url'               => (string) ( $p['url'] ?? '' ),
+			// Trust signals (issue #11). Cast to numbers so the widget can compare
+			// review_count > 0 reliably and render ★avg (count). Default to 0 for
+			// tools/add-ons that return a product shape without rating data.
+			'rating'            => round( (float) ( $p['rating'] ?? 0 ), 2 ),
+			'review_count'      => (int) ( $p['review_count'] ?? 0 ),
 		];
 	}
 

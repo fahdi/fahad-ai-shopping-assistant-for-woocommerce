@@ -200,6 +200,8 @@ final class Fahad_AI_Chatbot {
 				'addToCartNamed'     => __( 'Add %s to cart', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'inStock'            => __( 'In stock', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'outOfStock'         => __( 'Out of stock', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				/* translators: 1: average rating out of 5 (e.g. 4.5), 2: number of reviews. Accessible label for a product card's star rating. */
+				'ratingLabel'        => __( 'Rated %1$s out of 5 (%2$d reviews)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'productsGroupLabel' => __( 'Recommended products', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'productsIntro'      => __( 'Here are some products that might help:', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			],

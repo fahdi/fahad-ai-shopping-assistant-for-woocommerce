@@ -68,6 +68,8 @@ if ( ! class_exists( 'WC_Product' ) ) {
         public function is_visible(): bool                { return true; }
         public function is_type( string $type ): bool     { return $this->get_type() === $type; }
         public function get_available_variations(): array { return []; }
+        public function get_average_rating(): string      { return '0'; }
+        public function get_review_count(): int           { return 0; }
     }
 }
 
