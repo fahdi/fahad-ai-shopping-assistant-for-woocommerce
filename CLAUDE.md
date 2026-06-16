@@ -340,7 +340,8 @@ zip -r fahad-ai-shopping-assistant-for-woocommerce-1.1.0.zip fahad-ai-shopping-a
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/.phpunit.result.cache" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/.gitignore" \
   --exclude "fahad-ai-shopping-assistant-for-woocommerce/README.md" \
-  --exclude "fahad-ai-shopping-assistant-for-woocommerce/CLAUDE.md"
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/CLAUDE.md" \
+  --exclude "fahad-ai-shopping-assistant-for-woocommerce/ROADMAP.md"
 ```
 
 **Reply to WP.org reviewer pattern (from past EventCrafter/LeadCrafter approvals):**
