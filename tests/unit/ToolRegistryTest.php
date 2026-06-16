@@ -124,6 +124,8 @@ class ToolRegistryTest extends TestCase {
         $product->shouldReceive( 'is_in_stock' )->andReturn( true );
         $product->shouldReceive( 'get_short_description' )->andReturn( '' );
         $product->shouldReceive( 'get_image_id' )->andReturn( 0 );
+        $product->shouldReceive( 'get_average_rating' )->andReturn( '0' );
+        $product->shouldReceive( 'get_review_count' )->andReturn( 0 );
         Functions\when( 'wc_get_products' )->justReturn( [ $product ] );
 
         $result = $this->registry()->dispatch( 'search_products', [ 'query' => 'jeans' ] );

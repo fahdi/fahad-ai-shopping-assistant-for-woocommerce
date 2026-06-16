@@ -390,6 +390,49 @@ a.chatbot-card-title:hover {
 	text-decoration: line-through;
 }
 
+/* ── Star rating (issue #11) ──────────────────────────────────────────────────
+   ★avg (count), shown only when the product has reviews (the element is omitted
+   in JS otherwise). The filled overlay is clipped to (avg/5)*100% over a grey
+   base so fractional ratings render precisely with just the ★ glyph. */
+.chatbot-card-rating {
+	display:     flex;
+	align-items: center;
+	gap:         5px;
+	font-size:   12px;
+	line-height: 1;
+}
+
+.chatbot-card-stars {
+	position:       relative;
+	display:        inline-block;
+	white-space:    nowrap;
+	font-size:      13px;
+	line-height:    1;
+	/* Empty (base) stars colour. */
+	color:          #d1d5db;
+}
+
+.chatbot-card-stars-empty {
+	display: block;
+}
+
+.chatbot-card-stars-filled {
+	position:    absolute;
+	top:         0;
+	left:        0;
+	overflow:    hidden;
+	white-space: nowrap;
+	/* #b45309 (amber-700) = 4.8:1 on the white card so the filled stars are not a
+	   colour-only signal failing contrast; the numeric "4.5 (24)" text and the
+	   aria-label also convey the value (WCAG 1.4.1 / 1.4.11). */
+	color:       #b45309;
+}
+
+.chatbot-card-rating-text {
+	color:       var(--chatbot-muted);
+	font-weight: 600;
+}
+
 .chatbot-card-stock {
 	font-size: 11px;
 	color:     #15803d;
