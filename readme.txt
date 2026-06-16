@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 1.1.0
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,10 +23,22 @@ Fahad AI Shopping Assistant adds an intelligent shopping assistant widget to you
 
 * Search products by name, category, and price range
 * Show full product details including stock status, SKU, and available variations
-* Add products to the customer's cart
-* View current cart contents with totals
-* Remove items from the cart
+* Help customers pick and add a specific variation (size/colour) of a variable product
+* Show ratings and review highlights on product cards (grounded in real reviews)
+* Compare products side by side in a mobile-friendly table
+* Recommend related products and offer optional cross-sells, respecting a stated budget
+* Surface best-sellers and browse categories
+* Show valid, applicable coupons and apply them to the cart (never invented codes)
+* Estimate shipping cost and delivery options for a destination
+* Look up order status for the logged-in customer (their own orders only)
+* Check wallet/store-credit balance and top up, when a compatible wallet plugin is active
+* Remember a logged-in customer's stated preferences across sessions (opt-in, viewable and clearable)
+* Add products to the customer's cart, view cart contents with totals, and remove items
 * Stream responses in real-time (Moonshot provider)
+
+**Built for trust:** the assistant grounds every product fact in your store's data (no invented prices, stock, reviews, or codes), respects stated budgets, never uses fake scarcity or pressure, discloses upsells as optional, and always points customers to human support when needed. Personal data (orders, wallet, saved preferences) is restricted to the logged-in owner.
+
+**For developers:** other plugins can register their own assistant tools via the `fahad_ai_register_tools` filter — no core changes required.
 
 **Requirements:**
 
@@ -85,6 +97,31 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.0.0 =
+A major release delivering the full shopping-assistant roadmap.
+
+New shopper features:
+* Reviews & ratings shown on product cards (grounded in real reviews, never invented)
+* Pick and add a specific product variation (size/colour) conversationally
+* Side-by-side product comparison table (mobile-friendly)
+* Coupons & deals — only valid, applicable codes are shown and applied to the cart
+* Best-sellers and category browsing
+* Recommendations & optional cross-sells that respect a stated budget
+* Order status & tracking for the logged-in customer (their own orders only)
+* Wallet-aware shopping — balance and top-up via a decoupled provider, when a compatible wallet plugin is active
+* Shipping & delivery estimates by destination
+* Opt-in cross-session memory for stated preferences (viewable and clearable)
+
+Trust & safety:
+* Anti-dark-pattern guardrails encoded in the assistant: no fake scarcity, respect stated budgets, disclose upsells, abstain instead of guessing, and never block human support
+* Privacy/authorization boundary for personal-data tools — login-gated, with strict per-record ownership checks
+* WCAG 2.2 AA accessibility pass on the chat widget and product cards
+
+Under the hood:
+* Tool extensibility hook (`fahad_ai_register_tools`) so add-ons can register assistant tools without forking the core; built-in tools migrated to a drop-in registry
+* Cost & latency controls — tool results trimmed before being fed back to the model, per-conversation token budget, and a model-routing seam
+* An offline eval harness (golden conversations + grounding checks) runs in CI to guard answer quality
+
 = 1.1.0 =
 * New: product results now render as rich visual cards in the chat — product photo, price (with sale price), stock status, a short description, and View / Add to cart buttons
 * Product search and details now return the product image and a clean price; card data is sourced from WooCommerce (not AI text) so it is always accurate
@@ -129,6 +166,9 @@ The conversation history (user messages and assistant replies) and the results o
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.0.0 =
+Major update: reviews, variations, comparison, coupons, recommendations, best-sellers, order status, wallet, shipping estimates, and opt-in memory — plus trust guardrails, a privacy/auth boundary, accessibility, an extensibility hook, and cost controls. Backward compatible; no settings changes required.
 
 = 1.1.0 =
 Product results now appear as rich cards with photo, price, stock, and Add-to-cart buttons.

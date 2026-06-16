@@ -3,7 +3,7 @@
 Plugin folder: `fahad-ai-shopping-assistant-for-woocommerce/`
 Main file: `fahad-ai-shopping-assistant-for-woocommerce.php`
 GitHub: https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
-Current version: 1.1.0
+Current version: 2.0.0
 Requires: WordPress 6.0+ (tested up to 7.0), PHP 8.0+, WooCommerce active
 Slug (WP.org): `fahad-ai-shopping-assistant-for-woocommerce` (pending approval)
 Text domain: `fahad-ai-shopping-assistant-for-woocommerce` (must equal slug)
