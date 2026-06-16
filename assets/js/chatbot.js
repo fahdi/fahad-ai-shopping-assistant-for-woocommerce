@@ -8,6 +8,11 @@
 	// ── Accent colour ─────────────────────────────────────────────────────────
 	document.documentElement.style.setProperty('--chatbot-accent', cfg.accentColor);
 	document.documentElement.style.setProperty('--chatbot-accent-dark', darkenHex(cfg.accentColor, 20));
+	// Choose a foreground (black/white) that has the best contrast on the accent
+	// so text on accent backgrounds stays legible whatever accent the admin picks
+	// (WCAG 1.4.3). Picking the higher-contrast of black/white guarantees >=4.5:1
+	// across the whole sRGB gamut (worst case ~4.58:1).
+	document.documentElement.style.setProperty('--chatbot-accent-fg', accentForeground(cfg.accentColor));
 
 	function darkenHex(hex, amount) {
 		const n = parseInt(hex.replace('#', ''), 16);
@@ -15,6 +20,22 @@
 		const g = Math.max(0, ((n >> 8)  & 0xff) - amount);
 		const b = Math.max(0, ((n)       & 0xff) - amount);
 		return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+	}
+
+	function relLuminance(hex) {
+		const n = parseInt(String(hex).replace('#', ''), 16);
+		const ch = [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff].map(v => {
+			const c = v / 255;
+			return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+		});
+		return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+	}
+
+	function accentForeground(hex) {
+		const L = relLuminance(hex);
+		const contrastWhite = (1.0 + 0.05) / (L + 0.05);
+		const contrastBlack = (L + 0.05) / (0.0 + 0.05);
+		return contrastBlack > contrastWhite ? '#000000' : '#ffffff';
 	}
 
 	// ── Tool labels shown during streaming ────────────────────────────────────
@@ -28,6 +49,11 @@
 	};
 	const TOOL_FALLBACK = '⚙️ ' + (i18n.toolWorking || 'Working…');
 
+	// Substitute a single %s placeholder (printf-style) used by accessible labels.
+	function fmt(template, value) {
+		return String(template).replace('%s', value);
+	}
+
 	// ── State ─────────────────────────────────────────────────────────────────
 	let history = [];
 	let busy    = false;
@@ -37,22 +63,23 @@
 	if (!root) return;
 
 	root.innerHTML = `
-		<button id="chatbot-toggle" aria-label="${esc(i18n.openChat || 'Open chat assistant')}">
-			<svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+		<button id="chatbot-toggle" type="button" aria-expanded="false" aria-controls="chatbot-panel"
+			aria-label="${esc(i18n.openChat || 'Open chat assistant')}">
+			<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
 				stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 				<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
 			</svg>
 		</button>
-		<div id="chatbot-panel" class="chatbot-hidden"
+		<div id="chatbot-panel" class="chatbot-hidden" inert
 			role="dialog" aria-modal="true" aria-label="${esc(i18n.chatDialogLabel || 'Chat with store assistant')}">
 			<div id="chatbot-header">
 				<div id="chatbot-header-left">
 					<div id="chatbot-status-dot" aria-hidden="true"></div>
 					<span id="chatbot-bot-name">${esc(cfg.botName)}</span>
 				</div>
-				<button id="chatbot-close" aria-label="${esc(i18n.closeChat || 'Close chat')}">&#x2715;</button>
+				<button id="chatbot-close" type="button" aria-label="${esc(i18n.closeChat || 'Close chat')}"><span aria-hidden="true">&#x2715;</span></button>
 			</div>
-			<div id="chatbot-messages" role="log" aria-live="polite">
+			<div id="chatbot-messages" role="log" aria-live="polite" aria-atomic="false">
 				<div class="chatbot-msg bot">
 					<div class="chatbot-bubble">${esc(cfg.greeting)}</div>
 				</div>
@@ -61,8 +88,8 @@
 				<input id="chatbot-input" type="text"
 					placeholder="${esc(i18n.placeholder || 'Ask me anything…')}" autocomplete="off"
 					aria-label="${esc(i18n.yourMessage || 'Your message')}">
-				<button id="chatbot-send" aria-label="${esc(i18n.sendMessage || 'Send message')}">
-					<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+				<button id="chatbot-send" type="button" aria-label="${esc(i18n.sendMessage || 'Send message')}">
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
 						stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<line x1="22" y1="2" x2="11" y2="13"/>
 						<polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -83,12 +110,79 @@
 	// ── Open / close ──────────────────────────────────────────────────────────
 	toggle.addEventListener('click', openChat);
 	closeBtn.addEventListener('click', closeChat);
-	document.addEventListener('keydown', e => {
-		if (e.key === 'Escape' && !panel.classList.contains('chatbot-hidden')) closeChat();
+
+	function isOpen() { return !panel.classList.contains('chatbot-hidden'); }
+
+	// Keyboard handling for the open dialog: Esc closes, Tab is trapped inside the
+	// panel so keyboard focus cannot escape behind the modal (WCAG 2.4.3 / 2.1.2).
+	panel.addEventListener('keydown', e => {
+		if (!isOpen()) return;
+
+		if (e.key === 'Escape') {
+			e.preventDefault();
+			closeChat();
+			return;
+		}
+
+		if (e.key === 'Tab') trapFocus(e);
 	});
 
-	function openChat()  { panel.classList.remove('chatbot-hidden'); toggle.style.display = 'none'; input.focus(); }
-	function closeChat() { panel.classList.add('chatbot-hidden'); toggle.style.display = ''; toggle.focus(); }
+	// Fallback: Esc closes even if focus somehow sits outside the panel while open.
+	document.addEventListener('keydown', e => {
+		if (e.key === 'Escape' && isOpen()) closeChat();
+	});
+
+	function focusableInPanel() {
+		const nodes = panel.querySelectorAll(
+			'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+		);
+		// Only those actually rendered (visible) — disabled input during loading is excluded above.
+		return Array.prototype.filter.call(nodes, el => el.offsetParent !== null || el === document.activeElement);
+	}
+
+	function trapFocus(e) {
+		const focusable = focusableInPanel();
+		if (!focusable.length) {
+			e.preventDefault();
+			panel.focus();
+			return;
+		}
+		const first = focusable[0];
+		const last  = focusable[focusable.length - 1];
+		const active = document.activeElement;
+
+		if (e.shiftKey) {
+			if (active === first || !panel.contains(active)) {
+				e.preventDefault();
+				last.focus();
+			}
+		} else if (active === last || !panel.contains(active)) {
+			e.preventDefault();
+			first.focus();
+		}
+	}
+
+	function openChat() {
+		// Remove inert *before* focusing so the input is immediately focusable.
+		panel.removeAttribute('inert');
+		panel.classList.remove('chatbot-hidden');
+		toggle.style.display = 'none';
+		toggle.setAttribute('aria-expanded', 'true');
+		input.focus();
+		// Fallback: if the input could not take focus, move it to the close button
+		// so focus still lands inside the dialog (never left on the page behind it).
+		if (document.activeElement !== input) closeBtn.focus();
+	}
+
+	function closeChat() {
+		panel.classList.add('chatbot-hidden');
+		toggle.style.display = '';
+		toggle.setAttribute('aria-expanded', 'false');
+		toggle.focus();
+		// inert last: an inert element cannot hold focus, so applying it before
+		// moving focus to the toggle would strand focus on <body>.
+		panel.setAttribute('inert', '');
+	}
 
 	// ── Send ──────────────────────────────────────────────────────────────────
 	sendBtn.addEventListener('click', sendMessage);
@@ -280,6 +374,10 @@
 
 		const list = document.createElement('div');
 		list.className = 'chatbot-products';
+		// Group the cards under an accessible name so the set is understandable to
+		// assistive tech rather than a loose run of links and buttons.
+		list.setAttribute('role', 'group');
+		list.setAttribute('aria-label', i18n.productsGroupLabel || 'Recommended products');
 
 		products.forEach(p => {
 			if (p && p.name) list.appendChild(buildCard(p));
@@ -302,7 +400,9 @@
 			const img = document.createElement('img');
 			img.className = 'chatbot-card-img';
 			img.src       = p.image;
-			img.alt       = p.name || '';
+			// Decorative: the product name is announced via the adjacent title link,
+			// so an empty alt avoids a duplicate, redundant announcement.
+			img.alt       = '';
 			img.loading   = 'lazy';
 			// Hide gracefully if the image (e.g. a missing placeholder) fails to load.
 			img.addEventListener('error', () => img.remove());
@@ -334,9 +434,16 @@
 
 		const stock = document.createElement('div');
 		stock.className = 'chatbot-card-stock' + (p.in_stock ? '' : ' out');
-		stock.textContent = p.in_stock
-			? (i18n.inStock || 'In stock')
-			: (i18n.outOfStock || 'Out of stock');
+		// A leading glyph conveys stock state without relying on colour alone
+		// (WCAG 1.4.1). The glyph is decorative; the adjacent text is the label.
+		const stockIcon = document.createElement('span');
+		stockIcon.className = 'chatbot-card-stock-icon';
+		stockIcon.setAttribute('aria-hidden', 'true');
+		stockIcon.textContent = p.in_stock ? '✓ ' : '✕ ';
+		stock.appendChild(stockIcon);
+		stock.appendChild(document.createTextNode(
+			p.in_stock ? (i18n.inStock || 'In stock') : (i18n.outOfStock || 'Out of stock')
+		));
 		body.appendChild(stock);
 
 		if (p.short_description) {
@@ -356,6 +463,11 @@
 			view.target = '_blank';
 			view.rel = 'noopener';
 			view.textContent = i18n.viewProduct || 'View';
+			// Visible text is just "View"; give the link an accessible name that
+			// includes the product so it is unambiguous out of context (WCAG 2.4.4).
+			if (p.name) {
+				view.setAttribute('aria-label', fmt(i18n.viewProductNamed || 'View %s', p.name));
+			}
 			actions.appendChild(view);
 		}
 
@@ -364,6 +476,9 @@
 			add.type = 'button';
 			add.className = 'chatbot-card-add';
 			add.textContent = i18n.addToCart || 'Add to cart';
+			if (p.name) {
+				add.setAttribute('aria-label', fmt(i18n.addToCartNamed || 'Add %s to cart', p.name));
+			}
 			add.addEventListener('click', () => {
 				if (busy) return;
 				input.value = 'Please add ' + (p.name || '') + ' to my cart';

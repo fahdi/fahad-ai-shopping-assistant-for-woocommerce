@@ -3,13 +3,19 @@
 :root {
 	--chatbot-accent:      #2563eb;
 	--chatbot-accent-dark: #1d4ed8;
+	/* Foreground for text/icons on accent backgrounds. JS overrides this with the
+	   higher-contrast of black/white for the configured accent (>=4.5:1 across the
+	   whole gamut); the literal here is the fallback for the default accent. */
+	--chatbot-accent-fg:   #ffffff;
 	--chatbot-bg:          #ffffff;
 	--chatbot-border:      #e5e7eb;
 	--chatbot-text:        #111827;
-	--chatbot-muted:       #6b7280;
+	/* #646b76 = 4.88:1 on the bot bubble (#f3f4f6) so muted text clears AA 4.5:1
+	   for normal text; was #6b7280 (4.39:1, just under). */
+	--chatbot-muted:       #646b76;
 	--chatbot-bot-bubble:  #f3f4f6;
 	--chatbot-user-bubble: var(--chatbot-accent);
-	--chatbot-user-text:   #ffffff;
+	--chatbot-user-text:   var(--chatbot-accent-fg);
 	--chatbot-radius:      16px;
 	--chatbot-z:           9999;
 }
@@ -23,7 +29,7 @@
 	height:        56px;
 	border-radius: 50%;
 	background:    var(--chatbot-accent);
-	color:         #fff;
+	color:         var(--chatbot-accent-fg);
 	border:        none;
 	cursor:        pointer;
 	display:       flex;
@@ -31,17 +37,23 @@
 	justify-content: center;
 	box-shadow:    0 4px 14px rgba(0, 0, 0, .22);
 	z-index:       var(--chatbot-z);
-	transition:    background .2s, transform .2s;
 }
 
 #chatbot-toggle:hover {
 	background: var(--chatbot-accent-dark);
-	transform:  scale(1.06);
 }
 
+/* High-contrast, accent-independent focus ring: a dark ring plus a white offset
+   so it is visible on any accent/background (WCAG 2.4.7 / 2.4.11). */
 #chatbot-toggle:focus-visible {
-	outline: 2px solid var(--chatbot-accent);
-	outline-offset: 3px;
+	outline:        2px solid #1a1a1a;
+	outline-offset: 2px;
+	box-shadow:     0 4px 14px rgba(0, 0, 0, .22), 0 0 0 4px #ffffff, 0 0 0 6px #1a1a1a;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	#chatbot-toggle        { transition: background .2s, transform .2s; }
+	#chatbot-toggle:hover  { transform: scale(1.06); }
 }
 
 /* ── Panel ── */
@@ -59,19 +71,33 @@
 	flex-direction: column;
 	z-index:        var(--chatbot-z);
 	overflow:       hidden;
-	transition:     opacity .2s, transform .2s;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+	#chatbot-panel { transition: opacity .2s, transform .2s; }
+}
+
+/* The closed panel is also given the `inert` attribute in JS, which removes it
+   and its controls from the keyboard tab order and from assistive tech, so focus
+   cannot land on the hidden input (WCAG 2.4.3 / 4.1.2). Using `inert` rather than
+   `visibility:hidden` keeps the open animation while not delaying focusability of
+   the controls when the panel is revealed. */
 #chatbot-panel.chatbot-hidden {
 	opacity:        0;
 	pointer-events: none;
 	transform:      translateY(12px);
 }
 
+/* Defensive: a stale/un-inert-ed hidden panel (e.g. inert unsupported) must still
+   not capture clicks. inert handles keyboard/AT; this covers pointer. */
+#chatbot-panel[inert] {
+	pointer-events: none;
+}
+
 /* ── Header ── */
 #chatbot-header {
 	background:      var(--chatbot-accent);
-	color:           #fff;
+	color:           var(--chatbot-accent-fg);
 	padding:         14px 16px;
 	display:         flex;
 	align-items:     center;
@@ -99,20 +125,29 @@
 	line-height: 1;
 }
 
+/* Full-opacity accent-fg (no alpha dimming) so the glyph keeps maximum contrast
+   on the accent background. Hover uses a subtle translucent backdrop instead. */
 #chatbot-close {
-	background:  none;
-	border:      none;
-	color:       rgba(255, 255, 255, .85);
-	cursor:      pointer;
-	font-size:   18px;
-	line-height: 1;
-	padding:     0;
-	display:     flex;
-	align-items: center;
+	background:    none;
+	border:        none;
+	color:         var(--chatbot-accent-fg);
+	cursor:        pointer;
+	font-size:     18px;
+	line-height:   1;
+	padding:       4px;
+	margin:        -4px;
+	border-radius: 6px;
+	display:       flex;
+	align-items:   center;
 }
 
 #chatbot-close:hover {
-	color: #fff;
+	background: rgba(127, 127, 127, .25);
+}
+
+#chatbot-close:focus-visible {
+	outline:        2px solid var(--chatbot-accent-fg);
+	outline-offset: 1px;
 }
 
 /* ── Messages ── */
@@ -123,7 +158,10 @@
 	display:        flex;
 	flex-direction: column;
 	gap:            10px;
-	scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	#chatbot-messages { scroll-behavior: smooth; }
 }
 
 .chatbot-msg {
@@ -166,17 +204,24 @@
 .chatbot-typing span {
 	width:         7px;
 	height:        7px;
-	background:    #9ca3af;
+	background:    #6b7280;
 	border-radius: 50%;
-	animation:     chatbot-bounce 1.2s infinite ease-in-out;
 }
 
-.chatbot-typing span:nth-child(2) { animation-delay: .2s; }
-.chatbot-typing span:nth-child(3) { animation-delay: .4s; }
+/* Animate the typing dots only when motion is allowed; under reduced-motion the
+   three dots remain as a static "typing" affordance (WCAG 2.3.3). */
+@media (prefers-reduced-motion: no-preference) {
+	.chatbot-typing span {
+		animation: chatbot-bounce 1.2s infinite ease-in-out;
+	}
 
-@keyframes chatbot-bounce {
-	0%, 60%, 100% { transform: translateY(0); }
-	30%           { transform: translateY(-6px); }
+	.chatbot-typing span:nth-child(2) { animation-delay: .2s; }
+	.chatbot-typing span:nth-child(3) { animation-delay: .4s; }
+
+	@keyframes chatbot-bounce {
+		0%, 60%, 100% { transform: translateY(0); }
+		30%           { transform: translateY(-6px); }
+	}
 }
 
 /* ── Input area ── */
@@ -199,12 +244,17 @@
 	outline:       none;
 	background:    var(--chatbot-bg);
 	color:         var(--chatbot-text);
-	transition:    border-color .15s, box-shadow .15s;
 }
 
-#chatbot-input:focus {
+@media (prefers-reduced-motion: no-preference) {
+	#chatbot-input { transition: border-color .15s, box-shadow .15s; }
+}
+
+/* Visible focus indicator that does not depend on the (configurable) accent
+   meeting contrast: a dark ring is always perceivable (WCAG 2.4.7). */
+#chatbot-input:focus-visible {
 	border-color: var(--chatbot-accent);
-	box-shadow:   0 0 0 3px rgba(37, 99, 235, .12);
+	box-shadow:   0 0 0 2px #ffffff, 0 0 0 4px #1a1a1a;
 }
 
 #chatbot-send {
@@ -212,17 +262,27 @@
 	height:        38px;
 	flex-shrink:   0;
 	background:    var(--chatbot-accent);
-	color:         #fff;
+	color:         var(--chatbot-accent-fg);
 	border:        none;
 	border-radius: 8px;
 	cursor:        pointer;
 	display:       flex;
 	align-items:   center;
 	justify-content: center;
-	transition:    background .15s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	#chatbot-send { transition: background .15s; }
 }
 
 #chatbot-send:hover  { background: var(--chatbot-accent-dark); }
+
+#chatbot-send:focus-visible {
+	outline:        2px solid #1a1a1a;
+	outline-offset: 2px;
+	box-shadow:     0 0 0 4px #ffffff, 0 0 0 6px #1a1a1a;
+}
+
 #chatbot-send:disabled {
 	opacity: .5;
 	cursor:  not-allowed;
@@ -367,6 +427,15 @@ a.chatbot-card-title:hover {
 	line-height:     1.4;
 }
 
+/* Shared visible focus indicator for the card controls — accent-independent dark
+   ring on a white spacer so it is perceivable on any accent (WCAG 2.4.7). */
+.chatbot-card-view:focus-visible,
+.chatbot-card-add:focus-visible {
+	outline:        2px solid #1a1a1a;
+	outline-offset: 2px;
+	box-shadow:     0 0 0 4px #ffffff;
+}
+
 .chatbot-card-view {
 	color:      var(--chatbot-accent);
 	background: transparent;
@@ -378,11 +447,31 @@ a.chatbot-card-title:hover {
 }
 
 .chatbot-card-add {
-	color:      #fff;
+	color:      var(--chatbot-accent-fg);
 	background: var(--chatbot-accent);
 	border:     1px solid var(--chatbot-accent);
 }
 
 .chatbot-card-add:hover {
 	background: var(--chatbot-accent-dark);
+}
+
+.chatbot-card-stock-icon {
+	font-weight: 700;
+}
+
+/* ── Reduced motion safety net ────────────────────────────────────────────────
+   Non-essential transitions/animations are opt-in via the no-preference queries
+   above; this scoped catch-all neutralises anything that slips through (e.g. a
+   theme forcing a transition onto these elements) when the user asks to reduce
+   motion (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+	#fahad-ai-chatbot-root *,
+	#chatbot-toggle,
+	#chatbot-panel {
+		animation-duration:        .001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration:       .001ms !important;
+		scroll-behavior:           auto !important;
+	}
 }
