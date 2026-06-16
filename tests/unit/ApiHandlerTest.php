@@ -285,6 +285,25 @@ class ApiHandlerTest extends TestCase {
         $this->assertStringNotContainsString( '[INJECTED BLOCK]', $prompt );
     }
 
+    public function test_default_prompt_states_the_trust_guardrail_policy(): void {
+        // issue #24: the trust / anti-dark-pattern policy lives INLINE in the default
+        // prompt (its source of truth). This pins the consolidated guardrail section so
+        // a future prompt edit cannot silently drop the policy — the deterministic eval
+        // checkers (scarcity_violations / budget_violations / escalation_present /
+        // abstains) enforce the BEHAVIOUR; this asserts the POLICY text is present.
+        Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
+
+        $prompt = $this->get_system_prompt();
+
+        $this->assertStringContainsString( 'No fake urgency or scarcity', $prompt );
+        $this->assertStringContainsString( 'Respect the customer\'s stated budget', $prompt );
+        $this->assertStringContainsString( 'Abstain over guessing', $prompt );
+        $this->assertStringContainsString( 'Never block human support', $prompt );
+        // The earlier ad-hoc honesty lines are CONSOLIDATED here, not duplicated: the
+        // grounding clause now reads as one rule covering product facts AND reviews.
+        $this->assertStringContainsString( 'Never invent product details, prices, stock, reviews', $prompt );
+    }
+
     public function test_custom_system_prompt_option_still_passes_through_the_filter(): void {
         // An admin-set custom prompt short-circuits the default text but must STILL go
         // through the filter, so memory injection works regardless of a custom prompt.

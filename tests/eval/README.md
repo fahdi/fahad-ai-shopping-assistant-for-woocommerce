@@ -151,6 +151,44 @@ The checker is proven to actually fail by **negative self-tests** in
 `GoldenConversationTest` (`test_grounding_self_test_fails_for_fabricated_price`
 and `…_fabricated_product_name`) — a checker that always passes would be useless.
 
+## Trust & anti-dark-pattern policy (issue #24)
+
+Honesty is this assistant's core thesis, so the trust policy is encoded in two
+places that must stay in sync:
+
+1. **The policy text** — a consolidated "Trust & honesty — these rules are
+   absolute" section in `Fahad_AI_API_Handler::get_system_prompt()`
+   (`includes/class-api-handler.php`). It is pinned by
+   `ApiHandlerTest::test_default_prompt_states_the_trust_guardrail_policy` so a
+   prompt edit can't silently drop it. (The `fahad_ai_system_prompt` filter
+   pass-through is preserved, so the memory pack can still append preferences.)
+2. **Deterministic guardrail checkers** in `EvalHarness.php` — the offline
+   analogue of `grounding_violations()`. Like grounding they are containment /
+   phrasing heuristics (not semantic judges) and each is proven to have teeth by a
+   **positive + negative self-test** in `GoldenConversationTest` (the
+   "Guardrail-checker SELF-TESTS" block).
+
+| Policy rule | Checker | `expect` key | Self-tests (positive / negative) | Golden fixture |
+| --- | --- | --- | --- | --- |
+| No fake scarcity / urgency | `scarcity_violations($answer, $tool_results)` | `no_scarcity` | `test_scarcity_self_test_passes_for_honest_answer` / `…_fails_for_manufactured_urgency`, `…_fails_for_fabricated_stock_count` | `fixtures/fake-scarcity.php` |
+| Respect the stated budget | `budget_violations($answer, $budget, $tool_results)` | `budget` (the cap) | `test_budget_self_test_passes_within_budget` / `…_fails_when_over_budget` | `fixtures/budget.php` |
+| Abstain over guessing | `abstains($answer)` (pair with `grounded`) | `must_abstain` | `test_abstain_self_test_detects_abstention` / `…_false_for_confident_answer` | `fixtures/abstain-not-found.php` |
+| Never block human support | `escalation_present($answer)` | `must_escalate` | `test_escalation_self_test_detects_support_handoff` / `…_false_for_plain_answer` | `fixtures/escalate-refund.php` |
+| Disclose upsells / honest extras / ground facts | `grounding_violations()` + the prompt rule | `grounded` | the grounding self-tests | every product fixture with `'grounded' => true` |
+
+**Known limits (by design, documented in `EvalHarness.php`):**
+- `scarcity_violations` matches a finite phrase list (extend it when a new dark
+  pattern appears) and grounds a quantity by numeric containment — a claimed count
+  that coincidentally equals another number in the results would pass.
+- `budget_violations` only checks prices the answer states **in text** (the cards
+  render the rest); the recommendation tools already filter over-budget items out
+  of the cards server-side.
+- `escalation_present` / `abstains` are presence heuristics over common phrasings.
+
+These guardrails are intentionally narrow: they catch the high-value dark-pattern
+failure modes without policing ordinary, honest selling — the assistant can still
+recommend and upsell, just truthfully.
+
 ## How to add a new case
 
 > **Every new AI feature MUST add at least one eval case.** A tool the model can
@@ -162,6 +200,9 @@ and `…_fabricated_product_name`) — a checker that always passes would be use
 3. Provide the `wc` data your tools need (products / product_by_id / cart).
 4. List the expected `tool_calls` in order and any answer/card/grounding
    expectations. If the final answer states product facts, set `'grounded' => true`.
+   If the feature touches a trust guardrail, add the matching expectation too —
+   `no_scarcity`, `budget => <cap>`, `must_abstain`, or `must_escalate` (see the
+   "Trust & anti-dark-pattern policy" table above) — so the policy can't regress.
 5. Run `vendor/bin/phpunit --testsuite eval --testdox` and confirm your case is
    listed and green.
 
