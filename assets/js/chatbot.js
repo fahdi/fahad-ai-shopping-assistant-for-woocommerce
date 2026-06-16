@@ -67,6 +67,9 @@
 	// ── State ─────────────────────────────────────────────────────────────────
 	let history = [];
 	let busy    = false;
+	// Monotonic id source so each variation <select> can be tied to its own <label>
+	// (via for/id) for an accessible, unambiguous name even with many cards.
+	let uid     = 0;
 
 	// ── Build widget HTML ─────────────────────────────────────────────────────
 	const root = document.getElementById('fahad-ai-chatbot-root');
@@ -519,6 +522,13 @@
 			body.appendChild(desc);
 		}
 
+		// Variation selector (issue #12): for a variable product carrying a
+		// variations list, render a labelled <select> so the customer can pick a
+		// specific option. The chosen variation_id is then handed to the assistant
+		// (which calls add_to_cart with it). Built only when there is at least one
+		// in-stock variation to choose. Returns the <select> element (or null).
+		const variationSelect = buildVariationSelect(p, body);
+
 		const actions = document.createElement('div');
 		actions.className = 'chatbot-card-actions';
 
@@ -547,6 +557,23 @@
 			}
 			add.addEventListener('click', () => {
 				if (busy) return;
+
+				// Variable product: require a chosen variation, then pass its id (and
+				// human-readable label) so the model adds the exact variation.
+				if (variationSelect) {
+					const opt = variationSelect.selectedOptions[0];
+					const variationId = opt ? opt.value : '';
+					if (!variationId) {
+						variationSelect.focus();
+						return;
+					}
+					const label = opt.dataset.label || '';
+					input.value = 'Please add ' + (p.name || '') + ' — ' + label +
+						' (variation_id ' + variationId + ') to my cart';
+					sendMessage();
+					return;
+				}
+
 				input.value = 'Please add ' + (p.name || '') + ' to my cart';
 				sendMessage();
 			});
@@ -557,6 +584,59 @@
 
 		card.appendChild(body);
 		return card;
+	}
+
+	// Build the variation <select> for a variable product card and append it to the
+	// card body (before the action buttons). Each option carries its variation_id as
+	// the value and the readable label in data-label (so the Add handler can quote it
+	// to the assistant). Sold-out variations are shown but disabled so the option set
+	// is transparent without ever yielding an un-addable selection. Returns the
+	// <select> element, or null when there is nothing selectable to choose.
+	function buildVariationSelect(p, body) {
+		if (!p.is_variable || !Array.isArray(p.variations) || !p.variations.length) return null;
+
+		const inStock = p.variations.filter(v => v && v.in_stock && Number(v.variation_id) > 0);
+		if (!inStock.length) return null; // nothing the customer can actually add.
+
+		const id = 'chatbot-var-' + (++uid);
+
+		const label = document.createElement('label');
+		label.className = 'chatbot-card-var-label';
+		label.htmlFor = id;
+		// Associate the control with the product so AT announces e.g.
+		// "Choose an option for Cotton Tee" (WCAG 1.3.1 / 4.1.2 / 3.3.2).
+		label.textContent = fmt(i18n.chooseOptionFor || 'Choose an option for %s', p.name || '');
+
+		const select = document.createElement('select');
+		select.className = 'chatbot-card-var-select';
+		select.id = id;
+
+		// Leading placeholder so the customer makes an explicit choice.
+		const placeholder = document.createElement('option');
+		placeholder.value = '';
+		placeholder.textContent = i18n.chooseOption || 'Choose an option…';
+		select.appendChild(placeholder);
+
+		p.variations.forEach(v => {
+			if (!v || Number(v.variation_id) <= 0) return;
+			const opt = document.createElement('option');
+			opt.value = String(v.variation_id);
+			opt.dataset.label = v.label || '';
+			// Append the price when present so the option text is informative.
+			const base = (v.label || '') + (v.price ? ' — ' + v.price : '');
+			if (v.in_stock) {
+				opt.textContent = base;
+			} else {
+				// Show sold-out options as disabled (not selectable) for transparency.
+				opt.textContent = fmt(i18n.variationOutOfStock || '%s (out of stock)', base);
+				opt.disabled = true;
+			}
+			select.appendChild(opt);
+		});
+
+		body.appendChild(label);
+		body.appendChild(select);
+		return select;
 	}
 
 	// Safely render markdown links and bold from AI responses.

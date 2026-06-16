@@ -70,6 +70,10 @@ if ( ! class_exists( 'WC_Product' ) ) {
         public function get_available_variations(): array { return []; }
         public function get_average_rating(): string      { return '0'; }
         public function get_review_count(): int           { return 0; }
+        // Parent id of a variation (child) product; 0 for top-level products.
+        // Read by add_to_cart (issue #12) to verify a chosen variation belongs to
+        // the product before adding it to the cart.
+        public function get_parent_id(): int              { return 0; }
     }
 }
 

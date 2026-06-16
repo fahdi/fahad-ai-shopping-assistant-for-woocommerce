@@ -316,6 +316,114 @@ final class GoldenConversationTest extends TestCase {
 	}
 
 	// =========================================================================
+	// Variations END-TO-END (issue #12)
+	// =========================================================================
+
+	/**
+	 * Drive the variation-add golden conversation through the REAL loop and assert
+	 * on the TOOL RESULTS (not just the scripted answer): get_product_details must
+	 * surface the chosen variation with a human-readable label and its OWN price,
+	 * and add_to_cart must succeed for the specific variation, reflecting the
+	 * variation's price ($25.00) rather than the parent's ($20.00).
+	 *
+	 * The shared fixture runner already asserts the tool-call order, the chosen
+	 * variation_id, the surfaced card and grounding; this dedicated test reaches
+	 * into the recovered tool-result trace to prove the variation data is real
+	 * (the trace is accurate because the fixture gives each turn a unique tool id).
+	 */
+	public function test_variation_add_surfaces_and_adds_the_chosen_variation(): void {
+		$fixture = require __DIR__ . '/fixtures/variation-add.php';
+
+		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_woocommerce( $fixture['wc'] );
+		EvalHarness::script_transport( $fixture['script'] );
+
+		$run = EvalHarness::run( 'anthropic', $fixture['messages'] );
+
+		$this->assertFalse( is_wp_error( $run['result'] ) );
+
+		// Map tool name → result for clear assertions.
+		$by_tool = [];
+		foreach ( $run['tool_calls'] as $i => $call ) {
+			$by_tool[ $call['name'] ] = $run['tool_results'][ $i ] ?? [];
+		}
+
+		// 1. get_product_details surfaced readable variations with per-variation price/stock.
+		$details = $by_tool['get_product_details'] ?? [];
+		$this->assertArrayHasKey( 'variations', $details );
+		$labels = array_column( $details['variations'], 'label' );
+		$this->assertContains( 'Size: Large, Color: Blue', $labels );
+		$this->assertContains( 'Size: Small, Color: Red', $labels );
+		// The Large/Blue variation carries its own price, distinct from the parent's $20.00.
+		$large_blue = null;
+		foreach ( $details['variations'] as $v ) {
+			if ( 201 === $v['variation_id'] ) {
+				$large_blue = $v;
+			}
+		}
+		$this->assertNotNull( $large_blue, 'variation 201 was not surfaced' );
+		$this->assertSame( '$25.00', $large_blue['price'] );
+		$this->assertTrue( $large_blue['in_stock'] );
+
+		// 2. add_to_cart succeeded for the chosen variation and reflected ITS price.
+		$added = $by_tool['add_to_cart'] ?? [];
+		$this->assertTrue( $added['success'] ?? false, 'the chosen variation was not added' );
+		$this->assertSame( '$25.00', $added['price'] );
+
+		// 3. The surfaced card advertises the selector (is_variable + variations).
+		$this->assertNotEmpty( $run['products'] );
+		$this->assertTrue( $run['products'][0]['is_variable'] );
+		$this->assertCount( 2, $run['products'][0]['variations'] );
+	}
+
+	/**
+	 * Companion guard: an OUT-OF-STOCK variation is rejected end-to-end. The model
+	 * tries to add a sold-out variation; the real add_to_cart returns success:false
+	 * with an out-of-stock error (gated on the VARIATION's stock, not the in-stock
+	 * parent), and the scripted answer reports it without inventing availability.
+	 */
+	public function test_out_of_stock_variation_is_rejected_end_to_end(): void {
+		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_woocommerce( [
+			'product_by_id' => [
+				300 => [
+					'name'       => 'Wool Hat',
+					'price'      => '15.00',
+					'type'       => 'variable',
+					'in_stock'   => true, // parent in stock …
+					'variations' => [
+						// … but the chosen Red variation is sold out.
+						[ 'variation_id' => 301, 'attributes' => [ 'attribute_color' => 'Red' ], 'price' => '15.00', 'in_stock' => false ],
+						[ 'variation_id' => 302, 'attributes' => [ 'attribute_color' => 'Grey' ], 'price' => '15.00', 'in_stock' => true ],
+					],
+				],
+			],
+		] );
+		EvalHarness::script_transport( [
+			EvalHarness::anthropic_tool_turn( [
+				[ 'id' => 'toolu_d', 'name' => 'get_product_details', 'input' => [ 'product_id' => 300 ] ],
+			] ),
+			EvalHarness::anthropic_tool_turn( [
+				[ 'id' => 'toolu_a', 'name' => 'add_to_cart', 'input' => [ 'product_id' => 300, 'variation_id' => 301 ] ],
+			] ),
+			EvalHarness::anthropic_text_turn(
+				'Sorry, the Red Wool Hat is currently out of stock. The Grey one is available if you would like that instead.'
+			),
+		] );
+
+		$run = EvalHarness::run( 'anthropic', [
+			[ 'role' => 'user', 'content' => 'add the red Wool Hat' ],
+		] );
+
+		$this->assertFalse( is_wp_error( $run['result'] ) );
+
+		// The add_to_cart call (2nd) was rejected on the variation's stock.
+		$add = $run['tool_results'][1] ?? [];
+		$this->assertFalse( $add['success'] ?? true );
+		$this->assertStringContainsString( 'out of stock', strtolower( $add['error'] ?? '' ) );
+	}
+
+	// =========================================================================
 	// Grounding-checker SELF-TESTS (prove the checker actually works)
 	// =========================================================================
 

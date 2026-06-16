@@ -183,22 +183,87 @@ final class Fahad_AI_Tools {
 		];
 
 		if ( $product->is_type( 'variable' ) ) {
-			$variations = [];
-			foreach ( $product->get_available_variations() as $var ) {
-				$v = wc_get_product( $var['variation_id'] );
-				if ( $v ) {
-					$variations[] = [
-						'variation_id' => $v->get_id(),
-						'attributes'   => $var['attributes'],
-						'price'        => $this->plain_price( $v->get_price() ),
-						'in_stock'     => $v->is_in_stock(),
-					];
-				}
-			}
-			$data['variations'] = $variations;
+			$data['variations'] = $this->build_variations( $product );
 		}
 
 		return $data;
+	}
+
+	/**
+	 * Build the surfaced variation list for a variable product.
+	 *
+	 * Each entry carries the variation id, a human-readable attribute `label`
+	 * (e.g. "Size: Large, Color: Blue") derived from the raw attribute map, the
+	 * variation's OWN price/sale/stock (not the parent's), and the raw `attributes`
+	 * map (kept so the model can reason about exact attribute values).
+	 *
+	 * @return array<int, array{variation_id:int, label:string, attributes:array, price:string, regular_price:string, sale_price:?string, on_sale:bool, in_stock:bool}>
+	 */
+	private function build_variations( WC_Product $product ): array {
+		$variations = [];
+
+		foreach ( $product->get_available_variations() as $var ) {
+			$attributes = isset( $var['attributes'] ) && is_array( $var['attributes'] ) ? $var['attributes'] : [];
+			$v          = wc_get_product( $var['variation_id'] ?? 0 );
+
+			if ( ! $v ) {
+				continue;
+			}
+
+			$variations[] = [
+				'variation_id'  => $v->get_id(),
+				'label'         => $this->variation_label( $attributes ),
+				'attributes'    => $attributes,
+				'price'         => $this->plain_price( $v->get_price() ),
+				'regular_price' => $this->plain_price( $v->get_regular_price() ),
+				'sale_price'    => $v->is_on_sale() ? $this->plain_price( $v->get_sale_price() ) : null,
+				'on_sale'       => $v->is_on_sale(),
+				'in_stock'      => $v->is_in_stock(),
+			];
+		}
+
+		return $variations;
+	}
+
+	/**
+	 * Turn the raw `get_available_variations()` attribute map into a single
+	 * human-readable label like "Size: Large, Color: Blue".
+	 *
+	 * The map keys are "attribute_" + the attribute name/taxonomy (e.g.
+	 * attribute_pa_size, attribute_color); the values are term SLUGS for global
+	 * (taxonomy) attributes and the literal display value for custom product
+	 * attributes. We resolve the attribute name with wc_attribute_label() and, for
+	 * taxonomy attributes, look the value's term name up so a slug like "large"
+	 * reads as "Large". An empty value (a variation that leaves an attribute "Any")
+	 * is skipped so the label stays meaningful.
+	 *
+	 * @param array<string,string> $attributes Raw attribute map for one variation.
+	 */
+	private function variation_label( array $attributes ): string {
+		$parts = [];
+
+		foreach ( $attributes as $key => $value ) {
+			$value = (string) $value;
+			if ( '' === $value ) {
+				continue; // "Any <attribute>" — nothing specific to show.
+			}
+
+			$taxonomy = preg_replace( '/^attribute_/', '', (string) $key );
+			$name     = wc_attribute_label( $taxonomy );
+			$display  = $value;
+
+			// Global (taxonomy) attributes store a term slug — resolve to its name.
+			if ( taxonomy_exists( $taxonomy ) ) {
+				$term = get_term_by( 'slug', $value, $taxonomy );
+				if ( $term && ! empty( $term->name ) ) {
+					$display = $term->name;
+				}
+			}
+
+			$parts[] = $name . ': ' . $display;
+		}
+
+		return implode( ', ', $parts );
 	}
 
 	private function add_to_cart( array $input ): array {
@@ -215,13 +280,31 @@ final class Fahad_AI_Tools {
 			];
 		}
 
-		if ( ! $product->is_in_stock() ) {
+		// When a variation is chosen, the variation — not the parent — is the source
+		// of truth for stock and price. Load and validate it, then gate on ITS stock
+		// so a sold-out size/colour is rejected even if the parent reports in-stock.
+		$item = $product;
+
+		if ( $variation_id ) {
+			$variation = wc_get_product( $variation_id );
+
+			if ( ! $variation || (int) $variation->get_parent_id() !== $product_id ) {
+				return [
+					'success' => false,
+					'error'   => __( 'That product option is not available.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				];
+			}
+
+			$item = $variation;
+		}
+
+		if ( ! $item->is_in_stock() ) {
 			return [
 				'success' => false,
 				'error'   => sprintf(
-					/* translators: %s: product name */
+					/* translators: %s: product (or selected variation) name */
 					__( '%s is currently out of stock.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-					$product->get_name()
+					$item->get_name()
 				),
 			];
 		}
@@ -232,12 +315,13 @@ final class Fahad_AI_Tools {
 			return [
 				'success'       => true,
 				'message'       => sprintf(
-					/* translators: 1: quantity, 2: product name */
+					/* translators: 1: quantity, 2: product (or selected variation) name */
 					__( 'Added %1$dx %2$s to your cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 					$quantity,
-					$product->get_name()
+					$item->get_name()
 				),
 				'cart_item_key' => $cart_item_key,
+				'price'         => $this->plain_price( $item->get_price() ),
 				'cart_total'    => wp_strip_all_tags( WC()->cart->get_cart_total() ),
 				'cart_url'      => wc_get_cart_url(),
 				'checkout_url'  => wc_get_checkout_url(),

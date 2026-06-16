@@ -453,6 +453,39 @@ a.chatbot-card-title:hover {
 	overflow:            hidden;
 }
 
+/* ── Variation selector (issue #12) ───────────────────────────────────────────
+   A labelled <select> for variable products. The label is a real, associated
+   <label> (for/id) so the control has an accessible name; the focus ring matches
+   the card buttons' accent-independent dark ring on a white spacer (WCAG 2.4.7). */
+.chatbot-card-var-label {
+	display:     block;
+	margin-top:  5px;
+	font-size:   11px;
+	font-weight: 600;
+	color:       var(--chatbot-muted);
+}
+
+.chatbot-card-var-select {
+	margin-top:    3px;
+	width:         100%;
+	max-width:     100%;
+	box-sizing:    border-box;
+	padding:       5px 8px;
+	font-size:     12px;
+	line-height:   1.4;
+	color:         var(--chatbot-text);
+	background:    #fff;
+	border:        1px solid var(--chatbot-border);
+	border-radius: 7px;
+	cursor:        pointer;
+}
+
+.chatbot-card-var-select:focus-visible {
+	outline:        2px solid #1a1a1a;
+	outline-offset: 2px;
+	box-shadow:     0 0 0 4px #ffffff;
+}
+
 .chatbot-card-actions {
 	display:     flex;
 	gap:         8px;
