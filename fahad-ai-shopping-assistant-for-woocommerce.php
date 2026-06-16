@@ -26,6 +26,7 @@ define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 require_once FAHAD_AI_PATH . 'includes/class-auth.php';
 require_once FAHAD_AI_PATH . 'includes/class-tool-registry.php';
 require_once FAHAD_AI_PATH . 'includes/class-tools.php';
+require_once FAHAD_AI_PATH . 'includes/tools/class-catalog-tools.php';
 require_once FAHAD_AI_PATH . 'includes/class-api-handler.php';
 require_once FAHAD_AI_PATH . 'includes/admin-settings.php';
 
@@ -249,5 +250,11 @@ add_action( 'plugins_loaded', function () {
 		} );
 		return;
 	}
+
+	// Register feature tool packs on the extensibility hook. Each pack lives in
+	// its own file under includes/tools/ and registers its tools via
+	// add_filter( 'fahad_ai_register_tools', … ) — see Fahad_AI_Catalog_Tools.
+	new Fahad_AI_Catalog_Tools();
+
 	Fahad_AI_Chatbot::instance();
 } );

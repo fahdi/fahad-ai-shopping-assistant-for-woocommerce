@@ -90,6 +90,32 @@ final class EvalHarness {
 		] );
 	}
 
+	/**
+	 * Register the always-on feature tool packs through the extensibility filter,
+	 * mirroring the plugin bootstrap (which instantiates each pack so its
+	 * add_filter runs). Stubs apply_filters( 'fahad_ai_register_tools', … ) to
+	 * push the built-ins through each pack's real register() callback, so the
+	 * REAL catalog tools (get_top_products / list_categories) are dispatchable in
+	 * the agent loop exactly as in production.
+	 *
+	 * Idempotent and self-contained: callers do not need to pre-register anything.
+	 * A test that wants to register an ADDITIONAL bespoke tool (e.g. the #22/#25
+	 * dedicated tests) installs its own apply_filters alias instead of calling
+	 * this.
+	 */
+	public static function register_feature_tools(): void {
+		$catalog = new Fahad_AI_Catalog_Tools();
+
+		Functions\when( 'apply_filters' )->alias(
+			static function ( $hook, $value = null ) use ( $catalog ) {
+				if ( 'fahad_ai_register_tools' === $hook && is_array( $value ) ) {
+					return $catalog->register( $value );
+				}
+				return $value;
+			}
+		);
+	}
+
 	// =========================================================================
 	// WooCommerce data mocks
 	// =========================================================================

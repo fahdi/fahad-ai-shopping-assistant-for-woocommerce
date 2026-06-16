@@ -354,16 +354,34 @@ Guidelines:
 	/**
 	 * Build the product-card payload the widget renders, from a tool result.
 	 *
-	 * Card data comes straight from WooCommerce (via Fahad_AI_Tools), never from
-	 * model-generated text, so the widget can trust these fields. Returns an
-	 * empty array for tools that do not produce cards.
+	 * CONVENTION over configuration: card emission keys off the SHAPE of the tool
+	 * result, not the tool's name, so every product tool — the built-in
+	 * search_products / get_product_details AND any filter-registered tool that
+	 * returns the same shape (get_top_products, recommendations, comparisons, …) —
+	 * surfaces cards automatically without this method being taught its name.
+	 *
+	 *   1. A result with a non-empty `products` array  → one card per entry.
+	 *   2. Otherwise a single product-shaped result (has both `id` and `name`)
+	 *      → one card.
+	 *   3. Otherwise no cards (cart actions, category lists, errors, empty
+	 *      searches, …).
+	 *
+	 * The $tool name is retained for the call signature (callers pass the tool
+	 * that produced $result) but is intentionally NOT used to decide cards.
+	 *
+	 * Card data comes straight from WooCommerce (via the tools), never from
+	 * model-generated text, so the widget can trust these fields.
+	 *
+	 * @param string $tool   Name of the tool that produced the result (unused;
+	 *                        emission is by result shape, see above).
+	 * @param array  $result The tool result array.
 	 */
 	private function tool_result_cards( string $tool, array $result ): array {
-		if ( 'search_products' === $tool && ! empty( $result['products'] ) && is_array( $result['products'] ) ) {
+		if ( ! empty( $result['products'] ) && is_array( $result['products'] ) ) {
 			return array_values( array_filter( array_map( [ $this, 'normalize_card' ], $result['products'] ) ) );
 		}
 
-		if ( 'get_product_details' === $tool && ! empty( $result['id'] ) ) {
+		if ( ! empty( $result['id'] ) && ! empty( $result['name'] ) ) {
 			$card = $this->normalize_card( $result );
 			return $card ? [ $card ] : [];
 		}

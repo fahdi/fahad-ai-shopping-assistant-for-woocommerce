@@ -10,6 +10,7 @@ require_once __DIR__ . '/stubs/wc-stubs.php';
 require_once dirname( __DIR__ ) . '/includes/class-auth.php';
 require_once dirname( __DIR__ ) . '/includes/class-tool-registry.php';
 require_once dirname( __DIR__ ) . '/includes/class-tools.php';
+require_once dirname( __DIR__ ) . '/includes/tools/class-catalog-tools.php';
 require_once dirname( __DIR__ ) . '/includes/class-api-handler.php';
 
 // Eval harness (used by the `eval` test suite; harmless to load for `unit`).

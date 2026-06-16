@@ -67,6 +67,15 @@ final class GoldenConversationTest extends TestCase {
 		EvalHarness::stub_woocommerce( $fixture['wc'] ?? [] );
 		EvalHarness::script_transport( $fixture['script'] ?? [] );
 
+		// Register the always-on feature tool packs through the extensibility
+		// filter, exactly as the plugin bootstrap does in production, so fixtures
+		// can exercise filter-registered tools (e.g. get_top_products) without
+		// each one installing its own apply_filters stub. A declarative fixture
+		// cannot wire the filter itself; doing it here keeps the catalog tools
+		// available to every golden conversation while built-ins flow through
+		// unchanged.
+		EvalHarness::register_feature_tools();
+
 		// 2. Drive the real agent loop.
 		$run = EvalHarness::run( $provider, $fixture['messages'] ?? [] );
 
