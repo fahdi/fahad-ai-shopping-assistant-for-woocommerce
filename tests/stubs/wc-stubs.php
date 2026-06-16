@@ -70,6 +70,12 @@ if ( ! class_exists( 'WC_Product' ) ) {
         public function get_available_variations(): array { return []; }
         public function get_average_rating(): string      { return '0'; }
         public function get_review_count(): int           { return 0; }
+        // Recommendations (issue #16): merchant-curated relation IDs. Declared so the
+        // eval harness's makePartial() product mock (tests/eval/EvalHarness.php) can
+        // fall through to a safe empty default when a fixture does not set them, the
+        // same way the ratings getters above do.
+        public function get_upsell_ids(): array           { return []; }
+        public function get_cross_sell_ids(): array       { return []; }
         // Parent id of a variation (child) product; 0 for top-level products.
         // Read by add_to_cart (issue #12) to verify a chosen variation belongs to
         // the product before adding it to the cart.
@@ -87,6 +93,10 @@ if ( ! class_exists( 'WC_Cart' ) ) {
         public function get_cart_subtotal(): string       { return '$0.00'; }
         public function get_cart_total(): string          { return '$0.00'; }
         public function apply_coupon( string $code ): bool { return false; }
+        // Cross-sell (issue #16): IDs WooCommerce aggregates from the cart items'
+        // cross_sell_ids (deduped, excluding items already in the cart). Declared so
+        // the cross-sell tool's per-instance Mockery mock can stub it.
+        public function get_cross_sells(): array           { return []; }
     }
 }
 
