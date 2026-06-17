@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 2.4.0
+Stable tag: 2.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -96,6 +96,13 @@ The conversation history (user messages and assistant replies) and the results o
 2. Admin settings — provider and API key configuration
 
 == Changelog ==
+
+= 2.5.0 =
+Checkout help, merchant controls, and quality hardening.
+
+* Conversational checkout: the assistant can summarise the order (items, shipping options, totals), set a shipping method, and recommend or apply the best valid coupon — only with the shopper's consent — then hand off to the secure WooCommerce checkout for payment (it never handles card details).
+* Merchant controls: a new admin section to set the assistant's tone, restrict which tools it may use, define off-limits topics and promo emphasis, and tune cost/model options. The trust guardrails can never be disabled.
+* Hardening: the assistant always gives a one-line summary alongside product cards, currency symbols always render correctly, and internal quality-eval coverage was extended.
 
 = 2.4.0 =
 Privacy, reliability, and feedback.
@@ -205,6 +212,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.5.0 =
+Adds conversational checkout help (consent-gated coupons, no payment handling), merchant tone/scope/cost controls (guardrails stay enforced), and quality hardening. Backward compatible.
 
 = 2.4.0 =
 Adds GDPR export/erase for saved preferences, automatic AI-provider failover with graceful degradation, and thumbs up/down reply feedback. Backward compatible; no settings changes.
