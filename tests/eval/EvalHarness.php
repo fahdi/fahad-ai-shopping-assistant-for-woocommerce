@@ -22,6 +22,27 @@ use Brain\Monkey\Functions;
 final class EvalHarness {
 
 	/**
+	 * Monotonic counter backing the auto-generated tool-use ids (issue #66).
+	 *
+	 * The canned tool-turn builders used to derive an id from the call's index WITHIN
+	 * its turn ("toolu_0" / "call_0"), so two SEPARATE tool turns each reused id 0. A
+	 * multi-turn golden conversation (search → add_to_cart, …) then collided ids — and
+	 * the harness keys tool RESULTS by id when it reconstructs the trace, so the first
+	 * call's result was overwritten by the second's. A single process-wide counter
+	 * makes every auto-generated id unique across turns AND across builders (the
+	 * Anthropic and Moonshot prefixes differ, but the counter is shared so even a mixed
+	 * sequence can't collide). A fixture that supplies its own explicit `id` still wins.
+	 *
+	 * @var int
+	 */
+	private static int $tool_id_seq = 0;
+
+	/** Next process-unique numeric suffix for an auto-generated tool-use id. */
+	private static function next_tool_id_seq(): int {
+		return self::$tool_id_seq++;
+	}
+
+	/**
 	 * Reset the API handler + tools singletons so each case starts clean.
 	 * Mirrors the ApiHandlerTest / ToolsTest reflection reset of $instance.
 	 *
@@ -362,10 +383,13 @@ final class EvalHarness {
 	/** Anthropic: a turn that asks to call one or more tools (stop_reason tool_use). */
 	public static function anthropic_tool_turn( array $calls ): array {
 		$content = [];
-		foreach ( $calls as $i => $call ) {
+		foreach ( $calls as $call ) {
+			// Per-turn-unique id (issue #66): a fixture-supplied id wins; otherwise a
+			// process-wide counter keeps ids distinct across turns so a multi-turn
+			// conversation can't collide tool_use ids (which would corrupt the trace).
 			$content[] = [
 				'type'  => 'tool_use',
-				'id'    => $call['id'] ?? ( 'toolu_' . $i ),
+				'id'    => $call['id'] ?? ( 'toolu_' . self::next_tool_id_seq() ),
 				'name'  => $call['name'],
 				'input' => $call['input'] ?? [],
 			];
@@ -384,9 +408,12 @@ final class EvalHarness {
 	/** Moonshot/OpenAI: a turn that asks to call one or more tools (finish_reason tool_calls). */
 	public static function moonshot_tool_turn( array $calls ): array {
 		$tool_calls = [];
-		foreach ( $calls as $i => $call ) {
+		foreach ( $calls as $call ) {
+			// Per-turn-unique id (issue #66): a fixture-supplied id wins; otherwise the
+			// shared process-wide counter keeps ids distinct across turns (and across
+			// providers) so a multi-turn conversation can't collide tool_call ids.
 			$tool_calls[] = [
-				'id'       => $call['id'] ?? ( 'call_' . $i ),
+				'id'       => $call['id'] ?? ( 'call_' . self::next_tool_id_seq() ),
 				'type'     => 'function',
 				'function' => [
 					'name'      => $call['name'],

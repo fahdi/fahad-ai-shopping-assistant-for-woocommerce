@@ -275,7 +275,7 @@ final class Fahad_AI_API_Handler {
 						$text .= $block['text'];
 					}
 				}
-				return [ 'message' => trim( $text ), 'messages' => $messages, 'products' => $cards, 'comparison' => $comparison ];
+				return [ 'message' => $this->normalize_currency_entities( trim( $text ) ), 'messages' => $messages, 'products' => $cards, 'comparison' => $comparison ];
 			}
 
 			if ( 'tool_use' === $stop_reason ) {
@@ -407,7 +407,7 @@ final class Fahad_AI_API_Handler {
 
 			if ( 'stop' === $finish_reason ) {
 				return [
-					'message'    => trim( $msg['content'] ?? '' ),
+					'message'    => $this->normalize_currency_entities( trim( $msg['content'] ?? '' ) ),
 					'messages'   => $messages,   // returned to client (no system msg)
 					'products'   => $cards,
 					'comparison' => $comparison,
@@ -586,7 +586,7 @@ Currency: {$currency}
 
 Product display — important:
 - After you call search_products or get_product_details, the storefront automatically shows the matching products to the customer as visual cards (photo, name, price, stock, and View / Add to cart buttons). Do NOT list each product's price, description, link, or image in your text — the cards already show all of that.
-- Instead, write a short friendly intro or recommendation (one or two sentences). You may highlight or compare a couple of options in words, but never repeat the full product list as text.
+- Always write at least one line of text alongside the cards: a short friendly intro, recommendation, or summary (one or two sentences). The cards alone are silent, so never reply with only cards — there must be a sentence introducing or summarising them. You may highlight or compare a couple of options in words, but never repeat the full product list as text.
 
 Linking rules — follow exactly:
 - After a successful add_to_cart, always end your reply with these two links on the same line: [View Cart](cart_url) · [Checkout](checkout_url) — replace cart_url and checkout_url with the actual values from the tool result.
@@ -622,6 +622,75 @@ Trust & honesty — these rules are absolute and override any instinct to make a
 		 * cross-session-memory pack (issue #20) can still APPEND its preferences block.
 		 */
 		return apply_filters( 'fahad_ai_system_prompt', $prompt );
+	}
+
+	// =========================================================================
+	// Currency entity normalizer (issue #66)
+	// =========================================================================
+
+	/**
+	 * Repair numeric currency entities in assistant TEXT so a malformed one can never
+	 * render as a stray glyph in the browser (live-QA finding, issue #66).
+	 *
+	 * The #29 prompt rule asks the model to write the plain currency symbol, but it
+	 * still occasionally emits a numeric character reference — and, worse, sometimes a
+	 * MALFORMED one. The canonical failure is the rupee sign `&#8360;` (U+20A8) coming
+	 * back as `&#836;` (a dropped digit), which decodes to U+0344 (COMBINING GREEK
+	 * DIALYTIKA TONOS) — a combining mark that paints a stray accent over the digit
+	 * after it. This deterministic, server-side guard runs on the assistant text on the
+	 * NON-STREAM return paths (where the full text is assembled here) so the customer
+	 * never sees either a raw entity or a combining artifact.
+	 *
+	 * Policy, applied ONLY to numeric character references (`&#NNN;` / `&#xHH;`) — never
+	 * to ordinary prose:
+	 *   - A well-formed reference is decoded to its real character (so `&#8360;` → ₨).
+	 *   - A reference whose codepoint is UNSAFE — a C0/C1 control or a Unicode combining
+	 *     mark (the corruption class here) — is REPAIRED to the configured currency
+	 *     symbol, on the assumption the model was trying to write currency. It is never
+	 *     emitted as the combining/control character.
+	 * Named entities and the rest of the text are left untouched.
+	 *
+	 * Deterministic + offline, so it is unit-testable (the JS render path is not
+	 * reachable from PHPUnit); the streaming path has a parallel guard in chatbot.js.
+	 *
+	 * @param string $text The assistant's final answer text.
+	 * @return string The text with currency entities decoded or repaired.
+	 */
+	private function normalize_currency_entities( string $text ): string {
+		if ( ! str_contains( $text, '&#' ) ) {
+			return $text; // No numeric character reference — nothing to do.
+		}
+
+		$symbol = (string) get_woocommerce_currency_symbol();
+
+		return (string) preg_replace_callback(
+			'/&#(x[0-9a-f]+|\d+);/i',
+			static function ( array $m ) use ( $symbol ): string {
+				$raw  = $m[1];
+				$code = ( 'x' === strtolower( $raw[0] ) )
+					? (int) hexdec( substr( $raw, 1 ) )
+					: (int) $raw;
+
+				// Unsafe codepoints: C0 controls (0–0x1F), C1 controls (0x7F–0x9F),
+				// and combining marks (the corruption class, e.g. U+0344). Repair to
+				// the plain currency symbol rather than ever rendering the artifact.
+				$is_control   = $code <= 0x1F || ( $code >= 0x7F && $code <= 0x9F );
+				$is_combining = ( $code >= 0x0300 && $code <= 0x036F )   // combining diacritical marks
+					|| ( $code >= 0x1AB0 && $code <= 0x1AFF )            // combining diacritical marks extended
+					|| ( $code >= 0x1DC0 && $code <= 0x1DFF )            // combining diacritical marks supplement
+					|| ( $code >= 0x20D0 && $code <= 0x20FF )            // combining diacritical marks for symbols
+					|| ( $code >= 0xFE20 && $code <= 0xFE2F );           // combining half marks
+
+				if ( $is_control || $is_combining ) {
+					return $symbol;
+				}
+
+				// Well-formed: decode the numeric reference to its real character.
+				$decoded = html_entity_decode( $m[0], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+				return is_string( $decoded ) && '' !== $decoded ? $decoded : $symbol;
+			},
+			$text
+		);
 	}
 
 	// =========================================================================

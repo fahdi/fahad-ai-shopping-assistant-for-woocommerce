@@ -362,20 +362,42 @@
 			}
 
 			const data  = await res.json();
-			const reply = data.message || (i18n.noResponseRegular || 'No response. Please try again.');
-			const botMsg = appendMessage('bot', reply);
-			// Reply feedback (#50): only offer thumbs on a REAL answer, not the
-			// no-response fallback (rating an error tells us nothing useful).
-			if (data.message) attachFeedback(botMsg);
 
-			if (Array.isArray(data.products) && data.products.length) {
+			const hasProducts   = Array.isArray(data.products) && data.products.length;
+			const hasComparison = data.comparison && Array.isArray(data.comparison.products) && data.comparison.products.length;
+
+			// Closing-summary fallback (issue #66): the system prompt mandates a one-line
+			// intro alongside cards, but live QA found turns that came back card-only with
+			// no prose. Deterministically guarantee the reply is never cards-with-silence:
+			// when the model emitted NO text but cards/a comparison rendered, show a short
+			// generic intro line (matching the streaming path). Only when nothing at all
+			// came back do we fall to the no-response message.
+			let reply        = data.message;
+			let isRealAnswer = !!data.message;
+			if (!reply) {
+				if (hasComparison) {
+					reply = i18n.comparisonIntro || 'Here is how they compare:';
+				} else if (hasProducts) {
+					reply = i18n.productsIntro || 'Here are some products that might help:';
+				} else {
+					reply = i18n.noResponseRegular || 'No response. Please try again.';
+				}
+			}
+
+			const botMsg = appendMessage('bot', reply);
+			// Reply feedback (#50): offer thumbs on a REAL answer — the model's own text
+			// OR the generic intro that accompanies rendered cards — but not the
+			// no-response fallback (rating an empty turn tells us nothing useful).
+			if (isRealAnswer || hasProducts || hasComparison) attachFeedback(botMsg);
+
+			if (hasProducts) {
 				renderProductCards(data.products);
 			}
 
 			// Comparison table (issue #13): a comparison is surfaced as its own
 			// payload (aligned columns + attribute rows) and renders as a table, not
 			// product cards — the two are mutually exclusive server-side.
-			if (data.comparison && Array.isArray(data.comparison.products) && data.comparison.products.length) {
+			if (hasComparison) {
 				renderComparison(data.comparison);
 			}
 
@@ -983,6 +1005,33 @@
 		return select;
 	}
 
+	// Repair an obviously-malformed numeric currency entity before decoding (issue #66).
+	// The model occasionally emits a corrupted numeric character reference for a
+	// currency symbol — the canonical case is the rupee sign &#8360; (U+20A8) arriving
+	// as &#836; (a dropped digit), which decodes to U+0344 (a COMBINING mark) and paints
+	// a stray accent over the next digit. We can't decode-to-symbol on the client (the
+	// store's symbol isn't localized here), so we STRIP any numeric reference whose
+	// codepoint is a combining mark or a control character — never letting the artifact
+	// render. Well-formed references (e.g. &#8360;) are left for decodeEntities to decode
+	// normally. The server-side normalize_currency_entities() is the primary, tested
+	// guard (it repairs to the real symbol on the non-stream path); this is the parallel
+	// safety net for the streaming render.
+	function stripMalformedCurrencyEntities(str) {
+		return String(str).replace(/&#(x[0-9a-f]+|\d+);/gi, (m, raw) => {
+			const code = raw[0].toLowerCase() === 'x'
+				? parseInt(raw.slice(1), 16)
+				: parseInt(raw, 10);
+			if (!Number.isFinite(code)) return m;
+			const isControl   = code <= 0x1f || (code >= 0x7f && code <= 0x9f);
+			const isCombining = (code >= 0x0300 && code <= 0x036f)
+				|| (code >= 0x1ab0 && code <= 0x1aff)
+				|| (code >= 0x1dc0 && code <= 0x1dff)
+				|| (code >= 0x20d0 && code <= 0x20ff)
+				|| (code >= 0xfe20 && code <= 0xfe2f);
+			return (isControl || isCombining) ? '' : m;
+		});
+	}
+
 	// Decode HTML entities (e.g. &#8360; for the ₨ sign) to their real characters.
 	// Uses a textarea, which decodes its content as TEXT only — no markup is parsed
 	// or executed — so the result is safe to pass through the HTML escaping below.
@@ -998,9 +1047,13 @@
 	// 3. Convert **text** to <strong>.
 	// 4. Convert newlines to <br>.
 	function renderMarkdown(text) {
-		// Decode entities (currency symbols, etc.) FIRST, then escape HTML below so a
-		// model-emitted &#8360; renders as ₨ while this stays XSS-safe.
-		text = decodeEntities(String(text));
+		// Repair a malformed numeric currency entity (issue #66) BEFORE decoding, so a
+		// corrupted reference like &#836; (a dropped-digit &#8360;) can never decode to a
+		// stray combining glyph. Then decode well-formed entities (currency symbols, etc.)
+		// and escape HTML below — so a model-emitted &#8360; renders as ₨ while staying
+		// XSS-safe.
+		text = stripMalformedCurrencyEntities(String(text));
+		text = decodeEntities(text);
 
 		// Step 1: escape HTML
 		let html = String(text)

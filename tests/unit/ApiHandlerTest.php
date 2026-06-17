@@ -110,6 +110,85 @@ class ApiHandlerTest extends TestCase {
         $this->assertStringContainsString( 'Never use HTML entities', $prompt );
     }
 
+    // ── always close with a one-line summary, even alongside cards (issue #66) ───
+    // Live QA found turns that ended on product cards with NO prose. The prompt
+    // previously asked for a "short intro" but turns still came back card-only, so
+    // the rule is strengthened to make a one-line intro/summary MANDATORY whenever
+    // cards render. This pins that wording so a future prompt edit can't drop it
+    // (the client fallback in chatbot.js is the deterministic safety net underneath).
+
+    public function test_system_prompt_requires_a_summary_line_with_cards(): void {
+        Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
+
+        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+            ->invoke( $this->handler() );
+
+        // The rule must be phrased as an unconditional requirement, not a soft "you
+        // may". "Always" + "one line" of text accompanying the cards is the contract.
+        $this->assertStringContainsString( 'Always write at least one line', $prompt );
+        $this->assertStringContainsString( 'never reply with only cards', $prompt );
+    }
+
+    // ── deterministic currency entity normalizer (issue #66) ────────────────────
+    // Beyond the #29 prompt nudge, normalize_currency_entities() is a server-side
+    // guard on the assistant TEXT (applied on the non-stream return paths) so a
+    // numeric currency entity the model still occasionally emits can never reach the
+    // browser as a stray glyph. A well-formed entity is decoded to its symbol; a
+    // MALFORMED one (e.g. a dropped digit: &#836;, which would decode to the U+0344
+    // combining mark) is repaired to the configured currency symbol — never a
+    // combining/control character. A raw symbol passes through untouched.
+
+    private function normalize_currency_entities( string $text ): string {
+        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'normalize_currency_entities' );
+        return $method->invoke( $this->handler(), $text );
+    }
+
+    public function test_currency_normalizer_passes_through_a_raw_symbol(): void {
+        // A plain symbol (the desired output) must be left exactly as-is.
+        $this->assertSame(
+            'That is ₨1,299 in total.',
+            $this->normalize_currency_entities( 'That is ₨1,299 in total.' )
+        );
+    }
+
+    public function test_currency_normalizer_decodes_a_valid_numeric_entity(): void {
+        // &#8360; is the rupee sign (U+20A8) — a well-formed currency entity must be
+        // decoded to the plain symbol so the customer never sees the raw entity text.
+        $rupee = "\xE2\x82\xA8"; // U+20A8
+        $this->assertSame(
+            "It costs {$rupee}1,299.",
+            $this->normalize_currency_entities( 'It costs &#8360;1,299.' )
+        );
+    }
+
+    public function test_currency_normalizer_repairs_a_malformed_entity_to_the_symbol(): void {
+        // &#836; is a dropped-digit corruption of &#8360;. Decoded naively it becomes
+        // U+0344 (COMBINING GREEK DIALYTIKA TONOS) — a combining mark that renders as a
+        // stray glyph on the digits after it. The normalizer must repair it to the
+        // configured currency symbol ($ in these stubs), NEVER emit U+0344.
+        $out = $this->normalize_currency_entities( 'It costs &#836;1,299.' );
+
+        $this->assertSame( 'It costs $1,299.', $out );
+        // Hard guarantee: the combining mark must not survive anywhere in the output.
+        $this->assertStringNotContainsString( "\xCD\x84", $out, 'U+0344 combining mark leaked into output' );
+    }
+
+    public function test_currency_normalizer_repairs_hex_malformed_entity(): void {
+        // The hex spelling of the same malformed value (&#x344;) must be repaired too —
+        // the guard keys off the resulting codepoint, not the decimal/hex notation.
+        $out = $this->normalize_currency_entities( 'Total: &#x344;500.' );
+
+        $this->assertSame( 'Total: $500.', $out );
+        $this->assertStringNotContainsString( "\xCD\x84", $out );
+    }
+
+    public function test_currency_normalizer_leaves_unrelated_text_untouched(): void {
+        // No currency entity present → the text is returned verbatim (the guard is
+        // narrow: it only touches numeric character references, not ordinary prose).
+        $text = 'We have 3 left in stock — a great deal at $49.99.';
+        $this->assertSame( $text, $this->normalize_currency_entities( $text ) );
+    }
+
     // ── direct, verified cart REST actions (#48) ────────────────────────────────
     // The card "Add to cart" button calls a dedicated cart endpoint directly (no
     // agent round-trip). handle_cart_action() maps a sanitized action to a built-in

@@ -872,4 +872,81 @@ final class GoldenConversationTest extends TestCase {
 		$this->assertNotSame( '', $run['answer'] );
 		$this->assertStringNotContainsStringIgnoringCase( 'exceeded maximum iterations', $run['answer'] );
 	}
+
+	// =========================================================================
+	// Multi-turn tool-use id uniqueness (issue #66)
+	// =========================================================================
+	//
+	// The canned-response builders previously derived a tool-use id from the call's
+	// index WITHIN its turn ("toolu_0" / "call_0"), so two separate tool turns each
+	// reused id 0. A multi-turn golden conversation (search → add_to_cart, …) would
+	// then collide ids: the harness keys tool RESULTS by id when it reconstructs the
+	// trace, so the first call's result would be overwritten by the second's. These
+	// tests pin per-turn-unique ids so a multi-turn fixture can't collide.
+
+	/** Anthropic: ids generated across two tool turns must all be distinct. */
+	public function test_anthropic_tool_turn_ids_are_unique_across_turns(): void {
+		$turn1 = EvalHarness::anthropic_tool_turn( [
+			[ 'name' => 'search_products', 'input' => [ 'query' => 'shoes' ] ],
+		] );
+		$turn2 = EvalHarness::anthropic_tool_turn( [
+			[ 'name' => 'add_to_cart', 'input' => [ 'product_id' => 1 ] ],
+		] );
+
+		$ids = array_merge(
+			array_column( $turn1['content'], 'id' ),
+			array_column( $turn2['content'], 'id' )
+		);
+
+		$this->assertCount( 2, $ids );
+		$this->assertSame( $ids, array_values( array_unique( $ids ) ), 'tool_use ids collided across turns' );
+	}
+
+	/** Moonshot: tool_call ids generated across two tool turns must all be distinct. */
+	public function test_moonshot_tool_turn_ids_are_unique_across_turns(): void {
+		$turn1 = EvalHarness::moonshot_tool_turn( [
+			[ 'name' => 'search_products', 'input' => [ 'query' => 'shoes' ] ],
+		] );
+		$turn2 = EvalHarness::moonshot_tool_turn( [
+			[ 'name' => 'add_to_cart', 'input' => [ 'product_id' => 1 ] ],
+		] );
+
+		$ids = array_merge(
+			array_column( $turn1['choices'][0]['message']['tool_calls'], 'id' ),
+			array_column( $turn2['choices'][0]['message']['tool_calls'], 'id' )
+		);
+
+		$this->assertCount( 2, $ids );
+		$this->assertSame( $ids, array_values( array_unique( $ids ) ), 'tool_call ids collided across turns' );
+	}
+
+	/**
+	 * End-to-end: a 2+ tool-call multi-turn conversation must reconstruct each tool's
+	 * OWN result. With colliding ids the trace would map both calls to the last
+	 * result; with unique ids each call resolves to its distinct result. The fixture
+	 * runs two DIFFERENT tools across two turns whose results are unmistakably
+	 * different, so a collision would surface as the wrong result on the first call.
+	 */
+	public function test_multi_turn_tool_calls_do_not_collide_ids(): void {
+		$fixture = require __DIR__ . '/fixtures/multi-turn-tools.php';
+
+		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_woocommerce( $fixture['wc'] );
+		EvalHarness::script_transport( $fixture['script'] );
+
+		$run = EvalHarness::run( 'anthropic', $fixture['messages'] );
+
+		$this->assertFalse( is_wp_error( $run['result'] ) );
+
+		// Both tools ran, in order.
+		$names = array_map( static fn( $c ) => $c['name'], $run['tool_calls'] );
+		$this->assertSame( [ 'search_products', 'add_to_cart' ], $names );
+
+		// Each call resolved to its OWN result — the collision symptom is the first
+		// call's result being the add_to_cart result instead of the search result.
+		$this->assertCount( 2, $run['tool_results'] );
+		$this->assertArrayHasKey( 'products', $run['tool_results'][0], 'search result lost to an id collision' );
+		$this->assertArrayHasKey( 'cart_url', $run['tool_results'][1], 'add_to_cart result lost to an id collision' );
+		$this->assertArrayNotHasKey( 'cart_url', $run['tool_results'][0], 'first call wrongly resolved to the add_to_cart result' );
+	}
 }
