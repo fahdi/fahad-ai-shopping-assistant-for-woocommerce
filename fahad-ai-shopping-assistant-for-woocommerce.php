@@ -27,6 +27,7 @@ require_once FAHAD_AI_PATH . 'includes/class-auth.php';
 require_once FAHAD_AI_PATH . 'includes/class-feedback.php';
 require_once FAHAD_AI_PATH . 'includes/class-analytics.php';
 require_once FAHAD_AI_PATH . 'includes/class-proactive.php';
+require_once FAHAD_AI_PATH . 'includes/class-voice.php';
 require_once FAHAD_AI_PATH . 'includes/class-tool-registry.php';
 require_once FAHAD_AI_PATH . 'includes/class-tools.php';
 require_once FAHAD_AI_PATH . 'includes/class-api-handler.php';
@@ -226,6 +227,12 @@ final class Fahad_AI_Chatbot {
 			// merchant enabled it AND a REAL value signal (an applicable coupon, or unused
 			// store credit) exists right now — so the widget can never invent a nudge.
 			'proactive'   => $this->proactive_config(),
+			// Voice input/output (issue #64). Empty array unless the merchant enabled voice;
+			// when present the widget builds the mic (and, if tts is true, speaker) controls
+			// using the browser's Web Speech API — subject to browser support, with text
+			// always working as the fallback. No audio is ever stored and no external
+			// service is added (the API is in-browser).
+			'voice'       => Fahad_AI_Voice::instance()->config(),
 			'i18n'        => [
 				'openChat'           => __( 'Open chat assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'closeChat'          => __( 'Close chat', 'fahad-ai-shopping-assistant-for-woocommerce' ),
@@ -283,6 +290,16 @@ final class Fahad_AI_Chatbot {
 				'proactiveLabel'     => __( 'A message from the store assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'proactiveOpen'      => __( 'Open chat', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'proactiveDismiss'   => __( 'Dismiss this message', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				// Voice input/output (issue #64). Labels for the mic (speech-to-text) and
+				// speaker (text-to-speech) controls, plus the spoken recording status.
+				'voiceStart'         => __( 'Start voice input', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'voiceStop'          => __( 'Stop voice input', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'voiceListening'     => __( 'Listening…', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'voiceUnsupported'   => __( 'Voice input is not supported in this browser.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'voiceError'         => __( 'Could not hear that. Please try again or type your message.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'voiceDenied'        => __( 'Microphone access was blocked. You can still type your message.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'speakOn'            => __( 'Turn on spoken replies', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'speakOff'           => __( 'Turn off spoken replies', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			],
 		] );
 	}

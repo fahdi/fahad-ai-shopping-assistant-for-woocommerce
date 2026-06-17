@@ -118,12 +118,13 @@
 	`;
 
 	// ── Element refs ──────────────────────────────────────────────────────────
-	const panel    = document.getElementById('chatbot-panel');
-	const toggle   = document.getElementById('chatbot-toggle');
-	const closeBtn = document.getElementById('chatbot-close');
-	const input    = document.getElementById('chatbot-input');
-	const sendBtn  = document.getElementById('chatbot-send');
-	const msgs     = document.getElementById('chatbot-messages');
+	const panel     = document.getElementById('chatbot-panel');
+	const toggle    = document.getElementById('chatbot-toggle');
+	const closeBtn  = document.getElementById('chatbot-close');
+	const input     = document.getElementById('chatbot-input');
+	const sendBtn   = document.getElementById('chatbot-send');
+	const msgs      = document.getElementById('chatbot-messages');
+	const inputArea = document.getElementById('chatbot-input-area');
 
 	// ── Open / close ──────────────────────────────────────────────────────────
 	toggle.addEventListener('click', openChat);
@@ -193,6 +194,10 @@
 	}
 
 	function closeChat() {
+		// Voice output (#64): stop any spoken reply the moment the widget is dismissed so
+		// audio never continues after the panel closes. Guarded so it is a no-op when the
+		// voice module is absent (text-only config / unsupported browser).
+		if (typeof voice !== 'undefined' && voice) voice.cancel();
 		panel.classList.add('chatbot-hidden');
 		toggle.style.display = '';
 		toggle.setAttribute('aria-expanded', 'false');
@@ -362,6 +367,212 @@
 		toggle.addEventListener('click', () => dismiss(true), { once: true });
 	})();
 
+	// ── Voice input/output (issue #64) ──────────────────────────────────────────
+	// Hands-free input (speech → text) and optional spoken replies (text → speech) via
+	// the browser's Web Speech API. The whole module is GATED THREE ways:
+	//   1. cfg.voice present + enabled — the merchant turned voice on (server-side gate).
+	//   2. the relevant browser API exists — else the control is never built (graceful
+	//      degradation: text always works fully, no dead/disabled button is shown).
+	//   3. for spoken replies, cfg.voice.tts — the merchant's voice-OUTPUT sub-toggle.
+	//
+	// HARDENING (#64): the mic permission is the BROWSER's to grant — we call
+	// recognition.start() and let the browser prompt; we never bypass it. NO audio is
+	// stored or sent anywhere by this plugin (recognition/synthesis run in-browser; the
+	// only thing that leaves is the SAME transcribed text a shopper could have typed).
+	// No new external service. Accessible (WCAG 2.2 AA): real <button>s, keyboard
+	// operable, labelled, aria-pressed conveys the recording/speaking state, status is
+	// announced via a polite live region, and the recording pulse respects reduced motion
+	// (CSS). `speak` is exposed so the reply paths can voice a finalized answer.
+	const voice = (function initVoice() {
+		const noop = { speak: function () {}, cancel: function () {} };
+		const v = cfg.voice;
+		if (!v || !v.enabled) return noop;
+
+		// A shared polite live region so AT hears status changes (listening / errors)
+		// without stealing focus. One per widget, appended to the input area.
+		let liveRegion = null;
+		function announce(message) {
+			if (!message) return;
+			if (!liveRegion) {
+				liveRegion = document.createElement('span');
+				liveRegion.className = 'chatbot-sr-only';
+				liveRegion.setAttribute('aria-live', 'polite');
+				inputArea.appendChild(liveRegion);
+			}
+			// Re-set to guarantee the change is announced even if the text repeats.
+			liveRegion.textContent = '';
+			window.setTimeout(function () { liveRegion.textContent = message; }, 30);
+		}
+
+		buildMic();
+		const speakFn = buildSpeaker();
+
+		// Cancel any in-progress speech (used when the panel closes so audio never
+		// continues after the widget is dismissed). Safe no-op where unsupported.
+		function cancel() {
+			if ('speechSynthesis' in window) {
+				try { window.speechSynthesis.cancel(); } catch (e) {}
+			}
+		}
+
+		return { speak: speakFn, cancel: cancel };
+
+		// ── Voice INPUT: a mic toggle that dictates into the message box ─────────────
+		function buildMic() {
+			const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+			if (!SR) return; // Unsupported browser → no mic button at all (text still works).
+
+			const micBtn = document.createElement('button');
+			micBtn.type = 'button';
+			micBtn.id = 'chatbot-mic';
+			// aria-pressed makes it a toggle button to AT; starts not-pressed (not recording).
+			micBtn.setAttribute('aria-pressed', 'false');
+			micBtn.setAttribute('aria-label', i18n.voiceStart || 'Start voice input');
+			micBtn.innerHTML =
+				'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"' +
+				' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+				'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>' +
+				'<path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>';
+
+			let recognition = null;
+			let recording   = false;
+			let finalText   = '';
+
+			function setRecording(on) {
+				recording = on;
+				micBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+				micBtn.setAttribute('aria-label', on ? (i18n.voiceStop || 'Stop voice input') : (i18n.voiceStart || 'Start voice input'));
+				micBtn.classList.toggle('is-recording', on);
+				if (on) {
+					input.placeholder = i18n.voiceListening || 'Listening…';
+					announce(i18n.voiceListening || 'Listening…');
+				} else {
+					input.placeholder = i18n.placeholder || 'Ask me anything…';
+				}
+			}
+
+			function start() {
+				if (recording || busy) return;
+				finalText = '';
+				recognition = new SR();
+				if (v.lang) recognition.lang = v.lang;       // match the store language.
+				recognition.interimResults = true;            // live feedback into the box.
+				recognition.continuous      = false;          // a single utterance per press.
+
+				recognition.onresult = function (event) {
+					let interim = '';
+					for (let i = event.resultIndex; i < event.results.length; i++) {
+						const res = event.results[i];
+						if (res.isFinal) { finalText += res[0].transcript; }
+						else             { interim   += res[0].transcript; }
+					}
+					// Show the best-known transcript live so the shopper sees it forming.
+					input.value = (finalText + interim).trim();
+				};
+
+				recognition.onerror = function (event) {
+					// Distinguish a denied/blocked mic (actionable) from a generic miss.
+					const denied = event && (event.error === 'not-allowed' || event.error === 'service-not-allowed');
+					announce(denied ? (i18n.voiceDenied || 'Microphone access was blocked. You can still type your message.')
+					                : (i18n.voiceError  || 'Could not hear that. Please try again or type your message.'));
+					setRecording(false);
+				};
+
+				recognition.onend = function () {
+					setRecording(false);
+					// Auto-send a successfully dictated message (the issue's "transcribe then
+					// send"). Guard on real text so an empty/aborted capture never fires a turn.
+					if (finalText.trim() && !busy) {
+						sendMessage();
+					}
+					input.focus();
+				};
+
+				try {
+					recognition.start(); // The BROWSER prompts for mic permission here.
+					setRecording(true);
+				} catch (e) {
+					// start() throws if called while already starting — treat as a no-op.
+					setRecording(false);
+				}
+			}
+
+			function stop() {
+				if (recognition && recording) {
+					try { recognition.stop(); } catch (e) { /* already stopped */ }
+				}
+			}
+
+			micBtn.addEventListener('click', function () {
+				if (recording) { stop(); } else { start(); }
+			});
+
+			// Insert the mic just before the send button so tab order is input → mic →
+			// (speaker) → send.
+			inputArea.insertBefore(micBtn, sendBtn);
+		}
+
+		// ── Voice OUTPUT: a speaker toggle that reads replies aloud ──────────────────
+		// Returns a speak(text) function the reply paths call. Returns a no-op unless the
+		// merchant enabled TTS AND the browser supports speechSynthesis. The shopper
+		// toggle defaults OFF: auto-playing audio is intrusive and most browsers block
+		// speech without a user gesture, so the shopper opts IN with a clear button press.
+		function buildSpeaker() {
+			if (!v.tts || !('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance === 'undefined') {
+				return function () {}; // Unsupported / not enabled → never speak.
+			}
+
+			let speaking = false; // shopper's opt-in state (off until they turn it on).
+
+			const speakBtn = document.createElement('button');
+			speakBtn.type = 'button';
+			speakBtn.id = 'chatbot-speak';
+			speakBtn.setAttribute('aria-pressed', 'false');
+			speakBtn.setAttribute('aria-label', i18n.speakOn || 'Turn on spoken replies');
+			speakBtn.innerHTML =
+				'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"' +
+				' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+				'<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>' +
+				'<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
+
+			speakBtn.addEventListener('click', function () {
+				speaking = !speaking;
+				speakBtn.setAttribute('aria-pressed', speaking ? 'true' : 'false');
+				speakBtn.setAttribute('aria-label', speaking ? (i18n.speakOff || 'Turn off spoken replies') : (i18n.speakOn || 'Turn on spoken replies'));
+				speakBtn.classList.toggle('is-active', speaking);
+				if (!speaking) {
+					// Turning it off stops any in-progress speech immediately.
+					try { window.speechSynthesis.cancel(); } catch (e) {}
+				}
+			});
+
+			inputArea.insertBefore(speakBtn, sendBtn);
+
+			return function speak(text) {
+				if (!speaking || !text) return;
+				const clean = plainForSpeech(text);
+				if (!clean) return;
+				try {
+					window.speechSynthesis.cancel(); // never overlap utterances.
+					const utter = new window.SpeechSynthesisUtterance(clean);
+					if (v.lang) utter.lang = v.lang;
+					window.speechSynthesis.speak(utter);
+				} catch (e) { /* speech failure must never disrupt the chat */ }
+			};
+
+			// Reduce the reply's light markdown to plain prose so TTS does not read syntax
+			// aloud ("star star bold star star", bracketed link URLs, etc.): keep link/bold
+			// TEXT, drop the markup. Mirrors what renderMarkdown shows visually.
+			function plainForSpeech(text) {
+				return String(text)
+					.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '$1') // [text](url) → text
+					.replace(/\*\*([^*\n]+)\*\*/g, '$1')                    // **bold** → bold
+					.replace(/\s+/g, ' ')
+					.trim();
+			}
+		}
+	})();
+
 	// ── Send ──────────────────────────────────────────────────────────────────
 	sendBtn.addEventListener('click', sendMessage);
 	input.addEventListener('keydown', e => {
@@ -459,24 +670,33 @@
 							case 'done': {
 								bubble.classList.remove('chatbot-tool-status');
 								let gotReply = true;
+								let spokenText = '';
 								if (fullText) {
 									bubble.innerHTML = renderMarkdown(fullText);
 									history.push({ role: 'assistant', content: fullText });
+									spokenText = fullText;
 								} else if (comparisonShown) {
 									const intro = i18n.comparisonIntro || 'Here is how they compare:';
 									bubble.textContent = intro;
 									history.push({ role: 'assistant', content: intro });
+									spokenText = intro;
 								} else if (productsShown) {
 									const intro = i18n.productsIntro || 'Here are some products that might help:';
 									bubble.textContent = intro;
 									history.push({ role: 'assistant', content: intro });
+									spokenText = intro;
 								} else {
 									bubble.textContent = i18n.noResponseStream || 'No response received. Please try again.';
 									history.pop();
 									gotReply = false;
 								}
 								// Reply feedback (#50): thumbs on a real streamed answer only.
-								if (gotReply) attachFeedback(bubble.parentElement);
+								if (gotReply) {
+									attachFeedback(bubble.parentElement);
+									// Voice output (#64): speak a real answer when the shopper has
+									// turned spoken replies on (no-op otherwise).
+									voice.speak(spokenText);
+								}
 								break;
 							}
 
@@ -548,7 +768,12 @@
 			// Reply feedback (#50): offer thumbs on a REAL answer — the model's own text
 			// OR the generic intro that accompanies rendered cards — but not the
 			// no-response fallback (rating an empty turn tells us nothing useful).
-			if (isRealAnswer || hasProducts || hasComparison) attachFeedback(botMsg);
+			if (isRealAnswer || hasProducts || hasComparison) {
+				attachFeedback(botMsg);
+				// Voice output (#64): speak a real answer when the shopper has turned
+				// spoken replies on (no-op otherwise).
+				voice.speak(reply);
+			}
 
 			if (hasProducts) {
 				renderProductCards(data.products);

@@ -45,6 +45,11 @@ $fahad_ai_options = [
 	// grounded store data; nothing is persisted about a shopper here).
 	'fahad_ai_proactive_enabled',
 	'fahad_ai_proactive_frequency',
+	// Voice input/output (issue #64): the merchant kill-switch (default OFF) and the
+	// voice-output (speak replies) sub-toggle. No PII — voice uses the browser's
+	// in-browser Web Speech API and nothing about a shopper is persisted here.
+	'fahad_ai_voice_enabled',
+	'fahad_ai_voice_tts',
 ];
 
 foreach ( $fahad_ai_options as $fahad_ai_option ) {

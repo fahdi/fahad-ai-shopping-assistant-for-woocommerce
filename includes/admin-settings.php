@@ -403,6 +403,12 @@ function fahad_ai_settings_page(): void {
 		update_option( 'fahad_ai_proactive_enabled',   empty( $_POST['proactive_enabled'] ) ? 0 : 1 );
 		update_option( 'fahad_ai_proactive_frequency', max( 0, (int) ( $_POST['proactive_frequency'] ?? Fahad_AI_Proactive::DEFAULT_FREQUENCY ) ) );
 
+		// Voice input/output (issue #64). Both default OFF (opt-in): the master switch
+		// gates whether the widget builds the mic/speaker controls at all, and the TTS
+		// sub-toggle controls whether replies are spoken aloud.
+		update_option( 'fahad_ai_voice_enabled', empty( $_POST['voice_enabled'] ) ? 0 : 1 );
+		update_option( 'fahad_ai_voice_tts',     empty( $_POST['voice_tts'] ) ? 0 : 1 );
+
 		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'fahad-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
 	}
 
@@ -429,6 +435,10 @@ function fahad_ai_settings_page(): void {
 	// Proactive nudge (#65).
 	$proactive_enabled   = (bool) get_option( 'fahad_ai_proactive_enabled', 0 );
 	$proactive_frequency = max( 0, (int) get_option( 'fahad_ai_proactive_frequency', Fahad_AI_Proactive::DEFAULT_FREQUENCY ) );
+
+		// Voice input/output (#64). Both default OFF (opt-in).
+		$voice_enabled = (bool) get_option( 'fahad_ai_voice_enabled', 0 );
+		$voice_tts     = (bool) get_option( 'fahad_ai_voice_tts', 0 );
 
 	// The five built-in WooCommerce tools are a protected floor and are never shown as
 	// disable-able. Everything else advertised to the model (packs + add-ons) can be
@@ -715,6 +725,31 @@ function fahad_ai_settings_page(): void {
 						<p class="description">
 							<?php esc_html_e( 'How many times, at most, a proactive message may appear in a single visit. 1 (once per session) is recommended; 0 turns proactive messages off.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
+					</td>
+				</tr>
+			</table>
+
+			<h2 class="title"><?php esc_html_e( 'Voice', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+			<p class="description" style="max-width:50em;">
+				<?php esc_html_e( 'Let shoppers talk to the assistant. When enabled, a microphone button appears in the chat so a shopper can speak a question (it is transcribed into the message box using their browser\'s built-in speech recognition), and you can optionally have the assistant read its replies aloud. This uses the browser\'s own Web Speech API, so no audio is recorded or sent to any external service, the microphone permission is always requested by the browser, and typing always works. The controls are hidden automatically in browsers that do not support speech.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+			</p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Voice Input', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="voice_enabled" value="1" <?php checked( $voice_enabled ); ?>>
+							<?php esc_html_e( 'Show a microphone button so shoppers can speak their message (off by default).', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Spoken Replies', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="voice_tts" value="1" <?php checked( $voice_tts ); ?>>
+							<?php esc_html_e( 'Also let the assistant read its replies aloud, with a speaker button to toggle it (requires Voice Input; off by default).', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</label>
 					</td>
 				</tr>
 			</table>
