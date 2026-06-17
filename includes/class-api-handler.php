@@ -53,6 +53,64 @@ final class Fahad_AI_API_Handler {
 	}
 
 	// =========================================================================
+	// Direct cart actions (#48) — no agent round-trip
+	// =========================================================================
+
+	/**
+	 * Map a cart REST action to the built-in tool that performs it; null if unknown.
+	 */
+	private function cart_action_tool( string $action ): ?string {
+		return [
+			'add'    => 'add_to_cart',
+			'remove' => 'remove_from_cart',
+			'view'   => 'view_cart',
+		][ $action ] ?? null;
+	}
+
+	/**
+	 * Direct, verified cart action for the storefront — NO agent round-trip (#48).
+	 *
+	 * The card "Add to cart" button calls this instead of asking the model to add, so
+	 * a cart change is instant, cheap, and never "narrated" without being real. It
+	 * reuses the built-in cart tools (and their validation: invalid product / invalid
+	 * variation / out-of-stock) and returns the verified cart state. Gated by
+	 * authorize_request() (nonce + rate limit) like the chat endpoints. It returns
+	 * JSON (not SSE), so WooCommerce emits its session cookie normally and guest carts
+	 * persist.
+	 */
+	public function handle_cart_action( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		$action = sanitize_key( (string) $request->get_param( 'action' ) );
+		$tool   = $this->cart_action_tool( $action );
+
+		if ( null === $tool ) {
+			return new WP_Error( 'invalid_action', __( 'Unknown cart action.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 400 ] );
+		}
+
+		// Load the cart and set the guest session cookie before the response is sent,
+		// so a guest's cart change actually persists (same boundary fix as the SSE
+		// path, #31). On a JSON REST request headers aren't sent yet, so the cookie
+		// goes out fine.
+		$this->prime_cart_session();
+
+		$input = [
+			'product_id'    => (int) $request->get_param( 'product_id' ),
+			'quantity'      => max( 1, (int) ( $request->get_param( 'quantity' ) ?: 1 ) ),
+			'variation_id'  => (int) $request->get_param( 'variation_id' ),
+			'cart_item_key' => sanitize_text_field( (string) $request->get_param( 'cart_item_key' ) ),
+		];
+
+		$result = Fahad_AI_Tool_Registry::instance()->dispatch( $tool, $input );
+
+		// Persist the session immediately so the change survives this REST request —
+		// don't rely on the shutdown hook firing for a REST context.
+		if ( function_exists( 'WC' ) && WC()->session && method_exists( WC()->session, 'save_data' ) ) {
+			WC()->session->save_data();
+		}
+
+		return rest_ensure_response( $result );
+	}
+
+	// =========================================================================
 	// Anthropic (Claude) — tool_use / end_turn
 	// =========================================================================
 

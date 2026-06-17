@@ -377,6 +377,45 @@
 		}
 	}
 
+	// ── Direct cart add (#48) ───────────────────────────────────────────────────
+	// Card "Add to cart" hits the cart endpoint directly — no agent round-trip — so
+	// the action is instant and the confirmation reflects the REAL cart result.
+	// Falls back to asking the assistant if the endpoint isn't configured (old config).
+	async function addToCartDirect(productId, variationId, name) {
+		if (!cfg.cartUrl) {
+			input.value = 'Please add ' + (name || ('product ' + productId)) +
+				(variationId ? (' (variation_id ' + variationId + ')') : '') + ' to my cart';
+			sendMessage();
+			return;
+		}
+		if (busy) return;
+		setLoading(true);
+		try {
+			const res = await fetch(cfg.cartUrl, {
+				method:      'POST',
+				credentials: 'same-origin',
+				headers:     { 'Content-Type': 'application/json', 'X-WP-Nonce': cfg.nonce },
+				body:        JSON.stringify({ action: 'add', product_id: productId, quantity: 1, variation_id: variationId || 0 }),
+			});
+			const data = await res.json().catch(() => ({}));
+			if (!res.ok || data.success === false || data.error) {
+				appendMessage('bot', (data && (data.error || data.message)) || (i18n.genericError || 'Something went wrong. Please try again.'));
+			} else {
+				const links = (data.cart_url && data.checkout_url)
+					? '\n\n[' + (i18n.viewCart || 'View Cart') + '](' + data.cart_url + ') · [' + (i18n.checkout || 'Checkout') + '](' + data.checkout_url + ')'
+					: '';
+				appendMessage('bot', (data.message || (i18n.addedToCart || 'Added to your cart.')) + links);
+				// Best-effort mini-cart refresh for themes that listen for it.
+				document.body.dispatchEvent(new Event('wc_fragment_refresh'));
+			}
+		} catch (e) {
+			appendMessage('bot', i18n.connectionError || 'Connection error. Please try again.');
+		} finally {
+			setLoading(false);
+			input.focus();
+		}
+	}
+
 	// ── DOM helpers ───────────────────────────────────────────────────────────
 	function appendMessage(role, text) {
 		const div    = document.createElement('div');
@@ -766,24 +805,20 @@
 			add.addEventListener('click', () => {
 				if (busy) return;
 
-				// Variable product: require a chosen variation, then pass its id (and
-				// human-readable label) so the model adds the exact variation.
+				// Variable product: require a chosen, in-stock variation first.
+				let variationId = 0;
 				if (variationSelect) {
 					const opt = variationSelect.selectedOptions[0];
-					const variationId = opt ? opt.value : '';
-					if (!variationId) {
+					if (!opt || !opt.value) {
 						variationSelect.focus();
 						return;
 					}
-					const label = opt.dataset.label || '';
-					input.value = 'Please add ' + (p.name || '') + ' — ' + label +
-						' (variation_id ' + variationId + ') to my cart';
-					sendMessage();
-					return;
+					variationId = opt.value;
 				}
 
-				input.value = 'Please add ' + (p.name || '') + ' to my cart';
-				sendMessage();
+				// Direct, verified cart add (#48) — calls the cart endpoint, no agent
+				// round-trip; the confirmation reflects the real cart result.
+				addToCartDirect(p.id, variationId, p.name);
 			});
 			actions.appendChild(add);
 		}

@@ -3,7 +3,7 @@
  * Plugin Name: Fahad AI Shopping Assistant for WooCommerce
  * Plugin URI:  https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
  * Description: AI-powered shopping assistant for WooCommerce — answers questions and manages the cart using Claude or Kimi K2.
- * Version:     2.0.2
+ * Version:     2.1.0
  * Author:      Fahdi Murtaza
  * Author URI:  https://github.com/fahdi
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FAHAD_AI_VERSION', '2.0.2' );
+define( 'FAHAD_AI_VERSION', '2.1.0' );
 define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -57,6 +57,13 @@ final class Fahad_AI_Chatbot {
 		register_rest_route( 'fahad-ai/v1', '/stream', [
 			'methods'             => 'POST',
 			'callback'            => [ Fahad_AI_API_Handler::instance(), 'handle_stream' ],
+			'permission_callback' => [ $this, 'authorize_request' ],
+		] );
+		// Direct cart actions (#48): card buttons mutate the cart without an agent
+		// round-trip. Same gate as the chat endpoints (nonce + rate limit).
+		register_rest_route( 'fahad-ai/v1', '/cart', [
+			'methods'             => 'POST',
+			'callback'            => [ Fahad_AI_API_Handler::instance(), 'handle_cart_action' ],
 			'permission_callback' => [ $this, 'authorize_request' ],
 		] );
 	}
@@ -170,6 +177,7 @@ final class Fahad_AI_Chatbot {
 		wp_localize_script( 'fahad-ai-chatbot', 'fahadAiChatbot', [
 			'apiUrl'      => rest_url( 'fahad-ai/v1/message' ),
 			'streamUrl'   => rest_url( 'fahad-ai/v1/stream' ),
+			'cartUrl'     => rest_url( 'fahad-ai/v1/cart' ),
 			'provider'    => get_option( 'fahad_ai_provider', 'anthropic' ),
 			'nonce'       => wp_create_nonce( 'wp_rest' ),
 			'botName'     => get_option( 'fahad_ai_bot_name', __( 'Store Assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ) ),
@@ -196,6 +204,9 @@ final class Fahad_AI_Chatbot {
 				/* translators: %s is the product name. Accessible label for the card's View link. */
 				'viewProductNamed'   => __( 'View %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'addToCart'          => __( 'Add to cart', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'addedToCart'        => __( 'Added to your cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'viewCart'           => __( 'View Cart', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'checkout'           => __( 'Checkout', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				/* translators: %s is the product name. Accessible label for the card's Add-to-cart button. */
 				'addToCartNamed'     => __( 'Add %s to cart', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'inStock'            => __( 'In stock', 'fahad-ai-shopping-assistant-for-woocommerce' ),

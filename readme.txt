@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 2.0.2
+Stable tag: 2.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,6 +97,11 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.1.0 =
+New: direct, verified Add-to-cart from chat product cards.
+
+* The "Add to cart" button on chat product cards now adds the item instantly through a dedicated cart endpoint, with no AI round-trip — it's faster, and the confirmation always reflects the real cart result (it can no longer say "added" without actually adding). Variable products still require choosing an option first.
+
 = 2.0.2 =
 Maintenance & planning release — no functional plugin changes.
 
@@ -180,6 +185,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.1.0 =
+Adds instant, reliable Add-to-cart from chat product cards (no AI round-trip). Backward compatible; no settings changes.
 
 = 2.0.2 =
 Maintenance release: documentation and internal planning only — no functional changes. Safe to skip if you are on 2.0.1.

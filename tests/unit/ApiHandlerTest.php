@@ -110,6 +110,32 @@ class ApiHandlerTest extends TestCase {
         $this->assertStringContainsString( 'Never use HTML entities', $prompt );
     }
 
+    // ── direct, verified cart REST actions (#48) ────────────────────────────────
+    // The card "Add to cart" button calls a dedicated cart endpoint directly (no
+    // agent round-trip). handle_cart_action() maps a sanitized action to a built-in
+    // cart tool and dispatches it; an unknown action is rejected before any work.
+
+    public function test_cart_action_tool_maps_actions(): void {
+        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'cart_action_tool' );
+        $h = $this->handler();
+
+        $this->assertSame( 'add_to_cart',      $m->invoke( $h, 'add' ) );
+        $this->assertSame( 'remove_from_cart', $m->invoke( $h, 'remove' ) );
+        $this->assertSame( 'view_cart',        $m->invoke( $h, 'view' ) );
+        $this->assertNull( $m->invoke( $h, 'frobnicate' ) );
+    }
+
+    public function test_handle_cart_action_rejects_unknown_action(): void {
+        Functions\when( 'sanitize_key' )->returnArg();
+
+        $req = Mockery::mock( 'WP_REST_Request' );
+        $req->shouldReceive( 'get_param' )->with( 'action' )->andReturn( 'frobnicate' );
+
+        $result = $this->handler()->handle_cart_action( $req );
+
+        $this->assertTrue( is_wp_error( $result ), 'Unknown cart action must return a WP_Error.' );
+    }
+
     // ── sanitize_messages ─────────────────────────────────────────────────────
 
     public function test_user_role_is_allowed(): void {

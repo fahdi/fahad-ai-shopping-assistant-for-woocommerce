@@ -8,7 +8,7 @@ Concise router for this repo. To keep context lean, the detail lives in two focu
 
 ## Identity
 - Main file: `fahad-ai-shopping-assistant-for-woocommerce.php` · GitHub: https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
-- **Current version: 2.0.2**
+- **Current version: 2.1.0**
 - Requires: WordPress 6.0+ (tested up to 7.0), PHP 8.0+ (host dev runs 8.5), WooCommerce active
 - Slug / text domain (must match): `fahad-ai-shopping-assistant-for-woocommerce` (WP.org pending — see #67)
 - Prefixes: constants `FAHAD_AI_*`, classes `Fahad_AI_*`, functions/hooks/options `fahad_ai_*`, REST `fahad-ai/v1`. Full conventions table in [docs/plugin.md](docs/plugin.md).
