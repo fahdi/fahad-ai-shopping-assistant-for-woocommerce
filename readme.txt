@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 2.6.0
+Stable tag: 2.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -96,6 +96,13 @@ The conversation history (user messages and assistant replies) and the results o
 2. Admin settings — provider and API key configuration
 
 == Changelog ==
+
+= 2.7.0 =
+Multilingual replies, a PHP 8.1 fix, and developer seams for advanced search & channels.
+
+* Multilingual: the assistant detects the shopper's language (English, Urdu, Roman Urdu) and replies in it, while keeping all product facts grounded; new admin "Languages" setting, and prices/numbers format for the locale.
+* Fix: PHP 8.1 compatibility — a return type used PHP 8.2+ syntax that broke on 8.1; restored the stated minimum.
+* Developer seams (need a provider to activate, ship inert): semantic/vector product search (`fahad_ai_semantic_retriever`, falls back to keyword search), a signed WhatsApp webhook + agent routing behind a send provider, and an image-search upload endpoint behind a vision-retriever seam.
 
 = 2.6.0 =
 Insight, voice, and helpful nudges.
@@ -219,6 +226,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.7.0 =
+Adds multilingual replies (incl. Urdu / Roman Urdu), fixes PHP 8.1 compatibility, and adds developer seams for semantic search, WhatsApp, and image search (each needs a provider to activate). Backward compatible.
 
 = 2.6.0 =
 Adds an owner analytics dashboard (privacy-safe), optional voice input/output, and an optional value-gated proactive nudge (off by default, no fake urgency). Backward compatible.
