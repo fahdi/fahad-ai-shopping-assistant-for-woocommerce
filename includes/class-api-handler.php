@@ -61,11 +61,20 @@ final class Fahad_AI_API_Handler {
 				: $this->run_anthropic_agent( $sanitized );
 
 			if ( ! is_wp_error( $result ) ) {
+				// Owner analytics (#49): record this resolved turn (outcome + tool trace
+				// + funnel flags) — privacy-safe, opt-out-able, never fed to the model.
+				$this->record_turn_analytics( $sanitized, $result );
 				return rest_ensure_response( $result );
 			}
 		}
 
-		return rest_ensure_response( $this->degraded_response( $sanitized ) );
+		// Every provider failed: the shopper still gets the friendly degraded reply,
+		// and the owner-analytics store logs the turn as an error outcome (#49) so the
+		// dashboard reflects provider outages, not just answered turns.
+		$degraded = $this->degraded_response( $sanitized );
+		$this->record_turn_analytics( $sanitized, $degraded, Fahad_AI_Analytics::OUTCOME_ERROR );
+
+		return rest_ensure_response( $degraded );
 	}
 
 	// =========================================================================
@@ -776,6 +785,197 @@ Guidelines:
 	}
 
 	// =========================================================================
+	// Owner analytics recording (issue #49)
+	// =========================================================================
+
+	/**
+	 * Record one resolved assistant turn into the owner-analytics store (issue #49).
+	 *
+	 * Called from the dispatch / stream terminal points with the turn's INPUT messages
+	 * and its RESULT. Derives a privacy-safe event — a trimmed, email-masked question
+	 * snippet, the tool names called, the coarse outcome, the funnel flags
+	 * (product_surfaced / added_to_cart) and an OPAQUE per-conversation ref — and hands
+	 * it to Fahad_AI_Analytics, which applies the PII masking, bounds, retention and
+	 * opt-out. The store NEVER feeds any of this back to the model; this is owner
+	 * telemetry only.
+	 *
+	 * NEGLIGIBLE OVERHEAD + OPT-OUT: short-circuits before doing ANY derivation when the
+	 * merchant has disabled analytics (one option read), so a store that opts out pays
+	 * almost nothing. Wrapped so a recording failure can never break a shopper's turn.
+	 *
+	 * @param array  $input_messages The sanitized INPUT messages for the turn (used to
+	 *                               derive the question + a stable conversation ref).
+	 * @param array  $result         The loop result (message/messages/products).
+	 * @param string $outcome_hint   Force an outcome (OUTCOME_*); '' to auto-derive.
+	 * @param array  $overrides      Optional { tools: string[], added_to_cart: bool } from
+	 *                               the streaming path, which tracks these as it goes.
+	 */
+	private function record_turn_analytics( array $input_messages, array $result, string $outcome_hint = '', array $overrides = [] ): void {
+		$analytics = Fahad_AI_Analytics::instance();
+
+		// Opt-out / negligible-overhead gate: do no derivation when disabled.
+		if ( ! $analytics->enabled() ) {
+			return;
+		}
+
+		try {
+			$messages = is_array( $result['messages'] ?? null ) ? $result['messages'] : [];
+
+			$tools = isset( $overrides['tools'] ) && is_array( $overrides['tools'] )
+				? $overrides['tools']
+				: $this->analytics_tool_trace( $messages );
+
+			$added_to_cart = array_key_exists( 'added_to_cart', $overrides )
+				? (bool) $overrides['added_to_cart']
+				: in_array( 'add_to_cart', $tools, true );
+
+			$product_surfaced = ! empty( $result['products'] );
+
+			$outcome = '' !== $outcome_hint
+				? $outcome_hint
+				: $this->analytics_outcome( $tools, $product_surfaced, $messages );
+
+			$analytics->record( [
+				'question'         => $this->analytics_last_user_question( $input_messages ),
+				'tools'            => $tools,
+				'outcome'          => $outcome,
+				'product_surfaced' => $product_surfaced,
+				'added_to_cart'    => $added_to_cart,
+				// Token/cost are not exposed by the current provider responses; recorded
+				// as 0 (the store + dashboard treat 0 as "unknown"). A future change that
+				// surfaces usage can populate these without touching the store.
+				'tokens'           => 0,
+				'cost'             => 0.0,
+				'conversation_ref' => $this->analytics_conversation_ref( $input_messages ),
+			] );
+		} catch ( \Throwable $e ) {
+			// Telemetry must never break a turn. Swallow and move on.
+			return;
+		}
+	}
+
+	/**
+	 * The most recent genuine user question from the input messages — a plain-string
+	 * user turn (NOT a tool_result block, which is role user with array content). The
+	 * raw text is returned; Fahad_AI_Analytics masks emails + caps length on store, so
+	 * masking lives in exactly one place.
+	 */
+	private function analytics_last_user_question( array $messages ): string {
+		$question = '';
+		foreach ( $messages as $msg ) {
+			if ( ( $msg['role'] ?? '' ) === 'user' && is_string( $msg['content'] ?? null ) ) {
+				$question = (string) $msg['content'];
+			}
+		}
+		return $question;
+	}
+
+	/**
+	 * A stable, OPAQUE conversation ref derived from the conversation's OPENING user
+	 * turn, so every turn in the same conversation maps to the same bucket (best-effort
+	 * funnel/cost attribution — the issue explicitly allows best-effort here). It is a
+	 * hash, never readable PII, and the message endpoint carries no conversation token
+	 * of its own, so this is the most stable key available without one. An empty
+	 * conversation yields '' (the store buckets that turn anonymously).
+	 */
+	private function analytics_conversation_ref( array $messages ): string {
+		foreach ( $messages as $msg ) {
+			if ( ( $msg['role'] ?? '' ) === 'user' && is_string( $msg['content'] ?? null ) ) {
+				return substr( md5( (string) $msg['content'] ), 0, 16 );
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * The ordered tool names called during the turn, read from the transcript. Handles
+	 * BOTH provider shapes: Anthropic assistant `tool_use` content blocks, and the
+	 * OpenAI/Moonshot assistant `tool_calls` array. Used for the non-streaming paths
+	 * (the streaming path passes its own trace, which it accumulates live).
+	 *
+	 * @return string[]
+	 */
+	private function analytics_tool_trace( array $messages ): array {
+		$tools = [];
+		foreach ( $messages as $msg ) {
+			if ( ( $msg['role'] ?? '' ) !== 'assistant' ) {
+				continue;
+			}
+
+			// Anthropic: content is an array of blocks; tool_use blocks carry a name.
+			if ( is_array( $msg['content'] ?? null ) ) {
+				foreach ( $msg['content'] as $block ) {
+					if ( is_array( $block ) && ( $block['type'] ?? '' ) === 'tool_use' && ! empty( $block['name'] ) ) {
+						$tools[] = (string) $block['name'];
+					}
+				}
+			}
+
+			// Moonshot / OpenAI: an assistant message with a tool_calls array.
+			foreach ( $msg['tool_calls'] ?? [] as $call ) {
+				$name = $call['function']['name'] ?? '';
+				if ( '' !== $name ) {
+					$tools[] = (string) $name;
+				}
+			}
+		}
+		return $tools;
+	}
+
+	/**
+	 * Derive the coarse outcome for a normally-completed turn (the dispatch path passes
+	 * OUTCOME_ERROR explicitly when every provider failed, so this only classifies the
+	 * success case):
+	 *   - ESCALATED   — a personal tool returned `requires_login` (the grounded "please
+	 *                   sign in / reach support" handoff), detectable in the transcript.
+	 *   - NO_TOOL_MATCH — the model answered with NO tool call and surfaced no product
+	 *                   (a pure-chat / "I couldn't act on that" turn).
+	 *   - ANSWERED    — otherwise (it used a tool and/or surfaced a product).
+	 *
+	 * Deterministic and cheap — no model round-trip. Abstention is intentionally NOT
+	 * inferred here (it needs the answer-text checker the eval harness owns); the store
+	 * still supports OUTCOME_ABSTAINED for callers that can classify it.
+	 */
+	private function analytics_outcome( array $tools, bool $product_surfaced, array $messages ): string {
+		if ( $this->transcript_requires_login( $messages ) ) {
+			return Fahad_AI_Analytics::OUTCOME_ESCALATED;
+		}
+
+		if ( empty( $tools ) && ! $product_surfaced ) {
+			return Fahad_AI_Analytics::OUTCOME_NO_TOOL_MATCH;
+		}
+
+		return Fahad_AI_Analytics::OUTCOME_ANSWERED;
+	}
+
+	/**
+	 * Whether any tool_result in the transcript reported `requires_login` — the central
+	 * login-gate's grounded escalation signal (Fahad_AI_Auth::guard_logged_in). Tool
+	 * results are JSON-encoded into the transcript (role user array content on
+	 * Anthropic, role tool on Moonshot), so a substring probe for the flag is a cheap,
+	 * provider-agnostic detector.
+	 */
+	private function transcript_requires_login( array $messages ): bool {
+		foreach ( $messages as $msg ) {
+			$role = $msg['role'] ?? '';
+			if ( 'tool' === $role && is_string( $msg['content'] ?? null ) ) {
+				if ( str_contains( $msg['content'], 'requires_login' ) ) {
+					return true;
+				}
+			}
+			if ( 'user' === $role && is_array( $msg['content'] ?? null ) ) {
+				foreach ( $msg['content'] as $block ) {
+					$content = is_array( $block ) ? ( $block['content'] ?? '' ) : '';
+					if ( is_string( $content ) && str_contains( $content, 'requires_login' ) ) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	// =========================================================================
 	// Cost & latency controls (issue #23)
 	// =========================================================================
 
@@ -1384,6 +1584,11 @@ Guidelines:
 		$tools         = Fahad_AI_Tools::instance();
 		$max           = 8;
 		$sent_products = false;
+		// Owner analytics (#49): accumulate the tool names this streamed turn calls and
+		// whether anything was added to cart, so the terminal points can record one
+		// privacy-safe event. The SSE bytes the shopper sees are unaffected.
+		$tools_called  = [];
+		$added_to_cart = false;
 
 		// Moonshot needs system as first message.
 		$api_msgs = array_merge(
@@ -1408,6 +1613,12 @@ Guidelines:
 				// sent to the client. NOTE: mid-stream provider switching is out of
 				// scope for #58 — once bytes are flowing we cannot transparently swap
 				// providers, so we degrade rather than fail over here.
+				$this->record_turn_analytics(
+					$messages,
+					[ 'products' => $sent_products ? [ 1 ] : [], 'messages' => $api_msgs ],
+					Fahad_AI_Analytics::OUTCOME_ERROR,
+					[ 'tools' => $tools_called, 'added_to_cart' => $added_to_cart ]
+				);
 				$this->sse_send( 'chunk', [ 'content' => $this->degraded_response()['message'] ] );
 				$this->sse_send( 'done', [] );
 				return;
@@ -1425,7 +1636,14 @@ Guidelines:
 			$api_msgs[] = $assistant_msg;
 
 			if ( empty( $tool_calls ) ) {
-				// Final turn — signal completion.
+				// Final turn — signal completion. Record the resolved turn for owner
+				// analytics (#49) before the connection closes.
+				$this->record_turn_analytics(
+					$messages,
+					[ 'products' => $sent_products ? [ 1 ] : [], 'messages' => $api_msgs ],
+					'',
+					[ 'tools' => $tools_called, 'added_to_cart' => $added_to_cart ]
+				);
 				$this->sse_send( 'done', [] );
 				return;
 			}
@@ -1433,6 +1651,10 @@ Guidelines:
 			// Execute each tool and append results.
 			foreach ( $tool_calls as $tc ) {
 				$this->sse_send( 'tool', [ 'name' => $tc['name'] ] );
+				$tools_called[] = $tc['name'];
+				if ( 'add_to_cart' === $tc['name'] ) {
+					$added_to_cart = true;
+				}
 
 				// Sequence per tool call: execute → surface cards/comparison from the
 				// FULL result (the SSE events carry FULL data) → TRIM → append the
@@ -1463,7 +1685,15 @@ Guidelines:
 		}
 
 		// Graceful exhaustion (finding #28): stream a friendly message + done instead of
-		// a raw error event, keeping any product cards already streamed above.
+		// a raw error event, keeping any product cards already streamed above. The loop
+		// never produced a final answer within the budget — record it as a no-tool-match
+		// "couldn't complete" turn for owner analytics (#49).
+		$this->record_turn_analytics(
+			$messages,
+			[ 'products' => $sent_products ? [ 1 ] : [], 'messages' => $api_msgs ],
+			Fahad_AI_Analytics::OUTCOME_NO_TOOL_MATCH,
+			[ 'tools' => $tools_called, 'added_to_cart' => $added_to_cart ]
+		);
 		$this->sse_send( 'chunk', [ 'content' => $this->agent_fallback_message( $sent_products ) ] );
 		$this->sse_send( 'done', [] );
 	}

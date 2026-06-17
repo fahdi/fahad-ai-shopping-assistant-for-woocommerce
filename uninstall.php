@@ -25,6 +25,11 @@ $fahad_ai_options = [
 	// Reply feedback / guardrail telemetry (issue #50). A bounded, rolling window of
 	// thumbs ratings (no PII); removed on uninstall like every other fahad_ai_ option.
 	'fahad_ai_feedback',
+	// Owner analytics & "unanswered questions" telemetry (issue #49). A bounded,
+	// rolling window of privacy-safe per-turn events (masked question snippet, outcome,
+	// tools, funnel flags — never PII) plus the opt-out flag. Both removed on uninstall.
+	'fahad_ai_analytics',
+	'fahad_ai_analytics_enabled',
 	// Merchant scope / tone / business-rules config (issue #56): tone/persona,
 	// off-limits topics, per-category promo emphasis, the disabled-tools list, and the
 	// surfaced cost/model knobs (token budget + fast-model routing).
@@ -44,4 +49,11 @@ $fahad_ai_options = [
 
 foreach ( $fahad_ai_options as $fahad_ai_option ) {
 	delete_option( $fahad_ai_option );
+}
+
+// Clear the daily analytics-purge cron event (issue #49) so no orphaned schedule
+// lingers after the plugin is removed.
+$fahad_ai_purge_ts = wp_next_scheduled( 'fahad_ai_analytics_purge' );
+if ( $fahad_ai_purge_ts ) {
+	wp_unschedule_event( $fahad_ai_purge_ts, 'fahad_ai_analytics_purge' );
 }

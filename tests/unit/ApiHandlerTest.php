@@ -1741,6 +1741,16 @@ class ApiHandlerTest extends TestCase {
 
         Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
 
+        // Owner analytics (#49): handle_message now records a privacy-safe turn event
+        // via Fahad_AI_Analytics on every resolved (or degraded) turn. Analytics is ON
+        // by default, so these end-to-end dispatch tests exercise that path — give the
+        // store a harmless option seam (it persists with update_option) and a stable id
+        // so the recording neither fatals on an unstubbed function nor pollutes state.
+        // The recording is fire-and-forget here; the store has its own unit tests.
+        Functions\when( 'update_option' )->justReturn( true );
+        Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid-analytics' );
+        ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+
         Functions\when( 'wp_remote_post' )->alias(
             static function ( $url, $args = [] ) use ( $anthropic, $moonshot, $counts ) {
                 $is_anthropic = str_contains( (string) $url, 'anthropic' );
@@ -1890,5 +1900,161 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( 'anthropic single-provider', $result['message'] );
         $this->assertSame( 1, $counter['anthropic'] );
         $this->assertSame( 0, $counter['moonshot'] );
+    }
+
+    // ── owner-analytics recording wired into the agent loop (issue #49) ──────────
+    // handle_message / the stream loop call the private record_turn_analytics() at
+    // each terminal point. These cover the WIRING (outcome derivation, tool trace,
+    // funnel flags, PII passthrough to the store, opt-out) by invoking the private
+    // method against the in-memory option seam — the eval-harness reflection pattern,
+    // with NO setAccessible (host runs PHP 8.5). The store's own bounds/masking are
+    // unit-tested in AnalyticsTest; here we prove the loop feeds it the right event.
+
+    /** Back Fahad_AI_Analytics with the in-memory option map + reset its singleton. */
+    private function analytics_option_seam(): void {
+        Functions\when( 'get_option' )->alias( fn( $name, $default = false ) => $this->options[ $name ] ?? $default );
+        Functions\when( 'update_option' )->alias( function ( $name, $value ) {
+            $this->options[ $name ] = $value;
+            return true;
+        } );
+        Functions\when( 'sanitize_text_field' )->alias( static fn( $s ) => is_string( $s ) ? trim( $s ) : '' );
+        Functions\when( 'sanitize_textarea_field' )->alias( static fn( $s ) => is_string( $s ) ? trim( $s ) : '' );
+        Functions\when( 'sanitize_key' )->alias( static fn( $s ) => is_string( $s ) ? strtolower( trim( $s ) ) : '' );
+        Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid-fixed' );
+        ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+    }
+
+    /** Invoke the private record_turn_analytics() (no setAccessible — PHP 8.5 safe). */
+    private function record_turn_analytics( array $input, array $result, string $hint = '', array $overrides = [] ): void {
+        ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'record_turn_analytics' ) )
+            ->invoke( $this->handler(), $input, $result, $hint, $overrides );
+    }
+
+    /** The single persisted analytics row. */
+    private function analytics_row(): array {
+        $rows = $this->options[ Fahad_AI_Analytics::OPTION ] ?? [];
+        return (array) reset( $rows );
+    }
+
+    public function test_loop_records_an_answered_turn_with_tool_trace_and_funnel_flag(): void {
+        $this->options = [];
+        $this->analytics_option_seam();
+
+        // An Anthropic-shaped transcript: the model searched, then added to cart.
+        $input  = [ [ 'role' => 'user', 'content' => 'add the red shoes to my cart' ] ];
+        $result = [
+            'message'  => 'Added to your cart.',
+            'products' => [ [ 'id' => 1, 'name' => 'Red Shoes' ] ],
+            'messages' => [
+                [ 'role' => 'user', 'content' => 'add the red shoes to my cart' ],
+                [ 'role' => 'assistant', 'content' => [
+                    [ 'type' => 'tool_use', 'name' => 'search_products', 'id' => 't1', 'input' => [] ],
+                ] ],
+                [ 'role' => 'assistant', 'content' => [
+                    [ 'type' => 'tool_use', 'name' => 'add_to_cart', 'id' => 't2', 'input' => [] ],
+                ] ],
+            ],
+        ];
+
+        $this->record_turn_analytics( $input, $result );
+
+        $row = $this->analytics_row();
+        $this->assertSame( Fahad_AI_Analytics::OUTCOME_ANSWERED, $row['outcome'] );
+        $this->assertSame( [ 'search_products', 'add_to_cart' ], $row['tools'] );
+        $this->assertTrue( $row['product_surfaced'] );
+        $this->assertTrue( $row['added_to_cart'], 'add_to_cart in the trace flags the funnel.' );
+    }
+
+    public function test_loop_masks_an_email_typed_into_the_question(): void {
+        $this->options = [];
+        $this->analytics_option_seam();
+
+        $input  = [ [ 'role' => 'user', 'content' => 'ship it to jane.doe@example.com' ] ];
+        $result = [ 'message' => 'ok', 'products' => [], 'messages' => $input ];
+
+        $this->record_turn_analytics( $input, $result );
+
+        $q = $this->analytics_row()['question'];
+        $this->assertStringNotContainsString( 'jane.doe@example.com', $q, 'A raw email must never be persisted from the loop.' );
+        $this->assertStringContainsString( '@example.com', $q );
+    }
+
+    public function test_loop_records_escalated_when_a_tool_requires_login(): void {
+        $this->options = [];
+        $this->analytics_option_seam();
+
+        // A personal tool returned requires_login (the grounded sign-in handoff).
+        $input  = [ [ 'role' => 'user', 'content' => 'where is my order' ] ];
+        $result = [
+            'message'  => 'Please log in to see your orders.',
+            'products' => [],
+            'messages' => [
+                [ 'role' => 'user', 'content' => 'where is my order' ],
+                [ 'role' => 'assistant', 'content' => [ [ 'type' => 'tool_use', 'name' => 'get_my_orders', 'id' => 't1', 'input' => [] ] ] ],
+                [ 'role' => 'tool', 'content' => '{"error":"Please log in","requires_login":true}' ],
+            ],
+        ];
+
+        $this->record_turn_analytics( $input, $result );
+
+        $this->assertSame( Fahad_AI_Analytics::OUTCOME_ESCALATED, $this->analytics_row()['outcome'] );
+    }
+
+    public function test_loop_records_no_tool_match_when_nothing_was_used(): void {
+        $this->options = [];
+        $this->analytics_option_seam();
+
+        // The model answered with no tool call and surfaced no product.
+        $input  = [ [ 'role' => 'user', 'content' => 'what is the meaning of life' ] ];
+        $result = [
+            'message'  => 'I can help you shop — was there a product you had in mind?',
+            'products' => [],
+            'messages' => [ [ 'role' => 'user', 'content' => 'what is the meaning of life' ], [ 'role' => 'assistant', 'content' => [ [ 'type' => 'text', 'text' => '...' ] ] ] ],
+        ];
+
+        $this->record_turn_analytics( $input, $result );
+
+        $this->assertSame( Fahad_AI_Analytics::OUTCOME_NO_TOOL_MATCH, $this->analytics_row()['outcome'] );
+    }
+
+    public function test_loop_records_nothing_when_analytics_is_disabled(): void {
+        $this->options = [ Fahad_AI_Analytics::OPTION_ENABLED => 0 ];
+        $this->analytics_option_seam();
+
+        $input  = [ [ 'role' => 'user', 'content' => 'hi' ] ];
+        $this->record_turn_analytics( $input, [ 'message' => 'hi', 'products' => [], 'messages' => $input ] );
+
+        $this->assertSame( [], $this->options[ Fahad_AI_Analytics::OPTION ] ?? [], 'Opt-out must persist nothing.' );
+    }
+
+    public function test_loop_honors_an_explicit_outcome_hint(): void {
+        // The dispatch path passes OUTCOME_ERROR when every provider failed; the hint
+        // wins over derivation.
+        $this->options = [];
+        $this->analytics_option_seam();
+
+        $input  = [ [ 'role' => 'user', 'content' => 'hi' ] ];
+        $this->record_turn_analytics( $input, [ 'message' => '', 'products' => [], 'messages' => $input ], Fahad_AI_Analytics::OUTCOME_ERROR );
+
+        $this->assertSame( Fahad_AI_Analytics::OUTCOME_ERROR, $this->analytics_row()['outcome'] );
+    }
+
+    public function test_loop_uses_streaming_overrides_for_tools_and_cart(): void {
+        // The streaming path can't read the trace from a returned transcript, so it
+        // passes the tools it accumulated + the cart flag as overrides.
+        $this->options = [];
+        $this->analytics_option_seam();
+
+        $input = [ [ 'role' => 'user', 'content' => 'add it' ] ];
+        $this->record_turn_analytics(
+            $input,
+            [ 'message' => 'done', 'products' => [ [ 'id' => 1 ] ], 'messages' => $input ],
+            '',
+            [ 'tools' => [ 'search_products', 'add_to_cart' ], 'added_to_cart' => true ]
+        );
+
+        $row = $this->analytics_row();
+        $this->assertSame( [ 'search_products', 'add_to_cart' ], $row['tools'] );
+        $this->assertTrue( $row['added_to_cart'] );
     }
 }

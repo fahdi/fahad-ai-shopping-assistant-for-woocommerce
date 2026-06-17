@@ -9,6 +9,7 @@ require_once __DIR__ . '/stubs/wc-stubs.php';
 // Load the plugin classes (no WordPress bootstrap needed for unit tests).
 require_once dirname( __DIR__ ) . '/includes/class-auth.php';
 require_once dirname( __DIR__ ) . '/includes/class-feedback.php';
+require_once dirname( __DIR__ ) . '/includes/class-analytics.php';
 require_once dirname( __DIR__ ) . '/includes/class-proactive.php';
 require_once dirname( __DIR__ ) . '/includes/class-tool-registry.php';
 require_once dirname( __DIR__ ) . '/includes/class-tools.php';

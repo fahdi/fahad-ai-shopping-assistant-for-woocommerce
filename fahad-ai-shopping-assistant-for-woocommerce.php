@@ -25,6 +25,7 @@ define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
 require_once FAHAD_AI_PATH . 'includes/class-auth.php';
 require_once FAHAD_AI_PATH . 'includes/class-feedback.php';
+require_once FAHAD_AI_PATH . 'includes/class-analytics.php';
 require_once FAHAD_AI_PATH . 'includes/class-proactive.php';
 require_once FAHAD_AI_PATH . 'includes/class-tool-registry.php';
 require_once FAHAD_AI_PATH . 'includes/class-tools.php';
@@ -48,6 +49,33 @@ final class Fahad_AI_Chatbot {
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
 		add_action( 'wp_footer',             [ $this, 'render_widget' ] );
 		add_action( 'admin_menu',            [ $this, 'add_admin_menu' ] );
+
+		// Owner analytics (#49): the export/delete dashboard controls POST to
+		// admin-post.php; each handler re-checks capability + nonce.
+		add_action( 'admin_post_fahad_ai_analytics_export', 'fahad_ai_analytics_export_handler' );
+		add_action( 'admin_post_fahad_ai_analytics_delete', 'fahad_ai_analytics_delete_handler' );
+
+		// Owner analytics (#49): a daily scheduled purge ages out telemetry older than
+		// the retention window even on a quiet store where the lazy purge in record()
+		// rarely runs. The hook is registered once; the event is scheduled on init.
+		add_action( 'fahad_ai_analytics_purge', [ $this, 'run_analytics_purge' ] );
+		add_action( 'init',                     [ $this, 'schedule_analytics_purge' ] );
+	}
+
+	/**
+	 * Ensure the daily analytics-purge cron event is scheduled (issue #49). Idempotent:
+	 * only schedules when not already pending, so it self-heals if a site never ran a
+	 * formal activation hook (this plugin boots from plugins_loaded).
+	 */
+	public function schedule_analytics_purge(): void {
+		if ( ! wp_next_scheduled( 'fahad_ai_analytics_purge' ) ) {
+			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'fahad_ai_analytics_purge' );
+		}
+	}
+
+	/** Cron callback: purge analytics rows older than the retention window (#49). */
+	public function run_analytics_purge(): void {
+		Fahad_AI_Analytics::instance()->purge_expired();
 	}
 
 	public function register_routes(): void {
@@ -336,16 +364,32 @@ final class Fahad_AI_Chatbot {
 	}
 
 	public function add_admin_menu(): void {
+		// Shop managers (manage_woocommerce) as well as admins can tune the assistant —
+		// the natural cap for a WooCommerce extension; falls back to manage_options where
+		// the WooCommerce cap is not granted. Each page callback re-checks the same
+		// capability (defence in depth).
+		$capability = fahad_ai_settings_capability();
+
 		add_options_page(
 			esc_html__( 'Fahad AI Shopping Assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			esc_html__( 'Fahad AI Assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-			// Shop managers (manage_woocommerce) as well as admins can tune the
-			// assistant — the natural cap for a WooCommerce extension; falls back to
-			// manage_options where the WooCommerce cap is not granted. The page
-			// callback re-checks the same capability (defence in depth).
-			fahad_ai_settings_capability(),
+			$capability,
 			'fahad-ai-shopping-assistant-for-woocommerce',
 			'fahad_ai_settings_page'
+		);
+
+		// Owner analytics & "unanswered questions" dashboard (issue #49). A standalone
+		// page (own URL, own nonce-gated export/delete actions) rather than a tab on the
+		// settings form. Registered as a top-level admin page so its slug
+		// (admin.php?page=fahad-ai-analytics) is stable for the redirect after a delete.
+		add_menu_page(
+			esc_html__( 'AI Assistant Analytics', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			esc_html__( 'AI Analytics', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			$capability,
+			'fahad-ai-analytics',
+			'fahad_ai_analytics_page',
+			'dashicons-chart-bar',
+			58
 		);
 	}
 }

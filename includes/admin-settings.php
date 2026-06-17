@@ -57,6 +57,319 @@ function fahad_ai_sanitize_tool_list( $raw ): array {
 	return array_values( $clean );
 }
 
+/**
+ * Resolve the dashboard's date range from the request (issue #49).
+ *
+ * Reads `from` / `to` Y-m-d GET params (the date-range picker), converting them to an
+ * inclusive unix-timestamp window for the analytics aggregates. A blank/invalid bound
+ * is left open (null), so "all time" is the default. `to` is pushed to the END of its
+ * day so a single-day or inclusive range captures the whole final day. This is a
+ * read-only filter, so it is GET (no nonce needed); the values are validated as dates
+ * and never trusted as anything else.
+ *
+ * @return array{ from: ?int, to: ?int, from_str: string, to_str: string }
+ */
+function fahad_ai_analytics_range_from_request(): array {
+	$from_str = isset( $_GET['from'] ) ? sanitize_text_field( wp_unslash( $_GET['from'] ) ) : '';
+	$to_str   = isset( $_GET['to'] ) ? sanitize_text_field( wp_unslash( $_GET['to'] ) ) : '';
+
+	$from = fahad_ai_analytics_parse_date( $from_str, false );
+	$to   = fahad_ai_analytics_parse_date( $to_str, true );
+
+	return [
+		'from'     => $from,
+		'to'       => $to,
+		'from_str' => $from ? $from_str : '',
+		'to_str'   => $to ? $to_str : '',
+	];
+}
+
+/**
+ * Parse a Y-m-d string to a unix timestamp, or null when blank/invalid. When
+ * $end_of_day is true the timestamp is the last second of that day (inclusive upper
+ * bound). Uses the site timezone via strtotime so the merchant's chosen dates line up
+ * with how WordPress shows times.
+ */
+function fahad_ai_analytics_parse_date( string $date, bool $end_of_day ): ?int {
+	$date = trim( $date );
+	if ( '' === $date || ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ) {
+		return null;
+	}
+
+	$ts = strtotime( $date . ( $end_of_day ? ' 23:59:59' : ' 00:00:00' ) );
+
+	return false === $ts ? null : $ts;
+}
+
+/**
+ * Owner analytics & "unanswered questions" dashboard (issue #49).
+ *
+ * Renders the privacy-safe aggregates from Fahad_AI_Analytics for a selectable date
+ * range: top questions, the "questions we couldn't answer" list, the chat →
+ * add-to-cart → order funnel, and cost per conversation. Also hosts the retention
+ * controls — an opt-out toggle, an Export (download) and a Delete-all — each a
+ * nonce-protected POST routed through admin-post.php. Gated by the same capability as
+ * the settings page (manage_woocommerce, falling back to manage_options), re-checked
+ * here as defence in depth.
+ */
+function fahad_ai_analytics_page(): void {
+	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+		return;
+	}
+
+	$analytics = Fahad_AI_Analytics::instance();
+
+	// Toggle the opt-out from this page (its own nonce). The aggregates below still
+	// render whatever history exists even when logging is paused.
+	if ( isset( $_POST['fahad_ai_analytics_save'] ) && check_admin_referer( 'fahad_ai_analytics_settings' ) ) {
+		update_option( Fahad_AI_Analytics::OPTION_ENABLED, empty( $_POST['analytics_enabled'] ) ? 0 : 1 );
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Analytics settings saved.', 'fahad-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
+	}
+
+	// One-shot admin notices after an export/delete round-trip via admin-post.php.
+	if ( isset( $_GET['fahad_ai_purged'] ) ) {
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Analytics data deleted.', 'fahad-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
+	}
+
+	$enabled = $analytics->enabled();
+	$range   = fahad_ai_analytics_range_from_request();
+	$window  = [ 'from' => $range['from'], 'to' => $range['to'] ];
+
+	$top         = $analytics->top_questions( 20, $window );
+	$unanswered  = $analytics->unanswered( 50, $window );
+	$funnel      = $analytics->funnel( $window, 'fahad_ai_attribute_orders' );
+	$cost        = $analytics->cost_summary( $window );
+	$export_url  = admin_url( 'admin-post.php' );
+	$page_slug   = 'fahad-ai-analytics';
+	$currency    = function_exists( 'get_woocommerce_currency_symbol' ) ? get_woocommerce_currency_symbol() : '';
+	?>
+	<div class="wrap">
+		<h1><?php esc_html_e( 'AI Assistant Analytics', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h1>
+
+		<?php if ( ! $enabled ) : ?>
+			<div class="notice notice-warning inline"><p>
+				<?php esc_html_e( 'Analytics logging is currently turned off. New conversations are not being recorded; the figures below reflect previously stored data only.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+			</p></div>
+		<?php endif; ?>
+
+		<p class="description" style="max-width:55em;">
+			<?php esc_html_e( 'A privacy-safe view of how the assistant is performing. Questions are stored with emails masked and trimmed, never with names, IP addresses or customer identifiers, and this data is never sent back to the AI model. Data is kept on a rolling retention window and can be exported or deleted below.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+		</p>
+
+		<!-- Date-range filter (read-only → GET, no nonce). -->
+		<form method="get" style="margin:16px 0;">
+			<input type="hidden" name="page" value="<?php echo esc_attr( $page_slug ); ?>">
+			<label for="fahad-ai-from"><?php esc_html_e( 'From', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label>
+			<input type="date" id="fahad-ai-from" name="from" value="<?php echo esc_attr( $range['from_str'] ); ?>">
+			<label for="fahad-ai-to" style="margin-left:8px;"><?php esc_html_e( 'To', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label>
+			<input type="date" id="fahad-ai-to" name="to" value="<?php echo esc_attr( $range['to_str'] ); ?>">
+			<?php submit_button( esc_html__( 'Apply', 'fahad-ai-shopping-assistant-for-woocommerce' ), 'secondary', '', false ); ?>
+			<?php if ( '' !== $range['from_str'] || '' !== $range['to_str'] ) : ?>
+				<a class="button-link" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $page_slug ) ); ?>"><?php esc_html_e( 'Reset', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></a>
+			<?php endif; ?>
+		</form>
+
+		<!-- Funnel + cost summary cards. -->
+		<h2><?php esc_html_e( 'Conversion funnel', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<table class="widefat striped" style="max-width:46em;">
+			<tbody>
+				<tr><td><?php esc_html_e( 'Conversations', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['conversations'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Saw a product', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['product_surfaced'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Added to cart', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['added_to_cart'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Chat-attributed orders', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo null === $funnel['orders'] ? esc_html__( 'n/a', 'fahad-ai-shopping-assistant-for-woocommerce' ) : esc_html( (string) $funnel['orders'] ); ?></strong></td></tr>
+			</tbody>
+		</table>
+
+		<h2><?php esc_html_e( 'Cost', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<table class="widefat striped" style="max-width:46em;">
+			<tbody>
+				<tr><td><?php esc_html_e( 'Total cost', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( $currency . number_format( (float) $cost['total_cost'], 4 ) ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Cost per conversation', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( $currency . number_format( (float) $cost['cost_per_conversation'], 4 ) ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Total tokens', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $cost['total_tokens'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Turns', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $cost['turns'] ); ?></strong></td></tr>
+			</tbody>
+		</table>
+		<p class="description"><?php esc_html_e( 'Cost and token figures appear when your provider returns usage data; otherwise they read as zero.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+
+		<!-- Top questions. -->
+		<h2><?php esc_html_e( 'Top questions', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<?php if ( empty( $top ) ) : ?>
+			<p class="description"><?php esc_html_e( 'No questions recorded for this range yet.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+		<?php else : ?>
+			<table class="widefat striped" style="max-width:55em;">
+				<thead><tr>
+					<th><?php esc_html_e( 'Question', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th style="width:6em;"><?php esc_html_e( 'Count', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+				</tr></thead>
+				<tbody>
+					<?php foreach ( $top as $item ) : ?>
+						<tr>
+							<td><?php echo esc_html( $item['question'] ); ?></td>
+							<td><?php echo esc_html( (string) $item['count'] ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
+
+		<!-- The "couldn't answer" list. -->
+		<h2><?php esc_html_e( 'Questions we couldn\'t answer', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<p class="description" style="max-width:55em;"><?php esc_html_e( 'Turns where the assistant abstained, escalated to support, or had no matching action. These are your content and coverage opportunities.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+		<?php if ( empty( $unanswered ) ) : ?>
+			<p class="description"><?php esc_html_e( 'Nothing here for this range — the assistant answered everything it was asked.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+		<?php else : ?>
+			<table class="widefat striped" style="max-width:55em;">
+				<thead><tr>
+					<th><?php esc_html_e( 'Question', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th style="width:10em;"><?php esc_html_e( 'Outcome', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th style="width:14em;"><?php esc_html_e( 'When', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+				</tr></thead>
+				<tbody>
+					<?php foreach ( $unanswered as $item ) : ?>
+						<tr>
+							<td><?php echo esc_html( '' !== $item['question'] ? $item['question'] : __( '(no question text)', 'fahad-ai-shopping-assistant-for-woocommerce' ) ); ?></td>
+							<td><?php echo esc_html( fahad_ai_analytics_outcome_label( $item['outcome'] ) ); ?></td>
+							<td><?php echo esc_html( fahad_ai_analytics_format_time( $item['created'] ) ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
+
+		<!-- Retention controls: opt-out, export, delete. -->
+		<h2><?php esc_html_e( 'Data &amp; retention', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+
+		<form method="post" style="margin-bottom:18px;">
+			<?php wp_nonce_field( 'fahad_ai_analytics_settings' ); ?>
+			<label>
+				<input type="checkbox" name="analytics_enabled" value="1" <?php checked( $enabled ); ?>>
+				<?php esc_html_e( 'Record conversation analytics (privacy-safe; no PII stored). Untick to stop logging.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+			</label>
+			<?php submit_button( esc_html__( 'Save', 'fahad-ai-shopping-assistant-for-woocommerce' ), 'primary', 'fahad_ai_analytics_save', false ); ?>
+		</form>
+
+		<p>
+			<!-- Export (download a JSON of the privacy-safe rows). -->
+			<form method="post" action="<?php echo esc_url( $export_url ); ?>" style="display:inline-block;margin-right:10px;">
+				<?php wp_nonce_field( 'fahad_ai_analytics_export' ); ?>
+				<input type="hidden" name="action" value="fahad_ai_analytics_export">
+				<input type="hidden" name="from" value="<?php echo esc_attr( $range['from_str'] ); ?>">
+				<input type="hidden" name="to" value="<?php echo esc_attr( $range['to_str'] ); ?>">
+				<?php submit_button( esc_html__( 'Export (JSON)', 'fahad-ai-shopping-assistant-for-woocommerce' ), 'secondary', '', false ); ?>
+			</form>
+
+			<!-- Delete all stored rows (retention control). -->
+			<form method="post" action="<?php echo esc_url( $export_url ); ?>" style="display:inline-block;"
+				onsubmit="return confirm('<?php echo esc_js( __( 'Delete all stored analytics data? This cannot be undone.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ); ?>');">
+				<?php wp_nonce_field( 'fahad_ai_analytics_delete' ); ?>
+				<input type="hidden" name="action" value="fahad_ai_analytics_delete">
+				<?php submit_button( esc_html__( 'Delete all data', 'fahad-ai-shopping-assistant-for-woocommerce' ), 'delete', '', false ); ?>
+			</form>
+		</p>
+	</div>
+	<?php
+}
+
+/** Human-readable label for an outcome key (dashboard display only). */
+function fahad_ai_analytics_outcome_label( string $outcome ): string {
+	$labels = [
+		Fahad_AI_Analytics::OUTCOME_ANSWERED      => __( 'Answered', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		Fahad_AI_Analytics::OUTCOME_ESCALATED     => __( 'Escalated', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		Fahad_AI_Analytics::OUTCOME_ABSTAINED     => __( 'Abstained', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		Fahad_AI_Analytics::OUTCOME_NO_TOOL_MATCH => __( 'No matching action', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		Fahad_AI_Analytics::OUTCOME_ERROR         => __( 'Error', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+	];
+	return $labels[ $outcome ] ?? $outcome;
+}
+
+/** Format a stored unix timestamp using the site's date/time format. */
+function fahad_ai_analytics_format_time( int $ts ): string {
+	if ( $ts <= 0 ) {
+		return '';
+	}
+	if ( function_exists( 'wp_date' ) ) {
+		return (string) wp_date( get_option( 'date_format', 'Y-m-d' ) . ' ' . get_option( 'time_format', 'H:i' ), $ts );
+	}
+	return gmdate( 'Y-m-d H:i', $ts );
+}
+
+/**
+ * Best-effort chat → order attribution callback for the funnel (issue #49).
+ *
+ * Given the OPAQUE conversation refs whose conversations reached add-to-cart, returns
+ * how many converted to a real WooCommerce order. The current build records no
+ * order↔conversation link (the message endpoint carries no conversation token), so a
+ * faithful, NON-fabricated answer is 0 attributable orders — we return 0 rather than
+ * inventing a number. A future change that stamps the conversation ref onto the order
+ * (e.g. via order meta at checkout) can implement real attribution here without
+ * touching the store or the dashboard. Filterable so an integration can supply it.
+ *
+ * @param string[] $cart_conversation_refs Opaque refs that added to cart.
+ * @return int Attributable orders.
+ */
+function fahad_ai_attribute_orders( array $cart_conversation_refs ): int {
+	/**
+	 * Filter the chat-attributed order count for the analytics funnel (issue #49).
+	 *
+	 * @param int      $orders Default 0 (no built-in order↔conversation link yet).
+	 * @param string[] $cart_conversation_refs Opaque refs that reached add-to-cart.
+	 */
+	return (int) apply_filters( 'fahad_ai_attributed_orders', 0, $cart_conversation_refs );
+}
+
+/**
+ * admin-post handler: export the analytics rows as a downloadable JSON file (issue #49).
+ *
+ * Capability + nonce gated. Streams a privacy-safe JSON document (the rows are already
+ * masked/bounded by the store) with a download header and exits. Honours the same
+ * date-range as the dashboard so an export matches what the merchant is viewing.
+ */
+function fahad_ai_analytics_export_handler(): void {
+	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+		wp_die( esc_html__( 'You do not have permission to export this data.', 'fahad-ai-shopping-assistant-for-woocommerce' ), '', [ 'response' => 403 ] );
+	}
+	check_admin_referer( 'fahad_ai_analytics_export' );
+
+	$from = isset( $_POST['from'] ) ? sanitize_text_field( wp_unslash( $_POST['from'] ) ) : '';
+	$to   = isset( $_POST['to'] ) ? sanitize_text_field( wp_unslash( $_POST['to'] ) ) : '';
+
+	$window = [
+		'from' => fahad_ai_analytics_parse_date( $from, false ),
+		'to'   => fahad_ai_analytics_parse_date( $to, true ),
+	];
+
+	$rows = Fahad_AI_Analytics::instance()->export( $window );
+
+	nocache_headers();
+	header( 'Content-Type: application/json; charset=utf-8' );
+	header( 'Content-Disposition: attachment; filename="fahad-ai-analytics-' . gmdate( 'Ymd-His' ) . '.json"' );
+
+	echo wp_json_encode( [
+		'generated' => gmdate( 'c' ),
+		'count'     => count( $rows ),
+		'rows'      => $rows,
+	] );
+	exit;
+}
+
+/**
+ * admin-post handler: delete ALL stored analytics rows (issue #49 retention control).
+ *
+ * Capability + nonce gated. Purges the store and redirects back to the dashboard with
+ * a success flag.
+ */
+function fahad_ai_analytics_delete_handler(): void {
+	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+		wp_die( esc_html__( 'You do not have permission to delete this data.', 'fahad-ai-shopping-assistant-for-woocommerce' ), '', [ 'response' => 403 ] );
+	}
+	check_admin_referer( 'fahad_ai_analytics_delete' );
+
+	Fahad_AI_Analytics::instance()->purge();
+
+	wp_safe_redirect( add_query_arg( 'fahad_ai_purged', '1', admin_url( 'admin.php?page=fahad-ai-analytics' ) ) );
+	exit;
+}
+
 function fahad_ai_settings_page(): void {
 	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
 		return;
