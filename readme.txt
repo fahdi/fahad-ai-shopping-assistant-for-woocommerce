@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 2.3.0
+Stable tag: 2.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -96,6 +96,13 @@ The conversation history (user messages and assistant replies) and the results o
 2. Admin settings — provider and API key configuration
 
 == Changelog ==
+
+= 2.4.0 =
+Privacy, reliability, and feedback.
+
+* Privacy (GDPR): the assistant's opt-in saved preferences are now included in WordPress' personal-data Export and removed by its personal-data Erase tools.
+* Reliability: if the configured AI provider is briefly unavailable, the assistant automatically falls back to the other configured provider; if neither responds it shows a friendly message and points to search/support instead of an error.
+* Reply feedback: shoppers can give a thumbs up/down on replies so you can see where the assistant does well or needs work (no personal data stored).
 
 = 2.3.0 =
 New shopper features.
@@ -198,6 +205,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.4.0 =
+Adds GDPR export/erase for saved preferences, automatic AI-provider failover with graceful degradation, and thumbs up/down reply feedback. Backward compatible; no settings changes.
 
 = 2.3.0 =
 Adds a returns/exchange assistant (records requests, never refunds) and consented back-in-stock / price-drop alerts. Backward compatible; no settings changes.
