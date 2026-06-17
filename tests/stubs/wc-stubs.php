@@ -8,6 +8,13 @@ if ( ! defined( 'ABSPATH' ) ) {
     define( 'ABSPATH', sys_get_temp_dir() . '/' );
 }
 
+// WordPress time constant. Defined here for the unit tests (which don't bootstrap WP);
+// the returns tools (issue #53) use it for return-window math. Additive — guarded so it
+// never collides with a real WP define.
+if ( ! defined( 'DAY_IN_SECONDS' ) ) {
+    define( 'DAY_IN_SECONDS', 86400 );
+}
+
 // ── WordPress stubs ──────────────────────────────────────────────────────────
 
 if ( ! class_exists( 'WP_Error' ) ) {
@@ -168,6 +175,16 @@ if ( ! class_exists( 'WC_Order' ) ) {
         public function get_items( $types = 'line_item' ): array { return []; }
         public function get_meta( string $key = '', bool $single = true ) { return ''; }
         public function get_billing_email(): string         { return ''; }
+        // RMA recording (issue #53: returns/exchange). The returns tools persist a return
+        // REQUEST as order meta + a best-effort order note — and NEVER touch money. Declared
+        // so a Mockery WC_Order mock can stub them (Mockery intercepts declared methods);
+        // the methods that would mutate money/status (set_status, payment_complete, refunds)
+        // are deliberately NOT declared here, so the suite's ->never() money-safety
+        // assertions hold and a stray call would surface loudly. Additive — every existing
+        // getter above is untouched.
+        public function update_meta_data( string $key, $value, $meta_id = 0 ): void {}
+        public function save(): int { return 0; }
+        public function add_order_note( string $note, $is_customer_note = 0, $added_by_user = false ): int { return 0; }
     }
 }
 
