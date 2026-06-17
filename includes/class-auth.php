@@ -55,7 +55,7 @@ final class Fahad_AI_Auth {
 	 *
 	 * @return true|array{error: string, requires_login: true}
 	 */
-	public static function guard_logged_in(): true|array {
+	public static function guard_logged_in(): bool|array {
 		if ( self::is_logged_in() ) {
 			return true;
 		}
