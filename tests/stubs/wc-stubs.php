@@ -36,6 +36,23 @@ if ( ! function_exists( 'is_wp_error' ) ) {
     function is_wp_error( mixed $thing ): bool { return $thing instanceof WP_Error; }
 }
 
+// Minimal WP_REST_Response stub. The WhatsApp webhook handlers (issue #62) construct
+// real WP_REST_Response objects (rather than relying on rest_ensure_response), so unit
+// tests need the class to resolve and expose get_data()/get_status(). Guarded so it never
+// collides with a real WP define, and only the surface the tests read is implemented.
+if ( ! class_exists( 'WP_REST_Response' ) ) {
+    class WP_REST_Response {
+        public mixed $data;
+        public int   $status;
+        public function __construct( mixed $data = null, int $status = 200 ) {
+            $this->data   = $data;
+            $this->status = $status;
+        }
+        public function get_data(): mixed { return $this->data; }
+        public function get_status(): int { return $this->status; }
+    }
+}
+
 // Gettext stubs for tests — pass through the original string.
 if ( ! function_exists( '__' ) ) {
     function __( string $text, string $domain = '' ): string { return $text; }

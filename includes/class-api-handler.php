@@ -77,6 +77,69 @@ final class Fahad_AI_API_Handler {
 		return rest_ensure_response( $degraded );
 	}
 
+	/**
+	 * Run one non-streaming turn and return ONLY the reply text — the channel-agnostic
+	 * core of a turn, for callers that are not the web widget (issue #62: the WhatsApp
+	 * channel).
+	 *
+	 * This is the SAME path handle_message() drives — provider_chain() (configured
+	 * provider first, key-filtered), each provider tried at most once, the first
+	 * non-error result wins, and a graceful degraded reply if every provider fails — but
+	 * it returns the plain `message` string instead of a WP_REST_Response, because an
+	 * off-web channel (WhatsApp/SMS/etc.) sends back text, not a REST envelope with
+	 * product cards. Cards/comparison are intentionally dropped here: a text channel can
+	 * only render the grounded prose the model already writes alongside them.
+	 *
+	 * IDENTITY: this does NOT change the current user. A caller delivering a turn on
+	 * behalf of an off-web user (e.g. a phone number) must NOT have authenticated that
+	 * user — so the central login gate (Fahad_AI_Auth) keeps personal-data tools blocked
+	 * for an unverified identity (issue #62 hardening). Owner analytics is recorded for a
+	 * resolved turn exactly as on the web path (privacy-safe, never fed to the model).
+	 *
+	 * @param array $messages Conversation messages ([{role,content}, …]); sanitized here.
+	 * @return string The assistant's reply text (a friendly degraded line if all providers fail).
+	 */
+	public function run_text_turn( array $messages ): string {
+		$sanitized = $this->sanitize_messages( $messages );
+
+		if ( empty( $sanitized ) ) {
+			return $this->degraded_response()['message'];
+		}
+
+		if ( function_exists( 'wc_load_cart' ) ) {
+			wc_load_cart();
+		}
+
+		$chain = $this->provider_chain();
+
+		// No key configured at all: there is no provider to run, so return the friendly
+		// degraded line rather than leaking a "configure a key" WP_Error onto a customer
+		// channel (the admin still sees the no-key signal on the web/settings path).
+		if ( empty( $chain ) ) {
+			return $this->degraded_response( $sanitized )['message'];
+		}
+
+		// Try each provider AT MOST ONCE, in order; first non-error result wins (same
+		// bounded failover as handle_message — no loop, no backoff storm).
+		foreach ( $chain as $provider ) {
+			$result = ( 'moonshot' === $provider )
+				? $this->run_moonshot_agent( $sanitized )
+				: $this->run_anthropic_agent( $sanitized );
+
+			if ( ! is_wp_error( $result ) ) {
+				$this->record_turn_analytics( $sanitized, $result );
+				return (string) ( $result['message'] ?? '' );
+			}
+		}
+
+		// Every provider failed: degrade gracefully (never a dead end), and log the turn
+		// as an error outcome for owner analytics (mirrors handle_message).
+		$degraded = $this->degraded_response( $sanitized );
+		$this->record_turn_analytics( $sanitized, $degraded, Fahad_AI_Analytics::OUTCOME_ERROR );
+
+		return $degraded['message'];
+	}
+
 	// =========================================================================
 	// Provider failover & graceful degradation (issue #58)
 	// =========================================================================

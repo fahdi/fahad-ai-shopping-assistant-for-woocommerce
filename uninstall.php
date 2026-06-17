@@ -53,6 +53,13 @@ $fahad_ai_options = [
 	// in-browser Web Speech API and nothing about a shopper is persisted here.
 	'fahad_ai_voice_enabled',
 	'fahad_ai_voice_tts',
+	// WhatsApp omnichannel channel (issue #62): the merchant kill-switch (default OFF),
+	// the webhook verify token, and the Meta App Secret (the inbound HMAC key). The
+	// latter two are SECRETS, so removing them on uninstall is part of the security story;
+	// no shopper PII (phone numbers, message text) is ever persisted by this channel.
+	'fahad_ai_whatsapp_enabled',
+	'fahad_ai_whatsapp_verify_token',
+	'fahad_ai_whatsapp_app_secret',
 ];
 
 foreach ( $fahad_ai_options as $fahad_ai_option ) {
