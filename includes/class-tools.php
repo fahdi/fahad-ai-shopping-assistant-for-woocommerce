@@ -131,7 +131,28 @@ final class Fahad_AI_Tools {
 			$base['max_price'] = (float) $input['max_price'];
 		}
 
-		$query    = ! empty( $input['query'] ) ? sanitize_text_field( $input['query'] ) : '';
+		$query = ! empty( $input['query'] ) ? sanitize_text_field( $input['query'] ) : '';
+
+		// Semantic retrieval seam (issue #60). When the shopper supplied free text,
+		// consult any registered semantic (embeddings/vector) retriever FIRST — it
+		// understands intent/synonyms ("shoes for flat feet") that the literal
+		// keyword search below misses. The retriever returns ranked product IDs;
+		// Fahad_AI_Semantic_Search resolves them LIVE (so price/stock are never
+		// cached) into the same card-shaped summaries. With no provider registered
+		// it returns [] and we fall straight through to keyword search unchanged —
+		// the keyword leg is always the safety net (graceful degradation). A pure
+		// category/price browse (empty query) has no intent to embed, so it skips
+		// the seam entirely. See docs/RAG-DESIGN.md §4.3 / §5.4.
+		if ( '' !== $query ) {
+			$semantic = Fahad_AI_Semantic_Search::retrieve( $query, $this->semantic_filters( $base ) );
+			if ( ! empty( $semantic ) ) {
+				return [
+					'found'    => count( $semantic ),
+					'products' => $semantic,
+				];
+			}
+		}
+
 		$products = $this->query_products( $base, $query );
 
 		// Shoppers type plurals ("hoodies") and adjective-laden phrases ("medium black
@@ -173,6 +194,33 @@ final class Fahad_AI_Tools {
 			$base['s'] = $query;
 		}
 		return wc_get_products( $base );
+	}
+
+	/**
+	 * Project the parsed wc_get_products args into the structured constraint set the
+	 * semantic retriever receives (issue #60). The retriever is handed only the
+	 * filters that make sense for a vector pre-filter — category, price range and
+	 * limit — NOT the WooCommerce-internal keys (status/orderby), so a provider can
+	 * narrow its scan and bound its result count without depending on WC query shape.
+	 *
+	 * @param array $base Base wc_get_products args built in search_products.
+	 * @return array{category?: string, min_price?: float, max_price?: float, limit: int}
+	 */
+	private function semantic_filters( array $base ): array {
+		$filters = [ 'limit' => (int) ( $base['limit'] ?? 5 ) ];
+
+		// $base['category'] is a single-element slug array (see search_products).
+		if ( ! empty( $base['category'] ) && is_array( $base['category'] ) ) {
+			$filters['category'] = (string) reset( $base['category'] );
+		}
+		if ( isset( $base['min_price'] ) ) {
+			$filters['min_price'] = (float) $base['min_price'];
+		}
+		if ( isset( $base['max_price'] ) ) {
+			$filters['max_price'] = (float) $base['max_price'];
+		}
+
+		return $filters;
 	}
 
 	/**
