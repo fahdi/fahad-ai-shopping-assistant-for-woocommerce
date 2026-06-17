@@ -40,6 +40,9 @@ $fahad_ai_options = [
 	'fahad_ai_token_budget',
 	'fahad_ai_fast_model_routing',
 	'fahad_ai_fast_model',
+	// Multilingual default/allowed languages (issue #61). A single plain-text setting
+	// (token 'auto' or a preferred language list); no PII. Removed like every option.
+	'fahad_ai_languages',
 	// Proactive, value-gated nudge (issue #65): the merchant kill-switch (default OFF)
 	// and the per-visit frequency cap. No PII (the nudge is computed per request from
 	// grounded store data; nothing is persisted about a shopper here).

@@ -28,6 +28,24 @@ function fahad_ai_sanitize_tone( $raw ): string {
 }
 
 /**
+ * Sanitize the merchant default/allowed-languages setting (issue #61).
+ *
+ * The value is either the token 'auto' (detect the shopper's language and match it
+ * across the supported set) or a short, human-readable list of languages the merchant
+ * wants the assistant to favour (e.g. "English, Urdu"). It is folded into the system
+ * prompt as advisory text — it sits BEFORE the absolute guardrails, so it can never
+ * weaken the trust policy — but it is still sanitized to a single plain-text line.
+ * An empty value collapses to 'auto' (the safe default).
+ *
+ * @param mixed $raw Raw POST value.
+ * @return string A sanitized language list, or 'auto'.
+ */
+function fahad_ai_sanitize_languages( $raw ): string {
+	$value = sanitize_text_field( is_scalar( $raw ) ? (string) $raw : '' );
+	return '' === $value ? 'auto' : $value;
+}
+
+/**
  * Sanitize the merchant disabled-tools list (issue #56).
  *
  * Accepts an array of tool-name strings (e.g. from a group of checkboxes), keeps only
@@ -393,6 +411,11 @@ function fahad_ai_settings_page(): void {
 		update_option( 'fahad_ai_promo_emphasis', sanitize_textarea_field( wp_unslash( $_POST['promo_emphasis']  ?? '' ) ) );
 		update_option( 'fahad_ai_disabled_tools', fahad_ai_sanitize_tool_list( wp_unslash( $_POST['disabled_tools'] ?? [] ) ) );
 
+		// Multilingual: default/allowed languages (issue #61). Default 'auto' = detect and
+		// match the shopper's language across the supported set (English / Urdu / Roman
+		// Urdu); a specific list (e.g. "English, Urdu") pins the preferred set.
+		update_option( 'fahad_ai_languages', fahad_ai_sanitize_languages( wp_unslash( $_POST['languages'] ?? 'auto' ) ) );
+
 		// Cost / model knobs (issue #23, surfaced for #56).
 		update_option( 'fahad_ai_token_budget',        max( 0, (int) ( $_POST['token_budget'] ?? 0 ) ) );
 		update_option( 'fahad_ai_fast_model_routing',  empty( $_POST['fast_model_routing'] ) ? 0 : 1 );
@@ -427,6 +450,7 @@ function fahad_ai_settings_page(): void {
 	$tone               = get_option( 'fahad_ai_tone',                 '' );
 	$off_limits         = get_option( 'fahad_ai_off_limits',           '' );
 	$promo_emphasis     = get_option( 'fahad_ai_promo_emphasis',       '' );
+	$languages          = get_option( 'fahad_ai_languages',            'auto' ); // multilingual (#61)
 	$disabled_tools     = (array) get_option( 'fahad_ai_disabled_tools', [] );
 	$token_budget       = (int) get_option( 'fahad_ai_token_budget',   0 );
 	$fast_model_routing = (bool) get_option( 'fahad_ai_fast_model_routing', false );
@@ -638,6 +662,17 @@ function fahad_ai_settings_page(): void {
 						<textarea id="promo_emphasis" name="promo_emphasis" class="large-text" rows="3"><?php echo esc_textarea( $promo_emphasis ); ?></textarea>
 						<p class="description">
 							<?php esc_html_e( 'Optional per-category emphasis, e.g. "Footwear: highlight the winter clearance." The assistant will only mention these when genuinely relevant and never as pressure.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="languages"><?php esc_html_e( 'Languages', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<td>
+						<input type="text" id="languages" name="languages"
+							value="<?php echo esc_attr( $languages ); ?>" class="regular-text"
+							placeholder="auto">
+						<p class="description">
+							<?php esc_html_e( 'Languages the assistant should reply in. Use "auto" to detect each shopper\'s language and match it (English, Urdu, or Roman Urdu). Or list a preferred set, e.g. "English, Urdu". Product facts and prices stay grounded in the store data and are never translated; reply quality depends on the AI model you use.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>

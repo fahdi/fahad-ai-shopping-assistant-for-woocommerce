@@ -584,6 +584,19 @@ final class Fahad_AI_API_Handler {
 		'luxury'       => 'refined and understated, with a premium, concierge feel',
 	];
 
+	/**
+	 * The languages the assistant is told it can converse in (issue #61).
+	 *
+	 * Named in the system prompt so the model knows which scripts to expect and reply
+	 * in. This is the SUPPORTED set the multilingual directive references; the merchant
+	 * `fahad_ai_languages` option can pin a narrower set, but answer QUALITY (genuinely
+	 * fluent output) comes from the live model at runtime. Roman Urdu (Urdu written in
+	 * the Latin alphabet) is listed explicitly because shoppers frequently type it.
+	 *
+	 * @var string
+	 */
+	public const SUPPORTED_LANGUAGES = 'English, Urdu, Roman Urdu';
+
 	private function get_system_prompt(): string {
 		$custom = get_option( 'fahad_ai_system_prompt', '' );
 		$base   = ( is_string( $custom ) && '' !== $custom )
@@ -594,6 +607,12 @@ final class Fahad_AI_API_Handler {
 		// per-category promo emphasis. Inserted BEFORE the filter and BEFORE the
 		// guardrails, so merchant intent is honoured but can never weaken the policy.
 		$base .= $this->merchant_config_block();
+
+		// Multilingual directive (issue #61): tell the assistant to detect the shopper's
+		// language and reply IN THAT LANGUAGE, while keeping product facts grounded (no
+		// translated/invented specs). Lives in the body region — appended BEFORE the
+		// filter and BEFORE the guardrails, so the absolute trust policy still wins.
+		$base .= $this->language_directive();
 
 		/**
 		 * Filter the system prompt sent to the model (issue #20).
@@ -694,6 +713,71 @@ Guidelines:
 		}
 
 		return "\n\nStore preferences (set by the merchant — advisory; the Trust & honesty rules below always take precedence):\n" . implode( "\n", $lines );
+	}
+
+	/**
+	 * The multilingual directive (issue #61).
+	 *
+	 * Tells the assistant to DETECT the shopper's language from their latest message and
+	 * REPLY IN THAT SAME LANGUAGE (English / Urdu / Roman Urdu), while keeping every
+	 * product FACT grounded — prices, specs, names, stock and other data come from the
+	 * tool results verbatim and are NEVER translated, localised, or invented. Only the
+	 * assistant's own wording switches language; the grounded data does not. This is the
+	 * routing + instruction half of the feature; genuinely fluent translation is the
+	 * live model's job at runtime.
+	 *
+	 * The merchant may pin the allowed set via `fahad_ai_languages` (default 'auto' =
+	 * detect-and-match freely among the supported languages). A specific value (e.g.
+	 * "English, Urdu") is folded in as the preferred set; it is advisory free text and,
+	 * like every body-region instruction, sits BEFORE the absolute guardrails so it can
+	 * never weaken the trust policy. Always returned (never ''): a multilingual audience
+	 * is the deployment assumption, so the detect-and-match instruction is unconditional.
+	 */
+	private function language_directive(): string {
+		$configured = trim( (string) get_option( 'fahad_ai_languages', 'auto' ) );
+
+		// 'auto' (the default) is a config token, never an instruction word — detect and
+		// match freely across the supported set. A specific value pins the preferred set.
+		$preferred = ( '' === $configured || 'auto' === strtolower( $configured ) )
+			? self::SUPPORTED_LANGUAGES
+			: $configured;
+
+		return "\n\nLanguage:
+- Detect the language of the customer's most recent message and reply in that same language. You can converse in {$preferred}. Roman Urdu means Urdu written in the Latin alphabet; if the customer writes Roman Urdu, reply in Roman Urdu (not Urdu script) unless they switch.
+- Match the customer's language and script; do not switch languages on them unprompted.
+- Keep all product facts grounded regardless of language: product details, specifications, prices, names, and stock come from the tool results and must not be translated, localised, reworded into new claims, or invented. Translate only your own explanatory wording — never the underlying data. Currency symbols and amounts stay exactly as the tool results report them.";
+	}
+
+	/**
+	 * Format a monetary amount for display with the store's currency symbol and the
+	 * locale's number formatting (issue #61).
+	 *
+	 * A small, deterministic, unit-testable helper for composing a localised amount
+	 * string. It reuses `get_woocommerce_currency_symbol()` for the symbol and honours
+	 * WooCommerce's configured decimal/thousand separators and decimal count when those
+	 * helpers are available, falling back to PHP `number_format` defaults otherwise.
+	 *
+	 * It deliberately does NOT change the LIVE price source: tool results keep formatting
+	 * prices via `wc_price()` (see Fahad_AI_Tools). This helper exists for any amount the
+	 * plugin composes itself that should respect the locale, without pulling in WC markup.
+	 *
+	 * @param float    $amount   The amount to format.
+	 * @param int|null $decimals Decimal places; null = the WooCommerce/locale default (2).
+	 * @return string The symbol-prefixed, locale-formatted amount (e.g. "$1,299.50").
+	 */
+	private function format_localized_amount( float $amount, ?int $decimals = null ): string {
+		$symbol = (string) get_woocommerce_currency_symbol();
+
+		// Honour WooCommerce's locale-driven formatting when the store provides it; fall
+		// back to sane defaults so this stays usable (and testable) outside a full WC env.
+		$places = null !== $decimals
+			? max( 0, $decimals )
+			: ( function_exists( 'wc_get_price_decimals' ) ? (int) wc_get_price_decimals() : 2 );
+
+		$decimal_sep  = function_exists( 'wc_get_price_decimal_separator' ) ? (string) wc_get_price_decimal_separator() : '.';
+		$thousand_sep = function_exists( 'wc_get_price_thousand_separator' ) ? (string) wc_get_price_thousand_separator() : ',';
+
+		return $symbol . number_format( $amount, $places, $decimal_sep, $thousand_sep );
 	}
 
 	/**
