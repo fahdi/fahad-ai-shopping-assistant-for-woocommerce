@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 2.5.0
+Stable tag: 2.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -96,6 +96,13 @@ The conversation history (user messages and assistant replies) and the results o
 2. Admin settings — provider and API key configuration
 
 == Changelog ==
+
+= 2.6.0 =
+Insight, voice, and helpful nudges.
+
+* Owner analytics: a new admin dashboard showing top questions, the "couldn't answer" list, a chat-to-cart funnel, and cost per conversation — privacy-safe (no personal data stored), with export and delete controls.
+* Voice: optional speech-to-text input and spoken replies in the chat widget (browser Web Speech API; off by default, text always works).
+* Proactive help: an optional, value-gated nudge (off by default) that only appears when there's a genuinely applicable coupon or unused store credit — never fake urgency, frequency-capped, dismissible.
 
 = 2.5.0 =
 Checkout help, merchant controls, and quality hardening.
@@ -212,6 +219,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.6.0 =
+Adds an owner analytics dashboard (privacy-safe), optional voice input/output, and an optional value-gated proactive nudge (off by default, no fake urgency). Backward compatible.
 
 = 2.5.0 =
 Adds conversational checkout help (consent-gated coupons, no payment handling), merchant tone/scope/cost controls (guardrails stay enforced), and quality hardening. Backward compatible.
