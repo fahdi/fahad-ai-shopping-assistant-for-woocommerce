@@ -432,6 +432,15 @@ function fahad_ai_settings_page(): void {
 		update_option( 'fahad_ai_voice_enabled', empty( $_POST['voice_enabled'] ) ? 0 : 1 );
 		update_option( 'fahad_ai_voice_tts',     empty( $_POST['voice_tts'] ) ? 0 : 1 );
 
+		// WhatsApp omnichannel channel (issue #62). Default OFF (opt-in). The verify token
+		// and app secret are SECRETS used only server-side (the webhook handshake + the
+		// inbound HMAC) — sanitized as plain text, never localized to the client or fed to
+		// the model. Going live also needs a provider for the outbound send seam + Meta
+		// access tokens (held by that provider), which are intentionally out of core.
+		update_option( 'fahad_ai_whatsapp_enabled',      empty( $_POST['whatsapp_enabled'] ) ? 0 : 1 );
+		update_option( 'fahad_ai_whatsapp_verify_token', sanitize_text_field( wp_unslash( $_POST['whatsapp_verify_token'] ?? '' ) ) );
+		update_option( 'fahad_ai_whatsapp_app_secret',   sanitize_text_field( wp_unslash( $_POST['whatsapp_app_secret'] ?? '' ) ) );
+
 		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'fahad-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
 	}
 
@@ -463,6 +472,12 @@ function fahad_ai_settings_page(): void {
 		// Voice input/output (#64). Both default OFF (opt-in).
 		$voice_enabled = (bool) get_option( 'fahad_ai_voice_enabled', 0 );
 		$voice_tts     = (bool) get_option( 'fahad_ai_voice_tts', 0 );
+
+	// WhatsApp omnichannel channel (#62). Default OFF (opt-in). The verify token + app
+	// secret are server-side secrets (webhook handshake + inbound HMAC).
+	$whatsapp_enabled      = (bool) get_option( 'fahad_ai_whatsapp_enabled', 0 );
+	$whatsapp_verify_token = (string) get_option( 'fahad_ai_whatsapp_verify_token', '' );
+	$whatsapp_app_secret   = (string) get_option( 'fahad_ai_whatsapp_app_secret', '' );
 
 	// The five built-in WooCommerce tools are a protected floor and are never shown as
 	// disable-able. Everything else advertised to the model (packs + add-ons) can be
@@ -785,6 +800,43 @@ function fahad_ai_settings_page(): void {
 							<input type="checkbox" name="voice_tts" value="1" <?php checked( $voice_tts ); ?>>
 							<?php esc_html_e( 'Also let the assistant read its replies aloud, with a speaker button to toggle it (requires Voice Input; off by default).', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 						</label>
+					</td>
+				</tr>
+			</table>
+
+			<h2 class="title"><?php esc_html_e( 'WhatsApp (beta)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+			<p class="description" style="max-width:50em;">
+				<?php esc_html_e( 'Let shoppers reach the assistant over WhatsApp. This is the webhook + verification scaffolding only: going live needs a WhatsApp Business (Meta Cloud API) account, and an outbound message provider to actually send replies. Configure the webhook below in your Meta app, using this callback URL and verify token. Personal account data stays available only to verified, logged-in customers — a WhatsApp number is treated as a guest.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+			</p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Enable WhatsApp', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="whatsapp_enabled" value="1" <?php checked( $whatsapp_enabled ); ?>>
+							<?php esc_html_e( 'Process inbound WhatsApp messages through the assistant (off by default).', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Callback URL', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<td>
+						<input type="text" class="regular-text code" value="<?php echo esc_attr( rest_url( 'fahad-ai/v1/whatsapp' ) ); ?>" readonly onclick="this.select();">
+						<p class="description"><?php esc_html_e( 'Enter this as the Callback URL when configuring the WhatsApp webhook in your Meta app.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="fahad_ai_whatsapp_verify_token"><?php esc_html_e( 'Verify Token', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<td>
+						<input type="text" id="fahad_ai_whatsapp_verify_token" name="whatsapp_verify_token" value="<?php echo esc_attr( $whatsapp_verify_token ); ?>" class="regular-text" autocomplete="off">
+						<p class="description"><?php esc_html_e( 'A secret string you choose; enter the same value as the Verify Token in the Meta webhook setup.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="fahad_ai_whatsapp_app_secret"><?php esc_html_e( 'App Secret', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<td>
+						<input type="password" id="fahad_ai_whatsapp_app_secret" name="whatsapp_app_secret" value="<?php echo esc_attr( $whatsapp_app_secret ); ?>" class="regular-text" autocomplete="off">
+						<p class="description"><?php esc_html_e( 'Your Meta app secret. Used to verify the signature on each inbound message; never shared with the assistant or shown to shoppers.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
 					</td>
 				</tr>
 			</table>

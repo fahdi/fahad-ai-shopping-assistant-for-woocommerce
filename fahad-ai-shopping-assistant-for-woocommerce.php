@@ -32,6 +32,7 @@ require_once FAHAD_AI_PATH . 'includes/class-tool-registry.php';
 require_once FAHAD_AI_PATH . 'includes/class-semantic-search.php';
 require_once FAHAD_AI_PATH . 'includes/class-tools.php';
 require_once FAHAD_AI_PATH . 'includes/class-api-handler.php';
+require_once FAHAD_AI_PATH . 'includes/class-whatsapp.php';
 require_once FAHAD_AI_PATH . 'includes/admin-settings.php';
 
 final class Fahad_AI_Chatbot {
@@ -106,6 +107,13 @@ final class Fahad_AI_Chatbot {
 			'callback'            => [ Fahad_AI_API_Handler::instance(), 'handle_feedback' ],
 			'permission_callback' => [ $this, 'authorize_request' ],
 		] );
+
+		// WhatsApp omnichannel webhook (#62): Meta's verify handshake (GET) + signed
+		// inbound deliveries (POST) on /whatsapp. Its security boundary is NOT the chat
+		// nonce (Meta cannot send one) — it is the verify-token check (GET) and the
+		// X-Hub-Signature-256 HMAC (POST), enforced inside the handlers. The outbound send
+		// is a pluggable seam (fahad_ai_whatsapp_send); no live Meta call ships in core.
+		Fahad_AI_WhatsApp::instance()->register_routes();
 	}
 
 	/**
