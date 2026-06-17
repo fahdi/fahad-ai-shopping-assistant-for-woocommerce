@@ -37,7 +37,7 @@ defined( 'ABSPATH' ) || exit;
  * inject_preferences() is hooked to the `fahad_ai_system_prompt` filter (issue #20), so
  * a compact, clearly-labelled preferences block is APPENDED to the model context for a
  * logged-in, opted-in customer with stored prefs — WITHOUT editing the agent-loop
- * methods (run_anthropic_agent / run_moonshot_agent / run_stream_agent). For a guest, an
+ * methods (run_anthropic_agent / run_openai_agent / run_stream_agent). For a guest, an
  * opted-out user, or an empty map it appends nothing (returns the prompt unchanged). The
  * block is BOUNDED by the same caps as storage (MAX_PREFERENCES lines, each value
  * trimmed) so the prompt cannot balloon.

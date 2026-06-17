@@ -24,6 +24,7 @@ define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
 require_once FAHAD_AI_PATH . 'includes/class-auth.php';
+require_once FAHAD_AI_PATH . 'includes/class-providers.php';
 require_once FAHAD_AI_PATH . 'includes/class-feedback.php';
 require_once FAHAD_AI_PATH . 'includes/class-analytics.php';
 require_once FAHAD_AI_PATH . 'includes/class-proactive.php';
@@ -203,11 +204,17 @@ final class Fahad_AI_Chatbot {
 	}
 
 	private function has_api_key(): bool {
+		// The selected provider's key, resolved from the catalog (multi-provider). An
+		// unknown/unset provider resolves to anthropic. Ollama (local) needs no key, so
+		// having a configured base URL is enough for it to be considered ready.
 		$provider = get_option( 'fahad_ai_provider', 'anthropic' );
-		$key      = ( 'moonshot' === $provider )
-			? get_option( 'fahad_ai_moonshot_api_key', '' )
-			: get_option( 'fahad_ai_anthropic_api_key', '' );
-		return ! empty( $key );
+		$resolved = Fahad_AI_Providers::resolve( $provider );
+
+		if ( null === $resolved ) {
+			return false;
+		}
+
+		return '' !== $resolved['api_key'] || ( 'ollama' === $provider && '' !== $resolved['base_url'] );
 	}
 
 	public function enqueue_assets(): void {
@@ -236,6 +243,10 @@ final class Fahad_AI_Chatbot {
 			'cartUrl'     => rest_url( 'fahad-ai/v1/cart' ),
 			'feedbackUrl' => rest_url( 'fahad-ai/v1/feedback' ),
 			'provider'    => get_option( 'fahad_ai_provider', 'anthropic' ),
+			// Whether to use the SSE streaming endpoint: every OpenAI-compatible provider
+			// streams; the native Anthropic path does not (multi-provider). The widget
+			// keys off this flag rather than hardcoding a provider id.
+			'streaming'   => Fahad_AI_Providers::is_openai( get_option( 'fahad_ai_provider', 'anthropic' ) ),
 			'nonce'       => wp_create_nonce( 'wp_rest' ),
 			'botName'     => get_option( 'fahad_ai_bot_name', __( 'Store Assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ) ),
 			'greeting'    => get_option( 'fahad_ai_greeting', __( 'Hi! How can I help you today?', 'fahad-ai-shopping-assistant-for-woocommerce' ) ),

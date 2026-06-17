@@ -2057,4 +2057,398 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( [ 'search_products', 'add_to_cart' ], $row['tools'] );
         $this->assertTrue( $row['added_to_cart'] );
     }
+
+    // ── multi-provider dispatch (OpenAI-compatible presets) ──────────────────────
+    // The OpenAI path is generalised: run_openai_agent / call_openai are parameterised
+    // by a provider id resolved from Fahad_AI_Providers. Moonshot is now just one preset
+    // of this path; OpenAI, Gemini, Groq, … ride the SAME code, differing only in the
+    // base URL / key / model the catalog resolves. These pin:
+    //   - an 'openai'-type preset resolves the right base_url/key/model and hits the
+    //     OpenAI /chat/completions endpoint with a Bearer header (asserted via the
+    //     captured wp_remote_post URL/headers/body — the harness pattern);
+    //   - the native 'anthropic' path is unchanged (api.anthropic.com + x-api-key);
+    //   - BACKWARD COMPAT: fahad_ai_provider=moonshot still hits api.moonshot.ai;
+    //   - failover generalises across the whole catalog (configured first, then any
+    //     OTHER keyed provider, each at most once);
+    //   - the custom base URL is validated.
+
+    /**
+     * Capture the single wp_remote_post( url, args ) an agent turn makes, returning a
+     * scripted 200 body. Used to assert the URL/headers/model the generalised OpenAI
+     * path sends for a given provider preset.
+     *
+     * @param array $body The provider wire-format response body (use *_answer()).
+     * @return ArrayObject Live capture: ['url'], ['args'].
+     */
+    private function capture_openai_post( array $body ): ArrayObject {
+        $cap = new ArrayObject( [ 'url' => null, 'args' => null ] );
+
+        Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
+        Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
+
+        Functions\when( 'wp_remote_post' )->alias(
+            static function ( $url, $args = [] ) use ( &$cap, $body ) {
+                $cap['url']  = $url;
+                $cap['args'] = $args;
+                return [ '__eval' => true, 'code' => 200, 'body' => json_encode( $body ) ];
+            }
+        );
+        Functions\when( 'wp_remote_retrieve_response_code' )->alias(
+            static fn( $r ) => is_array( $r ) ? ( $r['code'] ?? 0 ) : 0
+        );
+        Functions\when( 'wp_remote_retrieve_body' )->alias(
+            static fn( $r ) => is_array( $r ) ? ( $r['body'] ?? '' ) : ''
+        );
+
+        return $cap;
+    }
+
+    /** Invoke the generalised private call_openai( messages, provider_id ). */
+    private function call_openai( array $messages, string $provider_id ): array {
+        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'call_openai' );
+        return (array) $method->invoke( $this->handler(), $messages, $provider_id );
+    }
+
+    public function test_call_openai_targets_openai_endpoint_with_bearer_and_model(): void {
+        // The 'openai' preset → https://api.openai.com/v1/chat/completions, a Bearer
+        // auth header carrying the openai key, and the configured openai model.
+        $this->set_option_alias( [
+            'fahad_ai_provider'       => 'openai',
+            'fahad_ai_openai_api_key' => 'sk-openai-XYZ',
+            'fahad_ai_openai_model'   => 'gpt-4o',
+        ] );
+
+        $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi from openai' ) );
+        $this->call_openai( [ [ 'role' => 'system', 'content' => 'sys' ], [ 'role' => 'user', 'content' => 'hi' ] ], 'openai' );
+
+        $this->assertSame( 'https://api.openai.com/v1/chat/completions', $cap['url'] );
+        $this->assertSame( 'Bearer sk-openai-XYZ', $cap['args']['headers']['Authorization'] );
+
+        $payload = json_decode( $cap['args']['body'], true );
+        $this->assertSame( 'gpt-4o', $payload['model'] );
+        // The OpenAI tool format (type:function), not the Anthropic input_schema form.
+        $this->assertArrayHasKey( 'tools', $payload );
+    }
+
+    public function test_call_openai_uses_preset_default_model_when_unset(): void {
+        // No model option set for openai → the catalog default (gpt-4o-mini) is sent.
+        $this->set_option_alias( [
+            'fahad_ai_provider'       => 'openai',
+            'fahad_ai_openai_api_key' => 'sk-openai',
+        ] );
+
+        $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi' ) );
+        $this->call_openai( [ [ 'role' => 'user', 'content' => 'hi' ] ], 'openai' );
+
+        $payload = json_decode( $cap['args']['body'], true );
+        $this->assertSame( 'gpt-4o-mini', $payload['model'] );
+    }
+
+    public function test_call_openai_targets_gemini_base_url(): void {
+        // A different OpenAI-compatible preset rides the SAME path with its own base URL.
+        $this->set_option_alias( [
+            'fahad_ai_provider'       => 'gemini',
+            'fahad_ai_gemini_api_key' => 'sk-gemini',
+            'fahad_ai_gemini_model'   => 'gemini-2.0-flash',
+        ] );
+
+        $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi' ) );
+        $this->call_openai( [ [ 'role' => 'user', 'content' => 'hi' ] ], 'gemini' );
+
+        $this->assertSame(
+            'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+            $cap['url']
+        );
+        $this->assertSame( 'Bearer sk-gemini', $cap['args']['headers']['Authorization'] );
+    }
+
+    public function test_call_openai_moonshot_preset_still_targets_moonshot(): void {
+        // BACKWARD COMPAT: the moonshot preset resolves to the region base URL and its
+        // existing key/model — the exact request the pre-multi-provider code sent.
+        $this->set_option_alias( [
+            'fahad_ai_provider'         => 'moonshot',
+            'fahad_ai_moonshot_api_key' => 'sk-moon',
+            'fahad_ai_moonshot_model'   => 'kimi-k2.6',
+            'fahad_ai_moonshot_region'  => 'global',
+        ] );
+
+        $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi' ) );
+        $this->call_openai( [ [ 'role' => 'user', 'content' => 'hi' ] ], 'moonshot' );
+
+        $this->assertSame( 'https://api.moonshot.ai/v1/chat/completions', $cap['url'] );
+        $this->assertSame( 'Bearer sk-moon', $cap['args']['headers']['Authorization'] );
+        $payload = json_decode( $cap['args']['body'], true );
+        $this->assertSame( 'kimi-k2.6', $payload['model'] );
+    }
+
+    public function test_call_openai_moonshot_china_region_targets_cn_endpoint(): void {
+        // BACKWARD COMPAT: the region selection survives the generalisation.
+        $this->set_option_alias( [
+            'fahad_ai_moonshot_api_key' => 'sk-moon',
+            'fahad_ai_moonshot_region'  => 'china',
+        ] );
+
+        $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi' ) );
+        $this->call_openai( [ [ 'role' => 'user', 'content' => 'hi' ] ], 'moonshot' );
+
+        $this->assertSame( 'https://api.moonshot.cn/v1/chat/completions', $cap['url'] );
+    }
+
+    public function test_call_openai_custom_uses_merchant_base_url(): void {
+        // The custom preset sends to the merchant-configured base URL.
+        $this->set_option_alias( [
+            'fahad_ai_provider'        => 'custom',
+            'fahad_ai_custom_api_key'  => 'sk-custom',
+            'fahad_ai_custom_model'    => 'my-model',
+            'fahad_ai_custom_base_url' => 'https://llm.mystore.example/v1',
+        ] );
+
+        $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi' ) );
+        $this->call_openai( [ [ 'role' => 'user', 'content' => 'hi' ] ], 'custom' );
+
+        $this->assertSame( 'https://llm.mystore.example/v1/chat/completions', $cap['url'] );
+        $payload = json_decode( $cap['args']['body'], true );
+        $this->assertSame( 'my-model', $payload['model'] );
+    }
+
+    public function test_call_openai_no_key_returns_wp_error(): void {
+        // No key for the selected provider → the existing no-key WP_Error contract
+        // (so an admin still gets the "configure a key" signal). No request is made.
+        $this->set_option_alias( [ 'fahad_ai_provider' => 'openai' ] );
+        Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
+        Functions\expect( 'wp_remote_post' )->never();
+
+        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'call_openai' );
+        $result = $method->invoke( $this->handler(), [ [ 'role' => 'user', 'content' => 'hi' ] ], 'openai' );
+
+        $this->assertTrue( is_wp_error( $result ) );
+    }
+
+    // ── has_provider_key()/provider_chain() generalised across the catalog ───────
+
+    public function test_has_provider_key_works_for_a_new_provider(): void {
+        $this->set_option_alias( [ 'fahad_ai_openai_api_key' => 'sk-openai' ] );
+
+        $this->assertTrue( $this->has_provider_key( 'openai' ) );
+        $this->assertFalse( $this->has_provider_key( 'gemini' ) );
+    }
+
+    public function test_provider_chain_configured_first_then_other_keyed_providers(): void {
+        // configured = openai (keyed); anthropic + groq also keyed; gemini NOT keyed.
+        // The chain is the configured provider FIRST, then the other keyed providers
+        // (in catalog order), each at most once. gemini is excluded (no key).
+        $this->set_option_alias( [
+            'fahad_ai_provider'          => 'openai',
+            'fahad_ai_openai_api_key'    => 'sk-openai',
+            'fahad_ai_anthropic_api_key' => 'sk-ant',
+            'fahad_ai_groq_api_key'      => 'sk-groq',
+        ] );
+
+        $chain = $this->provider_chain();
+
+        $this->assertSame( 'openai', $chain[0], 'Configured provider is tried first.' );
+        $this->assertContains( 'anthropic', $chain );
+        $this->assertContains( 'groq', $chain );
+        $this->assertNotContains( 'gemini', $chain, 'A keyless provider is never in the chain.' );
+        // Bounded + de-duplicated: each provider appears at most once.
+        $this->assertSame( $chain, array_values( array_unique( $chain ) ) );
+    }
+
+    public function test_provider_chain_backward_compat_anthropic_then_moonshot(): void {
+        // BACKWARD COMPAT: the original two-provider behaviour is preserved exactly.
+        // configured = anthropic, both legacy keys set → ['anthropic','moonshot', …]
+        // with anthropic first and moonshot present (the historical fallback).
+        $this->set_option_alias( [
+            'fahad_ai_provider'          => 'anthropic',
+            'fahad_ai_anthropic_api_key' => 'sk-ant',
+            'fahad_ai_moonshot_api_key'  => 'sk-moon',
+        ] );
+
+        $chain = $this->provider_chain();
+
+        $this->assertSame( 'anthropic', $chain[0] );
+        $this->assertContains( 'moonshot', $chain );
+    }
+
+    public function test_provider_chain_empty_when_no_keys_anywhere(): void {
+        // No key for ANY catalog provider → empty chain (handle_message preserves the
+        // existing no-key WP_Error in that case).
+        $this->set_option_alias( [ 'fahad_ai_provider' => 'openai' ] );
+
+        $this->assertSame( [], $this->provider_chain() );
+    }
+
+    // ── handle_message routes by provider type ───────────────────────────────────
+
+    public function test_handle_message_routes_openai_provider_to_openai_endpoint(): void {
+        // configured = openai with a key → the turn is dispatched through the OpenAI
+        // path to api.openai.com, and the anthropic endpoint is never touched.
+        $this->set_option_alias( [
+            'fahad_ai_provider'       => 'openai',
+            'fahad_ai_openai_api_key' => 'sk-openai',
+        ] );
+        Functions\when( 'sanitize_textarea_field' )->returnArg();
+        Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
+        $this->stub_rest_ensure_response();
+
+        $urls    = new ArrayObject( [] );
+        Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
+        Functions\when( 'update_option' )->justReturn( true );
+        Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid' );
+        ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+        Functions\when( 'wp_remote_post' )->alias(
+            static function ( $url, $args = [] ) use ( $urls ) {
+                $urls[] = $url;
+                return [ '__eval' => true, 'code' => 200, 'body' => json_encode(
+                    [ 'choices' => [ [ 'finish_reason' => 'stop', 'message' => [ 'role' => 'assistant', 'content' => 'openai reply' ] ] ] ]
+                ) ];
+            }
+        );
+        Functions\when( 'wp_remote_retrieve_response_code' )->alias( static fn( $r ) => is_array( $r ) ? ( $r['code'] ?? 0 ) : 0 );
+        Functions\when( 'wp_remote_retrieve_body' )->alias( static fn( $r ) => is_array( $r ) ? ( $r['body'] ?? '' ) : '' );
+
+        $result = $this->response_data( $this->handler()->handle_message(
+            $this->message_request( [ [ 'role' => 'user', 'content' => 'hi' ] ] )
+        ) );
+
+        $this->assertSame( 'openai reply', $result['message'] );
+        $this->assertStringContainsString( 'api.openai.com', (string) $urls[0] );
+        foreach ( $urls as $u ) {
+            $this->assertStringNotContainsString( 'anthropic', (string) $u, 'Anthropic must not be called for an openai provider.' );
+        }
+    }
+
+    public function test_handle_message_falls_back_across_new_providers(): void {
+        // configured = openai (502), fallback to a keyed anthropic. The dispatch tries
+        // openai first, falls through on its error, and returns anthropic's result.
+        $this->set_option_alias( [
+            'fahad_ai_provider'          => 'openai',
+            'fahad_ai_openai_api_key'    => 'sk-openai',
+            'fahad_ai_anthropic_api_key' => 'sk-ant',
+        ] );
+        Functions\when( 'sanitize_textarea_field' )->returnArg();
+        Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
+        $this->stub_rest_ensure_response();
+
+        $counts = new ArrayObject( [ 'openai' => 0, 'anthropic' => 0 ] );
+        Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
+        Functions\when( 'update_option' )->justReturn( true );
+        Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid' );
+        ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+        Functions\when( 'wp_remote_post' )->alias(
+            static function ( $url, $args = [] ) use ( $counts ) {
+                if ( str_contains( (string) $url, 'anthropic' ) ) {
+                    $counts['anthropic']++;
+                    return [ '__eval' => true, 'code' => 200, 'body' => json_encode(
+                        [ 'stop_reason' => 'end_turn', 'content' => [ [ 'type' => 'text', 'text' => 'anthropic fallback' ] ] ]
+                    ) ];
+                }
+                $counts['openai']++;
+                return [ '__eval' => true, 'code' => 502, 'body' => json_encode( [ 'error' => [ 'message' => 'down' ] ] ) ];
+            }
+        );
+        Functions\when( 'wp_remote_retrieve_response_code' )->alias( static fn( $r ) => is_array( $r ) ? ( $r['code'] ?? 0 ) : 0 );
+        Functions\when( 'wp_remote_retrieve_body' )->alias( static fn( $r ) => is_array( $r ) ? ( $r['body'] ?? '' ) : '' );
+
+        $result = $this->response_data( $this->handler()->handle_message(
+            $this->message_request( [ [ 'role' => 'user', 'content' => 'hi' ] ] )
+        ) );
+
+        $this->assertSame( 'anthropic fallback', $result['message'] );
+        $this->assertSame( 1, $counts['openai'], 'primary (openai) tried once' );
+        $this->assertSame( 1, $counts['anthropic'], 'fallback (anthropic) tried once' );
+    }
+
+    // ── custom base URL validation ───────────────────────────────────────────────
+
+    private function valid_custom_base_url( string $url ): string {
+        // wp_parse_url is WordPress's wrapper around parse_url; alias to the PHP core
+        // function for the test. esc_url_raw is stubbed pass-through by each caller.
+        Functions\when( 'wp_parse_url' )->alias( static fn( $u, $c = -1 ) => parse_url( $u ) );
+        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'sanitize_custom_base_url' );
+        return (string) $method->invoke( null, $url );
+    }
+
+    public function test_custom_base_url_accepts_https(): void {
+        Functions\when( 'esc_url_raw' )->returnArg();
+        $this->assertSame( 'https://llm.example/v1', $this->valid_custom_base_url( 'https://llm.example/v1' ) );
+    }
+
+    public function test_custom_base_url_rejects_non_https_and_junk(): void {
+        Functions\when( 'esc_url_raw' )->returnArg();
+        // http (non-TLS), a bare word, and a javascript: scheme are all rejected to ''.
+        $this->assertSame( '', $this->valid_custom_base_url( 'http://llm.example/v1' ), 'plain http rejected' );
+        $this->assertSame( '', $this->valid_custom_base_url( 'not a url' ), 'junk rejected' );
+        $this->assertSame( '', $this->valid_custom_base_url( 'javascript:alert(1)' ), 'dangerous scheme rejected' );
+    }
+
+    public function test_custom_base_url_allows_localhost_http_for_self_hosted(): void {
+        // A self-hosted/local endpoint (e.g. a proxy on the same box) is the one
+        // permitted non-TLS case — localhost never leaves the machine.
+        Functions\when( 'esc_url_raw' )->returnArg();
+        $this->assertSame( 'http://localhost:8080/v1', $this->valid_custom_base_url( 'http://localhost:8080/v1' ) );
+    }
+
+    // ── backward compatibility: the original moonshot dispatch is unchanged ───────
+
+    public function test_handle_message_moonshot_backward_compat_hits_moonshot_endpoint(): void {
+        // An install configured BEFORE multi-provider: fahad_ai_provider=moonshot with
+        // the legacy key/model/region options. The turn must still dispatch to
+        // api.moonshot.ai/v1/chat/completions with a Bearer header and the legacy model,
+        // returning the moonshot reply — exactly as the pre-change code did. Anthropic
+        // is never called (only the moonshot key is set).
+        $this->set_option_alias( [
+            'fahad_ai_provider'         => 'moonshot',
+            'fahad_ai_moonshot_api_key' => 'sk-moon-legacy',
+            'fahad_ai_moonshot_model'   => 'kimi-k2.6',
+            'fahad_ai_moonshot_region'  => 'global',
+        ] );
+        Functions\when( 'sanitize_textarea_field' )->returnArg();
+        Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
+        $this->stub_rest_ensure_response();
+
+        $captured = new ArrayObject( [ 'url' => null, 'auth' => null, 'model' => null ] );
+        Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
+        Functions\when( 'update_option' )->justReturn( true );
+        Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid' );
+        ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+        Functions\when( 'wp_remote_post' )->alias(
+            static function ( $url, $args = [] ) use ( $captured ) {
+                $captured['url']   = $url;
+                $captured['auth']  = $args['headers']['Authorization'] ?? null;
+                $captured['model'] = ( json_decode( $args['body'] ?? '{}', true )['model'] ?? null );
+                return [ '__eval' => true, 'code' => 200, 'body' => json_encode(
+                    [ 'choices' => [ [ 'finish_reason' => 'stop', 'message' => [ 'role' => 'assistant', 'content' => 'kimi reply' ] ] ] ]
+                ) ];
+            }
+        );
+        Functions\when( 'wp_remote_retrieve_response_code' )->alias( static fn( $r ) => is_array( $r ) ? ( $r['code'] ?? 0 ) : 0 );
+        Functions\when( 'wp_remote_retrieve_body' )->alias( static fn( $r ) => is_array( $r ) ? ( $r['body'] ?? '' ) : '' );
+
+        $result = $this->response_data( $this->handler()->handle_message(
+            $this->message_request( [ [ 'role' => 'user', 'content' => 'hi' ] ] )
+        ) );
+
+        $this->assertSame( 'kimi reply', $result['message'] );
+        $this->assertSame( 'https://api.moonshot.ai/v1/chat/completions', $captured['url'] );
+        $this->assertSame( 'Bearer sk-moon-legacy', $captured['auth'] );
+        $this->assertSame( 'kimi-k2.6', $captured['model'] );
+    }
+
+    public function test_provider_chain_is_bounded_with_many_keys(): void {
+        // Even with a key for EVERY catalog provider, the chain lists each provider at
+        // most once (bounded failover — no loop, no duplicate attempts). Its length
+        // never exceeds the catalog size.
+        $map = [ 'fahad_ai_provider' => 'openai' ];
+        foreach ( Fahad_AI_Providers::catalog() as $preset ) {
+            $map[ $preset['key_option'] ] = 'sk-key';
+        }
+        $this->set_option_alias( $map );
+
+        $chain = $this->provider_chain();
+
+        $this->assertSame( $chain, array_values( array_unique( $chain ) ), 'No duplicate providers.' );
+        $this->assertLessThanOrEqual( count( Fahad_AI_Providers::ids() ), count( $chain ) );
+        $this->assertSame( 'openai', $chain[0], 'Configured provider is still first.' );
+    }
 }

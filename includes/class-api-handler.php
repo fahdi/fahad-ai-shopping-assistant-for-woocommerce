@@ -46,9 +46,11 @@ final class Fahad_AI_API_Handler {
 		$chain = $this->provider_chain();
 
 		if ( empty( $chain ) ) {
-			return ( 'moonshot' === get_option( 'fahad_ai_provider', 'anthropic' ) )
-				? $this->run_moonshot_agent( $sanitized )   // returns the no-key WP_Error
-				: $this->run_anthropic_agent( $sanitized );
+			// No key for ANY provider: run the CONFIGURED provider's agent so the admin
+			// still gets that provider's "configure a key" WP_Error (the existing no-key
+			// signal). Routed by type so an openai-configured store reports the openai
+			// key error, not anthropic's.
+			return $this->run_provider_agent( get_option( 'fahad_ai_provider', 'anthropic' ), $sanitized );
 		}
 
 		// Try each provider AT MOST ONCE, in order (bounded — no loop, no backoff
@@ -56,9 +58,7 @@ final class Fahad_AI_API_Handler {
 		// to the next. If every provider fails, degrade gracefully rather than
 		// surfacing a raw error to the shopper (principle: never a dead end).
 		foreach ( $chain as $provider ) {
-			$result = ( 'moonshot' === $provider )
-				? $this->run_moonshot_agent( $sanitized )
-				: $this->run_anthropic_agent( $sanitized );
+			$result = $this->run_provider_agent( $provider, $sanitized );
 
 			if ( ! is_wp_error( $result ) ) {
 				// Owner analytics (#49): record this resolved turn (outcome + tool trace
@@ -122,9 +122,7 @@ final class Fahad_AI_API_Handler {
 		// Try each provider AT MOST ONCE, in order; first non-error result wins (same
 		// bounded failover as handle_message — no loop, no backoff storm).
 		foreach ( $chain as $provider ) {
-			$result = ( 'moonshot' === $provider )
-				? $this->run_moonshot_agent( $sanitized )
-				: $this->run_anthropic_agent( $sanitized );
+			$result = $this->run_provider_agent( $provider, $sanitized );
 
 			if ( ! is_wp_error( $result ) ) {
 				$this->record_turn_analytics( $sanitized, $result );
@@ -149,39 +147,72 @@ final class Fahad_AI_API_Handler {
 	 *
 	 * Used to build provider_chain() so a keyless provider is never attempted — a
 	 * call_* would only short-circuit with a "key not configured" WP_Error, which
-	 * would burn a failover slot for nothing.
+	 * would burn a failover slot for nothing. Generalised over the whole provider
+	 * catalog (issue: multi-provider): the key option is whatever the preset declares
+	 * (so anthropic/moonshot keep their existing option names, and every other preset
+	 * reads fahad_ai_{id}_api_key). An unknown id has no key.
 	 *
-	 * @param string $provider 'anthropic' | 'moonshot'.
+	 * @param string $provider A provider id from the catalog (e.g. 'anthropic', 'openai').
 	 */
 	private function has_provider_key( string $provider ): bool {
-		$option = ( 'moonshot' === $provider )
-			? 'fahad_ai_moonshot_api_key'
-			: 'fahad_ai_anthropic_api_key';
+		$preset = Fahad_AI_Providers::get( $provider );
+		if ( null === $preset ) {
+			return false;
+		}
 
-		return '' !== (string) get_option( $option, '' );
+		return '' !== (string) get_option( $preset['key_option'], '' );
 	}
 
 	/**
 	 * Ordered list of providers to try for a turn: the configured provider FIRST,
-	 * then the other as a fallback — filtered to only those with a key configured.
+	 * then every OTHER catalog provider that has a key configured — so failover works
+	 * across all providers, not just the original two (issue: multi-provider). The
+	 * fallbacks follow catalog order for determinism.
 	 *
-	 * Examples: configured=moonshot + both keys → ['moonshot','anthropic'];
-	 * configured=anthropic + only the anthropic key → ['anthropic']; no keys → [].
-	 * The result has no duplicates and at most two entries, so the failover loop in
-	 * handle_message() is inherently bounded (each provider attempted at most once).
+	 * Examples (with the built-in catalog):
+	 *   configured=moonshot + anthropic+moonshot keyed → ['moonshot','anthropic'];
+	 *   configured=openai + openai+anthropic+groq keyed → ['openai','anthropic','groq'];
+	 *   configured=anthropic + only the anthropic key → ['anthropic']; no keys → [].
 	 *
-	 * @return string[] Providers to try, in order.
+	 * The result has no duplicates and each provider appears at most once, so the
+	 * failover loop in handle_message() is inherently bounded (no loop, no backoff
+	 * storm — each provider attempted a single time).
+	 *
+	 * @return string[] Provider ids to try, in order.
 	 */
 	private function provider_chain(): array {
-		$configured = ( 'moonshot' === get_option( 'fahad_ai_provider', 'anthropic' ) )
-			? 'moonshot'
-			: 'anthropic';
-		$fallback   = ( 'moonshot' === $configured ) ? 'anthropic' : 'moonshot';
+		$configured = (string) get_option( 'fahad_ai_provider', 'anthropic' );
 
-		return array_values( array_filter(
-			[ $configured, $fallback ],
-			[ $this, 'has_provider_key' ]
-		) );
+		// The configured provider goes first IF it has a key; then every other catalog
+		// provider that has a key, in catalog order. array_unique guards against the
+		// configured id reappearing in the catalog walk.
+		$ordered = array_merge( [ $configured ], Fahad_AI_Providers::ids() );
+
+		$chain = [];
+		foreach ( array_values( array_unique( $ordered ) ) as $id ) {
+			if ( $this->has_provider_key( $id ) ) {
+				$chain[] = $id;
+			}
+		}
+
+		return $chain;
+	}
+
+	/**
+	 * Run one turn for a provider id, routing by its catalog transport type:
+	 * 'anthropic' → the native Anthropic loop; 'openai' (and everything else) → the
+	 * generalised OpenAI-compatible loop, parameterised by the provider id. This is
+	 * the single place handle_message()/run_text_turn() decide native vs. OpenAI, so
+	 * the failover loop stays provider-agnostic.
+	 *
+	 * @param string $provider Catalog provider id.
+	 * @param array  $messages Sanitized conversation messages.
+	 * @return array|WP_Error
+	 */
+	private function run_provider_agent( string $provider, array $messages ): array|WP_Error {
+		return ( 'anthropic' === Fahad_AI_Providers::type( $provider ) )
+			? $this->run_anthropic_agent( $messages )
+			: $this->run_openai_agent( $messages, $provider );
 	}
 
 	/**
@@ -444,16 +475,30 @@ final class Fahad_AI_API_Handler {
 	}
 
 	// =========================================================================
-	// Moonshot AI — OpenAI-compatible (tool_calls / stop)
+	// OpenAI-compatible providers — tool_calls / stop
 	// =========================================================================
+	//
+	// One generalised loop for EVERY OpenAI-compatible provider (Moonshot, OpenAI,
+	// Gemini, Groq, Mistral, DeepSeek, xAI, Together, OpenRouter, Perplexity, Ollama,
+	// and a merchant `custom` endpoint). The only per-provider differences — base URL,
+	// API key, model — are resolved from the catalog (Fahad_AI_Providers::resolve) by
+	// the $provider id, so adding a provider is data, not code. Moonshot is just the
+	// first preset of this path; its behaviour is unchanged.
 
-	private function run_moonshot_agent( array $messages ): array|WP_Error {
+	/**
+	 * @param array  $messages Sanitized conversation messages.
+	 * @param string $provider Catalog provider id (any 'openai'-type preset). Defaults
+	 *                         to 'moonshot' for backward compatibility with any caller
+	 *                         that has not yet been taught the provider argument.
+	 */
+	private function run_openai_agent( array $messages, string $provider = 'moonshot' ): array|WP_Error {
 		$tools      = Fahad_AI_Tools::instance();
 		$max        = 8;
 		$cards      = [];
 		$comparison = [];
 
-		// Moonshot uses a system message as the first entry, not a top-level field.
+		// OpenAI-compatible APIs use a system message as the first entry, not a
+		// top-level field.
 		$with_system = array_merge(
 			[ [ 'role' => 'system', 'content' => $this->get_system_prompt() ] ],
 			$messages
@@ -463,7 +508,7 @@ final class Fahad_AI_API_Handler {
 			// Cost/latency: bound the outgoing context to the configured token budget
 			// (no-op by default). The system message + latest turn + in-progress tool
 			// loop are preserved; only the oldest history is condensed.
-			$response = $this->call_moonshot( $this->apply_token_budget( $with_system ), $i );
+			$response = $this->call_openai( $this->apply_token_budget( $with_system ), $provider, $i );
 
 			if ( is_wp_error( $response ) ) {
 				return $response;
@@ -524,19 +569,41 @@ final class Fahad_AI_API_Handler {
 		];
 	}
 
-	private function call_moonshot( array $messages, int $iteration = 0 ): array|WP_Error {
-		$api_key = get_option( 'fahad_ai_moonshot_api_key', '' );
+	/**
+	 * One non-streaming OpenAI-compatible request for the given provider id.
+	 *
+	 * The provider's base URL, API key and model are resolved from the catalog
+	 * (Fahad_AI_Providers::resolve), so the SAME code talks to Moonshot, OpenAI,
+	 * Gemini, … differing only in those three values. Auth is the OpenAI-standard
+	 * `Authorization: Bearer <key>` for every provider. A missing key returns the
+	 * existing no-key WP_Error (admin signal) without making a request.
+	 *
+	 * @param array  $messages  Sanitized OpenAI-shaped messages (system first).
+	 * @param string $provider  Catalog provider id (an 'openai'-type preset).
+	 * @param int    $iteration Agent-loop index (passed to the model-routing seam).
+	 */
+	private function call_openai( array $messages, string $provider = 'moonshot', int $iteration = 0 ): array|WP_Error {
+		$resolved = Fahad_AI_Providers::resolve( $provider );
+		$label    = $resolved['label'] ?? $provider;
 
-		if ( empty( $api_key ) ) {
-			return new WP_Error( 'no_api_key', __( 'Moonshot API key is not configured.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 500 ] );
+		if ( null === $resolved || '' === $resolved['api_key'] ) {
+			return new WP_Error(
+				'no_api_key',
+				sprintf(
+					/* translators: %s: provider label, e.g. "OpenAI" */
+					__( '%s API key is not configured.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					$label
+				),
+				[ 'status' => 500 ]
+			);
 		}
 
 		$tools = $this->get_openai_tools();
 
 		// Model routing (issue #23): default unchanged; a fahad_ai_model hook may route.
 		$model = $this->resolve_model(
-			get_option( 'fahad_ai_moonshot_model', 'kimi-k2.6' ),
-			'moonshot',
+			$resolved['model'],
+			$provider,
 			[ 'has_tools' => ! empty( $tools ), 'iteration' => $iteration ]
 		);
 
@@ -547,10 +614,10 @@ final class Fahad_AI_API_Handler {
 			'tools'      => $tools,
 		];
 
-		$response = wp_remote_post( $this->moonshot_base_url() . '/v1/chat/completions', [
+		$response = wp_remote_post( $this->openai_chat_url( $resolved['base_url'] ), [
 			'timeout' => 30,
 			'headers' => [
-				'Authorization' => 'Bearer ' . $api_key,
+				'Authorization' => 'Bearer ' . $resolved['api_key'],
 				'Content-Type'  => 'application/json',
 			],
 			'body' => wp_json_encode( $payload ),
@@ -565,8 +632,9 @@ final class Fahad_AI_API_Handler {
 
 		if ( 200 !== $code ) {
 			$msg = $body['error']['message'] ?? sprintf(
-				/* translators: %d: HTTP status code from the Moonshot API */
-				__( 'Moonshot API error (HTTP %d).', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				/* translators: 1: provider label, 2: HTTP status code */
+				__( '%1$s API error (HTTP %2$d).', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				$label,
 				$code
 			);
 			return new WP_Error( 'api_error', $msg, [ 'status' => 502 ] );
@@ -580,12 +648,51 @@ final class Fahad_AI_API_Handler {
 	 * Moonshot runs two independent platforms with separate keys and model
 	 * catalogues: the global endpoint (api.moonshot.ai) and the China
 	 * endpoint (api.moonshot.cn). A key issued on one is rejected by the other.
+	 *
+	 * Retained for its own unit tests and as the documented region helper; the
+	 * catalog (Fahad_AI_Providers::resolve) computes the same value for the moonshot
+	 * preset at dispatch time.
 	 */
 	private function moonshot_base_url(): string {
 		$region = get_option( 'fahad_ai_moonshot_region', 'global' );
 		return 'china' === $region
 			? 'https://api.moonshot.cn'
 			: 'https://api.moonshot.ai';
+	}
+
+	/**
+	 * Build the chat-completions URL for an OpenAI-compatible base URL.
+	 *
+	 * Every catalog base URL is the FULL prefix up to (but not including) the
+	 * endpoint — i.e. it already carries each provider's version segment (.../v1,
+	 * .../openai/v1, .../v1beta/openai, or no version for those that take none). We
+	 * therefore append ONLY '/chat/completions', after trimming any trailing slash on
+	 * the base, so a single rule is correct for every provider regardless of whether
+	 * its endpoint includes a version path.
+	 */
+	private function openai_chat_url( string $base_url ): string {
+		return rtrim( $base_url, '/' ) . '/chat/completions';
+	}
+
+	/**
+	 * Validate a merchant-supplied custom OpenAI-compatible base URL.
+	 *
+	 * Security: the base URL is concatenated into the outbound request target, so it
+	 * must be a real http(s) URL — never a `javascript:`/`data:` scheme or junk. We
+	 * require HTTPS for any remote host (keys travel in the Authorization header), with
+	 * ONE exception: a localhost/127.0.0.1 host may use plain http, because a
+	 * self-hosted endpoint (e.g. a local proxy or Ollama-style server) on the same box
+	 * never leaves the machine. A failed check returns '' (no custom endpoint).
+	 *
+	 * Delegates to Fahad_AI_Providers::sanitize_base_url so the admin save path and
+	 * dispatch share ONE validator. Kept as a (private static) seam here for the
+	 * handler's own unit test.
+	 *
+	 * @param string $raw Raw URL from the settings form.
+	 * @return string The sanitized https (or localhost-http) URL, or '' if invalid.
+	 */
+	private static function sanitize_custom_base_url( string $raw ): string {
+		return Fahad_AI_Providers::sanitize_base_url( $raw );
 	}
 
 	// =========================================================================
@@ -1648,8 +1755,20 @@ Guidelines:
 	}
 
 	// =========================================================================
-	// Moonshot SSE streaming
+	// OpenAI-compatible SSE streaming
 	// =========================================================================
+
+	/**
+	 * The provider id to stream with: the configured provider if it is an
+	 * 'openai'-type preset, otherwise fall back to the moonshot preset (the original
+	 * streaming provider). The native Anthropic path does not stream; the widget only
+	 * calls /stream for openai-type providers (the bootstrap localizes a `streaming`
+	 * flag), so this is a defensive default, not the routing decision itself.
+	 */
+	private function stream_provider(): string {
+		$configured = (string) get_option( 'fahad_ai_provider', 'anthropic' );
+		return Fahad_AI_Providers::is_openai( $configured ) ? $configured : 'moonshot';
+	}
 
 	/**
 	 * REST callback for POST /wp-json/fahad-ai/v1/stream
@@ -1696,7 +1815,7 @@ Guidelines:
 			session_write_close();
 		}
 
-		$this->run_stream_agent( $sanitized );
+		$this->run_stream_agent( $sanitized, $this->stream_provider() );
 
 		exit;
 	}
@@ -1724,10 +1843,14 @@ Guidelines:
 	}
 
 	/**
-	 * Multi-turn streaming agent loop.
+	 * Multi-turn streaming agent loop for an OpenAI-compatible provider.
 	 * Each turn streams text chunks live; tool calls are collected, executed, then the next turn streams.
+	 *
+	 * @param array  $messages Sanitized conversation messages.
+	 * @param string $provider Catalog provider id (an 'openai'-type preset). Defaults
+	 *                         to 'moonshot' for backward compatibility.
 	 */
-	private function run_stream_agent( array $messages ): void {
+	private function run_stream_agent( array $messages, string $provider = 'moonshot' ): void {
 		$tools         = Fahad_AI_Tools::instance();
 		$max           = 8;
 		$sent_products = false;
@@ -1737,7 +1860,7 @@ Guidelines:
 		$tools_called  = [];
 		$added_to_cart = false;
 
-		// Moonshot needs system as first message.
+		// OpenAI-compatible APIs need the system prompt as the first message.
 		$api_msgs = array_merge(
 			[ [ 'role' => 'system', 'content' => $this->get_system_prompt() ] ],
 			$messages
@@ -1748,7 +1871,7 @@ Guidelines:
 			// (no-op by default); the system message + latest turn + in-progress tool
 			// loop survive. The SSE products/comparison events below still carry FULL
 			// data — only the model copy in $api_msgs is trimmed (issue #23).
-			[ $text, $tool_calls, $error ] = $this->stream_one_turn( $this->apply_token_budget( $api_msgs ), $i );
+			[ $text, $tool_calls, $error ] = $this->stream_one_turn( $this->apply_token_budget( $api_msgs ), $provider, $i );
 
 			if ( $error ) {
 				// Graceful degradation (issue #58). A stream error (5xx/429/timeout/
@@ -1867,20 +1990,30 @@ Guidelines:
 	}
 
 	/**
-	 * Opens a single streaming curl request to Moonshot.
+	 * Opens a single streaming curl request to an OpenAI-compatible provider.
 	 * Forwards text delta chunks to the browser immediately via SSE.
 	 * Accumulates tool_calls for the caller to execute.
 	 *
+	 * The provider's base URL / key / model are resolved from the catalog by the
+	 * $provider id, so streaming works for ANY 'openai'-type provider (Moonshot,
+	 * OpenAI, Gemini, …) over the same SSE path.
+	 *
+	 * @param array  $messages  OpenAI-shaped messages (system first).
+	 * @param string $provider  Catalog provider id (an 'openai'-type preset).
+	 * @param int    $iteration Agent-loop index (passed to the model-routing seam).
 	 * @return array{0: string, 1: array, 2: string|null} [text, tool_calls, error]
 	 */
-	private function stream_one_turn( array $messages, int $iteration = 0 ): array {
-		$api_key = get_option( 'fahad_ai_moonshot_api_key', '' );
-		$tools   = $this->get_openai_tools();
+	private function stream_one_turn( array $messages, string $provider = 'moonshot', int $iteration = 0 ): array {
+		$resolved = Fahad_AI_Providers::resolve( $provider );
+		$api_key  = $resolved['api_key'] ?? '';
+		$base_url = $resolved['base_url'] ?? '';
+		$label    = $resolved['label'] ?? $provider;
+		$tools    = $this->get_openai_tools();
 
 		// Model routing (issue #23): default unchanged; a fahad_ai_model hook may route.
 		$model = $this->resolve_model(
-			get_option( 'fahad_ai_moonshot_model', 'kimi-k2.6' ),
-			'moonshot',
+			$resolved['model'] ?? '',
+			$provider,
 			[ 'has_tools' => ! empty( $tools ), 'iteration' => $iteration ]
 		);
 
@@ -1898,7 +2031,7 @@ Guidelines:
 		$error           = null;
 		$line_buffer     = '';   // carries a partial SSE line between writes (#29)
 
-		$write_callback = function ( $ch, $raw ) use ( &$collected_text, &$tool_buf, &$error, &$raw_body, &$line_buffer ) {
+		$write_callback = function ( $ch, $raw ) use ( &$collected_text, &$tool_buf, &$error, &$raw_body, &$line_buffer, $label ) {
 			$raw_body .= $raw;
 
 			// cURL delivers arbitrary byte chunks, not line-aligned SSE frames. Parse
@@ -1922,7 +2055,11 @@ Guidelines:
 
 				// Error embedded inside the SSE stream.
 				if ( isset( $chunk['error'] ) ) {
-					$error = $chunk['error']['message'] ?? __( 'Moonshot API error.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+					$error = $chunk['error']['message'] ?? sprintf(
+						/* translators: %s: provider label, e.g. "OpenAI" */
+						__( '%s API error.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+						$label
+					);
 					return strlen( $raw );
 				}
 
@@ -1964,7 +2101,7 @@ Guidelines:
 
 		// phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_init, WordPress.WP.AlternativeFunctions.curl_curl_setopt, WordPress.WP.AlternativeFunctions.curl_curl_exec, WordPress.WP.AlternativeFunctions.curl_curl_errno, WordPress.WP.AlternativeFunctions.curl_curl_error, WordPress.WP.AlternativeFunctions.curl_curl_getinfo, WordPress.WP.AlternativeFunctions.curl_curl_close
 		$ch = curl_init();
-		curl_setopt( $ch, CURLOPT_URL, $this->moonshot_base_url() . '/v1/chat/completions' );
+		curl_setopt( $ch, CURLOPT_URL, $this->openai_chat_url( $base_url ) );
 		curl_setopt( $ch, CURLOPT_POST, true );
 		curl_setopt( $ch, CURLOPT_POSTFIELDS, wp_json_encode( $payload ) );
 		curl_setopt( $ch, CURLOPT_HTTPHEADER, [
@@ -1991,8 +2128,9 @@ Guidelines:
 		if ( ! $error && 200 !== $http_code ) {
 			$body  = json_decode( $raw_body, true );
 			$error = $body['error']['message'] ?? sprintf(
-				/* translators: %d: HTTP status code from the Moonshot API */
-				__( 'Moonshot API error (HTTP %d).', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				/* translators: 1: provider label, 2: HTTP status code */
+				__( '%1$s API error (HTTP %2$d).', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				$label,
 				$http_code
 			);
 		}

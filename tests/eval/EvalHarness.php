@@ -3,7 +3,7 @@
  * Eval harness for the Fahad AI shopping assistant.
  *
  * This is the AI analogue of the unit tests: it drives the REAL agent loop
- * (Fahad_AI_API_Handler::run_anthropic_agent / run_moonshot_agent) against a
+ * (Fahad_AI_API_Handler::run_anthropic_agent / run_openai_agent) against a
  * SCRIPTED LLM transport and REAL tool execution, then makes deterministic
  * assertions about which tools ran, what cards were produced, and whether the
  * model's final answer is grounded in the tool results.
@@ -11,7 +11,7 @@
  * It NEVER makes a live API call. The model's HTTP responses are canned per
  * fixture and replayed in order via a stubbed wp_remote_post.
  *
- * Why reflection: run_anthropic_agent() and run_moonshot_agent() are private
+ * Why reflection: run_anthropic_agent() and run_openai_agent() are private
  * (as is tool_result_cards()). The unit tests already reach private members the
  * same way (ReflectionMethod / ReflectionProperty), so we follow that pattern
  * rather than widening visibility in production code.
@@ -482,9 +482,15 @@ final class EvalHarness {
 		// Use the real singleton tools instance (freshly reset by the caller).
 		self::reset_singletons();
 
-		$method = ( 'moonshot' === $provider ) ? 'run_moonshot_agent' : 'run_anthropic_agent';
-		$ref    = new ReflectionMethod( Fahad_AI_API_Handler::class, $method );
-		$result = $ref->invoke( self::handler(), $messages );
+		// The OpenAI-compatible loop is generalised (run_openai_agent), parameterised by
+		// a provider id; the moonshot preset rides it. Anthropic keeps its native loop.
+		if ( 'anthropic' === $provider ) {
+			$ref    = new ReflectionMethod( Fahad_AI_API_Handler::class, 'run_anthropic_agent' );
+			$result = $ref->invoke( self::handler(), $messages );
+		} else {
+			$ref    = new ReflectionMethod( Fahad_AI_API_Handler::class, 'run_openai_agent' );
+			$result = $ref->invoke( self::handler(), $messages, $provider );
+		}
 
 		$tool_calls   = [];
 		$tool_results = [];

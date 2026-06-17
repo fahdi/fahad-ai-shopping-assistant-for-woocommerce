@@ -588,14 +588,18 @@
 		history.push({ role: 'user', content: text });
 		setLoading(true);
 
-		if (cfg.provider === 'moonshot') {
+		// Stream for any OpenAI-compatible provider (the server localizes `streaming`);
+		// the native Anthropic path is non-streaming. Falls back to the provider check
+		// for backward compatibility if `streaming` is absent.
+		var useStreaming = (typeof cfg.streaming === 'boolean') ? cfg.streaming : (cfg.provider === 'moonshot');
+		if (useStreaming) {
 			await sendStreaming();
 		} else {
 			await sendRegular();
 		}
 	}
 
-	// ── Streaming path (Moonshot SSE) ─────────────────────────────────────────
+	// ── Streaming path (OpenAI-compatible SSE) ────────────────────────────────
 	async function sendStreaming() {
 		const typingEl = appendTyping();
 

@@ -28,6 +28,22 @@ function fahad_ai_sanitize_tone( $raw ): string {
 }
 
 /**
+ * Sanitize the selected AI provider to a known catalog id (issue: multi-provider).
+ *
+ * The provider <select> is built from Fahad_AI_Providers::catalog(), so only an id
+ * the catalog actually declares is accepted; anything else — including a tampered
+ * value — collapses to the safe default 'anthropic'. This keeps routing keyed on a
+ * real preset (handle_message looks the id up in the catalog).
+ *
+ * @param mixed $raw Raw POST value.
+ * @return string A valid provider id, or 'anthropic'.
+ */
+function fahad_ai_sanitize_provider( $raw ): string {
+	$id = sanitize_text_field( is_scalar( $raw ) ? (string) $raw : '' );
+	return in_array( $id, Fahad_AI_Providers::ids(), true ) ? $id : 'anthropic';
+}
+
+/**
  * Sanitize the merchant default/allowed-languages setting (issue #61).
  *
  * The value is either the token 'auto' (detect the shopper's language and match it
@@ -394,12 +410,32 @@ function fahad_ai_settings_page(): void {
 	}
 
 	if ( isset( $_POST['fahad_ai_save'] ) && check_admin_referer( 'fahad_ai_settings' ) ) {
-		update_option( 'fahad_ai_provider',          sanitize_text_field( wp_unslash( $_POST['provider']          ?? 'anthropic' ) ) );
-		update_option( 'fahad_ai_anthropic_api_key', sanitize_text_field( wp_unslash( $_POST['anthropic_api_key'] ?? '' ) ) );
-		update_option( 'fahad_ai_anthropic_model',   sanitize_text_field( wp_unslash( $_POST['anthropic_model']   ?? 'claude-haiku-4-5-20251001' ) ) );
-		update_option( 'fahad_ai_moonshot_api_key',  sanitize_text_field( wp_unslash( $_POST['moonshot_api_key']  ?? '' ) ) );
-		update_option( 'fahad_ai_moonshot_model',    sanitize_text_field( wp_unslash( $_POST['moonshot_model']    ?? 'kimi-k2.6' ) ) );
-		update_option( 'fahad_ai_moonshot_region',   'china' === ( $_POST['moonshot_region'] ?? 'global' ) ? 'china' : 'global' );
+		// Selected provider: only a known catalog id is accepted (an unknown value
+		// falls back to anthropic), so a tampered select can't set a bogus provider.
+		update_option( 'fahad_ai_provider', fahad_ai_sanitize_provider( wp_unslash( $_POST['provider'] ?? 'anthropic' ) ) );
+
+		// Per-provider API key + model, driven by the catalog (issue: multi-provider).
+		// Each provider's form fields are {id}_api_key / {id}_model and persist to its
+		// declared option names. anthropic/moonshot keep their existing option names
+		// (backward compat) because those ids already follow the convention. The model
+		// defaults to the preset default when the field is blank.
+		foreach ( Fahad_AI_Providers::catalog() as $provider_id => $preset ) {
+			update_option(
+				$preset['key_option'],
+				sanitize_text_field( wp_unslash( $_POST[ $provider_id . '_api_key' ] ?? '' ) )
+			);
+
+			$model = sanitize_text_field( wp_unslash( $_POST[ $provider_id . '_model' ] ?? '' ) );
+			update_option( $preset['model_option'], '' !== $model ? $model : (string) $preset['default_model'] );
+		}
+
+		// Moonshot region (global vs. china — separate platforms/keys/catalogues).
+		update_option( 'fahad_ai_moonshot_region', 'china' === ( $_POST['moonshot_region'] ?? 'global' ) ? 'china' : 'global' );
+
+		// Custom provider base URL — validated to https (or a localhost http) and
+		// otherwise dropped to '' (Fahad_AI_Providers::sanitize_base_url). Never trusted
+		// as a raw string: it becomes part of the outbound request target.
+		update_option( 'fahad_ai_custom_base_url', Fahad_AI_Providers::sanitize_base_url( (string) wp_unslash( $_POST['custom_base_url'] ?? '' ) ) );
 		update_option( 'fahad_ai_bot_name',          sanitize_text_field( wp_unslash( $_POST['bot_name']          ?? 'Store Assistant' ) ) );
 		update_option( 'fahad_ai_greeting',          sanitize_textarea_field( wp_unslash( $_POST['greeting']      ?? 'Hi! How can I help you today?' ) ) );
 		update_option( 'fahad_ai_system_prompt',     sanitize_textarea_field( wp_unslash( $_POST['system_prompt'] ?? '' ) ) );
@@ -444,6 +480,7 @@ function fahad_ai_settings_page(): void {
 		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'fahad-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
 	}
 
+	$provider_catalog = Fahad_AI_Providers::catalog(); // multi-provider: drives the select + fields
 	$provider        = get_option( 'fahad_ai_provider',          'anthropic' );
 	$anthropic_key   = get_option( 'fahad_ai_anthropic_api_key', '' );
 	$anthropic_model = get_option( 'fahad_ai_anthropic_model',   'claude-haiku-4-5-20251001' );
@@ -505,9 +542,13 @@ function fahad_ai_settings_page(): void {
 					<th scope="row"><label for="provider"><?php esc_html_e( 'AI Provider', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<select id="provider" name="provider">
-							<option value="anthropic" <?php selected( $provider, 'anthropic' ); ?>><?php esc_html_e( 'Anthropic (Claude)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-							<option value="moonshot"  <?php selected( $provider, 'moonshot' );  ?>><?php esc_html_e( 'Moonshot AI (Kimi)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+							<?php foreach ( $provider_catalog as $provider_id => $preset ) : ?>
+								<option value="<?php echo esc_attr( $provider_id ); ?>" <?php selected( $provider, $provider_id ); ?>><?php echo esc_html( $preset['label'] ); ?></option>
+							<?php endforeach; ?>
 						</select>
+						<p class="description">
+							<?php esc_html_e( 'Anthropic (Claude) uses its native API; every other provider uses the OpenAI-compatible API. Configure the key and model for your chosen provider below.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</p>
 					</td>
 				</tr>
 
@@ -601,6 +642,80 @@ function fahad_ai_settings_page(): void {
 						</td>
 					</tr>
 				</tbody>
+
+				<?php
+				// Every OTHER provider (anthropic + moonshot are hand-rendered above for
+				// their richer UI). Each gets a generic API key + model field set, driven
+				// by the catalog so a filter-registered add-on provider also appears here
+				// with no edits. The `custom` provider additionally gets a base URL field.
+				foreach ( $provider_catalog as $provider_id => $preset ) :
+					if ( in_array( $provider_id, [ 'anthropic', 'moonshot' ], true ) ) {
+						continue;
+					}
+					$pid_key      = $provider_id . '_api_key';
+					$pid_model    = $provider_id . '_model';
+					$saved_key    = (string) get_option( $preset['key_option'], '' );
+					$saved_model  = (string) get_option( $preset['model_option'], $preset['default_model'] );
+					$is_custom    = ( 'custom' === $provider_id );
+					$is_local     = ( 'ollama' === $provider_id );
+					?>
+					<tbody id="fahad-ai-<?php echo esc_attr( $provider_id ); ?>" style="<?php echo $provider_id !== $provider ? 'display:none' : ''; ?>">
+						<?php if ( $is_custom ) : ?>
+							<tr>
+								<th scope="row"><label for="custom_base_url"><?php esc_html_e( 'Base URL', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+								<td>
+									<input type="url" id="custom_base_url" name="custom_base_url"
+										value="<?php echo esc_attr( (string) get_option( 'fahad_ai_custom_base_url', '' ) ); ?>" class="regular-text" placeholder="https://api.example.com/v1">
+									<p class="description">
+										<?php esc_html_e( 'The OpenAI-compatible base URL (the prefix before /chat/completions). Must be HTTPS (a localhost address may use http). Invalid values are discarded on save.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+									</p>
+								</td>
+							</tr>
+						<?php endif; ?>
+						<tr>
+							<th scope="row">
+								<label for="<?php echo esc_attr( $pid_key ); ?>">
+									<?php
+									/* translators: %s: provider label, e.g. "OpenAI" */
+									printf( esc_html__( '%s API Key', 'fahad-ai-shopping-assistant-for-woocommerce' ), esc_html( $preset['label'] ) );
+									?>
+								</label>
+							</th>
+							<td>
+								<input type="password" id="<?php echo esc_attr( $pid_key ); ?>" name="<?php echo esc_attr( $pid_key ); ?>"
+									value="<?php echo esc_attr( $saved_key ); ?>" class="regular-text" autocomplete="new-password">
+								<?php if ( $is_local ) : ?>
+									<p class="description"><?php esc_html_e( 'A local Ollama server usually needs no key — leave blank unless your setup requires one.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+								<?php endif; ?>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="<?php echo esc_attr( $pid_model ); ?>"><?php esc_html_e( 'Model', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label>
+							</th>
+							<td>
+								<?php if ( ! empty( $preset['models'] ) ) : ?>
+									<input type="text" id="<?php echo esc_attr( $pid_model ); ?>" name="<?php echo esc_attr( $pid_model ); ?>"
+										value="<?php echo esc_attr( $saved_model ); ?>" class="regular-text" list="fahad-ai-<?php echo esc_attr( $provider_id ); ?>-models">
+									<datalist id="fahad-ai-<?php echo esc_attr( $provider_id ); ?>-models">
+										<?php foreach ( $preset['models'] as $model_option ) : ?>
+											<option value="<?php echo esc_attr( $model_option ); ?>"></option>
+										<?php endforeach; ?>
+									</datalist>
+								<?php else : ?>
+									<input type="text" id="<?php echo esc_attr( $pid_model ); ?>" name="<?php echo esc_attr( $pid_model ); ?>"
+										value="<?php echo esc_attr( $saved_model ); ?>" class="regular-text">
+								<?php endif; ?>
+								<p class="description">
+									<?php
+									/* translators: %s: the provider's default model id */
+									printf( esc_html__( 'Defaults to %s when left blank.', 'fahad-ai-shopping-assistant-for-woocommerce' ), '<code>' . esc_html( (string) $preset['default_model'] ) . '</code>' );
+									?>
+								</p>
+							</td>
+						</tr>
+					</tbody>
+				<?php endforeach; ?>
 
 			</table>
 
