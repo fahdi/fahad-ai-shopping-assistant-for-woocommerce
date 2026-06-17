@@ -966,6 +966,13 @@ Trust & honesty — these rules are absolute and override any instinct to make a
 			ob_end_clean();
 		}
 
+		// Load the WC cart and force the guest session cookie out BEFORE any SSE
+		// headers/output are flushed. Once the event-stream headers are sent the
+		// response is committed, so WooCommerce can no longer emit its Set-Cookie —
+		// guest carts mutated mid-stream would then be lost on the next request
+		// (live-QA finding #31). Must run before the header() calls below.
+		$this->prime_cart_session();
+
 		// SSE headers — X-Accel-Buffering disables nginx buffering.
 		header( 'Content-Type: text/event-stream' );
 		header( 'Cache-Control: no-cache' );
@@ -977,13 +984,31 @@ Trust & honesty — these rules are absolute and override any instinct to make a
 			session_write_close();
 		}
 
+		$this->run_stream_agent( $sanitized );
+
+		exit;
+	}
+
+	/**
+	 * Load the WooCommerce cart and emit the guest session cookie eagerly.
+	 *
+	 * The streaming endpoint flushes SSE headers and then keeps the connection
+	 * open, so WooCommerce never gets its usual shutdown opportunity to send the
+	 * session Set-Cookie header before output begins. Without the cookie a guest's
+	 * cart mutations (e.g. add_to_cart) are written to session storage under one
+	 * id but the browser is handed none, so the following request reads a fresh,
+	 * empty session. Priming here — before any headers/output — keeps guest carts
+	 * persistent across the stream (live-QA finding #31). Emits only a cookie
+	 * header; nothing is echoed, so it is safe to call before the SSE headers.
+	 */
+	private function prime_cart_session(): void {
 		if ( function_exists( 'wc_load_cart' ) ) {
 			wc_load_cart();
 		}
 
-		$this->run_stream_agent( $sanitized );
-
-		exit;
+		if ( function_exists( 'WC' ) && WC()->session && ! headers_sent() ) {
+			WC()->session->set_customer_session_cookie( true );
+		}
 	}
 
 	/**

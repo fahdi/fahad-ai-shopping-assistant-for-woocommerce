@@ -1238,4 +1238,33 @@ class ApiHandlerTest extends TestCase {
 
         $this->assertSame( 'claude-opus-4-8', $captured['model'] );
     }
+
+    // ── prime_cart_session() — guest cart persistence over SSE (live-QA finding #31)
+    // The streaming endpoint flushes the event-stream headers and then holds the
+    // connection open, so WooCommerce never gets its shutdown chance to send the
+    // guest session Set-Cookie before output starts. handle_stream() therefore
+    // primes the cart and forces the cookie out via this helper BEFORE the headers.
+    // Header ordering itself isn't unit-testable, but we can pin the contract: the
+    // helper must load the cart and emit the session cookie when none has been sent.
+
+    private function prime_cart_session(): void {
+        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'prime_cart_session' );
+        $method->invoke( $this->handler() );
+    }
+
+    public function test_prime_cart_session_emits_guest_session_cookie(): void {
+        // wc_load_cart() must be called so the session/cart are available, and the
+        // session cookie must be forced out (true) so the guest's browser is handed
+        // a WC session id that survives to the next request. headers_sent() is a PHP
+        // internal Patchwork can't redefine without extra config; under PHPUnit CLI it
+        // genuinely returns false (nothing has been emitted), which is the path that
+        // matters here — so we exercise it for real rather than stubbing it.
+        Functions\expect( 'wc_load_cart' )->once();
+
+        $session = Mockery::mock();
+        $session->shouldReceive( 'set_customer_session_cookie' )->once()->with( true );
+        Functions\when( 'WC' )->justReturn( (object) [ 'session' => $session ] );
+
+        $this->prime_cart_session();
+    }
 }
