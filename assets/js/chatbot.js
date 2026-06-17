@@ -70,6 +70,11 @@
 	// Monotonic id source so each variation <select> can be tied to its own <label>
 	// (via for/id) for an accessible, unambiguous name even with many cards.
 	let uid     = 0;
+	// Reply feedback (#50): an OPAQUE, per-page conversation token plus a per-reply
+	// counter. These are random/sequential client tokens — never PII — sent with a
+	// 👍/👎 so a rating can be correlated to a reply server-side (telemetry only).
+	const conversationRef = 'c-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+	let   replyIndex      = 0;
 
 	// ── Build widget HTML ─────────────────────────────────────────────────────
 	const root = document.getElementById('fahad-ai-chatbot-root');
@@ -291,8 +296,9 @@
 								comparisonShown = true;
 								break;
 
-							case 'done':
+							case 'done': {
 								bubble.classList.remove('chatbot-tool-status');
+								let gotReply = true;
 								if (fullText) {
 									bubble.innerHTML = renderMarkdown(fullText);
 									history.push({ role: 'assistant', content: fullText });
@@ -307,8 +313,12 @@
 								} else {
 									bubble.textContent = i18n.noResponseStream || 'No response received. Please try again.';
 									history.pop();
+									gotReply = false;
 								}
+								// Reply feedback (#50): thumbs on a real streamed answer only.
+								if (gotReply) attachFeedback(bubble.parentElement);
 								break;
+							}
 
 							case 'error':
 								bubble.textContent = event.message || (i18n.genericError || 'Something went wrong. Please try again.');
@@ -353,7 +363,10 @@
 
 			const data  = await res.json();
 			const reply = data.message || (i18n.noResponseRegular || 'No response. Please try again.');
-			appendMessage('bot', reply);
+			const botMsg = appendMessage('bot', reply);
+			// Reply feedback (#50): only offer thumbs on a REAL answer, not the
+			// no-response fallback (rating an error tells us nothing useful).
+			if (data.message) attachFeedback(botMsg);
 
 			if (Array.isArray(data.products) && data.products.length) {
 				renderProductCards(data.products);
@@ -431,6 +444,94 @@
 		msgs.appendChild(div);
 		scrollToBottom();
 		return div;
+	}
+
+	// ── Reply feedback / thumbs (#50) ───────────────────────────────────────────
+	// Append accessible 👍/👎 controls to a finalized BOT reply so a shopper can rate
+	// answer quality. WCAG 2.2 AA: real <button>s (keyboard operable, focusable by
+	// default), each with an aria-label conveying meaning (the thumb glyph is
+	// decorative, aria-hidden), grouped under a labelled toolbar, and a polite live
+	// region that announces the result. The rating POSTs to the feedback endpoint
+	// with the nonce (same gate as chat: nonce + rate limit) carrying only opaque
+	// refs — never PII. After a choice the controls reflect the pressed state and are
+	// disabled so a reply is rated once. Silently no-ops if the endpoint isn't
+	// configured (older localized config) so nothing breaks.
+	function attachFeedback(msgEl) {
+		if (!cfg.feedbackUrl || !msgEl) return;
+
+		const messageRef = 'm-' + (++replyIndex);
+
+		const bar = document.createElement('div');
+		bar.className = 'chatbot-feedback';
+		bar.setAttribute('role', 'group');
+		bar.setAttribute('aria-label', i18n.feedbackPrompt || 'Was this helpful?');
+
+		const prompt = document.createElement('span');
+		prompt.className = 'chatbot-feedback-prompt';
+		prompt.textContent = i18n.feedbackPrompt || 'Was this helpful?';
+		bar.appendChild(prompt);
+
+		// Polite status so a screen-reader user hears the acknowledgement after rating.
+		const status = document.createElement('span');
+		status.className = 'chatbot-feedback-status';
+		status.setAttribute('aria-live', 'polite');
+
+		const up   = buildFeedbackButton('up',   '👍', i18n.feedbackUp   || 'Mark this reply as helpful');
+		const down = buildFeedbackButton('down', '👎', i18n.feedbackDown || 'Mark this reply as not helpful');
+
+		function choose(rating, btn) {
+			// Reflect the chosen state: press the picked button, disable both so the
+			// reply is rated once.
+			[up, down].forEach(b => {
+				b.disabled = true;
+				b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+			});
+			btn.classList.add('is-selected');
+			status.textContent = i18n.feedbackThanks || 'Thanks for the feedback.';
+			sendFeedback(rating, messageRef);
+		}
+
+		up.addEventListener('click',   () => choose('up', up));
+		down.addEventListener('click', () => choose('down', down));
+
+		bar.appendChild(up);
+		bar.appendChild(down);
+		bar.appendChild(status);
+		msgEl.appendChild(bar);
+		scrollToBottom();
+	}
+
+	function buildFeedbackButton(rating, glyph, label) {
+		const btn = document.createElement('button');
+		btn.type = 'button';
+		btn.className = 'chatbot-feedback-btn chatbot-feedback-' + rating;
+		// aria-pressed makes it a toggle button to AT; the glyph is decorative and the
+		// aria-label carries the meaning (WCAG 1.1.1 / 4.1.2).
+		btn.setAttribute('aria-pressed', 'false');
+		btn.setAttribute('aria-label', label);
+		const icon = document.createElement('span');
+		icon.setAttribute('aria-hidden', 'true');
+		icon.textContent = glyph;
+		btn.appendChild(icon);
+		return btn;
+	}
+
+	// Fire-and-forget POST of a rating. No PII: only the rating + opaque conversation
+	// / message refs. Best-effort — a failed POST is swallowed (the UI already
+	// reflected the choice; telemetry loss is acceptable and must never disrupt chat).
+	function sendFeedback(rating, messageRef) {
+		try {
+			fetch(cfg.feedbackUrl, {
+				method:      'POST',
+				credentials: 'same-origin',
+				headers:     { 'Content-Type': 'application/json', 'X-WP-Nonce': cfg.nonce },
+				body:        JSON.stringify({
+					rating:           rating,
+					conversation_ref: conversationRef,
+					message_ref:      messageRef,
+				}),
+			}).catch(() => {});
+		} catch (e) { /* never disrupt the chat over telemetry */ }
 	}
 
 	// ── Product cards ─────────────────────────────────────────────────────────

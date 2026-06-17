@@ -194,6 +194,44 @@ final class Fahad_AI_API_Handler {
 	}
 
 	// =========================================================================
+	// Reply feedback / guardrail telemetry (#50) — no agent, no PII
+	// =========================================================================
+
+	/**
+	 * Record a 👍/👎 rating for a bot reply (issue #50).
+	 *
+	 * The widget POSTs a rating ('up'|'down'), an optional short reason, and opaque
+	 * conversation/message refs. The handler validates the rating, hands the raw
+	 * strings to Fahad_AI_Feedback (which sanitizes, length-caps, stores NO PII,
+	 * auto-flags a 👎, and enforces retention), and echoes back the stored id so the
+	 * client can reflect the chosen state. An invalid rating is a 400 before anything
+	 * is stored. Gated by authorize_request() (nonce + rate limit) like the chat
+	 * endpoints; it returns JSON, not SSE.
+	 */
+	public function handle_feedback( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		$rating = sanitize_key( (string) $request->get_param( 'rating' ) );
+
+		if ( ! in_array( $rating, [ Fahad_AI_Feedback::RATING_UP, Fahad_AI_Feedback::RATING_DOWN ], true ) ) {
+			return new WP_Error(
+				'fahad_ai_invalid_rating',
+				__( 'A valid rating is required.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Sanitization + length caps + PII exclusion all live in the store; pass the
+		// raw param values through (the store is the single place that bounds them).
+		$result = Fahad_AI_Feedback::instance()->record(
+			$rating,
+			(string) $request->get_param( 'reason' ),
+			(string) $request->get_param( 'conversation_ref' ),
+			(string) $request->get_param( 'message_ref' )
+		);
+
+		return rest_ensure_response( $result );
+	}
+
+	// =========================================================================
 	// Anthropic (Claude) — tool_use / end_turn
 	// =========================================================================
 

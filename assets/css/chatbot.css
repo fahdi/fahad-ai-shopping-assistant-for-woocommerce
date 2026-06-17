@@ -636,6 +636,70 @@ a.chatbot-compare-name:hover {
 	margin:      2px 4px 2px 0;
 }
 
+/* ── Reply feedback / thumbs (#50) ────────────────────────────────────────────
+   A small toolbar appended under a finalized bot reply: a muted prompt + two real
+   toggle buttons (👍/👎). The selected state is conveyed by border weight + a
+   background tint AND the aria-pressed state AND which glyph was chosen — never by
+   colour alone (WCAG 1.4.1). The muted prompt uses --chatbot-muted (>=4.5:1). */
+.chatbot-feedback {
+	display:     flex;
+	align-items: center;
+	gap:         6px;
+	margin:      4px 0 2px 2px;
+	flex-wrap:   wrap;
+}
+
+.chatbot-feedback-prompt,
+.chatbot-feedback-status {
+	font-size: 12px;
+	color:     var(--chatbot-muted);
+}
+
+.chatbot-feedback-btn {
+	display:         inline-flex;
+	align-items:     center;
+	justify-content: center;
+	min-width:       32px;
+	min-height:      32px;
+	padding:         2px 6px;
+	font-size:       14px;
+	line-height:     1;
+	background:      transparent;
+	border:          1px solid var(--chatbot-border);
+	border-radius:   7px;
+	cursor:          pointer;
+}
+
+.chatbot-feedback-btn:hover:not([disabled]) {
+	border-color: var(--chatbot-accent);
+}
+
+/* Accent-independent dark focus ring on a white spacer — perceivable on any accent
+   (matches the card controls, WCAG 2.4.7). */
+.chatbot-feedback-btn:focus-visible {
+	outline:        2px solid #1a1a1a;
+	outline-offset: 2px;
+	box-shadow:     0 0 0 4px #ffffff;
+}
+
+/* Chosen rating: heavier accent border + tint. Not colour-alone — the disabled
+   state, the aria-pressed value, and the picked glyph also signal the selection. */
+.chatbot-feedback-btn.is-selected {
+	border-color: var(--chatbot-accent);
+	border-width: 2px;
+	background:   var(--chatbot-bot-bubble);
+}
+
+.chatbot-feedback-btn[disabled] {
+	cursor:  default;
+	opacity: 1; /* keep contrast — don't grey out the chosen toggle */
+}
+
+/* The unpicked button fades once a choice is made so the selection reads clearly. */
+.chatbot-feedback-btn[disabled]:not(.is-selected) {
+	opacity: .45;
+}
+
 /* ── Reduced motion safety net ────────────────────────────────────────────────
    Non-essential transitions/animations are opt-in via the no-preference queries
    above; this scoped catch-all neutralises anything that slips through (e.g. a

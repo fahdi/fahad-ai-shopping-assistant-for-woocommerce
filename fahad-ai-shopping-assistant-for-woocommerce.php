@@ -24,6 +24,7 @@ define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
 require_once FAHAD_AI_PATH . 'includes/class-auth.php';
+require_once FAHAD_AI_PATH . 'includes/class-feedback.php';
 require_once FAHAD_AI_PATH . 'includes/class-tool-registry.php';
 require_once FAHAD_AI_PATH . 'includes/class-tools.php';
 require_once FAHAD_AI_PATH . 'includes/class-api-handler.php';
@@ -64,6 +65,14 @@ final class Fahad_AI_Chatbot {
 		register_rest_route( 'fahad-ai/v1', '/cart', [
 			'methods'             => 'POST',
 			'callback'            => [ Fahad_AI_API_Handler::instance(), 'handle_cart_action' ],
+			'permission_callback' => [ $this, 'authorize_request' ],
+		] );
+		// Reply feedback / guardrail telemetry (#48 sibling, #50): the 👍/👎 controls
+		// on each bot reply POST here. Same gate as the chat endpoints (nonce + rate
+		// limit); telemetry-only, stores no PII.
+		register_rest_route( 'fahad-ai/v1', '/feedback', [
+			'methods'             => 'POST',
+			'callback'            => [ Fahad_AI_API_Handler::instance(), 'handle_feedback' ],
 			'permission_callback' => [ $this, 'authorize_request' ],
 		] );
 	}
@@ -178,6 +187,7 @@ final class Fahad_AI_Chatbot {
 			'apiUrl'      => rest_url( 'fahad-ai/v1/message' ),
 			'streamUrl'   => rest_url( 'fahad-ai/v1/stream' ),
 			'cartUrl'     => rest_url( 'fahad-ai/v1/cart' ),
+			'feedbackUrl' => rest_url( 'fahad-ai/v1/feedback' ),
 			'provider'    => get_option( 'fahad_ai_provider', 'anthropic' ),
 			'nonce'       => wp_create_nonce( 'wp_rest' ),
 			'botName'     => get_option( 'fahad_ai_bot_name', __( 'Store Assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ) ),
@@ -230,6 +240,11 @@ final class Fahad_AI_Chatbot {
 				'comparisonRating'   => __( 'Rating', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'comparisonStock'    => __( 'Availability', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'comparisonIntro'    => __( 'Here is how they compare:', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				// Reply feedback / thumbs (issue #50).
+				'feedbackPrompt'     => __( 'Was this helpful?', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'feedbackUp'         => __( 'Mark this reply as helpful', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'feedbackDown'       => __( 'Mark this reply as not helpful', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'feedbackThanks'     => __( 'Thanks for the feedback.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			],
 		] );
 	}

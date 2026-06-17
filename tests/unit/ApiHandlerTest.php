@@ -136,6 +136,72 @@ class ApiHandlerTest extends TestCase {
         $this->assertTrue( is_wp_error( $result ), 'Unknown cart action must return a WP_Error.' );
     }
 
+    // ── reply feedback endpoint (#50) ────────────────────────────────────────────
+    // POST fahad-ai/v1/feedback → handle_feedback(): validates the rating, sanitizes
+    // the optional reason + opaque conversation/message refs, and delegates to the
+    // Fahad_AI_Feedback store (option-backed, telemetry-only, NO PII). A junk rating
+    // is rejected with a 400 before anything is stored; a valid rating is recorded
+    // and the store's id is echoed back so the client can reflect the chosen state.
+
+    /**
+     * Back handle_feedback's Fahad_AI_Feedback store with the in-memory option map so
+     * these endpoint tests assert what was persisted end-to-end (the handler is on a
+     * `final` class, so we drive the real store rather than mocking it).
+     */
+    private function feedback_option_seam(): void {
+        Functions\when( 'get_option' )->alias( fn( $name, $default = false ) => $this->options[ $name ] ?? $default );
+        Functions\when( 'update_option' )->alias( function ( $name, $value ) {
+            $this->options[ $name ] = $value;
+            return true;
+        } );
+    }
+
+    /** In-memory WP options stand-in for the feedback endpoint tests. */
+    private array $options = [];
+
+    private function feedback_request( $rating, string $reason = '', string $conv = '', string $msg = '' ) {
+        $req = Mockery::mock( 'WP_REST_Request' );
+        $req->shouldReceive( 'get_param' )->with( 'rating' )->andReturn( $rating );
+        $req->shouldReceive( 'get_param' )->with( 'reason' )->andReturn( $reason );
+        $req->shouldReceive( 'get_param' )->with( 'conversation_ref' )->andReturn( $conv );
+        $req->shouldReceive( 'get_param' )->with( 'message_ref' )->andReturn( $msg );
+        return $req;
+    }
+
+    public function test_handle_feedback_rejects_an_invalid_rating(): void {
+        Functions\when( 'sanitize_key' )->returnArg();
+        Functions\when( 'sanitize_text_field' )->returnArg();
+        Functions\when( 'sanitize_textarea_field' )->returnArg();
+        $this->options = [];
+        $this->feedback_option_seam();
+
+        $result = $this->handler()->handle_feedback( $this->feedback_request( 'sideways', '', 'c1', 'm1' ) );
+
+        $this->assertTrue( is_wp_error( $result ), 'A junk rating must return a WP_Error.' );
+        // Nothing persisted for a bad rating.
+        $this->assertSame( [], $this->options[ Fahad_AI_Feedback::OPTION ] ?? [] );
+    }
+
+    public function test_handle_feedback_stores_a_valid_rating_and_returns_ok(): void {
+        Functions\when( 'sanitize_key' )->returnArg();
+        Functions\when( 'sanitize_text_field' )->returnArg();
+        Functions\when( 'sanitize_textarea_field' )->returnArg();
+        Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid-fixed' );
+        $this->options = [];
+        $this->feedback_option_seam();
+        $this->stub_rest_ensure_response();
+        // Reset the store singleton so it reads our seam, not a prior test's.
+        ( new ReflectionProperty( Fahad_AI_Feedback::class, 'instance' ) )->setValue( null, null );
+
+        $result = $this->handler()->handle_feedback( $this->feedback_request( 'down', 'wrong answer', 'conv-1', 'msg-1' ) );
+        $data   = $this->response_data( $result );
+
+        $this->assertTrue( $data['ok'] ?? false, 'A valid rating must be accepted.' );
+        $rows = $this->options[ Fahad_AI_Feedback::OPTION ] ?? [];
+        $this->assertCount( 1, $rows, 'Exactly one feedback row must be persisted.' );
+        $this->assertSame( 'down', reset( $rows )['rating'] );
+    }
+
     // ── sanitize_messages ─────────────────────────────────────────────────────
 
     public function test_user_role_is_allowed(): void {

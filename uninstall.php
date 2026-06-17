@@ -22,6 +22,9 @@ $fahad_ai_options = [
 	// Back-in-stock / price-drop alert subscriptions (issue #51). Holds subscriber
 	// emails (PII), so removing it on uninstall is part of the GDPR story.
 	'fahad_ai_stock_alert_subs',
+	// Reply feedback / guardrail telemetry (issue #50). A bounded, rolling window of
+	// thumbs ratings (no PII); removed on uninstall like every other fahad_ai_ option.
+	'fahad_ai_feedback',
 ];
 
 foreach ( $fahad_ai_options as $fahad_ai_option ) {
