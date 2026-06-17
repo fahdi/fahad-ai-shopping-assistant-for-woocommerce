@@ -847,12 +847,25 @@
 		return select;
 	}
 
+	// Decode HTML entities (e.g. &#8360; for the ₨ sign) to their real characters.
+	// Uses a textarea, which decodes its content as TEXT only — no markup is parsed
+	// or executed — so the result is safe to pass through the HTML escaping below.
+	function decodeEntities(str) {
+		const ta = document.createElement('textarea');
+		ta.innerHTML = String(str);
+		return ta.value;
+	}
+
 	// Safely render markdown links and bold from AI responses.
 	// 1. Escape all HTML first so no raw markup can slip through.
 	// 2. Convert [text](url) — same-origin URLs only — to <a> elements.
 	// 3. Convert **text** to <strong>.
 	// 4. Convert newlines to <br>.
 	function renderMarkdown(text) {
+		// Decode entities (currency symbols, etc.) FIRST, then escape HTML below so a
+		// model-emitted &#8360; renders as ₨ while this stays XSS-safe.
+		text = decodeEntities(String(text));
+
 		// Step 1: escape HTML
 		let html = String(text)
 			.replace(/&/g,  '&amp;')

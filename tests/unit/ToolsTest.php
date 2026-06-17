@@ -121,6 +121,38 @@ class ToolsTest extends TestCase {
         $this->tools()->execute( 'search_products', [ 'min_price' => 10, 'max_price' => 50 ] );
     }
 
+    // ── search relaxation: plurals & adjective-laden queries (live-QA finding) ──
+
+    public function test_search_relaxes_plural_query_to_find_product(): void {
+        // "hoodies" must surface the "Premium Pullover Hoodie" even though WooCommerce's
+        // literal substring search misses the plural ("hoodies" is not in the title).
+        $this->aliasCatalogSearch( [ 38 => 'Premium Pullover Hoodie', 14 => 'Running Sneakers' ] );
+
+        $result = $this->tools()->execute( 'search_products', [ 'query' => 'hoodies' ] );
+
+        $this->assertSame( 1, $result['found'] );
+        $this->assertSame( 38, $result['products'][0]['id'] );
+    }
+
+    public function test_search_relaxes_adjective_laden_query(): void {
+        // A shopper phrase ("Medium Black Premium Pullover Hoodie") should drop the
+        // size/colour words and still resolve the product.
+        $this->aliasCatalogSearch( [ 38 => 'Premium Pullover Hoodie', 14 => 'Running Sneakers' ] );
+
+        $result = $this->tools()->execute( 'search_products', [ 'query' => 'Medium Black Premium Pullover Hoodie' ] );
+
+        $this->assertSame( 38, $result['products'][0]['id'] );
+    }
+
+    public function test_search_does_not_overbroaden_for_nonsense(): void {
+        // Relaxation must not turn a genuine no-match into "return everything".
+        $this->aliasCatalogSearch( [ 38 => 'Premium Pullover Hoodie', 14 => 'Running Sneakers' ] );
+
+        $result = $this->tools()->execute( 'search_products', [ 'query' => 'zzzznope' ] );
+
+        $this->assertSame( 0, $result['found'] );
+    }
+
     public function test_search_product_summary_contains_required_fields(): void {
         $product = $this->mockProduct( 7, 'T-Shirt', '29.99' );
         Functions\when( 'wc_get_products' )->justReturn( [ $product ] );
@@ -540,6 +572,34 @@ class ToolsTest extends TestCase {
         $p->shouldReceive( 'get_average_rating' )->andReturn( '4.5' )->byDefault();
         $p->shouldReceive( 'get_review_count' )->andReturn( 8 )->byDefault();
         return $p;
+    }
+
+    /**
+     * Alias wc_get_products() to a WooCommerce-like AND-substring search over a small
+     * { id => name } catalog, so search relaxation can be tested deterministically:
+     * every word in 's' must be a substring of the product name (mirrors WP search).
+     */
+    private function aliasCatalogSearch( array $catalog ): void {
+        $self = $this;
+        Functions\when( 'wc_get_products' )->alias( function ( array $args ) use ( $catalog, $self ): array {
+            $s   = isset( $args['s'] ) ? trim( (string) $args['s'] ) : '';
+            $out = [];
+            foreach ( $catalog as $id => $name ) {
+                $match = true;
+                if ( '' !== $s ) {
+                    foreach ( preg_split( '/\s+/', strtolower( $s ) ) as $word ) {
+                        if ( '' !== $word && false === strpos( strtolower( $name ), $word ) ) {
+                            $match = false;
+                            break;
+                        }
+                    }
+                }
+                if ( $match ) {
+                    $out[] = $self->mockProduct( (int) $id, $name, '45' );
+                }
+            }
+            return $out;
+        } );
     }
 
     /**

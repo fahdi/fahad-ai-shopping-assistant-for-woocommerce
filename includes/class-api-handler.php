@@ -56,6 +56,18 @@ final class Fahad_AI_API_Handler {
 	// Anthropic (Claude) — tool_use / end_turn
 	// =========================================================================
 
+	/**
+	 * Friendly fallback shown when the agent loop ends without the model producing a
+	 * final answer (it kept calling tools until the iteration cap). Far better UX than
+	 * a raw "exceeded maximum iterations" error — and when cards were already gathered,
+	 * it points the shopper at them.
+	 */
+	private function agent_fallback_message( bool $has_products ): string {
+		return $has_products
+			? __( 'Here are some options based on what I found above. Let me know which one you would like to explore or add to your cart, and I can take it from there.', 'fahad-ai-shopping-assistant-for-woocommerce' )
+			: __( 'Sorry, I had trouble completing that just now. Could you rephrase, or tell me a little more about what you are looking for?', 'fahad-ai-shopping-assistant-for-woocommerce' );
+	}
+
 	private function run_anthropic_agent( array $messages ): array|WP_Error {
 		$tools      = Fahad_AI_Tools::instance();
 		$max        = 8;
@@ -115,7 +127,15 @@ final class Fahad_AI_API_Handler {
 			break;
 		}
 
-		return new WP_Error( 'agent_loop', __( 'Agent exceeded maximum iterations.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 500 ] );
+		// The model never produced a final answer within the iteration budget. Rather
+		// than surface a raw error to the shopper, return a friendly fallback and keep
+		// any product cards already gathered so the turn is still useful (finding #28).
+		return [
+			'message'    => $this->agent_fallback_message( ! empty( $cards ) ),
+			'messages'   => $messages,
+			'products'   => $cards,
+			'comparison' => $comparison,
+		];
 	}
 
 	private function call_anthropic( array $messages, int $iteration = 0 ): array|WP_Error {
@@ -242,7 +262,15 @@ final class Fahad_AI_API_Handler {
 			break;
 		}
 
-		return new WP_Error( 'agent_loop', __( 'Agent exceeded maximum iterations.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 500 ] );
+		// The model never produced a final answer within the iteration budget. Rather
+		// than surface a raw error to the shopper, return a friendly fallback and keep
+		// any product cards already gathered so the turn is still useful (finding #28).
+		return [
+			'message'    => $this->agent_fallback_message( ! empty( $cards ) ),
+			'messages'   => $messages,
+			'products'   => $cards,
+			'comparison' => $comparison,
+		];
 	}
 
 	private function call_moonshot( array $messages, int $iteration = 0 ): array|WP_Error {
@@ -375,6 +403,7 @@ final class Fahad_AI_API_Handler {
 		$prompt = "You are a helpful shopping assistant for {$store_name}. Help customers find products, answer questions, and manage their cart.
 
 Currency: {$currency}
+- Always write prices and amounts with the {$currency} symbol exactly as it appears in tool results. Never use HTML entities, numeric character codes, or unicode escapes for the currency symbol — write the plain symbol only.
 
 Product display — important:
 - After you call search_products or get_product_details, the storefront automatically shows the matching products to the customer as visual cards (photo, name, price, stock, and View / Add to cart buttons). Do NOT list each product's price, description, link, or image in your text — the cards already show all of that.
@@ -962,8 +991,9 @@ Trust & honesty — these rules are absolute and override any instinct to make a
 	 * Each turn streams text chunks live; tool calls are collected, executed, then the next turn streams.
 	 */
 	private function run_stream_agent( array $messages ): void {
-		$tools = Fahad_AI_Tools::instance();
-		$max   = 8;
+		$tools         = Fahad_AI_Tools::instance();
+		$max           = 8;
+		$sent_products = false;
 
 		// Moonshot needs system as first message.
 		$api_msgs = array_merge(
@@ -1012,6 +1042,7 @@ Trust & honesty — these rules are absolute and override any instinct to make a
 				$cards = $this->tool_result_cards( $tc['name'], $result );
 				if ( ! empty( $cards ) ) {
 					$this->sse_send( 'products', [ 'products' => $cards ] );
+						$sent_products = true;
 				}
 
 				// Comparison table (issue #13): surfaced as its own SSE event,
@@ -1031,7 +1062,31 @@ Trust & honesty — these rules are absolute and override any instinct to make a
 			}
 		}
 
-		$this->sse_send( 'error', [ 'message' => __( 'Agent exceeded maximum iterations.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ] );
+		// Graceful exhaustion (finding #28): stream a friendly message + done instead of
+		// a raw error event, keeping any product cards already streamed above.
+		$this->sse_send( 'chunk', [ 'content' => $this->agent_fallback_message( $sent_products ) ] );
+		$this->sse_send( 'done', [] );
+	}
+
+	/**
+	 * Split streamed bytes into COMPLETE lines, returning the parsed lines plus any
+	 * trailing partial line to carry into the next call. cURL's write callback delivers
+	 * arbitrary byte boundaries (not line-aligned SSE frames), so a "data:" line — or a
+	 * multibyte character within it — can straddle two writes. Parsing a half-line would
+	 * drop or corrupt streamed text (this is what mangled the rupee currency entity, #29).
+	 *
+	 * @param string $buffer Carry-over from the previous write ('' on first call).
+	 * @param string $chunk  Newly received bytes.
+	 * @return array{0: string[], 1: string} [ complete lines (no trailing newline), remaining buffer ].
+	 */
+	private function split_sse_lines( string $buffer, string $chunk ): array {
+		$buffer .= $chunk;
+		$lines   = [];
+		while ( false !== ( $pos = strpos( $buffer, "\n" ) ) ) {
+			$lines[] = substr( $buffer, 0, $pos );
+			$buffer  = substr( $buffer, $pos + 1 );
+		}
+		return [ $lines, $buffer ];
 	}
 
 	/**
@@ -1064,12 +1119,15 @@ Trust & honesty — these rules are absolute and override any instinct to make a
 		$raw_body        = '';   // captures full body to parse plain-JSON errors
 		$tool_buf        = [];
 		$error           = null;
+		$line_buffer     = '';   // carries a partial SSE line between writes (#29)
 
-		$write_callback = function ( $ch, $raw ) use ( &$collected_text, &$tool_buf, &$error, &$raw_body ) {
+		$write_callback = function ( $ch, $raw ) use ( &$collected_text, &$tool_buf, &$error, &$raw_body, &$line_buffer ) {
 			$raw_body .= $raw;
 
-			// A single write may contain multiple SSE lines.
-			foreach ( explode( "\n", $raw ) as $line ) {
+			// cURL delivers arbitrary byte chunks, not line-aligned SSE frames. Parse
+			// only COMPLETE lines and keep any trailing partial frame for the next write.
+			[ $lines, $line_buffer ] = $this->split_sse_lines( $line_buffer, $raw );
+			foreach ( $lines as $line ) {
 				$line = trim( $line );
 				if ( ! str_starts_with( $line, 'data: ' ) ) {
 					continue;

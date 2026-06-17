@@ -833,4 +833,43 @@ final class GoldenConversationTest extends TestCase {
 			EvalHarness::abstains( 'Here are a couple of great running shoes — take a look below.' )
 		);
 	}
+
+	// ── agent-loop exhaustion is graceful (live-QA finding #28) ──────────────────
+
+	/**
+	 * When the model keeps calling tools and never ends the turn, the loop must NOT
+	 * surface a raw "Agent exceeded maximum iterations." error to the shopper. It
+	 * returns a friendly fallback message instead — and never a WP_Error.
+	 */
+	public function test_anthropic_loop_exhaustion_returns_friendly_message(): void {
+		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_woocommerce( [] );
+
+		// 12 tool turns (> max): the model thrashes and never reaches end_turn.
+		EvalHarness::script_transport( array_fill( 0, 12,
+			EvalHarness::anthropic_tool_turn( [ [ 'name' => 'search_products', 'input' => [ 'query' => 'zzz' ] ] ] )
+		) );
+
+		$run = EvalHarness::run( 'anthropic', [ [ 'role' => 'user', 'content' => 'hi' ] ] );
+
+		$this->assertFalse( is_wp_error( $run['result'] ), 'Exhaustion must not surface a WP_Error.' );
+		$this->assertNotSame( '', $run['answer'], 'A friendly fallback message must be returned.' );
+		$this->assertStringNotContainsStringIgnoringCase( 'exceeded maximum iterations', $run['answer'] );
+	}
+
+	/** Same graceful exhaustion for the Moonshot (OpenAI-shaped) loop. */
+	public function test_moonshot_loop_exhaustion_returns_friendly_message(): void {
+		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'moonshot' ] );
+		EvalHarness::stub_woocommerce( [] );
+
+		EvalHarness::script_transport( array_fill( 0, 12,
+			EvalHarness::moonshot_tool_turn( [ [ 'name' => 'search_products', 'input' => [ 'query' => 'zzz' ] ] ] )
+		) );
+
+		$run = EvalHarness::run( 'moonshot', [ [ 'role' => 'user', 'content' => 'hi' ] ] );
+
+		$this->assertFalse( is_wp_error( $run['result'] ), 'Exhaustion must not surface a WP_Error.' );
+		$this->assertNotSame( '', $run['answer'] );
+		$this->assertStringNotContainsStringIgnoringCase( 'exceeded maximum iterations', $run['answer'] );
+	}
 }

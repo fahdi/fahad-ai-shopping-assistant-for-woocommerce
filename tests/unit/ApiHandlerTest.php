@@ -62,6 +62,54 @@ class ApiHandlerTest extends TestCase {
         return Fahad_AI_API_Handler::instance();
     }
 
+    // ── SSE line buffering (live-QA finding #29) ────────────────────────────────
+    // cURL's write callback delivers arbitrary byte chunks, not line-aligned SSE
+    // frames. Parsing a half-received "data:" line drops/corrupts streamed text
+    // (this is what mangled the rupee currency entity). split_sse_lines() must
+    // return only COMPLETE lines and buffer the trailing partial for the next write.
+
+    public function test_split_sse_lines_reassembles_frame_split_across_writes(): void {
+        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'split_sse_lines' );
+        $h = $this->handler();
+
+        // First write ends mid-frame: only the first line is complete.
+        [ $lines, $buffer ] = $m->invoke( $h, '', "data: {\"a\":1}\ndata: {\"b\":" );
+        $this->assertSame( [ 'data: {"a":1}' ], $lines );
+        $this->assertSame( 'data: {"b":', $buffer );
+
+        // Second write completes the buffered frame.
+        [ $lines2, $buffer2 ] = $m->invoke( $h, $buffer, "2}\n" );
+        $this->assertSame( [ 'data: {"b":2}' ], $lines2 );
+        $this->assertSame( '', $buffer2 );
+    }
+
+    public function test_split_sse_lines_preserves_multibyte_split_across_writes(): void {
+        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'split_sse_lines' );
+        $h = $this->handler();
+
+        // The rupee sign (U+20A8) is three UTF-8 bytes; split it across two writes.
+        $rupee = "\xE2\x82\xA8";
+
+        [ $lines, $buffer ] = $m->invoke( $h, '', 'data: {"c":"' . substr( $rupee, 0, 1 ) );
+        $this->assertSame( [], $lines, 'No complete line yet — partial frame must be buffered.' );
+
+        [ $lines2 ] = $m->invoke( $h, $buffer, substr( $rupee, 1 ) . "\"}\n" );
+        $this->assertSame( [ 'data: {"c":"' . $rupee . '"}' ], $lines2 );
+    }
+
+    // ── system prompt nudges plain currency symbols (live-QA finding #29) ───────
+    // The model sometimes emitted a numeric HTML entity for ₨ (and occasionally a
+    // malformed one); the prompt now tells it to write the plain symbol instead.
+
+    public function test_system_prompt_forbids_currency_entities(): void {
+        Functions\when( 'apply_filters' )->alias( fn( $tag, $value ) => $value );
+
+        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+            ->invoke( $this->handler() );
+
+        $this->assertStringContainsString( 'Never use HTML entities', $prompt );
+    }
+
     // ── sanitize_messages ─────────────────────────────────────────────────────
 
     public function test_user_role_is_allowed(): void {

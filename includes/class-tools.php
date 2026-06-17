@@ -113,29 +113,40 @@ final class Fahad_AI_Tools {
 	// -------------------------------------------------------------------------
 
 	private function search_products( array $input ): array {
-		$args = [
+		$base = [
 			'status'  => 'publish',
 			'limit'   => min( (int) ( $input['limit'] ?? 5 ), 10 ),
 			'orderby' => 'relevance',
 		];
 
-		if ( ! empty( $input['query'] ) ) {
-			$args['s'] = sanitize_text_field( $input['query'] );
-		}
-
 		if ( ! empty( $input['category'] ) ) {
-			$args['category'] = [ sanitize_text_field( $input['category'] ) ];
+			$base['category'] = [ sanitize_text_field( $input['category'] ) ];
 		}
 
 		if ( isset( $input['min_price'] ) ) {
-			$args['min_price'] = (float) $input['min_price'];
+			$base['min_price'] = (float) $input['min_price'];
 		}
 
 		if ( isset( $input['max_price'] ) ) {
-			$args['max_price'] = (float) $input['max_price'];
+			$base['max_price'] = (float) $input['max_price'];
 		}
 
-		$products = wc_get_products( $args );
+		$query    = ! empty( $input['query'] ) ? sanitize_text_field( $input['query'] ) : '';
+		$products = $this->query_products( $base, $query );
+
+		// Shoppers type plurals ("hoodies") and adjective-laden phrases ("medium black
+		// hoodie") that WooCommerce's literal AND substring search misses. When an exact
+		// query finds nothing, relax it before giving up. Relaxation only ever runs after
+		// the exact search already failed, so a genuine match is never diluted.
+		if ( empty( $products ) && '' !== $query ) {
+			$relaxed = $this->relax_query( $query );
+			if ( '' !== $relaxed && $relaxed !== strtolower( $query ) ) {
+				$products = $this->query_products( $base, $relaxed );
+			}
+			if ( empty( $products ) ) {
+				$products = $this->token_search( $base, $query );
+			}
+		}
 
 		if ( empty( $products ) ) {
 			return [
@@ -149,6 +160,90 @@ final class Fahad_AI_Tools {
 			'found'    => count( $products ),
 			'products' => array_map( [ $this, 'format_product_summary' ], $products ),
 		];
+	}
+
+	/**
+	 * Run one product query, attaching the search term only when it is non-empty.
+	 *
+	 * @param array  $base  Base wc_get_products args (status/limit/filters).
+	 * @param string $query Search term, or '' for no text constraint.
+	 */
+	private function query_products( array $base, string $query ): array {
+		if ( '' !== $query ) {
+			$base['s'] = $query;
+		}
+		return wc_get_products( $base );
+	}
+
+	/**
+	 * Significant search words: lowercased, de-pluralised, with size/colour/filler
+	 * words dropped. Used only to relax a search that already returned nothing.
+	 *
+	 * @return string[] Unique stems in first-seen order.
+	 */
+	private function search_terms( string $query ): array {
+		static $stop = [
+			// Sizes.
+			'xs', 's', 'm', 'l', 'xl', 'xxl', 'small', 'medium', 'large', 'extra',
+			// Colours.
+			'black', 'white', 'navy', 'blue', 'red', 'green', 'grey', 'gray', 'pink', 'yellow', 'brown', 'purple', 'orange',
+			// Filler.
+			'the', 'a', 'an', 'of', 'for', 'with', 'in', 'to', 'me', 'my', 'show', 'do', 'you', 'have', 'any', 'please', 'want', 'looking', 'need', 'some', 'one', 'find', 'get',
+		];
+
+		$words = preg_split( '/[^a-z0-9]+/', strtolower( $query ), -1, PREG_SPLIT_NO_EMPTY );
+		$terms = [];
+		foreach ( (array) $words as $word ) {
+			if ( in_array( $word, $stop, true ) ) {
+				continue;
+			}
+			if ( strlen( $word ) > 3 && 's' === $word[ strlen( $word ) - 1 ] ) {
+				$word = substr( $word, 0, -1 ); // Drop a trailing plural "s"; substring search forgives the stem.
+			}
+			$terms[] = $word;
+		}
+		return array_values( array_unique( $terms ) );
+	}
+
+	/**
+	 * Relaxed AND query: the significant stems joined back into one search string.
+	 */
+	private function relax_query( string $query ): string {
+		return implode( ' ', $this->search_terms( $query ) );
+	}
+
+	/**
+	 * Last-ditch OR search: match ANY significant term, ranked by how many terms each
+	 * product hits, so "sneakers jacket" still surfaces the closest products instead of
+	 * nothing. Bounded by the same limit as the primary search.
+	 */
+	private function token_search( array $base, string $query ): array {
+		$terms = $this->search_terms( $query );
+		if ( empty( $terms ) ) {
+			return [];
+		}
+
+		$scored = [];
+		foreach ( $terms as $term ) {
+			foreach ( $this->query_products( $base, $term ) as $product ) {
+				$id = $product->get_id();
+				if ( ! isset( $scored[ $id ] ) ) {
+					$scored[ $id ] = [ 'score' => 0, 'product' => $product ];
+				}
+				++$scored[ $id ]['score'];
+			}
+		}
+
+		if ( empty( $scored ) ) {
+			return [];
+		}
+
+		usort( $scored, fn( $a, $b ) => $b['score'] <=> $a['score'] );
+
+		return array_map(
+			fn( $entry ) => $entry['product'],
+			array_slice( $scored, 0, (int) ( $base['limit'] ?? 5 ) )
+		);
 	}
 
 	private function get_product_details( array $input ): array {
