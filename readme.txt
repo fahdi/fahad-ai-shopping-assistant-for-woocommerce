@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 2.7.0
+Stable tag: 2.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -47,12 +47,16 @@ Fahad AI Shopping Assistant adds an intelligent shopping assistant widget to you
 
 **External services:**
 
-This plugin sends conversation data to third-party AI APIs:
+This plugin sends conversation data only to the single AI provider you select in Settings and configure with an API key. Every provider is opt-in; nothing is sent until you choose and configure one.
 
-* Anthropic Messages API (`api.anthropic.com`) — when the Anthropic provider is selected. [Privacy policy](https://www.anthropic.com/legal/privacy).
-* Moonshot AI API (`api.moonshot.ai`) — when the Moonshot provider is selected. [Privacy policy](https://www.moonshot.ai/privacy).
+* Anthropic Messages API (`api.anthropic.com`). [Privacy policy](https://www.anthropic.com/legal/privacy).
+* Moonshot AI (`api.moonshot.ai` / `api.moonshot.cn`). [Privacy policy](https://www.moonshot.ai/privacy).
+* OpenAI (`api.openai.com`). [Privacy policy](https://openai.com/policies/privacy-policy/).
+* Google Gemini (`generativelanguage.googleapis.com`). [Privacy policy](https://policies.google.com/privacy).
+* Groq (`api.groq.com`), Mistral (`api.mistral.ai`), DeepSeek (`api.deepseek.com`), xAI (`api.x.ai`), Together AI (`api.together.xyz`), OpenRouter (`openrouter.ai`), Perplexity (`api.perplexity.ai`) — each used only when you select it; review that provider's own privacy policy before enabling it.
+* A custom OpenAI-compatible endpoint you enter yourself, or a local model served via Ollama (`localhost`, no data leaves your server).
 
-Only conversation history and product data relevant to the current session are transmitted. No personal customer data is sent unless the customer types it into the chat.
+Only conversation history and product data relevant to the current session are transmitted, and only to the provider you selected. No personal customer data is sent unless the customer types it into the chat.
 
 == Installation ==
 
@@ -96,6 +100,14 @@ The conversation history (user messages and assistant replies) and the results o
 2. Admin settings — provider and API key configuration
 
 == Changelog ==
+
+= 2.8.0 =
+Support for all major AI providers.
+
+* Choose your AI provider in Settings: **OpenAI** (GPT), **Google Gemini**, **Groq**, **Mistral**, **DeepSeek**, **xAI (Grok)**, **Together**, **OpenRouter**, **Perplexity**, a **local model via Ollama**, or any **custom OpenAI-compatible endpoint** — alongside the existing **Anthropic (Claude)** and **Moonshot (Kimi)**.
+* Each provider has its own API key and model setting; the assistant streams replies for the OpenAI-compatible providers and uses the native API for Claude.
+* Automatic failover already extends across whichever providers you've configured: if your chosen one is briefly unavailable, the assistant falls back to another keyed provider, then to search/support — never a dead end.
+* Fully backward compatible: existing Anthropic and Moonshot setups keep working with no changes.
 
 = 2.7.0 =
 Multilingual replies, a PHP 8.1 fix, and developer seams for advanced search & channels.
@@ -226,6 +238,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.8.0 =
+Adds support for all major AI providers — OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI, Together, OpenRouter, Perplexity, local Ollama, and custom OpenAI-compatible endpoints — alongside Claude and Moonshot. Backward compatible; existing setups are unchanged.
 
 = 2.7.0 =
 Adds multilingual replies (incl. Urdu / Roman Urdu), fixes PHP 8.1 compatibility, and adds developer seams for semantic search, WhatsApp, and image search (each needs a provider to activate). Backward compatible.
