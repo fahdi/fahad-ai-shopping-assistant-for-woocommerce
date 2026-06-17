@@ -178,3 +178,60 @@ Rationale: front-load trust (grounding, reviews, eval) and local-data wins; defe
 - **Upsell stance:** how aggressive, and how is it disclosed?
 - **Multilingual priority:** is Urdu/English worth pulling earlier for this store?
 - **Wallet bundling:** ship wallet tools inside this plugin, or as a WalletPro add-on that registers via the hook? (Recommend the latter.)
+
+---
+
+## 10. Post-2.0 — the v2.1+ backlog
+
+**Status:** v2.0.0 shipped the entire "Now/Next" above plus every cross-cutting foundation (eval harness, cost controls, guardrails, auth boundary, accessibility, extensibility). v2.0.1 then hardened them after live-store QA (search relevance, graceful loop exhaustion, currency rendering, guest cart persistence). Tracked as **epic #47**.
+
+Four next-order themes the shipped product + live QA reveal — each sharpens a principle from §1:
+
+- **Actions must be real and verified, not narrated.** QA caught a false "added to cart" (fixed in 2.0.1). A transactional assistant runs deterministic, idempotent, verified actions; the model confirms only what a tool returned.
+- **Own the whole post-purchase loop.** Strong on Discover/Decide/Save; thin on Transact-completion (checkout) and Follow-up (returns, reorder, tracking) — where retention and support-deflection live.
+- **Prove ROI to the merchant.** No owner analytics yet — the #1 commercial gap; the merchant can't justify the API spend without it.
+- **Meet shoppers in their language and channel.** Deployed on a ₨/Pakistan store but English-only and web-widget-only; Urdu/Roman-Urdu and WhatsApp are the biggest reach levers here.
+
+Effort: S ≈ <1d, M ≈ 2–4d, L ≈ week+. Impact: H/M/L.
+
+### Now — high value, mostly local data; several surfaced by live QA
+| Issue | Opportunity | Job | Effort | Impact | Key risk |
+|---|---|---|---|---|---|
+| #48 | Direct, verified cart actions (no agent round-trip) | Transact | M | H | Keep nonce + rate-limit; idempotency |
+| #49 | Owner analytics & "unanswered questions" dashboard | Owner/Measurable | M–L | H | Privacy-safe logging, retention |
+| #50 | Reply feedback (thumbs) + prod guardrail telemetry | Improvable | S–M | M–H | Low |
+| #51 | Back-in-stock & price-drop alerts (consented) | Qualify/Recover | M | H | Consent, deliverability |
+| #52 | Reorder / buy-it-again | Follow-up | S–M | M–H | Auth (boundary exists) |
+
+### Next — differentiation; some need integration
+| Issue | Opportunity | Job | Effort | Impact | Key risk |
+|---|---|---|---|---|---|
+| #53 | Returns / exchange (RMA) assistant | Follow-up/Recover | M–L | H | Money/policy correctness; never auto-refund |
+| #54 | Size/fit advisor (grounded) | Decide | M | M–H | Must ground in data, not guess |
+| #55 | Conversational checkout assist | Transact | M–L | H | Stop at PCI boundary |
+| #56 | Merchant scope/tone/rules config (admin) | Owner/Extensible | M | M–H | Config must not weaken guardrails |
+| #57 | Curated bundles / "complete the look" | Save/Decide | M | M | Relevance; disclose as optional |
+| #58 | Provider failover & graceful degradation | Reliability | S–M | M | Cost/consistency |
+| #59 | GDPR export/erase for the memory pack | Private/safe | S–M | M | Must fully purge |
+
+### Later — platform bets
+| Issue | Opportunity | Job | Effort | Impact | Key risk |
+|---|---|---|---|---|---|
+| #60 | Semantic / vector search | Discover | L | H | Index freshness, embedding cost |
+| #61 | Multilingual (Urdu / Roman Urdu) + locale | All | M–L | H (local) | Non-English answer quality |
+| #62 | Omnichannel — WhatsApp | All | L | H | Platform approval, async UX, cost |
+| #63 | Visual / image search | Discover | L | M | Vision cost/accuracy |
+| #64 | Voice input/output | Accessibility | M–L | L–M | Browser support, cost |
+| #65 | Proactive, consented, value-gated assist | Discover/Recover | M | M | Spam/dark-pattern — guardrail-gated |
+
+### Hardening / chore
+| Issue | Item | Effort |
+|---|---|---|
+| #66 | Live-QA hardening (closing summary, currency normalizer, eval tool-use ids) | S |
+| #67 | Submit current release to WordPress.org (once slug approved) | — |
+
+### Recommended sequencing
+**#49 analytics → #48 direct-cart → #50 thumbs/telemetry → #51 back-in-stock → #52 reorder.** Make value *visible* first (analytics unlocks the commercial case), fix the reliability/cost class the QA exposed (direct-cart), then cheap retention/demand-capture wins on existing infra. Pull **#61 multilingual + #62 WhatsApp** forward if reaching Urdu/WhatsApp shoppers is a near-term business goal. Defer #60/#63 (new infra) until the core advisor's value is measured.
+
+### Delivery rule — release per PR
+Every child ships under the standing workflow (see **CLAUDE.md → "Release workflow — EVERY plugin PR"**): TDD first, semver bump across the four version locations, readme changelog + upgrade notice, branch → PR → merge, build the zip, and publish a GitHub release documenting the change. Each child issue carries its own explicit acceptance criteria + hardening; the shared definition-of-done is in epic #47.

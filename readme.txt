@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,6 +97,12 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.0.2 =
+Maintenance & planning release — no functional plugin changes.
+
+* Documentation: split the developer guide (CLAUDE.md) into focused context docs (docs/plugin.md, docs/ai-assistant.md) and refreshed it for the 2.0.x architecture.
+* Planning: published the v2.1+ opportunity backlog and a standing per-PR release workflow.
+
 = 2.0.1 =
 Bug-fix release from live-store QA of 2.0.0.
 
@@ -174,6 +180,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.0.2 =
+Maintenance release: documentation and internal planning only — no functional changes. Safe to skip if you are on 2.0.1.
 
 = 2.0.1 =
 Fixes from live QA: smarter product search (plurals and descriptive queries), a friendly fallback instead of a raw loop error, correct currency rendering in streamed replies, and add to cart now persists for guests on the streaming provider.
