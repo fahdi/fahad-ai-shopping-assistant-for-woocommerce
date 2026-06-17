@@ -19,6 +19,9 @@ $fahad_ai_options = [
 	'fahad_ai_greeting',
 	'fahad_ai_system_prompt',
 	'fahad_ai_accent_color',
+	// Back-in-stock / price-drop alert subscriptions (issue #51). Holds subscriber
+	// emails (PII), so removing it on uninstall is part of the GDPR story.
+	'fahad_ai_stock_alert_subs',
 ];
 
 foreach ( $fahad_ai_options as $fahad_ai_option ) {
