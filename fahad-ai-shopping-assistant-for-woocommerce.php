@@ -29,6 +29,7 @@ require_once FAHAD_AI_PATH . 'includes/class-analytics.php';
 require_once FAHAD_AI_PATH . 'includes/class-proactive.php';
 require_once FAHAD_AI_PATH . 'includes/class-voice.php';
 require_once FAHAD_AI_PATH . 'includes/class-tool-registry.php';
+require_once FAHAD_AI_PATH . 'includes/class-semantic-search.php';
 require_once FAHAD_AI_PATH . 'includes/class-tools.php';
 require_once FAHAD_AI_PATH . 'includes/class-api-handler.php';
 require_once FAHAD_AI_PATH . 'includes/admin-settings.php';
