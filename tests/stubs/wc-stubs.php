@@ -88,6 +88,12 @@ if ( ! class_exists( 'WC_Product' ) ) {
         // Read by add_to_cart (issue #12) to verify a chosen variation belongs to
         // the product before adding it to the cart.
         public function get_parent_id(): int              { return 0; }
+        // Arbitrary product meta. Read by the size/fit advisor (issue #54) to
+        // surface any size-chart meta a product stores, and by the eval harness's
+        // makePartial() product mock so a fixture that sets no meta falls through to
+        // a safe empty default — the same pattern the rating getters above use. The
+        // WC_Order stub already declares an identical signature for the same reason.
+        public function get_meta( string $key = '', bool $single = true ) { return ''; }
     }
 }
 
