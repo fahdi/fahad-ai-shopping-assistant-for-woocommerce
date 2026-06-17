@@ -14,6 +14,7 @@ require_once dirname( __DIR__ ) . '/includes/class-proactive.php';
 require_once dirname( __DIR__ ) . '/includes/class-voice.php';
 require_once dirname( __DIR__ ) . '/includes/class-tool-registry.php';
 require_once dirname( __DIR__ ) . '/includes/class-semantic-search.php';
+require_once dirname( __DIR__ ) . '/includes/class-visual-search.php';
 require_once dirname( __DIR__ ) . '/includes/class-tools.php';
 
 // Load every drop-in feature tool pack, exactly like the plugin bootstrap. Each

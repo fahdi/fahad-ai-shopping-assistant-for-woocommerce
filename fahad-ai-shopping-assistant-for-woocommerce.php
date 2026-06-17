@@ -30,6 +30,7 @@ require_once FAHAD_AI_PATH . 'includes/class-proactive.php';
 require_once FAHAD_AI_PATH . 'includes/class-voice.php';
 require_once FAHAD_AI_PATH . 'includes/class-tool-registry.php';
 require_once FAHAD_AI_PATH . 'includes/class-semantic-search.php';
+require_once FAHAD_AI_PATH . 'includes/class-visual-search.php';
 require_once FAHAD_AI_PATH . 'includes/class-tools.php';
 require_once FAHAD_AI_PATH . 'includes/class-api-handler.php';
 require_once FAHAD_AI_PATH . 'includes/class-whatsapp.php';
@@ -114,6 +115,13 @@ final class Fahad_AI_Chatbot {
 		// X-Hub-Signature-256 HMAC (POST), enforced inside the handlers. The outbound send
 		// is a pluggable seam (fahad_ai_whatsapp_send); no live Meta call ships in core.
 		Fahad_AI_WhatsApp::instance()->register_routes();
+
+		// Visual / image search — "shop the look" (#63): POST an image to /visual-search and
+		// get visually-similar in-stock products. Same gate as the chat endpoints (nonce +
+		// rate limit), since a vision lookup is billable. The actual image ranking is a
+		// pluggable seam (fahad_ai_visual_retriever); NO live vision API ships in core, so
+		// the route degrades to a graceful "not available" until a provider is registered.
+		Fahad_AI_Visual_Search::instance()->register_routes( [ $this, 'authorize_request' ] );
 	}
 
 	/**
