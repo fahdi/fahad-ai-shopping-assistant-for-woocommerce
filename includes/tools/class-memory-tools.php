@@ -59,6 +59,29 @@ defined( 'ABSPATH' ) || exit;
  * and each value ≤ MAX_VALUE_LENGTH characters, all sanitized. A new key beyond the cap
  * is refused (overwriting an existing key is always allowed, since it does not grow the
  * map). This keeps the stored map — and the injected context — small and predictable.
+ *
+ * ─── GDPR EXPORT / ERASE + RETENTION (issue #59) ───────────────────────────────────
+ *
+ * RETENTION STANCE. This pack stores exactly two per-user meta rows and NOTHING else:
+ * the consent flag (OPTIN_META) and the bounded preferences map (PREFS_META). There is
+ * no separate log, table, or transient — the user's "record" IS those two meta keys.
+ * Data is kept only while the customer remains opted in and chooses to keep it; it is
+ * NOT time-limited, because the customer controls its whole lifetime: forget_preferences
+ * clears it on demand, opting out stops further use, and the data is removed entirely on
+ * account/data erasure. No PII is ever sent to the model (the injected block carries only
+ * the customer's own stated preferences, never an email/name/id).
+ *
+ * The two meta rows participate in WordPress' core privacy tools so a store can fulfil a
+ * subject access / erasure request:
+ *   - register_exporter() hooks `wp_privacy_personal_data_exporters`; gdpr_export()
+ *     resolves the request email to its user and returns that user's consent state + every
+ *     saved preference (the only data this pack holds).
+ *   - register_eraser() hooks `wp_privacy_personal_data_erasers`; gdpr_erase() DELETES
+ *     BOTH meta rows for that user, leaving NO residue (verified by MemoryPrivacyTest).
+ * Both callbacks act ONLY on the user the (core-verified) request email resolves to — an
+ * unknown email is a safe no-op — so they never expose or purge another customer's data.
+ * forget_preferences (the in-chat erasure tool) and WordPress account deletion (which
+ * drops all of a user's meta) likewise leave nothing behind.
  */
 final class Fahad_AI_Memory_Tools {
 
@@ -308,6 +331,149 @@ final class Fahad_AI_Memory_Tools {
 	}
 
 	// -------------------------------------------------------------------------
+	// GDPR: WordPress privacy export / erase (issue #59).
+	//
+	// These wire the pack's two per-user meta rows (consent + preferences) into
+	// WordPress' core "Export personal data" / "Erase personal data" tools. They are
+	// NOT model tools — they are admin-side privacy callbacks invoked by WordPress
+	// after IT has verified the request, so they receive the subject's EMAIL (not a
+	// model-supplied id) and never touch the agent loop or send anything to a model.
+	// The exporter/eraser/group are all keyed by self::PRIVACY_KEY.
+	// -------------------------------------------------------------------------
+
+	/** Stable id used as the export group / eraser / exporter array key. */
+	private const PRIVACY_KEY = 'fahad-ai-memory';
+
+	/**
+	 * Register the personal-data EXPORTER so WordPress' "Export personal data" tool
+	 * includes the user's assistant memory. Hooked to `wp_privacy_personal_data_exporters`.
+	 *
+	 * @param array $exporters Existing exporters.
+	 * @return array Exporters with this pack's exporter added (existing entries kept).
+	 */
+	public static function register_exporter( array $exporters ): array {
+		$exporters[ self::PRIVACY_KEY ] = [
+			'exporter_friendly_name' => __( 'Fahad AI assistant memory', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'callback'               => [ __CLASS__, 'gdpr_export' ],
+		];
+
+		return $exporters;
+	}
+
+	/**
+	 * Register the personal-data ERASER so WordPress' "Erase personal data" tool removes
+	 * the user's assistant memory completely. Hooked to `wp_privacy_personal_data_erasers`.
+	 *
+	 * @param array $erasers Existing erasers.
+	 * @return array Erasers with this pack's eraser added (existing entries kept).
+	 */
+	public static function register_eraser( array $erasers ): array {
+		$erasers[ self::PRIVACY_KEY ] = [
+			'eraser_friendly_name' => __( 'Fahad AI assistant memory', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'callback'             => [ __CLASS__, 'gdpr_erase' ],
+		];
+
+		return $erasers;
+	}
+
+	/**
+	 * EXPORTER callback: return the user's stored preferences + consent state.
+	 *
+	 * WordPress passes the (already-verified) subject EMAIL; we resolve it to a user and
+	 * read ONLY that user's two meta rows — an email with no matching user yields an empty
+	 * export, so another customer's data is never surfaced. The exported items are the
+	 * user's own stated preferences plus a single "Memory consent" Yes/No row; no PII
+	 * (email/name/id) is added beyond what WordPress already associates with the request.
+	 *
+	 * @param string $email_address The subject email being exported.
+	 * @param int    $page          Pagination (single page — all data fits one response).
+	 * @return array{ data: array<int, array<string,mixed>>, done: bool } WP exporter shape.
+	 */
+	public static function gdpr_export( string $email_address, int $page = 1 ): array {
+		$empty   = [ 'data' => [], 'done' => true ];
+		$user_id = self::user_id_for_email( $email_address );
+
+		if ( $user_id <= 0 ) {
+			return $empty;
+		}
+
+		$prefs       = self::read_prefs( $user_id );
+		$has_consent = '' !== get_user_meta( $user_id, self::OPTIN_META, true );
+
+		// No consent record AND no stored preferences → this user has no assistant-memory
+		// personal data, so there is nothing to export (a post-erase user lands here).
+		if ( ! $has_consent && empty( $prefs ) ) {
+			return $empty;
+		}
+
+		$items = [
+			[
+				'name'  => __( 'Memory consent', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'value' => self::has_consent( $user_id )
+					? __( 'Yes', 'fahad-ai-shopping-assistant-for-woocommerce' )
+					: __( 'No', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			],
+		];
+
+		foreach ( $prefs as $key => $value ) {
+			$items[] = [
+				'name'  => (string) $key,
+				'value' => self::sanitize_value( (string) $value ),
+			];
+		}
+
+		return [
+			'data' => [
+				[
+					'group_id'    => self::PRIVACY_KEY,
+					'group_label' => __( 'Assistant memory (saved preferences)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					'item_id'     => self::PRIVACY_KEY . '-' . $user_id,
+					'data'        => $items,
+				],
+			],
+			'done' => true,
+		];
+	}
+
+	/**
+	 * ERASER callback: DELETE all of the user's assistant memory — complete purge.
+	 *
+	 * WordPress passes the (already-verified) subject EMAIL; we resolve it to a user and
+	 * delete BOTH meta rows (preferences AND the consent flag) for that user only, so no
+	 * residue is left for the privacy tool to report. An email with no matching user (or a
+	 * user that never used the feature) is a no-op that reports nothing removed. Mirrors
+	 * the WordPress eraser response shape used by the stock-alerts eraser.
+	 *
+	 * @param string $email_address The subject email being erased.
+	 * @param int    $page          Pagination (single page — we erase everything at once).
+	 * @return array{ items_removed: bool, items_retained: bool, messages: array, done: bool }
+	 */
+	public static function gdpr_erase( string $email_address, int $page = 1 ): array {
+		$user_id = self::user_id_for_email( $email_address );
+
+		$removed = false;
+
+		if ( $user_id > 0 ) {
+			// Did the user have any memory data at all? (so we report accurately).
+			$had_prefs   = '' !== get_user_meta( $user_id, self::PREFS_META, true );
+			$had_consent = '' !== get_user_meta( $user_id, self::OPTIN_META, true );
+
+			// Purge BOTH rows unconditionally — leaves NO orphan meta either way.
+			delete_user_meta( $user_id, self::PREFS_META );
+			delete_user_meta( $user_id, self::OPTIN_META );
+
+			$removed = $had_prefs || $had_consent;
+		}
+
+		return [
+			'items_removed'  => $removed,
+			'items_retained' => false,
+			'messages'       => [],
+			'done'           => true,
+		];
+	}
+
+	// -------------------------------------------------------------------------
 	// Context injection (fahad_ai_system_prompt filter) — loop-free.
 	// -------------------------------------------------------------------------
 
@@ -386,6 +552,26 @@ final class Fahad_AI_Memory_Tools {
 		return is_array( $prefs ) ? $prefs : [];
 	}
 
+	/**
+	 * Resolve a privacy-request email to its user id, or 0 when there is no such user.
+	 *
+	 * Used ONLY by the GDPR export/erase callbacks (which WordPress invokes with a
+	 * verified subject email). Centralising this keeps both callbacks acting strictly on
+	 * the resolved user's own meta — an unknown email returns 0, so they become no-ops
+	 * rather than touching anyone else's data.
+	 */
+	private static function user_id_for_email( string $email ): int {
+		$email = sanitize_email( $email );
+
+		if ( '' === $email ) {
+			return 0;
+		}
+
+		$user = get_user_by( 'email', $email );
+
+		return ( $user && isset( $user->ID ) ) ? (int) $user->ID : 0;
+	}
+
 	/** Sanitize + length-cap a preference key. */
 	private static function sanitize_key( $raw ): string {
 		$key = sanitize_text_field( (string) $raw );
@@ -427,4 +613,12 @@ Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Memory_Tools', 'register' ] )
 // and in WordPress add_filter is always defined so the hook is registered for real.
 if ( function_exists( 'add_filter' ) ) {
 	add_filter( 'fahad_ai_system_prompt', [ 'Fahad_AI_Memory_Tools', 'inject_preferences' ] );
+
+	// GDPR (issue #59): wire the pack's two per-user meta rows into WordPress' core
+	// privacy export/erase tools. Self-contained, same drop-in pattern as above — no
+	// bootstrap edit needed. Guarded by the same function_exists so the unit-test
+	// bootstrap can glob-load this file before Brain\Monkey patches WP functions (the
+	// privacy suite calls the callbacks directly and stubs WP itself per-test).
+	add_filter( 'wp_privacy_personal_data_exporters', [ 'Fahad_AI_Memory_Tools', 'register_exporter' ] );
+	add_filter( 'wp_privacy_personal_data_erasers', [ 'Fahad_AI_Memory_Tools', 'register_eraser' ] );
 }
