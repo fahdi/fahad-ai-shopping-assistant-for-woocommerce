@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 2.8.0
+Stable tag: 2.8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -100,6 +100,9 @@ The conversation history (user messages and assistant replies) and the results o
 2. Admin settings — provider and API key configuration
 
 == Changelog ==
+
+= 2.8.1 =
+* Fixed a bug where a product could be shown as a duplicate card within a single reply when the assistant referenced it from more than one action in the same turn (e.g. a search followed by a details lookup). Each product now appears at most once per reply.
 
 = 2.8.0 =
 Support for all major AI providers.
@@ -238,6 +241,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.8.1 =
+Fixes a bug where the same product card could appear twice in one reply when the assistant looked a product up more than once in a single turn.
 
 = 2.8.0 =
 Adds support for all major AI providers — OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI, Together, OpenRouter, Perplexity, local Ollama, and custom OpenAI-compatible endpoints — alongside Claude and Moonshot. Backward compatible; existing setups are unchanged.

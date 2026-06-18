@@ -1543,6 +1543,37 @@ Guidelines:
 	}
 
 	/**
+	 * Reduce product cards to those not already streamed this turn (bug #97).
+	 *
+	 * The agent loop can surface the same product from more than one tool call in a
+	 * single turn (e.g. search_products then get_product_details on the same item).
+	 * Each such result previously emitted its own `products` SSE event, so the widget
+	 * appended the same card twice. Keyed on the WooCommerce product id, this keeps
+	 * only cards not yet sent and records the ids it lets through, so each product
+	 * appears at most once per turn. A card without a usable (> 0) id cannot be
+	 * deduped reliably, so it passes through unchanged.
+	 *
+	 * @param array            $cards    Normalized cards from tool_result_cards().
+	 * @param array<int, bool> $sent_ids Set of already-sent product ids (id => true),
+	 *                                   updated in place across the turn's tool calls.
+	 * @return array The subset of $cards not previously sent, original order preserved.
+	 */
+	private function dedupe_cards( array $cards, array &$sent_ids ): array {
+		$fresh = [];
+		foreach ( $cards as $card ) {
+			$id = isset( $card['id'] ) ? (int) $card['id'] : 0;
+			if ( $id > 0 ) {
+				if ( isset( $sent_ids[ $id ] ) ) {
+					continue;
+				}
+				$sent_ids[ $id ] = true;
+			}
+			$fresh[] = $card;
+		}
+		return $fresh;
+	}
+
+	/**
 	 * Build the comparison-table payload the widget renders, from a tool result.
 	 *
 	 * CONVENTION over configuration, exactly like tool_result_cards(): emission keys
@@ -1854,6 +1885,9 @@ Guidelines:
 		$tools         = Fahad_AI_Tools::instance();
 		$max           = 8;
 		$sent_products = false;
+		// Product ids already streamed this turn, so a product surfaced by more than
+		// one tool call (e.g. search then get_product_details) is shown once (bug #97).
+		$sent_ids      = [];
 		// Owner analytics (#49): accumulate the tool names this streamed turn calls and
 		// whether anything was added to cart, so the terminal points can record one
 		// privacy-safe event. The SSE bytes the shopper sees are unaffected.
@@ -1931,10 +1965,10 @@ Guidelines:
 				// trimmed copy to the model messages (issue #23).
 				$result = $tools->execute( $tc['name'], $tc['input'] );
 
-				$cards = $this->tool_result_cards( $tc['name'], $result );
+				$cards = $this->dedupe_cards( $this->tool_result_cards( $tc['name'], $result ), $sent_ids );
 				if ( ! empty( $cards ) ) {
 					$this->sse_send( 'products', [ 'products' => $cards ] );
-						$sent_products = true;
+					$sent_products = true;
 				}
 
 				// Comparison table (issue #13): surfaced as its own SSE event,

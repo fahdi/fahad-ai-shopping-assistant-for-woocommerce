@@ -97,6 +97,55 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( [ 'data: {"c":"' . $rupee . '"}' ], $lines2 );
     }
 
+    // ── per-turn product-card de-duplication (bug #97) ──────────────────────────
+    // The agent loop can surface the same product from more than one tool call in a
+    // single turn (e.g. search_products then get_product_details on the same item),
+    // which previously emitted a duplicate `products` SSE event and rendered the card
+    // twice. dedupe_cards() drops cards whose product id was already streamed this
+    // turn and records the newly-sent ids, so each product appears at most once.
+
+    public function test_dedupe_cards_drops_a_product_already_streamed_this_turn(): void {
+        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'dedupe_cards' );
+        $h = $this->handler();
+
+        $sent = [];
+
+        // First tool call this turn: two distinct products — both are fresh.
+        $args1  = [ [ [ 'id' => 14, 'name' => 'Running Sneakers' ], [ 'id' => 10, 'name' => 'White T-Shirt' ] ], &$sent ];
+        $fresh1 = $m->invokeArgs( $h, $args1 );
+        $this->assertSame( [ 14, 10 ], array_column( $fresh1, 'id' ) );
+
+        // Second tool call in the SAME turn re-surfaces product 14 — it must be dropped.
+        $args2  = [ [ [ 'id' => 14, 'name' => 'Running Sneakers' ] ], &$sent ];
+        $fresh2 = $m->invokeArgs( $h, $args2 );
+        $this->assertSame( [], $fresh2, 'A product already streamed this turn must not be re-emitted.' );
+    }
+
+    public function test_dedupe_cards_keeps_unseen_products_and_records_them(): void {
+        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'dedupe_cards' );
+        $h = $this->handler();
+
+        $sent  = [ 14 => true ];
+        $args  = [ [ [ 'id' => 14, 'name' => 'Dup' ], [ 'id' => 13, 'name' => 'Water Bottle' ] ], &$sent ];
+        $fresh = $m->invokeArgs( $h, $args );
+
+        $this->assertSame( [ 13 ], array_column( $fresh, 'id' ), 'Only the not-yet-seen product survives.' );
+        $this->assertArrayHasKey( 13, $sent, 'The newly-streamed id must be recorded for later dedup.' );
+    }
+
+    public function test_dedupe_cards_keeps_cards_without_a_usable_id(): void {
+        // Defence in depth: a card with no/zero id cannot be deduped reliably, so it
+        // passes through rather than being silently dropped.
+        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'dedupe_cards' );
+        $h = $this->handler();
+
+        $sent  = [];
+        $args  = [ [ [ 'name' => 'No id card' ], [ 'id' => 0, 'name' => 'Zero id' ] ], &$sent ];
+        $fresh = $m->invokeArgs( $h, $args );
+
+        $this->assertCount( 2, $fresh, 'Cards without a usable id are kept.' );
+    }
+
     // ── system prompt nudges plain currency symbols (live-QA finding #29) ───────
     // The model sometimes emitted a numeric HTML entity for ₨ (and occasionally a
     // malformed one); the prompt now tells it to write the plain symbol instead.
