@@ -49,7 +49,7 @@ final class Fahad_AI_Retriever {
 			return $ids;
 		}
 
-		$store = new Fahad_AI_Postmeta_Vector_Store( $provider->model(), $provider->dimensions() );
+		$store = Fahad_AI_Vector_Stores::resolve( $provider->model(), $provider->dimensions() );
 		try {
 			$limit  = isset( $filters['limit'] ) ? max( 1, (int) $filters['limit'] ) : 10;
 			$hybrid = ( new self( $provider, $store ) )->search( $query, $filters, $limit );

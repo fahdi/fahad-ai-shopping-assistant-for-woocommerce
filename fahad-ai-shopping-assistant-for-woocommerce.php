@@ -33,6 +33,8 @@ require_once FAHAD_AI_PATH . 'includes/class-cohere-embedding-provider.php';
 require_once FAHAD_AI_PATH . 'includes/class-embeddings.php';
 require_once FAHAD_AI_PATH . 'includes/interface-vector-store.php';
 require_once FAHAD_AI_PATH . 'includes/class-postmeta-vector-store.php';
+require_once FAHAD_AI_PATH . 'includes/class-mariadb-vector-store.php';
+require_once FAHAD_AI_PATH . 'includes/class-vector-stores.php';
 require_once FAHAD_AI_PATH . 'includes/class-index-health.php';
 require_once FAHAD_AI_PATH . 'includes/class-indexer.php';
 require_once FAHAD_AI_PATH . 'includes/class-retriever.php';
