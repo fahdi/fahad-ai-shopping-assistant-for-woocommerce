@@ -148,7 +148,7 @@ final class Fahad_AI_Indexer {
 		if ( ! $provider || ! $provider->is_available() ) {
 			return;
 		}
-		$store = new Fahad_AI_Postmeta_Vector_Store( $provider->model(), $provider->dimensions() );
+		$store = Fahad_AI_Vector_Stores::resolve( $provider->model(), $provider->dimensions() );
 		( new self( $provider, $store ) )->reindex_product( (int) $product_id );
 	}
 
@@ -157,7 +157,7 @@ final class Fahad_AI_Indexer {
 		$provider = Fahad_AI_Embeddings::provider();
 		$model    = $provider ? $provider->model() : '';
 		$dims     = $provider ? $provider->dimensions() : 0;
-		( new Fahad_AI_Postmeta_Vector_Store( $model, $dims ) )->delete( (int) $product_id );
+		Fahad_AI_Vector_Stores::resolve( $model, $dims )->delete( (int) $product_id );
 	}
 
 	/** Compose the embeddable fields from a WooCommerce product. */

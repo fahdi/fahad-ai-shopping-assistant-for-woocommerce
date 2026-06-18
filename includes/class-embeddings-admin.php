@@ -88,7 +88,7 @@ final class Fahad_AI_Embeddings_Admin {
 
 		Fahad_AI_Index_Health::clear(); // fresh build — reset the failure tally
 
-		$store = new Fahad_AI_Postmeta_Vector_Store( $provider->model(), $provider->dimensions() );
+		$store = Fahad_AI_Vector_Stores::resolve( $provider->model(), $provider->dimensions() );
 		$count = ( new Fahad_AI_Indexer( $provider, $store ) )->backfill();
 
 		update_option( Fahad_AI_Postmeta_Vector_Store::OPTION_INDEX_MODEL, $provider->model() );
