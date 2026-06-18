@@ -17,6 +17,7 @@ require_once dirname( __DIR__ ) . '/includes/class-embeddings.php';
 require_once dirname( __DIR__ ) . '/includes/interface-vector-store.php';
 require_once dirname( __DIR__ ) . '/includes/class-postmeta-vector-store.php';
 require_once dirname( __DIR__ ) . '/includes/class-indexer.php';
+require_once dirname( __DIR__ ) . '/includes/class-retriever.php';
 require_once dirname( __DIR__ ) . '/includes/class-rrf.php';
 require_once dirname( __DIR__ ) . '/includes/class-embedding-document.php';
 require_once dirname( __DIR__ ) . '/includes/class-relevance-metrics.php';
