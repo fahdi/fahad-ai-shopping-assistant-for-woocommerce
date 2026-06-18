@@ -14,6 +14,8 @@ require_once dirname( __DIR__ ) . '/includes/class-embedding-exception.php';
 require_once dirname( __DIR__ ) . '/includes/interface-embedding-provider.php';
 require_once dirname( __DIR__ ) . '/includes/class-openai-embedding-provider.php';
 require_once dirname( __DIR__ ) . '/includes/class-embeddings.php';
+require_once dirname( __DIR__ ) . '/includes/interface-vector-store.php';
+require_once dirname( __DIR__ ) . '/includes/class-postmeta-vector-store.php';
 require_once dirname( __DIR__ ) . '/includes/class-rrf.php';
 require_once dirname( __DIR__ ) . '/includes/class-embedding-document.php';
 require_once dirname( __DIR__ ) . '/includes/class-relevance-metrics.php';

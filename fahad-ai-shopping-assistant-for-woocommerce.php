@@ -30,6 +30,8 @@ require_once FAHAD_AI_PATH . 'includes/class-embedding-exception.php';
 require_once FAHAD_AI_PATH . 'includes/interface-embedding-provider.php';
 require_once FAHAD_AI_PATH . 'includes/class-openai-embedding-provider.php';
 require_once FAHAD_AI_PATH . 'includes/class-embeddings.php';
+require_once FAHAD_AI_PATH . 'includes/interface-vector-store.php';
+require_once FAHAD_AI_PATH . 'includes/class-postmeta-vector-store.php';
 require_once FAHAD_AI_PATH . 'includes/class-rrf.php';
 require_once FAHAD_AI_PATH . 'includes/class-embedding-document.php';
 require_once FAHAD_AI_PATH . 'includes/class-relevance-metrics.php';
