@@ -32,6 +32,7 @@ require_once FAHAD_AI_PATH . 'includes/class-openai-embedding-provider.php';
 require_once FAHAD_AI_PATH . 'includes/class-embeddings.php';
 require_once FAHAD_AI_PATH . 'includes/interface-vector-store.php';
 require_once FAHAD_AI_PATH . 'includes/class-postmeta-vector-store.php';
+require_once FAHAD_AI_PATH . 'includes/class-indexer.php';
 require_once FAHAD_AI_PATH . 'includes/class-rrf.php';
 require_once FAHAD_AI_PATH . 'includes/class-embedding-document.php';
 require_once FAHAD_AI_PATH . 'includes/class-relevance-metrics.php';
@@ -477,4 +478,7 @@ add_action( 'plugins_loaded', function () {
 	}
 
 	Fahad_AI_Chatbot::instance();
+
+	// Keep product embeddings in step with the catalog (async; no-op without a key).
+	Fahad_AI_Indexer::init();
 } );
