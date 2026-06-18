@@ -13,6 +13,7 @@ require_once dirname( __DIR__ ) . '/includes/class-vector-math.php';
 require_once dirname( __DIR__ ) . '/includes/class-embedding-exception.php';
 require_once dirname( __DIR__ ) . '/includes/interface-embedding-provider.php';
 require_once dirname( __DIR__ ) . '/includes/class-openai-embedding-provider.php';
+require_once dirname( __DIR__ ) . '/includes/class-cohere-embedding-provider.php';
 require_once dirname( __DIR__ ) . '/includes/class-embeddings.php';
 require_once dirname( __DIR__ ) . '/includes/interface-vector-store.php';
 require_once dirname( __DIR__ ) . '/includes/class-postmeta-vector-store.php';

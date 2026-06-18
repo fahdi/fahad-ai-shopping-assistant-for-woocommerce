@@ -4,7 +4,7 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 2.9.0
+Stable tag: 2.10.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -58,7 +58,7 @@ This plugin sends conversation data only to the single AI provider you select in
 
 Only conversation history and product data relevant to the current session are transmitted, and only to the provider you selected. No personal customer data is sent unless the customer types it into the chat.
 
-If you enable **Semantic Search** (off by default), product text — titles, descriptions and attributes, never prices, stock, or customer data — is sent to OpenAI (`api.openai.com`) to build a vector index when you build the index or a product changes. [OpenAI privacy policy](https://openai.com/policies/privacy-policy/).
+If you enable **Semantic Search** (off by default), product text — titles, descriptions and attributes, never prices, stock, or customer data — is sent to the embeddings provider you choose to build a vector index when you build the index or a product changes. The provider is configurable: OpenAI (`api.openai.com`, default), Cohere (`api.cohere.com`, stronger for non-Latin scripts), or any OpenAI-compatible endpoint you point it at (e.g. Moonshot, Together, or a self-hosted server) using that endpoint's key. Review the chosen provider's privacy policy before enabling. [OpenAI](https://openai.com/policies/privacy-policy/) · [Cohere](https://cohere.com/privacy).
 
 == Installation ==
 
@@ -102,6 +102,12 @@ The conversation history (user messages and assistant replies) and the results o
 2. Admin settings — provider and API key configuration
 
 == Changelog ==
+
+= 2.10.0 =
+Semantic search hardening + provider flexibility.
+
+* **Choose your embeddings provider.** Semantic search is no longer tied to OpenAI: pick OpenAI, **Cohere** (better for Urdu and other non-Latin scripts), or any **OpenAI-compatible endpoint** (e.g. Moonshot, Together, or a self-hosted server) by setting a base URL and key — so you can reuse a key you already have.
+* **More resilient & cost-aware.** Embedding requests now retry rate-limit/temporary errors with backoff, repeated identical searches reuse a cached embedding, and the admin shows index health (indexed count, last build, failures) with a clear "rebuild needed" prompt when you change the model.
 
 = 2.9.0 =
 Semantic search (beta) — find products by meaning, not just keywords.
@@ -250,6 +256,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.10.0 =
+Semantic search now works with Cohere or any OpenAI-compatible endpoint (not just OpenAI), plus retry/caching and index-health reporting. No action needed; semantic search stays off until you enable it.
 
 = 2.9.0 =
 Adds optional semantic (AI vector) product search, off by default. Enable it in Settings with an OpenAI key to let shoppers find products by meaning; search is unchanged until you do.

@@ -13,20 +13,22 @@ defined( 'ABSPATH' ) || exit;
 
 final class Fahad_AI_OpenAI_Embedding_Provider implements Fahad_AI_Embedding_Provider {
 
-	private const ENDPOINT = 'https://api.openai.com/v1/embeddings';
-
 	/** Extra attempts after the first on a transient failure (429/5xx/transport). */
 	private const MAX_RETRIES = 2;
 
 	/**
-	 * @param int $retry_base_ms Base backoff in ms (exponential + jitter). 0 disables
-	 *                           the sleep (used in tests so retries don't block).
+	 * @param int    $retry_base_ms Base backoff in ms (exponential + jitter). 0 disables
+	 *                              the sleep (used in tests so retries don't block).
+	 * @param string $base_url      OpenAI-compatible API base (no trailing slash). Lets a
+	 *                              merchant point embeddings at Moonshot/Together/a self-
+	 *                              hosted endpoint with that endpoint's key (#111).
 	 */
 	public function __construct(
 		private string $key,
 		private string $model = 'text-embedding-3-small',
 		private int $dimensions = 512,
-		private int $retry_base_ms = 0
+		private int $retry_base_ms = 0,
+		private string $base_url = 'https://api.openai.com/v1'
 	) {}
 
 	public function model(): string {
@@ -68,7 +70,7 @@ final class Fahad_AI_OpenAI_Embedding_Provider implements Fahad_AI_Embedding_Pro
 	/** A single embeddings request; throws Fahad_AI_Embedding_Exception on any failure. */
 	private function request( array $texts ): array {
 		$response = wp_remote_post(
-			self::ENDPOINT,
+			rtrim( $this->base_url, '/' ) . '/embeddings',
 			[
 				'timeout' => 60,
 				'headers' => [

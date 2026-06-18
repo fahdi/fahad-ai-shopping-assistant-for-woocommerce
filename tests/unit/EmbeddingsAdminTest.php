@@ -55,6 +55,27 @@ class EmbeddingsAdminTest extends TestCase {
 		$this->assertSame( 1000, $this->options[ Fahad_AI_Embeddings_Admin::OPT_CAP ] );
 	}
 
+	public function test_save_persists_provider_type_endpoint_and_keys(): void {
+		Fahad_AI_Embeddings_Admin::save(
+			[
+				'embedding_provider_type' => 'cohere',
+				'embedding_base_url'      => 'https://api.moonshot.ai/v1',
+				'embedding_api_key'       => 'sk-moon',
+				'cohere_api_key'          => 'co-key',
+			]
+		);
+		$this->assertSame( 'cohere', $this->options[ Fahad_AI_Embeddings_Admin::OPT_PROVIDER_TYPE ] );
+		$this->assertSame( 'https://api.moonshot.ai/v1', $this->options[ Fahad_AI_Embeddings_Admin::OPT_BASE_URL ] );
+		$this->assertSame( 'sk-moon', $this->options[ Fahad_AI_Embeddings_Admin::OPT_API_KEY ] );
+		$this->assertSame( 'co-key', $this->options[ Fahad_AI_Embeddings_Admin::OPT_COHERE_KEY ] );
+	}
+
+	public function test_save_rejects_unknown_provider_type_and_defaults_base_url(): void {
+		Fahad_AI_Embeddings_Admin::save( [ 'embedding_provider_type' => 'bogus' ] );
+		$this->assertSame( 'openai', $this->options[ Fahad_AI_Embeddings_Admin::OPT_PROVIDER_TYPE ] );
+		$this->assertSame( 'https://api.openai.com/v1', $this->options[ Fahad_AI_Embeddings_Admin::OPT_BASE_URL ] );
+	}
+
 	public function test_save_clamps_and_defaults(): void {
 		Fahad_AI_Embeddings_Admin::save( [ 'embedding_dims' => '0', 'embed_daily_cap' => '-5', 'embedding_model' => '' ] );
 		$this->assertSame( 0, $this->options[ Fahad_AI_Embeddings_Admin::OPT_ENABLED ], 'unchecked box -> disabled' );
