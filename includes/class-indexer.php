@@ -69,7 +69,24 @@ final class Fahad_AI_Indexer {
 			$this->store->delete( $product_id );
 			return;
 		}
-		$this->index_fields( $product_id, $this->product_fields( $product ) );
+		$this->index_fields_safe( $product_id, $this->product_fields( $product ) );
+	}
+
+	/**
+	 * index_fields() with failure handling (#110): a terminal embedding error is
+	 * recorded and swallowed; a retryable one is recorded and rethrown so Action
+	 * Scheduler reschedules the job. Either way the shopper never sees an error.
+	 */
+	public function index_fields_safe( int $product_id, array $fields ): bool {
+		try {
+			return $this->index_fields( $product_id, $fields );
+		} catch ( Fahad_AI_Embedding_Exception $e ) {
+			Fahad_AI_Index_Health::record_failure( $e->getMessage() );
+			if ( $e->is_retryable() ) {
+				throw $e;
+			}
+			return false;
+		}
 	}
 
 	/**
