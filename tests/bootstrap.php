@@ -9,6 +9,12 @@ require_once __DIR__ . '/stubs/wc-stubs.php';
 // Load the plugin classes (no WordPress bootstrap needed for unit tests).
 require_once dirname( __DIR__ ) . '/includes/class-auth.php';
 require_once dirname( __DIR__ ) . '/includes/class-providers.php';
+require_once dirname( __DIR__ ) . '/includes/class-vector-math.php';
+require_once dirname( __DIR__ ) . '/includes/class-rrf.php';
+require_once dirname( __DIR__ ) . '/includes/class-embedding-document.php';
+require_once dirname( __DIR__ ) . '/includes/class-relevance-metrics.php';
+require_once dirname( __DIR__ ) . '/includes/class-rag-spike-retriever.php';
+require_once dirname( __DIR__ ) . '/includes/class-rag-spike.php';
 require_once dirname( __DIR__ ) . '/includes/class-feedback.php';
 require_once dirname( __DIR__ ) . '/includes/class-analytics.php';
 require_once dirname( __DIR__ ) . '/includes/class-proactive.php';
@@ -34,3 +40,4 @@ require_once dirname( __DIR__ ) . '/includes/class-whatsapp.php';
 
 // Eval harness (used by the `eval` test suite; harmless to load for `unit`).
 require_once __DIR__ . '/eval/EvalHarness.php';
+require_once __DIR__ . '/eval/RagGoldenSet.php';

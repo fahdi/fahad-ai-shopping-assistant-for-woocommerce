@@ -28,6 +28,18 @@
 		<exclude name="Generic.Commenting"/>
 		<!-- Statement alignment is a stylistic choice, not a correctness concern. -->
 		<exclude name="Generic.Formatting.MultipleStatementAlignment"/>
+		<!--
+			The codebase deliberately uses modern conventions that the WordPress
+			standard pre-dates. Excluding these keeps the gate aligned with the
+			project's ACTUAL, consistent style rather than flagging every file:
+			- short array syntax `[]` (used throughout; the WP `array()` rule is legacy),
+			- inline associative arrays (e.g. `[ 'response' => 403 ]`),
+			- `class-{shortname}.php` filenames without the global prefix
+			  (matches class-api-handler.php = Fahad_AI_API_Handler, etc.).
+		-->
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+		<exclude name="WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound"/>
+		<exclude name="WordPress.Files.FileName"/>
 	</rule>
 
 	<!-- Project identity so naming / i18n sniffs don't false-positive. -->

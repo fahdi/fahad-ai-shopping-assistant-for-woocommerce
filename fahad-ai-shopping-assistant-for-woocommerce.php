@@ -25,6 +25,13 @@ define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
 require_once FAHAD_AI_PATH . 'includes/class-auth.php';
 require_once FAHAD_AI_PATH . 'includes/class-providers.php';
+require_once FAHAD_AI_PATH . 'includes/class-vector-math.php';
+require_once FAHAD_AI_PATH . 'includes/class-rrf.php';
+require_once FAHAD_AI_PATH . 'includes/class-embedding-document.php';
+require_once FAHAD_AI_PATH . 'includes/class-relevance-metrics.php';
+require_once FAHAD_AI_PATH . 'includes/class-rag-spike-retriever.php';
+require_once FAHAD_AI_PATH . 'includes/class-rag-spike.php';
+require_once FAHAD_AI_PATH . 'includes/class-rag-spike-cli.php';
 require_once FAHAD_AI_PATH . 'includes/class-feedback.php';
 require_once FAHAD_AI_PATH . 'includes/class-analytics.php';
 require_once FAHAD_AI_PATH . 'includes/class-proactive.php';
