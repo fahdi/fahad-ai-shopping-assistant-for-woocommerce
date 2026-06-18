@@ -16,6 +16,7 @@ require_once dirname( __DIR__ ) . '/includes/class-openai-embedding-provider.php
 require_once dirname( __DIR__ ) . '/includes/class-embeddings.php';
 require_once dirname( __DIR__ ) . '/includes/interface-vector-store.php';
 require_once dirname( __DIR__ ) . '/includes/class-postmeta-vector-store.php';
+require_once dirname( __DIR__ ) . '/includes/class-index-health.php';
 require_once dirname( __DIR__ ) . '/includes/class-indexer.php';
 require_once dirname( __DIR__ ) . '/includes/class-retriever.php';
 require_once dirname( __DIR__ ) . '/includes/class-embeddings-admin.php';

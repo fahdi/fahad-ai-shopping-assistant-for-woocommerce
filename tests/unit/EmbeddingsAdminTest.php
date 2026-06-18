@@ -30,6 +30,7 @@ class EmbeddingsAdminTest extends TestCase {
 		Functions\when( 'get_option' )->alias(
 			fn( $k, $d = '' ) => $this->options[ $k ] ?? $d
 		);
+		Functions\when( 'delete_option' )->alias( function ( $k ) { unset( $this->options[ $k ] ); return true; } );
 		Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
 		Functions\when( 'sanitize_text_field' )->alias( static fn( $s ) => is_string( $s ) ? trim( $s ) : '' );
 	}

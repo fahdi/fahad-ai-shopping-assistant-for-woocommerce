@@ -72,6 +72,8 @@ final class Fahad_AI_Embeddings_Admin {
 			return 0;
 		}
 
+		Fahad_AI_Index_Health::clear(); // fresh build — reset the failure tally
+
 		$store = new Fahad_AI_Postmeta_Vector_Store( $provider->model(), $provider->dimensions() );
 		$count = ( new Fahad_AI_Indexer( $provider, $store ) )->backfill();
 
@@ -97,6 +99,8 @@ final class Fahad_AI_Embeddings_Admin {
 			'stale'        => '' !== $active_model && $index_model !== $active_model,
 			'last_build'   => (int) get_option( self::OPT_LAST_BUILD, 0 ),
 			'count'        => self::embedded_count(),
+			'failures'     => Fahad_AI_Index_Health::failures(),
+			'last_error'   => Fahad_AI_Index_Health::last_error(),
 		];
 	}
 
@@ -171,6 +175,18 @@ final class Fahad_AI_Embeddings_Admin {
 						);
 						?>
 					</p>
+					<?php if ( (int) $status['failures'] > 0 ) : ?>
+						<p class="description" style="color:#b32d2e;margin-bottom:8px;">
+							<?php
+							printf(
+								/* translators: 1: failure count, 2: last error message */
+								esc_html__( '%1$d embedding failure(s). Last error: %2$s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+								(int) $status['failures'],
+								esc_html( (string) $status['last_error'] )
+							);
+							?>
+						</p>
+					<?php endif; ?>
 					<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', self::ACTION_BUILD, $build_url ), self::ACTION_BUILD ) ); ?>" class="button">
 						<?php esc_html_e( 'Build / rebuild index', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 					</a>

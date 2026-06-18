@@ -32,6 +32,7 @@ require_once FAHAD_AI_PATH . 'includes/class-openai-embedding-provider.php';
 require_once FAHAD_AI_PATH . 'includes/class-embeddings.php';
 require_once FAHAD_AI_PATH . 'includes/interface-vector-store.php';
 require_once FAHAD_AI_PATH . 'includes/class-postmeta-vector-store.php';
+require_once FAHAD_AI_PATH . 'includes/class-index-health.php';
 require_once FAHAD_AI_PATH . 'includes/class-indexer.php';
 require_once FAHAD_AI_PATH . 'includes/class-retriever.php';
 require_once FAHAD_AI_PATH . 'includes/class-embeddings-admin.php';
