@@ -33,6 +33,7 @@ require_once FAHAD_AI_PATH . 'includes/class-embeddings.php';
 require_once FAHAD_AI_PATH . 'includes/interface-vector-store.php';
 require_once FAHAD_AI_PATH . 'includes/class-postmeta-vector-store.php';
 require_once FAHAD_AI_PATH . 'includes/class-indexer.php';
+require_once FAHAD_AI_PATH . 'includes/class-retriever.php';
 require_once FAHAD_AI_PATH . 'includes/class-rrf.php';
 require_once FAHAD_AI_PATH . 'includes/class-embedding-document.php';
 require_once FAHAD_AI_PATH . 'includes/class-relevance-metrics.php';
@@ -481,4 +482,8 @@ add_action( 'plugins_loaded', function () {
 
 	// Keep product embeddings in step with the catalog (async; no-op without a key).
 	Fahad_AI_Indexer::init();
+
+	// Make product search hybrid (keyword + vector) via the semantic-search seam.
+	// No-op without an embeddings provider — search stays keyword-only.
+	Fahad_AI_Retriever::register();
 } );
