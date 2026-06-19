@@ -1146,11 +1146,7 @@
 				if (p.name) {
 					add.setAttribute('aria-label', fmt(i18n.addToCartNamed || 'Add %s to cart', p.name));
 				}
-				add.addEventListener('click', () => {
-					if (busy) return;
-					input.value = 'Please add ' + (p.name || '') + ' to my cart';
-					sendMessage();
-				});
+				add.addEventListener('click', () => addToCartDirect(p.id, 0, p.name));
 				td.appendChild(add);
 			}
 
