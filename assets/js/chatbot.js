@@ -83,7 +83,7 @@
 	root.innerHTML = `
 		<button id="chatbot-toggle" type="button" aria-expanded="false" aria-controls="chatbot-panel"
 			aria-label="${esc(i18n.openChat || 'Open chat assistant')}">
-			<svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" style="width:45px;height:45px;display:block;flex-shrink:0" viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true" focusable="false">
+			<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" style="width:32px;height:32px;display:block;flex-shrink:0" viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true" focusable="false">
 				<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
 			</svg>
 		</button>
@@ -106,8 +106,7 @@
 					placeholder="${esc(i18n.placeholder || 'Ask me anything…')}" autocomplete="off"
 					aria-label="${esc(i18n.yourMessage || 'Your message')}">
 				<button id="chatbot-send" type="button" aria-label="${esc(i18n.sendMessage || 'Send message')}">
-					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
-						stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" style="width:18px;height:18px;display:block;flex-shrink:0" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<line x1="22" y1="2" x2="11" y2="13"/>
 						<polygon points="22 2 15 22 11 13 2 9 22 2"/>
 					</svg>
