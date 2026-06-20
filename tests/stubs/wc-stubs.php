@@ -36,6 +36,17 @@ if ( ! function_exists( 'is_wp_error' ) ) {
     function is_wp_error( mixed $thing ): bool { return $thing instanceof WP_Error; }
 }
 
+// Minimal WP_REST_Request stub: a params bag the admin-copilot endpoints read via
+// get_param(). The real class has far more; this is enough for unit tests.
+if ( ! class_exists( 'WP_REST_Request' ) ) {
+    class WP_REST_Request {
+        private array $params;
+        public function __construct( array $params = [] ) { $this->params = $params; }
+        public function get_param( string $key ) { return $this->params[ $key ] ?? null; }
+        public function set_param( string $key, $value ): void { $this->params[ $key ] = $value; }
+    }
+}
+
 // Minimal WP_REST_Response stub. The WhatsApp webhook handlers (issue #62) construct
 // real WP_REST_Response objects (rather than relying on rest_ensure_response), so unit
 // tests need the class to resolve and expose get_data()/get_status(). Guarded so it never
@@ -94,6 +105,7 @@ if ( ! class_exists( 'WC_Product' ) ) {
         public function get_available_variations(): array { return []; }
         public function get_average_rating(): string      { return '0'; }
         public function get_review_count(): int           { return 0; }
+        public function get_total_sales(): int            { return 0; }
         // Product attributes (issue #13: comparison). get_attributes() returns the
         // WC_Product_Attribute[] map keyed by attribute name; get_attribute( $name )
         // returns the product's comma-separated DISPLAY value for that attribute (''
@@ -186,6 +198,7 @@ if ( ! class_exists( 'WC_Order' ) ) {
         public function get_order_number(): string          { return ''; }
         public function get_status(): string                { return ''; }
         public function get_total(): string                 { return '0'; }
+        public function get_total_refunded()                { return 0; }
         public function get_customer_id(): int              { return 0; }
         public function get_date_created()                  { return null; }
         /** @return array WC_Order_Item_Product[] keyed by line-item id. */

@@ -103,6 +103,11 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.12.0 =
+Merchant copilot — admin insight endpoints.
+
+* New admin-only, read-only endpoints (gated by the Manage WooCommerce capability) that surface real store data for an admin assistant: a sales/refunds summary, products worth putting on sale, a product's real attributes for content generation, and reviews awaiting a reply. Nothing is written automatically.
+
 = 2.11.12 =
 Refer a friend, from chat.
 

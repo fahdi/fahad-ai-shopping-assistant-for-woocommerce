@@ -59,6 +59,7 @@ foreach ( $fahad_ai_pack_files as $fahad_ai_pack_file ) {
 
 require_once dirname( __DIR__ ) . '/includes/class-api-handler.php';
 require_once dirname( __DIR__ ) . '/includes/class-whatsapp.php';
+require_once dirname( __DIR__ ) . '/includes/class-admin-copilot.php';
 
 // Eval harness (used by the `eval` test suite; harmless to load for `unit`).
 require_once __DIR__ . '/eval/EvalHarness.php';

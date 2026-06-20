@@ -3,7 +3,7 @@
  * Plugin Name: Fahad AI Shopping Assistant for WooCommerce
  * Plugin URI:  https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
  * Description: AI-powered shopping assistant for WooCommerce — answers questions and manages the cart using OpenAI, Claude, Gemini, Moonshot, and other major AI providers.
- * Version:           2.11.12
+ * Version:           2.12.0
  * Author:      Fahdi Murtaza
  * Author URI:  https://github.com/fahdi
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FAHAD_AI_VERSION', '2.11.12' );
+define( 'FAHAD_AI_VERSION', '2.12.0' );
 define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -56,6 +56,7 @@ require_once FAHAD_AI_PATH . 'includes/class-visual-search.php';
 require_once FAHAD_AI_PATH . 'includes/class-tools.php';
 require_once FAHAD_AI_PATH . 'includes/class-api-handler.php';
 require_once FAHAD_AI_PATH . 'includes/class-whatsapp.php';
+require_once FAHAD_AI_PATH . 'includes/class-admin-copilot.php';
 require_once FAHAD_AI_PATH . 'includes/admin-settings.php';
 
 final class Fahad_AI_Chatbot {
@@ -144,6 +145,11 @@ final class Fahad_AI_Chatbot {
 		// pluggable seam (fahad_ai_visual_retriever); NO live vision API ships in core, so
 		// the route degrades to a graceful "not available" until a provider is registered.
 		Fahad_AI_Visual_Search::instance()->register_routes( [ $this, 'authorize_request' ] );
+
+		// Merchant AI copilot (Epic B): admin-only, read-only/draft-only insight and
+		// content endpoints under /admin, each gated by the manage_woocommerce capability
+		// (NOT the storefront nonce). Grounded in real WooCommerce data; nothing writes.
+		Fahad_AI_Admin_Copilot::instance()->register_routes();
 	}
 
 	/**
