@@ -249,7 +249,10 @@ class Fahad_AI_Shipping_Tools {
 	 */
 	protected static function resolve_zone_methods( array $package ): ?array {
 		if ( ! class_exists( 'WC_Shipping_Zones' ) ) {
+			// @codeCoverageIgnoreStart
+			// Reason: the shared test bootstrap (tests/stubs/wc-stubs.php) always defines WC_Shipping_Zones, so this no-WooCommerce guard branch can never be entered in-process.
 			return null;
+			// @codeCoverageIgnoreEnd
 		}
 
 		$zone = WC_Shipping_Zones::get_zone_matching_package( $package );
@@ -258,7 +261,10 @@ class Fahad_AI_Shipping_Tools {
 		// If that zone has no enabled methods we treat the destination as
 		// unserviceable below (empty list), which the caller reports honestly.
 		if ( ! $zone || ! is_object( $zone ) || ! method_exists( $zone, 'get_shipping_methods' ) ) {
+			// @codeCoverageIgnoreStart
+			// Reason: the shared WC_Shipping_Zones stub hardcodes get_zone_matching_package() to return a concrete WC_Shipping_Zone with get_shipping_methods(), and a loaded concrete static cannot be overridden in-process, so this falsy-zone guard can never be entered.
 			return null;
+			// @codeCoverageIgnoreEnd
 		}
 
 		$descriptors = [];
@@ -348,4 +354,7 @@ class Fahad_AI_Shipping_Tools {
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this
 // file in is the ONLY wiring needed — no bootstrap or harness edits.
+// @codeCoverageIgnoreStart
+// Reason: file-scope self-registration runs once at require time during bootstrap, before PHPUnit's per-test pcov window opens, so it is never measurable.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Shipping_Tools', 'register' ] );
+// @codeCoverageIgnoreEnd

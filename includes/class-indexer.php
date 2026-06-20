@@ -99,7 +99,10 @@ final class Fahad_AI_Indexer {
 		if ( null === $product_ids ) {
 			$product_ids = function_exists( 'wc_get_products' )
 				? (array) wc_get_products( [ 'return' => 'ids', 'status' => 'publish', 'limit' => -1 ] )
+				// @codeCoverageIgnoreStart
+				// Reason: the `: []` arm runs only when wc_get_products() is undefined; once any sibling test stubs it via Patchwork the definition lingers (PHP cannot undefine a function) so function_exists() reports true for the rest of the process — unreachable in the full suite.
 				: [];
+				// @codeCoverageIgnoreEnd
 		}
 		$count = 0;
 		foreach ( $product_ids as $id ) {

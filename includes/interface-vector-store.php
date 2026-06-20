@@ -9,7 +9,10 @@
  * (RAG-DESIGN.md §7.1, §7.4).
  */
 
+// @codeCoverageIgnoreStart
+// Reason: file-scope guard runs once at bootstrap require time, before PHPUnit's per-test pcov window; re-requiring fatally redeclares the interface (see CoverageVectorStoreTest).
 defined( 'ABSPATH' ) || exit;
+// @codeCoverageIgnoreEnd
 
 interface Fahad_AI_Vector_Store {
 

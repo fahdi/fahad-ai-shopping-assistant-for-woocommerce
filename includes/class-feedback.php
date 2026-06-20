@@ -257,7 +257,10 @@ final class Fahad_AI_Feedback {
 		if ( function_exists( 'mb_substr' ) ) {
 			return mb_substr( $text, 0, $max );
 		}
+		// @codeCoverageIgnoreStart
+		// Reason: mb_substr is an always-loaded mbstring builtin in the test runtime; function_exists() never returns false here, and a global builtin cannot be undefined/stubbed (class is in the global namespace), so this fallback is structurally unreachable in-process.
 		return substr( $text, 0, $max );
+		// @codeCoverageIgnoreEnd
 	}
 
 	/** A unique row id (UUID when available, else a random hash). */

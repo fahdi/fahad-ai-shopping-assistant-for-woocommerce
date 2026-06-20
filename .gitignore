@@ -16,6 +16,9 @@ Thumbs.db
 .vscode/
 *.swp
 
+# Coverage build artifacts
+build/
+
 # Node / frontend tests
 node_modules/
 package-lock.json

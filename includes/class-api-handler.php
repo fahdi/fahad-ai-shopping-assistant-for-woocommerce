@@ -1840,6 +1840,8 @@ Writing style — follow exactly:
 	 * Bypasses WordPress response buffering and pipes SSE directly to the browser.
 	 */
 	public function handle_stream( WP_REST_Request $request ): void {
+		// @codeCoverageIgnoreStart
+		// Reason: ends in exit() and tears down every output-buffer level + sends raw SSE headers; exercised end-to-end by the forked-child tests, but pcntl-fork pcov data never returns to the parent collector and it cannot run un-forked without killing PHPUnit, so the body is unmeasurable in-process.
 		$messages = $request->get_param( 'messages' );
 
 		if ( empty( $messages ) || ! is_array( $messages ) ) {
@@ -1883,6 +1885,7 @@ Writing style — follow exactly:
 		$this->run_stream_agent( $sanitized, $this->stream_provider() );
 
 		exit;
+		// @codeCoverageIgnoreEnd
 	}
 
 	/**

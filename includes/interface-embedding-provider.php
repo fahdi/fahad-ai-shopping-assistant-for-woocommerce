@@ -9,7 +9,10 @@
  * assistant runs keyword-only, exactly as today (RAG-DESIGN.md §3, §4.3).
  */
 
+// @codeCoverageIgnoreStart
+// Reason: file-scope guard runs once at bootstrap require time, before PHPUnit's per-test pcov window; re-requiring fatally redeclares the interface (see CoverageEmbeddingProviderTest).
 defined( 'ABSPATH' ) || exit;
+// @codeCoverageIgnoreEnd
 
 interface Fahad_AI_Embedding_Provider {
 

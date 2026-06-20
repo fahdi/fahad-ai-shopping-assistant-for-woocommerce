@@ -383,7 +383,10 @@ function fahad_ai_analytics_export_handler(): void {
 		'count'     => count( $rows ),
 		'rows'      => $rows,
 	] );
+	// @codeCoverageIgnoreStart
+	// Reason: terminating exit after streaming JSON download headers/body; cannot be measured in-process (an exit kills the PHPUnit run, so tests halt one call earlier).
 	exit;
+	// @codeCoverageIgnoreEnd
 }
 
 /**
@@ -401,7 +404,10 @@ function fahad_ai_analytics_delete_handler(): void {
 	Fahad_AI_Analytics::instance()->purge();
 
 	wp_safe_redirect( add_query_arg( 'fahad_ai_purged', '1', admin_url( 'admin.php?page=fahad-ai-analytics' ) ) );
+	// @codeCoverageIgnoreStart
+	// Reason: terminating exit after a redirect header; cannot be measured in-process (an exit kills the PHPUnit run, so tests halt one call earlier).
 	exit;
+	// @codeCoverageIgnoreEnd
 }
 
 function fahad_ai_settings_page(): void {

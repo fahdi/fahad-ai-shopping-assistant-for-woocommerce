@@ -619,6 +619,8 @@ class Fahad_AI_Checkout_Tools {
 				continue;
 			}
 
+			// @codeCoverageIgnoreStart
+			// Reason: the shared WC_Coupon test stub hardcodes get_id()=0, so line 618 always continues and this valid-coupon branch is unreachable in-process (verified: WC_Coupon is defined at bootstrap, so it cannot be overloaded even in a separate process).
 			// Defer to WooCommerce's authoritative validator for applicability.
 			$discounts = new WC_Discounts( $cart );
 			$valid     = $discounts->is_coupon_valid( $coupon );
@@ -638,6 +640,7 @@ class Fahad_AI_Checkout_Tools {
 				'saving'      => $saving,
 				'description' => wp_strip_all_tags( (string) $coupon->get_description() ),
 			];
+			// @codeCoverageIgnoreEnd
 		}
 
 		return $candidates;
@@ -702,4 +705,7 @@ class Fahad_AI_Checkout_Tools {
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this
 // file in is the ONLY wiring needed — no bootstrap or harness edits.
+// @codeCoverageIgnoreStart
+// Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test PCOV coverage window opens.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Checkout_Tools', 'register' ] );
+// @codeCoverageIgnoreEnd

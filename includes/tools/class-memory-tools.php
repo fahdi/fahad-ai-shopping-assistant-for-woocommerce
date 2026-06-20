@@ -595,14 +595,20 @@ final class Fahad_AI_Memory_Tools {
 			return mb_substr( $text, 0, $max );
 		}
 
+		// @codeCoverageIgnoreStart
+		// Reason: mbstring is always loaded in the PHPUnit runtime, so function_exists('mb_substr') is permanently true and this substr fallback can never execute.
 		return substr( $text, 0, $max );
+		// @codeCoverageIgnoreEnd
 	}
 }
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap (and the
 // test bootstrap) glob-require includes/tools/*.php, so dropping this file in is the ONLY
 // wiring needed — no bootstrap, registry, or agent-loop edits.
+// @codeCoverageIgnoreStart
+// Reason: file-scope self-registration runs once at require time (test bootstrap glob-requires this file) before PHPUnit opens its per-test pcov window, so it can never be measured.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Memory_Tools', 'register' ] );
+// @codeCoverageIgnoreEnd
 
 // Hook the compact preferences block into the model context via the documented
 // `fahad_ai_system_prompt` filter (issue #20). This is how memory is injected WITHOUT
@@ -611,6 +617,8 @@ Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Memory_Tools', 'register' ] )
 // patches WordPress functions per-test) without fataling on a missing add_filter — the
 // unit suites exercise inject_preferences() directly and stub apply_filters themselves,
 // and in WordPress add_filter is always defined so the hook is registered for real.
+// @codeCoverageIgnoreStart
+// Reason: file-scope hook wiring runs once at require time (test bootstrap glob-requires this file) before PHPUnit opens its per-test pcov window, so it can never be measured.
 if ( function_exists( 'add_filter' ) ) {
 	add_filter( 'fahad_ai_system_prompt', [ 'Fahad_AI_Memory_Tools', 'inject_preferences' ] );
 
@@ -622,3 +630,4 @@ if ( function_exists( 'add_filter' ) ) {
 	add_filter( 'wp_privacy_personal_data_exporters', [ 'Fahad_AI_Memory_Tools', 'register_exporter' ] );
 	add_filter( 'wp_privacy_personal_data_erasers', [ 'Fahad_AI_Memory_Tools', 'register_eraser' ] );
 }
+// @codeCoverageIgnoreEnd

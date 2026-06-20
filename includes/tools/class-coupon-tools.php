@@ -97,7 +97,12 @@ final class Fahad_AI_Coupon_Tools {
 
 		foreach ( self::get_coupon_objects() as $coupon ) {
 			if ( ! $coupon instanceof WC_Coupon ) {
+				// @codeCoverageIgnoreStart
+				// Reason: defensive guard with no injection seam — get_coupon_objects()
+				// only ever yields WC_Coupon instances (pass-through or `new WC_Coupon`),
+				// so a non-coupon can never enter this loop, in tests or production.
 				continue;
+				// @codeCoverageIgnoreEnd
 			}
 			if ( ! self::is_coupon_currently_valid( $coupon, $cart ) ) {
 				continue;
@@ -448,4 +453,8 @@ final class Fahad_AI_Coupon_Tools {
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this file
 // in is the ONLY wiring needed — no bootstrap or harness edits.
+// @codeCoverageIgnoreStart
+// Reason: file-scope self-registration runs once at require time (test bootstrap
+// glob-requires this file) — before PHPUnit opens its per-test pcov window.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Coupon_Tools', 'register' ] );
+// @codeCoverageIgnoreEnd

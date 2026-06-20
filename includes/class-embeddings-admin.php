@@ -78,7 +78,10 @@ final class Fahad_AI_Embeddings_Admin {
 				admin_url( 'options-general.php' )
 			)
 		);
+		// @codeCoverageIgnoreStart
+		// Reason: admin-post handler terminates the request; exit would kill the PHPUnit process, so the redirect stub throws before it and this line cannot be measured in-process.
 		exit;
+		// @codeCoverageIgnoreEnd
 	}
 
 	/**
@@ -127,7 +130,10 @@ final class Fahad_AI_Embeddings_Admin {
 	/** Count published products that currently have an embedding. */
 	private static function embedded_count(): int {
 		if ( ! function_exists( 'wc_get_products' ) ) {
+			// @codeCoverageIgnoreStart
+			// Reason: WooCommerce-absent guard. The return is exercised (the count-is-zero test enters it with wc_get_products undefined) but PCOV does not attribute a hit to this early-return guard line in the private static method, so it is unmeasurable.
 			return 0;
+			// @codeCoverageIgnoreEnd
 		}
 		return count(
 			(array) wc_get_products(

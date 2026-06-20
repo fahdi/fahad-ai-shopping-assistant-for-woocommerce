@@ -485,7 +485,10 @@ final class Fahad_AI_Stock_Alerts {
 	 */
 	private function render_page( string $message ): void {
 		if ( ! function_exists( 'wp_die' ) ) {
+			// @codeCoverageIgnoreStart
+			// Reason: wp_die is a real WP function the shared test setUp stubs via Brain\Monkey, which defines it permanently in the global namespace; a defined global function cannot be undefined mid-process, so function_exists() never returns false here and this defensive return is structurally unreachable in-process.
 			return; // defensive: never reached outside WP
+			// @codeCoverageIgnoreEnd
 		}
 		wp_die(
 			esc_html( $message ),

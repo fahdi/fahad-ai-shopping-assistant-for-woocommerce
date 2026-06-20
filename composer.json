@@ -21,7 +21,12 @@
     },
     "scripts": {
         "phpcs": "phpcs",
-        "phpcbf": "phpcbf"
+        "phpcbf": "phpcbf",
+        "test": "phpunit --testsuite unit",
+        "test:coverage": [
+            "phpunit --testsuite unit --coverage-clover build/clover.xml --coverage-filter includes",
+            "php tests/check-coverage.php build/clover.xml 100"
+        ]
     },
     "config": {
         "allow-plugins": {

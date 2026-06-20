@@ -358,4 +358,7 @@ final class Fahad_AI_Bundle_Tools {
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this
 // file in is the ONLY wiring needed — no bootstrap or harness edits.
+// @codeCoverageIgnoreStart
+// Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test pcov window opens, so it can never be measured.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Bundle_Tools', 'register' ] );
+// @codeCoverageIgnoreEnd

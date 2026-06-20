@@ -5,7 +5,10 @@ defined( 'ABSPATH' ) || exit;
 // plugin bootstrap) so the WHOLE feature drops in as files under includes/ — the
 // bootstrap glob-requires includes/tools/*.php, this file is one of them, and it
 // pulls in the store. No edits to the plugin bootstrap or the test bootstrap.
+// @codeCoverageIgnoreStart
+// Reason: file-scope require_once runs once at bootstrap require time, before PHPUnit's per-test pcov window.
 require_once dirname( __DIR__ ) . '/class-stock-alerts.php';
+// @codeCoverageIgnoreEnd
 
 /**
  * Back-in-stock & price-drop alert tool (issue #51) — the agent-facing surface.
@@ -162,7 +165,10 @@ final class Fahad_AI_Stock_Alert_Tools {
 // Self-register this feature pack the moment the file is loaded. The bootstrap (and
 // the test bootstrap) glob-require includes/tools/*.php, so dropping this file in is
 // the ONLY wiring needed — no bootstrap or harness edits.
+// @codeCoverageIgnoreStart
+// Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test pcov window.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Stock_Alert_Tools', 'register' ] );
+// @codeCoverageIgnoreEnd
 
 // Wire the store's WooCommerce + WordPress hooks (stock/price notifications and the
 // confirm/unsubscribe + GDPR handlers). Guarded with function_exists so this file can
@@ -171,6 +177,9 @@ Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Stock_Alert_Tools', 'register
 // add_action — the unit suites exercise Fahad_AI_Stock_Alerts directly and stub WP
 // functions themselves; in WordPress add_action is always defined so the hooks are
 // registered for real. Mirrors how Fahad_AI_Memory_Tools wires its filter.
+// @codeCoverageIgnoreStart
+// Reason: file-scope hook-wiring guard runs once at bootstrap require time, before PHPUnit's per-test pcov window.
 if ( function_exists( 'add_action' ) && function_exists( 'add_filter' ) ) {
 	Fahad_AI_Stock_Alerts::init_hooks();
 }
+// @codeCoverageIgnoreEnd

@@ -3,6 +3,14 @@
  * PHPUnit bootstrap — sets up Brain\Monkey and loads plugin files.
  */
 
+// pcov coverage collection over the full suite needs more than the default 128M
+// (the assertion-event exporter + per-test coverage maps add up). Raise it here so
+// `composer test:coverage` runs without per-command -d flags on any machine.
+$fahad_ai_mem = trim( (string) ini_get( 'memory_limit' ) );
+if ( '-1' !== $fahad_ai_mem && (int) $fahad_ai_mem < 512 ) {
+	ini_set( 'memory_limit', '512M' );
+}
+
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 require_once __DIR__ . '/stubs/wc-stubs.php';
 

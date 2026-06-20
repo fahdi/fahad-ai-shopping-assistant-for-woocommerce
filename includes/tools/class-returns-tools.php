@@ -492,4 +492,7 @@ final class Fahad_AI_Returns_Tools {
 // Self-register this feature pack the moment the file is loaded. The bootstrap (and the
 // test bootstrap) glob-require includes/tools/*.php, so dropping this file in is the ONLY
 // wiring needed — no bootstrap or harness edits.
+// @codeCoverageIgnoreStart
+// Reason: file-scope self-registration runs once at bootstrap require time, before pcov's per-test window opens; its effect is asserted in ReturnsToolsTest::test_returns_tools_are_registered_via_register_pack.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Returns_Tools', 'register' ] );
+// @codeCoverageIgnoreEnd

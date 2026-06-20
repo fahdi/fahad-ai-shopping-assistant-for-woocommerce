@@ -410,4 +410,7 @@ final class Fahad_AI_Wallet_Tools {
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this file
 // in is the ONLY wiring needed — no bootstrap or harness edits.
+// @codeCoverageIgnoreStart
+// Reason: file-scope self-registration runs once at bootstrap require_once time, before PHPUnit's per-test pcov window, so it can never be measured in-process (the callable it wires is verified by test_pack_self_registration_references_a_callable_register).
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Wallet_Tools', 'register' ] );
+// @codeCoverageIgnoreEnd

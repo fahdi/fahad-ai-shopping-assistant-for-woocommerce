@@ -18,7 +18,10 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+	// @codeCoverageIgnoreStart
+	// Reason: file-scope require-time guard; tests must define WP_CLI truthy to load this file at all (else the class + add_command below never run), so this non-CLI return branch is unreachable in-process.
 	return;
+	// @codeCoverageIgnoreEnd
 }
 
 final class Fahad_AI_Rag_Spike_CLI {

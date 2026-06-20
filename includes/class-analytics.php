@@ -560,7 +560,12 @@ final class Fahad_AI_Analytics {
 		if ( function_exists( 'mb_substr' ) ) {
 			return mb_substr( $text, 0, $max );
 		}
+		// @codeCoverageIgnoreStart
+		// Reason: mbstring is a loaded extension in the test/runtime env, so
+		// function_exists('mb_substr') is hardcoded true and this substr fallback
+		// (taken only when mbstring is absent) is unreachable in-process.
 		return substr( $text, 0, $max );
+		// @codeCoverageIgnoreEnd
 	}
 
 	/** A unique row id (UUID when available, else a random hash). */
