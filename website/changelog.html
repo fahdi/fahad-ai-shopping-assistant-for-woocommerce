@@ -41,6 +41,15 @@
   .nav .links{display:flex;gap:24px;margin-left:auto;font-size:15px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper)}
   .btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:15px;padding:10px 16px;border-radius:10px;border:1px solid var(--line)}
   .btn-lime{background:var(--lime);color:#10130a;border-color:var(--lime)}
+  .btn-red{background:#ff6b5e;color:#240a07;border-color:#ff6b5e;transition:.18s}
+  .btn-red:hover{background:#ff8478;border-color:#ff8478;transform:translateY(-1px)}
+  .pl{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:8px;padding-left:1px;flex-shrink:0;background:#240a07;color:#ff6b5e}
+  @property --spk{syntax:'<angle>';initial-value:0deg;inherits:false}
+  @keyframes spk{to{--spk:360deg}}
+  @keyframes plpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
+  .btn-red{position:relative;z-index:0}
+  .btn-red::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:conic-gradient(from var(--spk),transparent 0 248deg,rgba(255,255,255,.45) 296deg,#fff 318deg,rgba(255,240,235,.7) 338deg,transparent 360deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spk 2.6s linear infinite;pointer-events:none}
+  .pl{animation:plpulse 1.9s ease-in-out infinite}
   .head{padding:64px 0 30px;text-align:center}
   .head h1{font-size:clamp(34px,6vw,54px)}
   .head p{color:var(--paper-soft);margin:16px 0 0}
@@ -106,7 +115,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/#features">Features</a><a href="/#open">Open source</a><a href="/contact.html">Contact</a></nav><a class="btn btn-lime" href="https://wordpress.org/plugins/fahad-ai-shopping-assistant-for-woocommerce/" rel="noopener noreferrer">Get it free</a><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/#features">Features</a><a href="/#open">Open source</a><a href="/contact.html">Contact</a></nav><a class="btn btn-red" href="https://woo.isupercoder.com/?fahad_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F" target="_blank" rel="noopener noreferrer"><span class="pl">▶</span> Live demo</a><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
 <main id="main">
   <div class="wrap head"><h1>Changelog</h1><p>What shipped, release by release. Every version ships at 100% test coverage.</p></div>
   <div class="wrap">
