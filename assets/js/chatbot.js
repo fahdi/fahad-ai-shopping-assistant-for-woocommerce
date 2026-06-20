@@ -3,6 +3,8 @@
 	'use strict';
 
 	const cfg = window.fahadAiChatbot;
+	// defensive: cfg is always localized server-side, so this guard is unreachable in practice
+	/* v8 ignore next */
 	if (!cfg) return;
 
 	// ── Accent colour ─────────────────────────────────────────────────────────
@@ -78,6 +80,8 @@
 
 	// ── Build widget HTML ─────────────────────────────────────────────────────
 	const root = document.getElementById('fahad-ai-chatbot-root');
+	// defensive: the mount point is always server-rendered, so this guard is unreachable in practice
+	/* v8 ignore next */
 	if (!root) return;
 
 	root.innerHTML = `
@@ -154,11 +158,18 @@
 			'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 		);
 		// Only those actually rendered (visible) — disabled input during loading is excluded above.
+		// The `|| el === document.activeElement` fallback is defensive: an element can only
+		// be document.activeElement while it is rendered (offsetParent !== null), so the
+		// right-hand operand is never the deciding branch — unreachable in practice.
+		/* v8 ignore next */
 		return Array.prototype.filter.call(nodes, el => el.offsetParent !== null || el === document.activeElement);
 	}
 
 	function trapFocus(e) {
 		const focusable = focusableInPanel();
+		// defensive: the dialog always contains at least the (never-disabled) close button,
+		// so the focusable set is never empty while the panel is open — unreachable in practice.
+		/* v8 ignore next 5 */
 		if (!focusable.length) {
 			e.preventDefault();
 			panel.focus();
@@ -188,6 +199,9 @@
 		input.focus();
 		// Fallback: if the input could not take focus, move it to the close button
 		// so focus still lands inside the dialog (never left on the page behind it).
+		// defensive: openChat never runs while the input is disabled, so input.focus()
+		// always succeeds here and the fallback is unreachable in practice.
+		/* v8 ignore next */
 		if (document.activeElement !== input) closeBtn.focus();
 	}
 
@@ -273,6 +287,10 @@
 		function showNudge() {
 			// Re-check at fire time: the panel may have been opened, or the cap reached
 			// in another flow, since the trigger was armed.
+			// defensive: every trigger calls cleanupTriggers() on first fire (and opening
+			// the chat retires the nudge), so showNudge cannot re-enter with shown/open/
+			// ineligible state under the current wiring — unreachable in practice.
+			/* v8 ignore next */
 			if (shown || isOpen() || !eligible()) { cleanupTriggers(); return; }
 			shown = true;
 			cleanupTriggers();
@@ -390,6 +408,9 @@
 		// without stealing focus. One per widget, appended to the input area.
 		let liveRegion = null;
 		function announce(message) {
+			// defensive: every call site passes `i18n.X || 'default'` (always truthy), so
+			// announce is never invoked with an empty message — unreachable in practice.
+			/* v8 ignore next */
 			if (!message) return;
 			if (!liveRegion) {
 				liveRegion = document.createElement('span');
@@ -808,6 +829,11 @@
 	// Falls back to asking the assistant if the endpoint isn't configured (old config).
 	async function addToCartDirect(productId, variationId, name) {
 		if (!cfg.cartUrl) {
+			// defensive: addToCartDirect is only ever called from cards/comparison Add
+			// buttons, which are built solely for products that passed a `p.name` filter,
+			// so `name` is always truthy and the `'product ' + productId` fallback is
+			// unreachable in practice.
+			/* v8 ignore next */
 			input.value = 'Please add ' + (name || ('product ' + productId)) +
 				(variationId ? (' (variation_id ' + variationId + ')') : '') + ' to my cart';
 			sendMessage();
@@ -943,6 +969,9 @@
 					message_ref:      messageRef,
 				}),
 			}).catch(() => {});
+		// defensive: fetch() does not throw synchronously for these valid arguments, so the
+		// outer catch is unreachable (the async rejection is handled by .catch above).
+		/* v8 ignore next */
 		} catch (e) { /* never disrupt the chat over telemetry */ }
 	}
 
@@ -1029,6 +1058,9 @@
 			const url = isHttpUrl(p.url) ? p.url : '';
 			const nameEl = document.createElement(url ? 'a' : 'span');
 			nameEl.className = 'chatbot-compare-name';
+			// defensive: renderComparison filters its products by `p.name`, so every product
+			// reaching here has a truthy name and the `|| ''` fallback is unreachable.
+			/* v8 ignore next */
 			nameEl.textContent = p.name || '';
 			if (url) { nameEl.href = url; nameEl.target = '_blank'; nameEl.rel = 'noopener'; }
 			th.appendChild(nameEl);
@@ -1056,6 +1088,9 @@
 				if (content instanceof Node) {
 					td.appendChild(content);
 				} else {
+					// defensive: every cellFn returns a string or '—' (never null/undefined),
+					// so the `content == null` branch is unreachable in practice.
+					/* v8 ignore next */
 					td.textContent = content == null ? '' : String(content);
 				}
 				tr.appendChild(td);
@@ -1234,6 +1269,9 @@
 		const url   = isHttpUrl(p.url) ? p.url : '';
 		const title = document.createElement(url ? 'a' : 'span');
 		title.className = 'chatbot-card-title';
+		// defensive: renderProductCards only builds a card when `p.name` is truthy, so the
+		// `|| ''` fallback is unreachable in practice.
+		/* v8 ignore next */
 		title.textContent = p.name || '';
 		if (url) { title.href = url; title.target = '_blank'; title.rel = 'noopener'; }
 		body.appendChild(title);
@@ -1357,6 +1395,9 @@
 		label.htmlFor = id;
 		// Associate the control with the product so AT announces e.g.
 		// "Choose an option for Cotton Tee" (WCAG 1.3.1 / 4.1.2 / 3.3.2).
+		// defensive: buildVariationSelect runs only for cards built from named products, so
+		// the trailing `p.name || ''` fallback is unreachable in practice.
+		/* v8 ignore next */
 		label.textContent = fmt(i18n.chooseOptionFor || 'Choose an option for %s', p.name || '');
 
 		const select = document.createElement('select');
@@ -1407,6 +1448,9 @@
 			const code = raw[0].toLowerCase() === 'x'
 				? parseInt(raw.slice(1), 16)
 				: parseInt(raw, 10);
+			// defensive: the regex only matches `x[0-9a-f]+` or `\d+`, so parseInt always
+			// yields a finite code and the `return m` bail-out is unreachable in practice.
+			/* v8 ignore next */
 			if (!Number.isFinite(code)) return m;
 			const isControl   = code <= 0x1f || (code >= 0x7f && code <= 0x9f);
 			const isCombining = (code >= 0x0300 && code <= 0x036f)

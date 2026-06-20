@@ -26,7 +26,10 @@
 	<script>
 		// Mirror of what the plugin localizes via wp_localize_script. REST URLs are
 		// same-origin paths so Playwright's page.route('**/fahad-ai/v1/*') intercepts them.
-		window.fahadAiChatbot = {
+		// The coverage collector may set window.__FAHAD_CFG_OVERRIDE__ (via addInitScript,
+		// before this runs) to exercise alternate configs (Anthropic path, accent variants,
+		// voice, proactive); the E2E specs set nothing and get these defaults unchanged.
+		window.fahadAiChatbot = Object.assign({
 			botName:     'Store Assistant',
 			greeting:    'Hi! How can I help you today?',
 			accentColor: '#2563eb',
@@ -38,7 +41,7 @@
 			feedbackUrl: '/wp-json/fahad-ai/v1/feedback',
 			nonce:       'test-nonce',
 			i18n:        {}
-		};
+		}, window.__FAHAD_CFG_OVERRIDE__ || {});
 	</script>
 	<script src="/assets/js/chatbot.js"></script>
 </body>

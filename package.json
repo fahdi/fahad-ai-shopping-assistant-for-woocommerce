@@ -7,12 +7,11 @@
     "serve:harness": "node e2e/server.mjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:unit": "vitest run --passWithNoTests",
-    "test:unit:watch": "vitest",
-    "coverage:js": "vitest run --coverage --passWithNoTests",
-    "test": "npm run test:unit && npm run test:e2e"
+    "coverage:e2e": "node e2e/coverage/collect.mjs",
+    "test": "npm run test:e2e && npm run coverage:e2e"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.0"
+    "@playwright/test": "^1.61.0",
+    "monocart-coverage-reports": "^2.12.12"
   }
 }
