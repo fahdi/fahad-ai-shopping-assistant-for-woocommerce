@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>(function(){try{var t=localStorage.getItem('fa-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="dark light">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>Fahad AI: the honest WooCommerce shopping assistant</title>
 <meta name="description" content="An open-source AI shopping assistant for WooCommerce that answers from your real catalogue, never invents prices or stock, and ships with 100% test coverage.">
@@ -79,13 +80,13 @@
   h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.04;letter-spacing:-.02em;margin:0}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
   .mono{font-family:var(--mono)}
-  .mark{background:linear-gradient(transparent 62%,var(--lime) 62%);padding:0 .06em;color:var(--paper);box-decoration-break:clone;-webkit-box-decoration-break:clone}
+  .mark{background:linear-gradient(transparent 78%,var(--lime) 78%,var(--lime) 95%,transparent 95%);padding:0 .04em;color:var(--paper);box-decoration-break:clone;-webkit-box-decoration-break:clone}
   .dim{color:var(--paper-dim)}
 
   /* header */
   header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
   .nav{display:flex;align-items:center;gap:28px;height:68px}
-  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:-.02em}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:-.02em;white-space:nowrap;flex-shrink:0}
   .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
   .nav .links{display:flex;gap:26px;margin-left:auto;font-size:15px}
   .nav .links a{color:var(--paper-soft)}
@@ -109,7 +110,7 @@
   /* receipts under hero */
   .receipts{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
   .receipt{font-family:var(--mono);font-size:12.5px;color:var(--paper-soft);border:1px solid var(--line);border-radius:999px;padding:7px 14px;display:inline-flex;gap:8px;align-items:center}
-  .receipt b{color:var(--lime)}
+  .receipt b{color:var(--lime-text,var(--lime))}
 
   /* chat mock */
   .mock{background:linear-gradient(180deg,var(--ink-2),#101218);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
@@ -122,9 +123,10 @@
   .bub.user{align-self:flex-end;background:var(--ink-3);border-bottom-right-radius:5px}
   .bub.bot{align-self:flex-start;background:#0c1408;border:1px solid rgba(214,251,79,.22);border-bottom-left-radius:5px}
   .card{display:flex;gap:11px;align-items:center;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:4px}
-  .card .ph{width:46px;height:46px;border-radius:8px;background:linear-gradient(135deg,#23262e,#171a20);flex-shrink:0}
+  .card .ph{width:46px;height:46px;border-radius:8px;background:linear-gradient(135deg,#23262e,#171a20);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .card .ph svg{width:30px;height:30px;display:block}
   .card .t{font-weight:600;font-size:13.5px}
-  .card .pr{font-family:var(--mono);font-size:12.5px;color:var(--lime);margin-top:2px}
+  .card .pr{font-family:var(--mono);font-size:12.5px;color:var(--lime-text,var(--lime));margin-top:2px}
   .src{font-family:var(--mono);font-size:11px;color:var(--lime-deep);margin-top:7px;display:inline-flex;gap:7px;align-items:center}
   .src::before{content:"✓";font-weight:700}
 
@@ -162,7 +164,7 @@
   /* open source band */
   .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:46px}
   .stat{border:1px solid var(--line);border-radius:16px;padding:26px 22px;background:var(--ink-2)}
-  .stat .n{font-family:var(--serif);font-size:42px;font-weight:600;color:var(--lime);letter-spacing:-.02em}
+  .stat .n{font-family:var(--serif);font-size:42px;font-weight:600;color:var(--lime-text,var(--lime));letter-spacing:-.02em}
   .stat .l{font-size:14.5px;color:var(--paper-soft);margin-top:6px}
 
   /* final cta */
@@ -186,7 +188,7 @@
     .nav .links{display:none}
     .hero{padding:54px 0 40px}
   }
-  @media(max-width:560px){.grid{grid-template-columns:1fr}.stat-row{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}.stat-row{grid-template-columns:1fr 1fr}header .btn:not(.btn-lime){display:none}}
 
   /* a11y + motion (audit) */
   :root{color-scheme:dark}
@@ -201,6 +203,39 @@
     .reveal{animation:none;opacity:1;transform:none}
     .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
   }
+
+  /* theme: light mode (warm daylight) */
+  [data-theme="light"]{
+    color-scheme:light;
+    --ink:#f4f1e8;        /* page background, warm paper */
+    --ink-2:#fcfaf4;      /* raised surface / cards */
+    --ink-3:#e9e3d5;      /* inset chip */
+    --paper:#1b1a17;      /* primary text, warm near-black */
+    --paper-soft:#494640; /* secondary text */
+    --paper-dim:#6c685f;  /* tertiary / mono dim */
+    --lime-deep:#5d7d12;  /* accent text + thin bars */
+    --lime-text:#5d7d12;  /* lime used as text */
+    --line:rgba(22,20,14,.14);
+    --line-2:rgba(22,20,14,.05);
+    --shadow:0 24px 60px -30px rgba(70,58,28,.30);
+  }
+  /* hard-coded dark colours that don't flow through variables */
+  [data-theme="light"] header{background:rgba(244,241,232,.82)}
+  [data-theme="light"] .btn:hover{border-color:rgba(22,20,14,.28)}
+  [data-theme="light"] .mock{background:linear-gradient(180deg,#fcfaf4,#f1ece0)}
+  [data-theme="light"] .mock-top{background:rgba(22,20,14,.02)}
+  [data-theme="light"] .bub.bot{background:#eef6d6;border-color:rgba(120,150,30,.40)}
+  [data-theme="light"] .card{background:rgba(22,20,14,.03)}
+  [data-theme="light"] .card .ph{background:linear-gradient(135deg,#e7e1d3,#d6d0c0)}
+  [data-theme="light"] code{background:rgba(22,20,14,.05)}
+  [data-theme="light"] pre{background:#f7f3ea}
+  /* theme toggle */
+  .theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;margin-left:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--paper-soft);cursor:pointer;flex-shrink:0;transition:color .18s,border-color .18s}
+  .theme-toggle:hover{color:var(--paper);border-color:var(--paper-dim)}
+  .theme-toggle svg{width:17px;height:17px;display:block}
+  .theme-toggle .i-moon{display:none}
+  [data-theme="light"] .theme-toggle .i-sun{display:none}
+  [data-theme="light"] .theme-toggle .i-moon{display:block}
 </style>
 </head>
 <body>
@@ -217,7 +252,7 @@
     </nav>
     <a class="btn" href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a>
     <a class="btn btn-lime" href="https://wordpress.org/plugins/fahad-ai-shopping-assistant-for-woocommerce/" rel="noopener noreferrer">Get it free</a>
-  </div>
+  <button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div>
 </header>
 
 <main id="main">
@@ -246,7 +281,7 @@
           <div class="bub user">do you have the running sneakers in stock, and the price?</div>
           <div class="bub bot">
             Yes, the Trailblazer Runners are in stock right now.
-            <div class="card"><div class="ph"></div><div><div class="t">Trailblazer Runners</div><div class="pr">$89.00 · In stock</div></div></div>
+            <div class="card"><div class="ph"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M5 30.2c-.5-3 .7-5.8 3.4-7.2l5.1-2.7c1.3-.7 2.9-.2 3.6 1.1l1.9 3c.7 1.1 1.8 1.9 3.1 2.2l9.6 2.1c2.6.6 4.5 1.8 5.1 4.4.3 1.4-.7 2.6-2.1 2.6H8.6C7.2 37.7 6.2 36.6 6 35.1z" fill="var(--paper-soft)"/><path d="M7 36.6h33.5" stroke="var(--lime)" stroke-width="3" stroke-linecap="round"/><path d="M17.5 23.4l2.6 3.3M21.4 21.9l2.7 3.4M25.4 21.2l2.5 3.2" stroke="var(--ink-2)" stroke-width="1.7" stroke-linecap="round"/></svg></div><div><div class="t">Trailblazer Runners</div><div class="pr">$89.00 · In stock</div></div></div>
             <div class="src">read live from your catalogue</div>
           </div>
           <div class="bub user">any chance of a discount?</div>
@@ -347,5 +382,6 @@
   </div>
 </footer>
 
+<script>(function(){function s(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('fa-theme',t);}catch(e){}document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(t==='light'));});}document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var c=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';s(c==='light'?'dark':'light');});var c0=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(c0==='light'));});})();</script>
 </body>
 </html>
