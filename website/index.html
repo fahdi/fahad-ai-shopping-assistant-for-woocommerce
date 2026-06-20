@@ -131,7 +131,7 @@
   .bub.user.typing-now::after{content:"";display:inline-block;width:2px;height:1.05em;margin-left:2px;vertical-align:-0.16em;background:var(--paper);animation:caret .85s steps(1,end) infinite}
   @keyframes caret{50%{opacity:0}}
   /* subtle parallax: the mock drifts as it scrolls through the viewport (desktop, supported browsers) */
-  @keyframes mockPar{from{translate:0 14px}to{translate:0 -14px}}
+  @keyframes mockPar{from{translate:0 60px}to{translate:0 -60px}}
   @media(min-width:881px){@supports (animation-timeline:view()){.mock-link .mock{animation:mockPar linear both;animation-timeline:view();animation-range:cover}}}
 
   /* hero */
