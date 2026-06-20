@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Configuration: Fahad AI settings</title>
+<meta name="description" content="Configure the Fahad AI assistant: pick a provider and key, set the bot name and tone, choose languages, and gate which tools it can use.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/configuration.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="Configuration: Fahad AI settings">
+<meta property="og:description" content="Configure the Fahad AI assistant: pick a provider and key, set the bot name and tone, choose languages, and gate which tools it can use.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/configuration.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Configuration: Fahad AI settings">
+<meta name="twitter:description" content="Configure the Fahad AI assistant: pick a provider and key, set the bot name and tone, choose languages, and gate which tools it can use.">
+<meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Configuration: Fahad AI settings","url":"https://fahadai.isupercoder.com/docs/configuration.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"Configuration","item":"https://fahadai.isupercoder.com/docs/configuration.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html" style="color:var(--lime)">Configuration</a>
+    <a href="/docs/ai-providers.html">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html">REST API</a>
+    <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / Configuration</div>
+    <h1>Configuration</h1>
+    <p class="lede">Every setting lives on one screen at <strong>WooCommerce &rarr; Fahad AI</strong>. You pick a provider and key, name the assistant, set its tone and languages, and decide which actions it is allowed to take. The trust safeguards stay on no matter what you change.</p>
+
+    <h2>Where the settings live</h2>
+    <p>From your WordPress admin, open <strong>WooCommerce &rarr; Fahad AI</strong>. The page is grouped into sections: Provider, Widget, System Prompt, Assistant Behaviour, Cost &amp; Performance, Proactive Assist, and optional channels. Change what you need, then click <strong>Save Settings</strong> at the bottom. Most fields take effect on the next message; provider changes apply to the next conversation.</p>
+
+    <h2>Provider and API key</h2>
+    <p>Choose your <strong>AI Provider</strong> from the dropdown, then paste the matching <strong>API key</strong>. Supported providers include Anthropic (Claude), OpenAI, Google Gemini, Moonshot AI (Kimi), Groq, Mistral, DeepSeek, xAI (Grok), Together AI, OpenRouter, Perplexity, Ollama for local models, and a Custom option for any OpenAI compatible endpoint. You pay the model provider directly. The plugin stores your key in your own database and never proxies it through a third party.</p>
+    <div class="note">Because the assistant answers from real store data through tools, it behaves the same whichever provider you pick. Start with whatever key you already have, and see <a href="/docs/ai-providers.html">AI providers</a> for the full list and model notes.</div>
+
+    <h2>Widget: name, greeting, accent colour</h2>
+    <p>The Widget section controls how the launcher presents itself:</p>
+    <ul>
+      <li><strong>Bot Name</strong> is the label shown on the chat header. The default is <em>Store Assistant</em>.</li>
+      <li><strong>Greeting Message</strong> is the first line a shopper sees when they open the chat. The default is <em>Hi! How can I help you today?</em></li>
+      <li><strong>Accent Color</strong> sets the highlight colour of the widget so it matches your storefront. The default is a blue hex value, and you can pick any colour.</li>
+    </ul>
+
+    <h2>Tone</h2>
+    <p>The <strong>Tone / Persona</strong> dropdown shapes how the assistant phrases its replies. It is a fixed, vetted allowlist, not a free text box, so a chosen tone always maps to a reviewed instruction line and can never smuggle in other behaviour. The options are:</p>
+    <ul>
+      <li><strong>Default</strong>: friendly, with no specific persona.</li>
+      <li><strong>Friendly &amp; approachable</strong>: warm and welcoming.</li>
+      <li><strong>Professional &amp; precise</strong>: businesslike and exact.</li>
+      <li><strong>Concise &amp; to the point</strong>: minimal small talk.</li>
+      <li><strong>Playful &amp; upbeat</strong>: light humour.</li>
+      <li><strong>Premium / concierge</strong>: refined and understated.</li>
+    </ul>
+    <p>Tone affects voice only. It never changes the facts the assistant reports, and it never relaxes the trust safeguards described below.</p>
+
+    <h2>Languages</h2>
+    <p>The <strong>Languages</strong> field tells the assistant which languages to reply in. Leave it set to <code>auto</code> to detect each shopper's language and match it across the supported set, which includes English, Urdu, and Roman Urdu (Urdu written in the Latin alphabet, which shoppers often type). To pin a narrower set, list the languages you want:</p>
+    <pre><code>auto
+
+English, Urdu</code></pre>
+    <p>Product facts and prices stay grounded in your store data and are never translated. Genuine fluency in any given language depends on the AI model you connect, so reply quality follows the provider you choose.</p>
+
+    <h2>Streaming</h2>
+    <p>The widget streams replies token by token when the provider supports it. This is automatic and provider driven, so there is no on or off switch to set: every OpenAI compatible provider streams over a server sent events endpoint, while the native Anthropic path returns the full reply in one response. Either way the shopper sees the same grounded answer, and the dash filtering that keeps replies free of em dashes and en dashes is applied on both paths before any text reaches the shopper.</p>
+
+    <h2>Tool gating: choosing available actions</h2>
+    <p>The <strong>Available Actions</strong> control lists every optional tool the assistant can use, each by name with a short description. Tools are organised so that core product search and cart actions can never be turned off, which guarantees the assistant can always help a shopper find and buy. Everything beyond that core, the extra packs and add ons, can be gated.</p>
+    <p>To stop the assistant using a specific tool, tick its checkbox. Ticked actions are <strong>disabled</strong>. The disabled list is sanitised on save, so a tampered request can never reach in and disable the protected core tools. If no optional tools are installed, the section simply notes that the core actions are always available.</p>
+
+    <h2>Token budget</h2>
+    <p>The <strong>Conversation Token Budget</strong> caps roughly how much context is sent to the model on each turn, which keeps long conversations affordable. When a conversation grows past the cap, the oldest history is trimmed first and the current turn is always kept, so the assistant never loses the question it is answering right now. Set it to <code>0</code> for no cap.</p>
+
+    <h2>Proactive nudges</h2>
+    <p>Proactive Assist lets the assistant offer help without being asked, but only when there is genuine value to surface, such as a discount code that actually applies or store credit the shopper has not used. It is off by default. When you enable it, set <strong>Max Nudges Per Visit</strong> to control how often a single, dismissible message may appear. The recommended value is <code>1</code>, meaning once per session, and <code>0</code> turns proactive messages off entirely.</p>
+    <div class="note">A proactive nudge never invents urgency or scarcity, is capped per visit, and stops the moment a shopper dismisses it. If you would rather the assistant only ever speaks when spoken to, leave this off.</div>
+
+    <h2>Custom system prompt</h2>
+    <p>The <strong>System Prompt</strong> section gives you one optional text box to add store policies, shipping details, FAQs, or tone guidance. Leave it blank to use the default. Whatever you write is placed in the body region of the prompt, so it informs the assistant but sits below the assistant's grounding rules.</p>
+    <p>This slot is deliberately bounded. The absolute trust guardrails are appended <strong>last</strong>, after your custom prompt and after every extension filter has run, so the policy always wins. The order is fixed:</p>
+    <ol>
+      <li>The default prompt body and your custom prompt slot.</li>
+      <li>Any context that feature packs append through the prompt filter.</li>
+      <li>The trust guardrails, appended last and never passed through that filter.</li>
+    </ol>
+    <p>Because the guardrails come after everything else, no custom prompt and no plugin can weaken them. The behaviour you cannot turn off includes: no fake urgency, respect the customer's budget, honesty about extras, no invented facts, and always allowing a path to human support.</p>
+
+    <div class="next"><a href="/docs/">&larr; All docs</a><a href="/docs/ai-providers.html">AI providers &rarr;</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce &middot; <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> &middot; <a href="/">Home</a></div></footer>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Back-in-stock and price-drop alerts</title>
+<meta name="description" content="Let shoppers ask the Fahad AI assistant to notify them when an out-of-stock item returns or drops in price, with a confirmed double opt-in.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/stock-alerts.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="Back-in-stock and price-drop alerts">
+<meta property="og:description" content="Let shoppers ask the Fahad AI assistant to notify them when an out-of-stock item returns or drops in price, with a confirmed double opt-in.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/stock-alerts.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Back-in-stock and price-drop alerts">
+<meta name="twitter:description" content="Let shoppers ask the Fahad AI assistant to notify them when an out-of-stock item returns or drops in price, with a confirmed double opt-in.">
+<meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Back-in-stock and price-drop alerts","url":"https://fahadai.isupercoder.com/docs/stock-alerts.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"Stock alerts","item":"https://fahadai.isupercoder.com/docs/stock-alerts.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html">Configuration</a>
+    <a href="/docs/ai-providers.html">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html">REST API</a>
+    <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / Stock alerts</div>
+    <h1>Stock alerts</h1>
+    <p class="lede">Let shoppers ask to be notified when an out-of-stock item returns or drops in price. The assistant records the request, sends a confirmation email, and only ever mails people who clicked to confirm. No fake urgency, no surprise email.</p>
+
+    <h2>What it does</h2>
+    <p>When a customer asks to be told about a product, the assistant can record a watch on that product for that shopper's email address. There are two kinds of watch:</p>
+    <ul>
+      <li><strong>Back-in-stock:</strong> notify the shopper when an out-of-stock item becomes available again.</li>
+      <li><strong>Price-drop:</strong> notify the shopper when the price falls below what it is today.</li>
+    </ul>
+    <p>Both run on the assistant's <code>subscribe_stock_alert</code> tool, which records the alert against the product and the shopper email. The email is the only thing the shopper needs to provide, so this works for logged-in customers and guests alike.</p>
+
+    <h2>No fake urgency</h2>
+    <p>A back-in-stock alert is only offered for an item that is genuinely out of stock. If the shopper asks for one on an item that is in stock right now, the assistant declines and tells them they can simply buy it, because there is nothing to wait for. The in-stock check reads live WooCommerce data, not the model's assumption, so a back-in-stock alert can never be used to manufacture scarcity.</p>
+    <p>Price-drop alerts are allowed on any item, in stock or not, since watching for a lower price is not a scarcity tactic.</p>
+    <div class="note">A price-drop alert fires only when the new price is genuinely lower than the price at the time the watch was set. A back-in-stock alert fires only on a real return to stock. Alerts are never sent speculatively.</div>
+
+    <h2>Double opt-in</h2>
+    <p>Recording an alert does not activate it. The flow is deliberately two-step so the store can never be used to mail an address that did not ask for it:</p>
+    <ol>
+      <li>The shopper asks to be notified and gives an email. The assistant records a <strong>pending</strong> subscription.</li>
+      <li>A confirmation email goes to that address with a single confirm link.</li>
+      <li>The alert becomes active only after the shopper clicks that link. Until then, nothing else is sent and no notification can fire.</li>
+    </ol>
+    <p>Every alert email also carries a one-click unsubscribe link, so a shopper can stop a watch at any time without signing in or replying. Confirm and unsubscribe links are authorised by a signed token tied to the specific subscription and action, not by a login session.</p>
+
+    <h2>What the shopper sees</h2>
+    <p>A typical exchange in the chat widget:</p>
+    <pre><code>Shopper:  The navy hoodie in medium is sold out. Tell me when it's back?
+Assistant: Sure. What email should I use?
+Shopper:  sam@example.com
+Assistant: Almost done! I've set up the alert and sent a confirmation
+           link to your email. Click it to activate the alert. You can
+           unsubscribe anytime in one click.</code></pre>
+    <p>For a price watch, the shopper simply asks to be told if the price drops, and the same confirm-then-activate flow applies.</p>
+
+    <h2>How the assistant calls it</h2>
+    <p>The model invokes <code>subscribe_stock_alert</code> with the product and the shopper email. <code>type</code> defaults to a back-in-stock watch when omitted.</p>
+    <pre><code>subscribe_stock_alert({
+  "product_id": 482,
+  "email": "sam@example.com",
+  "type": "back_in_stock"   // or "price_drop"
+  // optional: "variation_id" to watch a specific variant
+})</code></pre>
+    <p>Pass <code>variation_id</code> to watch one specific variant, for example a single size or colour. The recorded watch is matched to the product and variation so the right shopper is notified on the right change.</p>
+
+    <h2>Privacy</h2>
+    <p>The shopper's email is personal data. It is stored only for the watch and used only to send the confirmation and the eventual alert. The result the model sees never contains the raw address, only a masked form, so the email stays out of the model's context. Stored alerts are covered by WordPress personal-data export and erase tools.</p>
+
+    <div class="note">Back-in-stock alerts ship out of the box and use the store's existing email, so there is nothing extra to configure. See the <a href="/changelog.html">changelog</a> for the releases that introduced and extended this feature.</div>
+
+    <div class="next"><a href="/docs/">← All docs</a><a href="/docs/product-search.html">Product search →</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+</body>
+</html>

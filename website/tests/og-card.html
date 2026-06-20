@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--paper:#f3efe6;--paper-soft:#c7c3b8;--paper-dim:#9a968c;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.055);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1200px;height:630px;overflow:hidden}
+  body{background:var(--ink);color:var(--paper);font-family:var(--sans);
+    background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);
+    background-size:60px 60px;position:relative}
+  .glow{position:absolute;width:560px;height:560px;right:-160px;top:-160px;border-radius:50%;
+    background:radial-gradient(circle,rgba(214,251,79,.16),transparent 62%);filter:blur(8px)}
+  .pad{position:absolute;inset:0;padding:74px 80px;display:flex;flex-direction:column;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:16px;font-family:var(--serif);font-size:34px;font-weight:600;letter-spacing:-.02em}
+  .dot{width:20px;height:20px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 7px rgba(214,251,79,.18)}
+  .eyebrow{font-family:var(--mono);font-size:19px;letter-spacing:.18em;text-transform:uppercase;color:var(--lime-deep);display:flex;align-items:center;gap:16px}
+  .eyebrow::before{content:"";width:40px;height:2px;background:var(--lime-deep)}
+  h1{font-family:var(--serif);font-weight:600;font-size:74px;line-height:1.02;letter-spacing:-.02em;max-width:18ch;margin:26px 0 0}
+  .mark{background:linear-gradient(transparent 60%,var(--lime) 60%);padding:0 .04em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+  .row{display:flex;align-items:center;justify-content:space-between}
+  .chips{display:flex;gap:14px}
+  .chip{font-family:var(--mono);font-size:18px;color:var(--paper-soft);border:1px solid var(--line);border-radius:999px;padding:11px 20px}
+  .chip b{color:var(--lime)}
+  .host{font-family:var(--mono);font-size:20px;color:var(--paper-dim)}
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="pad">
+    <div class="row">
+      <div class="brand"><span class="dot"></span>Fahad AI</div>
+      <div class="eyebrow">Open source · GPL</div>
+    </div>
+    <div>
+      <div class="eyebrow">WooCommerce shopping assistant</div>
+      <h1>The assistant that <span class="mark">shows its work.</span></h1>
+    </div>
+    <div class="row">
+      <div class="chips">
+        <span class="chip"><b>0</b> invented prices</span>
+        <span class="chip"><b>100%</b> test coverage</span>
+        <span class="chip">grounded in real catalogue</span>
+      </div>
+      <div class="host">fahadai.isupercoder.com</div>
+    </div>
+  </div>
+</body>
+</html>

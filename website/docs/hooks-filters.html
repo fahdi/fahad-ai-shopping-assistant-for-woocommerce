@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Hooks and filters for developers</title>
+<meta name="description" content="Extend the assistant: register tools, supply a wallet provider, filter the system prompt, and tune rate limits.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/hooks-filters.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="Hooks and filters for developers">
+<meta property="og:description" content="Extend the assistant: register tools, supply a wallet provider, filter the system prompt, and tune rate limits.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/hooks-filters.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hooks and filters for developers">
+<meta name="twitter:description" content="Extend the assistant: register tools, supply a wallet provider, filter the system prompt, and tune rate limits.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Hooks and filters for developers","url":"https://fahadai.isupercoder.com/docs/hooks-filters.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"Hooks and filters","item":"https://fahadai.isupercoder.com/docs/hooks-filters.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html">Configuration</a>
+    <a href="/docs/ai-providers.html">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html">REST API</a>
+    <a href="/docs/hooks-filters.html" style="color:var(--lime)">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / Hooks and filters</div>
+    <h1>Hooks and filters</h1>
+    <p class="lede">The assistant is built to be extended without forking it. A handful of WordPress filters let an add-on register new tools, supply a wallet or image-search provider, shape the system prompt, route outbound WhatsApp, and tune the per-client rate limit. Each seam is decoupled on purpose: with nothing hooked, the capability simply stays dormant.</p>
+
+    <h2>Register tools with a name, schema and callback</h2>
+    <p>Tools are how the model reads and acts on real store data. The plugin ships its built-in WooCommerce tools, then exposes the full list to add-ons through the <code>fahad_ai_register_tools</code> filter. Append an entry with a unique <code>name</code>, a <code>description</code> shown to the model, a JSON Schema <code>parameters</code> block, and a <code>callback</code> with the signature <code>fn( array $input ): array</code>.</p>
+    <pre><code>add_filter( 'fahad_ai_register_tools', function ( array $tools ) {
+    $tools[] = [
+        'name'        =&gt; 'loyalty_points',
+        'description' =&gt; 'Get the logged-in customer loyalty points balance.',
+        'parameters'  =&gt; [ 'type' =&gt; 'object', 'properties' =&gt; new stdClass() ],
+        'callback'    =&gt; fn( array $input ) =&gt; [ 'points' =&gt; my_points_lookup() ],
+    ];
+    return $tools;
+} );</code></pre>
+    <p>Invalid entries are skipped, and a callback that throws is isolated, so a misbehaving add-on cannot fatal a request. The callback return value is sent back to the model as the tool result, so keep it to plain, grounded data.</p>
+    <div class="note">First-party feature packs that ship inside the plugin use a separate, filter-free path, <code>Fahad_AI_Tool_Registry::register_pack()</code>, where a pack drops into <code>includes/tools/</code> as one new file with no bootstrap edits. The <code>fahad_ai_register_tools</code> filter is the seam for your own add-ons, and it runs after the packs so you can still override a name.</div>
+
+    <h2>Supply a wallet provider</h2>
+    <p>Store credit is the differentiator, and it is also money-sensitive, so the assistant core never depends on any wallet plugin. The wallet tools resolve a provider adapter at runtime through <code>fahad_ai_wallet_provider</code>. Return an object (or an array of callables keyed by the same operation names).</p>
+    <pre><code>add_filter( 'fahad_ai_wallet_provider', fn() =&gt; new My_WalletPro_Adapter() );</code></pre>
+    <p>The adapter exposes these operations. All amounts are floats in the store currency, and any operation you cannot service should return an <code>[ 'error' =&gt; string ]</code> array rather than throw or report a success it did not perform.</p>
+    <ul>
+      <li><code>get_balance( int $user_id ): array</code> returns <code>[ 'amount', 'currency', 'formatted' ]</code>.</li>
+      <li><code>get_deposit_bonus( float $amount ): array|null</code> returns the bonus a top-up would earn, surfaced honestly, or <code>null</code> when none applies.</li>
+      <li><code>top_up( int $user_id, float $amount ): array</code> credits the wallet atomically and returns the new balance.</li>
+      <li><code>pay_with_credit( int $user_id, float $amount, array $context = [] ): array</code> debits for an order or cart, atomically and idempotently, and returns the new balance.</li>
+    </ul>
+    <p>The ledger and its atomicity belong to your provider. The tool layer only guarantees it never creates an unsafe condition: it validates amounts before touching you, checks sufficient balance before a debit is even attempted, never fabricates a balance, and acts only on the current logged-in user. See the <a href="/docs/wallet-integration.html">wallet integration</a> page for the full contract.</p>
+
+    <h2>Filter the system prompt</h2>
+    <p>The <code>fahad_ai_system_prompt</code> filter receives the base prompt (the default body or the merchant custom prompt) so you can inject context, for example a returning customer's stored preferences. Return a string.</p>
+    <pre><code>add_filter( 'fahad_ai_system_prompt', function ( $prompt ) {
+    return $prompt . "\n\nThis customer prefers vegan products.";
+} );</code></pre>
+    <div class="note">The trust guardrails are appended after this filter returns, not passed through it. Neither this hook, a merchant custom prompt, nor any config field can drop or override the anti dark-pattern policy. You can add to the prompt, you cannot remove the guardrails.</div>
+
+    <h2>Tune the rate limit</h2>
+    <p>Each client is held to a request count inside a time window. Both are overridable: <code>fahad_ai_rate_limit</code> sets the number of requests (default 20), and <code>fahad_ai_rate_window</code> sets the window in seconds (default one minute).</p>
+    <pre><code>add_filter( 'fahad_ai_rate_limit',  fn() =&gt; 40 );                   // 40 requests
+add_filter( 'fahad_ai_rate_window', fn() =&gt; 2 * MINUTE_IN_SECONDS ); // per 2 minutes</code></pre>
+    <p>Raising these costs more provider tokens per visitor, so move them deliberately. Lowering them tightens abuse protection at the cost of stricter limits for genuine shoppers.</p>
+
+    <h2>Plug in an image-search provider</h2>
+    <p>Visual search stays dormant until a provider is hooked. The <code>fahad_ai_visual_retriever</code> filter receives a validated image descriptor and structured filters, and returns ranked product IDs, best first. Two shapes are accepted: return the IDs directly, or return a callable retriever to register once.</p>
+    <pre><code>add_filter( 'fahad_ai_visual_retriever', function ( $ids, $image, $filters ) {
+    return My_Vision_Backend::rank( $image, $filters ); // int[] best first
+}, 10, 3 );</code></pre>
+    <p>The plugin validates every upload before the seam is consulted, so the provider only ever sees a size-bounded payload with an allowed image type. The retriever returns IDs only, never price or stock, and <code>$filters</code> carries <code>category</code>, <code>min_price</code>, <code>max_price</code> and <code>limit</code> so you can pre-filter the scan.</p>
+
+    <h2>Send outbound WhatsApp</h2>
+    <p>The core makes no live Meta call. The <code>fahad_ai_whatsapp_send</code> filter is the outbound seam: with no provider hooked it returns <code>null</code> and nothing is sent. A provider posts to the Graph API and returns a result array.</p>
+    <pre><code>add_filter( 'fahad_ai_whatsapp_send', function ( $result, $to, $text, $ctx ) {
+    // POST to the WhatsApp Cloud API with your phone number id + token.
+    // return [ 'sent' =&gt; true, 'id' =&gt; $wamid ] on success.
+    return $result;
+}, 10, 4 );</code></pre>
+    <p>Keeping the HTTP call and the access token in the provider means this scaffolding ships and is fully testable without any Meta credentials, and it mirrors the same decoupling as the wallet seam.</p>
+
+    <h2>A note on the pattern</h2>
+    <p>Every seam here follows one rule: the assistant ships the behaviour, your add-on ships the provider, and either side can change independently. Nothing fires until you hook it, so installing the plugin is always a calm, predictable starting point. If you build something, please return data the model can trust, plain and grounded, and let the guardrails do the rest.</p>
+
+    <div class="next"><a href="/docs/">&larr; All docs</a><a href="/docs/rest-api.html">REST API &rarr;</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce &middot; <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> &middot; <a href="/">Home</a></div></footer>
+</body>
+</html>

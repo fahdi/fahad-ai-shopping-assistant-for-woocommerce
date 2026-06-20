@@ -8,6 +8,9 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "coverage:e2e": "node e2e/coverage/collect.mjs",
+    "test:website": "node website/tests/check-links.mjs && node website/tests/check-seo.mjs",
+    "test:website:links": "node website/tests/check-links.mjs",
+    "test:website:seo": "node website/tests/check-seo.mjs",
     "test": "npm run test:e2e && npm run coverage:e2e"
   },
   "devDependencies": {

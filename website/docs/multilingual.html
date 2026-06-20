@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Multilingual shopper replies</title>
+<meta name="description" content="The assistant detects the shopper language and replies in it, keeping product facts grounded and untranslated.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/multilingual.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="Multilingual shopper replies">
+<meta property="og:description" content="The assistant detects the shopper language and replies in it, keeping product facts grounded and untranslated.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/multilingual.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Multilingual shopper replies">
+<meta name="twitter:description" content="The assistant detects the shopper language and replies in it, keeping product facts grounded and untranslated.">
+<meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Multilingual shopper replies","url":"https://fahadai.isupercoder.com/docs/multilingual.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"Multilingual","item":"https://fahadai.isupercoder.com/docs/multilingual.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html">Configuration</a>
+    <a href="/docs/ai-providers.html">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html">REST API</a>
+    <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / Multilingual</div>
+    <h1>Multilingual</h1>
+    <p class="lede">The assistant reads the language of the shopper's latest message and replies in that same language and script. Product facts stay grounded in your store data: they are never translated, reworded into new claims, or invented. Only the assistant's own wording switches language.</p>
+
+    <h2>How language detection works</h2>
+    <p>On every turn, the assistant looks at the customer's most recent message, detects its language, and replies in that same language. It matches the script as well as the language, so a shopper who types Roman Urdu (Urdu written in the Latin alphabet) gets a reply in Roman Urdu, not in Urdu script, unless they switch first.</p>
+    <p>The assistant will not change languages on a shopper unprompted. If the conversation is in English and stays in English, replies stay in English. When the shopper switches, the next reply follows them.</p>
+    <p>Out of the box, the supported set is English, Urdu, and Roman Urdu. Detection runs automatically with no per-store setup.</p>
+
+    <h2>Product facts are never translated</h2>
+    <p>This is the core promise of the assistant, and it holds in every language. Product details, specifications, prices, product names, and stock all come from your live catalogue through tool calls. Those values are passed through verbatim. They are never translated, localised, reworded into new claims, or invented.</p>
+    <p>Only the assistant's own explanatory wording, the sentence that introduces or summarises results, switches language. The underlying data does not. Currency symbols and amounts stay exactly as your store reports them, so a price of <code>&#8360;2,499</code> reads the same whether the surrounding reply is in English or in Urdu.</p>
+    <div class="note">Why this matters: translating a price, a model number, or a stock count is how assistants drift into false claims. By keeping the grounded data fixed and translating only the framing, the assistant can speak the shopper's language without ever inventing a fact.</div>
+
+    <h2>Setting the languages</h2>
+    <p>The behaviour is on by default. You can review or pin it under <strong>WooCommerce &rarr; Fahad AI</strong>, in the <strong>Languages</strong> field.</p>
+    <ul>
+      <li><code>auto</code> (the default): detect each shopper's language and match it across the supported set.</li>
+      <li>A specific list, for example <code>English, Urdu</code>: folds in your preferred set as advisory guidance for the assistant.</li>
+    </ul>
+    <p>An empty value falls back to <code>auto</code>, which is the safe default. The setting names which languages the assistant should expect and reply in; the actual fluency of non-English replies comes from the AI model you connect.</p>
+
+    <h2>What a turn looks like</h2>
+    <p>A shopper asks, in Roman Urdu, for something in their budget. The assistant detects the language, calls the catalogue tool, and replies in Roman Urdu while leaving the product card data untouched:</p>
+    <pre><code>Shopper:  budget 3000 me kya mil sakta hai?
+
+Assistant (Roman Urdu wording, grounded data):
+  3000 ke andar yeh options available hain:
+  [ product cards rendered from live catalogue ]
+  Name, price, aur stock store ke data se aate hain.</code></pre>
+    <p>The introductory sentence is Roman Urdu. The card content, the names, the prices such as <code>&#8360;2,499</code>, and the stock status, are the exact values the catalogue tool returned.</p>
+
+    <h2>Things to keep in mind</h2>
+    <ul>
+      <li>Reply quality in any language depends on the AI provider and model you connect. For stores serving Urdu and other non-Latin scripts, a stronger multilingual model gives better wording.</li>
+      <li>Language detection is per message. A shopper can move between languages within one conversation and the assistant follows each turn.</li>
+      <li>The grounding rule is unconditional. No language, and no setting, lets the assistant translate or restate a price, name, or stock value into something the store did not report.</li>
+    </ul>
+
+    <div class="next"><a href="/docs/">&larr; All docs</a><a href="/docs/how-it-works.html">How it works &rarr;</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce &middot; <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> &middot; <a href="/">Home</a></div></footer>
+</body>
+</html>

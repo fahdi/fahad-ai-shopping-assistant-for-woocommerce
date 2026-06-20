@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>REST API endpoint reference</title>
+<meta name="description" content="The fahad-ai/v1 REST endpoints for the Fahad AI assistant: chat, cart, feedback, admin and agent routes, plus the permission gate that guards each one.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/rest-api.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="REST API endpoint reference">
+<meta property="og:description" content="The fahad-ai/v1 REST endpoints for the Fahad AI assistant: chat, cart, feedback, admin and agent routes, plus the permission gate that guards each one.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/rest-api.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="REST API endpoint reference">
+<meta name="twitter:description" content="The fahad-ai/v1 REST endpoints for the Fahad AI assistant: chat, cart, feedback, admin and agent routes, plus the permission gate that guards each one.">
+<meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"REST API endpoint reference","url":"https://fahadai.isupercoder.com/docs/rest-api.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"REST API","item":"https://fahadai.isupercoder.com/docs/rest-api.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html">Configuration</a>
+    <a href="/docs/ai-providers.html">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html" style="color:var(--lime)">REST API</a>
+    <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / REST API</div>
+    <h1>REST API</h1>
+    <p class="lede">Every server route the plugin adds lives under the <code>fahad-ai/v1</code> namespace. This page lists each endpoint, its method, the permission gate that protects it, and the shape of what it returns. Nothing here is invented; it mirrors the routes the plugin registers on your store.</p>
+
+    <h2>Namespace and base URL</h2>
+    <p>All routes are registered against the WordPress REST API under the <code>fahad-ai/v1</code> namespace, so the base path on your site is:</p>
+    <pre><code>https://your-store.com/wp-json/fahad-ai/v1/</code></pre>
+    <p>The endpoints fall into four groups, each with a different security boundary: the storefront chat endpoints, the admin copilot endpoints, the WhatsApp webhook, and the store-as-an-agent gateway.</p>
+
+    <h2>How the storefront endpoints are gated</h2>
+    <p>The chat, cart, feedback, and visual search endpoints are intentionally public, because a storefront assistant has to answer guests who are not logged in. They are not left open, though. Each request passes through one shared gate that does two things:</p>
+    <ul>
+      <li><strong>Nonce check.</strong> The request must carry a valid <code>wp_rest</code> nonce in the <code>X-WP-Nonce</code> header. The nonce is not an identity check (every visitor gets one), but it blocks cross origin and CSRF style abuse. A missing or expired nonce returns <code>403</code>.</li>
+      <li><strong>Per client rate limit.</strong> A fixed window counter caps how many billable calls and cart mutations any one client can trigger. It is keyed per user when logged in, otherwise per IP. The default is 20 requests per 60 seconds. When the window is exhausted the request returns <code>429</code>.</li>
+    </ul>
+    <p>Both limits are adjustable with filters, covered in <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>:</p>
+    <pre><code>add_filter( 'fahad_ai_rate_limit', fn() =&gt; 40 );   // requests per window
+add_filter( 'fahad_ai_rate_window', fn() =&gt; 30 );  // window length in seconds</code></pre>
+    <div class="note">A nonce alone is public, so it is never treated as authorization. The rate limit is what actually protects you from a single client running up provider cost or spamming cart changes.</div>
+
+    <h2>Storefront chat endpoints</h2>
+    <p>These are the routes the chat widget calls. All four share the gate above: <code>wp_rest</code> nonce plus the per client rate limit, returning <code>429</code> when the limit is exceeded.</p>
+
+    <h3>POST /message</h3>
+    <p>Runs one non streaming conversation turn. You send a <code>messages</code> array of <code>{ role, content }</code> entries; the assistant answers using grounded store tools. The response is a JSON object:</p>
+    <pre><code>{
+  "message":    "Here are two options under $50 ...",
+  "cards":      [ /* grounded product cards */ ],
+  "comparison": [ /* optional side-by-side rows */ ]
+}</code></pre>
+    <p>An empty or malformed <code>messages</code> array returns <code>400</code>. If every configured provider fails, the endpoint still returns <code>200</code> with a friendly fallback <code>message</code> rather than a raw error, so the shopper never hits a dead end.</p>
+
+    <h3>POST /stream</h3>
+    <p>The same turn as <code>/message</code>, but streamed as Server Sent Events (<code>Content-Type: text/event-stream</code>) so replies render token by token. Each event has a <code>type</code> and a small data payload:</p>
+    <ul>
+      <li><code>chunk</code> carries a piece of the reply text.</li>
+      <li><code>tool</code> announces a grounded tool call by name.</li>
+      <li><code>products</code> delivers product cards.</li>
+      <li><code>comparison</code> delivers a comparison table.</li>
+      <li><code>done</code> closes the turn.</li>
+      <li><code>error</code> reports a validation problem (for example a missing <code>messages</code> array).</li>
+    </ul>
+
+    <h3>POST /cart</h3>
+    <p>Mutates the WooCommerce cart directly, so card buttons (add to cart, change quantity, remove) do not need an agent round trip. It takes an <code>action</code> plus <code>product_id</code>, <code>quantity</code>, <code>variation_id</code>, or <code>cart_item_key</code> as the action needs, reuses the same cart tools the assistant uses (including their stock and variation validation), and returns the verified cart state as JSON. An unknown <code>action</code> returns <code>400</code>. It returns JSON rather than SSE so WooCommerce can set its session cookie and guest carts persist.</p>
+
+    <h3>POST /feedback</h3>
+    <p>Records a thumbs up or thumbs down on a bot reply. You send a <code>rating</code> of <code>up</code> or <code>down</code>, an optional short <code>reason</code>, and opaque <code>conversation_ref</code> and <code>message_ref</code> values. It is telemetry only and stores no personal data. The response confirms the stored row:</p>
+    <pre><code>{ "ok": true, "id": "fb_a1b2c3" }</code></pre>
+    <p>Any rating that is not <code>up</code> or <code>down</code> returns <code>400</code> before anything is stored.</p>
+
+    <h2>Visual search</h2>
+    <h3>POST /visual-search</h3>
+    <p>The "shop the look" route. It accepts a multipart upload with an <code>image</code> part and optional <code>category</code>, <code>min_price</code>, <code>max_price</code>, and <code>limit</code> filters, then returns visually similar in stock products. It uses the same gate as the chat endpoints (nonce plus rate limit), because a vision lookup is billable. The response shape is:</p>
+    <pre><code>{ "available": true, "found": 3, "products": [ /* cards */ ] }</code></pre>
+    <p>Image validation failures return <code>413</code> (too large), <code>415</code> (wrong type), or <code>400</code> (missing). The image ranking itself is a pluggable seam, so with no vision provider registered the route degrades gracefully to <code>{ "available": false, "found": 0, "products": [], "message": ... }</code> rather than failing.</p>
+
+    <h2>WhatsApp webhook</h2>
+    <h3>GET and POST /whatsapp</h3>
+    <p>The omnichannel webhook for the WhatsApp channel. Its security boundary is not the chat nonce, because Meta cannot send one. Instead:</p>
+    <ul>
+      <li>The <code>GET</code> request is Meta's verification handshake, checked against your configured verify token and echoing back the challenge.</li>
+      <li>The <code>POST</code> request carries inbound messages and is validated by the <code>X-Hub-Signature-256</code> HMAC signature.</li>
+    </ul>
+    <p>The outbound send is a pluggable seam (<code>fahad_ai_whatsapp_send</code>); no live Meta call ships in core.</p>
+
+    <h2>Admin copilot endpoints</h2>
+    <p>The merchant copilot routes live under <code>/admin</code>. They are gated by the <code>manage_woocommerce</code> capability, not the storefront nonce, so only store managers can reach them. Every one is read only or draft only; nothing here writes to your store. All are <code>GET</code> requests grounded in real WooCommerce data.</p>
+    <ul>
+      <li><code>GET /admin/insights</code> returns a grounded sales summary for a recent window: order count, gross revenue, refund total and count, and currency.</li>
+      <li><code>GET /admin/sale-candidates</code> returns products that look like good discount candidates.</li>
+      <li><code>GET /admin/product-context</code> returns grounded context for a single product.</li>
+      <li><code>GET /admin/review-drafts</code> returns draft review replies for the manager to edit and post.</li>
+    </ul>
+    <p>A caller without the <code>manage_woocommerce</code> capability is rejected by the permission gate before any handler runs.</p>
+
+    <h2>Agent gateway endpoints</h2>
+    <p>The store as an agent gateway lives under <code>/agent</code>. These are public read only routes so external AI agents can discover and shop your catalogue using the same grounded data a human shopper sees. They expose only published catalogue data, and the handoff only returns URLs; nothing here mutates the store or charges anyone. See <a href="/docs/agent-endpoints.html">Agent endpoints</a> for the full walkthrough.</p>
+    <ul>
+      <li><code>GET /agent/llms</code> returns a plain text usage policy (llms.txt style) that points agents at the feed and states what is allowed.</li>
+      <li><code>GET /agent/catalog</code> returns a structured product feed: <code>{ "count": N, "products": [ ... ] }</code> built from trusted WooCommerce fields.</li>
+      <li><code>GET /agent/search</code> reuses the chat <code>search_products</code> tool, taking a <code>q</code> query and returning grounded card data.</li>
+      <li><code>GET /agent/product</code> reuses <code>get_product_details</code> for a single product <code>id</code>.</li>
+      <li><code>GET /agent/checkout-handoff</code> takes a comma separated <code>ids</code> list and returns <code>{ "note": ..., "items": [ { "product_id": N, "add_to_cart": "..." } ] }</code>. The agent never holds a cart or pays; a human opens the link and completes checkout in their own session.</li>
+    </ul>
+
+    <h2>Summary table</h2>
+    <pre><code>METHOD  PATH                      GATE                     RETURNS
+POST    /message                  nonce + rate limit       { message, cards, comparison }
+POST    /stream                   nonce + rate limit       SSE: chunk, tool, products,
+                                                           comparison, done, error
+POST    /cart                     nonce + rate limit       verified cart state (JSON)
+POST    /feedback                 nonce + rate limit       { ok, id }
+POST    /visual-search            nonce + rate limit       { available, found, products }
+GET     /whatsapp                 verify token             challenge echo
+POST    /whatsapp                 X-Hub-Signature-256      delivery ack
+GET     /admin/insights           manage_woocommerce       sales summary
+GET     /admin/sale-candidates    manage_woocommerce       discount candidates
+GET     /admin/product-context    manage_woocommerce       product context
+GET     /admin/review-drafts      manage_woocommerce       draft review replies
+GET     /agent/llms               public read              text usage policy
+GET     /agent/catalog            public read              { count, products }
+GET     /agent/search             public read              grounded card data
+GET     /agent/product            public read              product details
+GET     /agent/checkout-handoff   public read              { note, items }</code></pre>
+
+    <h2>Common status codes</h2>
+    <ul>
+      <li><code>200</code> the request succeeded, including the graceful fallbacks described above.</li>
+      <li><code>400</code> the request was malformed (for example a missing <code>messages</code> array or an invalid rating).</li>
+      <li><code>403</code> the <code>wp_rest</code> nonce was missing or expired, or the admin capability check failed.</li>
+      <li><code>429</code> the per client rate limit was exceeded; wait for the window to reset and retry.</li>
+    </ul>
+
+    <div class="next"><a href="/docs/">← All docs</a><a href="/docs/hooks-filters.html">Hooks &amp; filters →</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+</body>
+</html>

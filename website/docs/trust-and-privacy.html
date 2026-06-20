@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Trust, guardrails and privacy</title>
+<meta name="description" content="Non-overridable guardrails: no fabricated scarcity, ground or abstain, respect budgets, and keep PII out of model context.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/trust-and-privacy.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="Trust, guardrails and privacy">
+<meta property="og:description" content="Non-overridable guardrails: no fabricated scarcity, ground or abstain, respect budgets, and keep PII out of model context.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/trust-and-privacy.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Trust, guardrails and privacy">
+<meta name="twitter:description" content="Non-overridable guardrails: no fabricated scarcity, ground or abstain, respect budgets, and keep PII out of model context.">
+<meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Trust, guardrails and privacy","url":"https://fahadai.isupercoder.com/docs/trust-and-privacy.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"Trust and privacy","item":"https://fahadai.isupercoder.com/docs/trust-and-privacy.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html">Configuration</a>
+    <a href="/docs/ai-providers.html">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html">REST API</a>
+    <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / Trust and privacy</div>
+    <h1>Trust and privacy</h1>
+    <p class="lede">Most shopping bots are tuned to close a sale. This one is tuned to be trustworthy first. A short set of honesty rules is appended to every prompt last, after the merchant's own instructions, so the rules hold no matter how the store is configured. Personal data stays behind a login gate, and the plugin keeps customer details out of the model where it can.</p>
+
+    <h2>The rules are absolute and appended last</h2>
+    <p>The system prompt is assembled in layers: a base persona, then a bounded slot where the merchant can set tone, off-limits topics and per-category guidance, then any context a feature pack adds through a filter. The trust rules are added <strong>after</strong> all of that. Because they come last, a merchant preference, a custom prompt, or a third-party filter can shape the assistant's voice but cannot weaken or remove the policy. This is structural, not a matter of phrasing the merchant just happens to respect.</p>
+    <p>The merchant slot says so in plain language. The preferences a store sets are introduced as advisory, with a note that the honesty rules below always take precedence.</p>
+    <div class="note">The store preferences slot is advisory by design. Anything a merchant types there is honoured for persona and topic scope, but it sits above the guardrails in the prompt, so the guardrails always win.</div>
+
+    <h2>What the guardrails actually say</h2>
+    <p>There are six rules, and they read the way a careful salesperson would behave:</p>
+    <ul>
+      <li><strong>No fake urgency or scarcity.</strong> The assistant never invents "only N left", countdowns, "selling fast" or "limited time". Stock and low-availability claims appear only when a tool result actually reports them, and then it states the real number.</li>
+      <li><strong>Respect a stated budget.</strong> If a shopper gives a budget, the assistant does not push past it. When nothing fits, it says so plainly instead of steering them higher.</li>
+      <li><strong>Be honest about extras.</strong> Recommendations and cross-sells are framed as optional suggestions, never as required or pressured. Coupons, discount codes and wallet bonuses are mentioned only when they are real and currently applicable, from a tool result, never implied.</li>
+      <li><strong>Ground every product fact.</strong> Details, prices, stock, reviews and ratings come from tools like <code>search_products</code>, <code>get_product_details</code> and <code>get_product_reviews</code>. The assistant summarises only what those tools return.</li>
+      <li><strong>Abstain over guessing.</strong> When the assistant does not know, or a tool returns nothing, it says it could not find the answer and offers a real next step rather than fabricating one.</li>
+      <li><strong>Never block human support.</strong> For order status, account issues, refunds or returns, it points the shopper to the store's support team or to sign in for their own data, and it always allows reaching a human.</li>
+    </ul>
+    <p>These are not aspirations. The test suite pins the exact policy text so it cannot quietly drift, and a set of deterministic eval checkers measures the behaviour: scarcity violations, budget violations, grounding violations, whether an escalation path is present, and whether the assistant abstains when it should.</p>
+
+    <h2>Grounding: state facts from tools, or abstain</h2>
+    <p>The honesty rules are only credible because the assistant cannot answer about your store from memory. Every product, price, stock figure, review and order detail is read live through a tool call, and the assistant is told to summarise only what the tool returns. When a tool returns nothing, the correct move is to abstain.</p>
+    <p>Money actions hold the same line. A reorder reads the current price from the live product rather than echoing an old number, a verified variation must still belong to its parent, and the checkout tools report the real cart, shipping and total with an explicit null where there is no coupon, never an invented code or figure.</p>
+
+    <h2>Personal data sits behind a login gate</h2>
+    <p>The public chat endpoint is open to guests on purpose, so anyone can browse and ask product questions. The nonce and rate limit on that endpoint are there for abuse protection, not as an authorization boundary. The real boundary is two layers deep, applied only to tools that touch personal data such as orders and the wallet:</p>
+    <ol>
+      <li><strong>Central login gate.</strong> A personal tool declares <code>'personal' =&gt; true</code>. The tool registry checks login before the tool's callback runs, so a guest is blocked centrally and a personal tool cannot leak by forgetting to check.</li>
+      <li><strong>Per-record ownership.</strong> Being logged in is not enough. Each personal tool compares the record's owner against the current user before returning anything, so one signed-in shopper can never read another shopper's order or balance.</li>
+    </ol>
+    <p>A blocked guest gets a clear, grounded result rather than a dead end:</p>
+    <pre><code>{
+  "error": "Please log in to access your account information.",
+  "requires_login": true
+}</code></pre>
+    <p>The <code>requires_login</code> flag lets the widget steer the shopper to sign in instead of treating it as a generic failure, which keeps the human path open while keeping data private.</p>
+
+    <h2>Keeping PII out of model context and logs</h2>
+    <p>Where personal data has to be handled, the plugin minimises what leaves the boundary. Tool results carry only the fields an answer needs, for example an order's number, status, date and total rather than a full customer record. Email addresses are masked before they go anywhere near model context or logs, keeping the first character and the full domain and hiding the rest:</p>
+    <pre><code>jane@example.com  ->  j***@example.com</code></pre>
+    <p>A value that is not a clean <code>local@domain</code> shape is masked to <code>***</code> rather than echoed back, so a malformed input cannot leak verbatim. No personal customer data is sent to the AI provider unless the customer types it into the chat themselves.</p>
+    <div class="note">Privacy controls are wired into WordPress too: a shopper's opt-in saved preferences are included in the personal-data Export tool and removed by the personal-data Erase tool, so a standard GDPR request covers them.</div>
+
+    <h2>Your catalogue and chats are not resold</h2>
+    <p>Conversation history and the product data relevant to a session are sent only to the single AI provider you select and configure with a key, and nothing is sent until you choose one. You pay that provider directly; the plugin does not proxy your key or route your data through a third party of its own. There is no analytics product underneath this that resells your catalogue or your customers' chats.</p>
+    <p>Two optional features extend where data can go, and both are off until you turn them on. Semantic search sends product text, never prices, stock or customer data, to an embeddings provider you choose. An optional external Qdrant store holds only vectors and product IDs. In every case you pick the provider and review its privacy policy before enabling it.</p>
+
+    <div class="next"><a href="/docs/">All docs</a><a href="/docs/wallet-integration.html">Wallet integration</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+</body>
+</html>

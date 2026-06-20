@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Cart actions and checkout handoff</title>
+<meta name="description" content="Add to cart, pick variations and hand off to checkout, with confirmations that reflect the real cart result and never a narrated guess.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/cart-and-checkout.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="Cart actions and checkout handoff">
+<meta property="og:description" content="Add to cart, pick variations and hand off to checkout, with confirmations that reflect the real cart result and never a narrated guess.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/cart-and-checkout.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cart actions and checkout handoff">
+<meta name="twitter:description" content="Add to cart, pick variations and hand off to checkout, with confirmations that reflect the real cart result and never a narrated guess.">
+<meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Cart actions and checkout handoff","url":"https://fahadai.isupercoder.com/docs/cart-and-checkout.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"Cart and checkout","item":"https://fahadai.isupercoder.com/docs/cart-and-checkout.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html">Configuration</a>
+    <a href="/docs/ai-providers.html">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html">REST API</a>
+    <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / Cart and checkout</div>
+    <h1>Cart and checkout</h1>
+    <p class="lede">When a shopper adds something to the cart, the confirmation has to be true. The assistant adds, inspects and clears cart items through verified cart actions, then hands off to your normal WooCommerce checkout. It never narrates a success a tool did not return.</p>
+
+    <h2>Add to cart from a product card</h2>
+    <p>Every product card the assistant renders carries an <strong>Add to cart</strong> button. Clicking it does not ask the model to add anything. It posts straight to a verified cart endpoint, so there is no agent round-trip, the action is instant, and the confirmation you read reflects the real cart result rather than a sentence the model composed.</p>
+    <p>The request the card sends is small and explicit:</p>
+    <pre><code>POST  (your store cart endpoint)
+X-WP-Nonce: (session nonce)
+Content-Type: application/json
+
+{ "action": "add", "product_id": 128, "quantity": 1, "variation_id": 0 }</code></pre>
+    <p>The endpoint validates the product, applies WooCommerce's own stock rules, and replies with the verified cart state. On success the reply carries the cart total, a View Cart link and a Checkout link, which the assistant surfaces as the two links below its confirmation. If the add fails, you get the real reason (product not found, option unavailable, out of stock) and no success line.</p>
+    <div class="note">The endpoint is gated by the same nonce and rate limit as the chat itself, and it returns plain JSON rather than a stream, so WooCommerce sets its session cookie normally and a guest cart persists across the visit.</div>
+
+    <h2>Variable products: pick an option first</h2>
+    <p>For a variable product, there is no single thing to add until the shopper chooses. The card shows a <em>Choose an option</em> select listing the real variations. In-stock options are selectable, sold-out ones are shown but disabled, so the choices stay transparent without ever offering something that cannot be added.</p>
+    <p>The <strong>Add to cart</strong> button waits for a real selection. If no variation is chosen, the click moves focus to the select instead of adding anything. Once an option is picked, its <code>variation_id</code> goes to the endpoint, and the variation, not the parent product, is the source of truth for both price and stock. A sold-out size or colour is rejected even when the parent product still reports as in stock.</p>
+
+    <h2>Viewing and removing cart items</h2>
+    <p>Ask the assistant what is in the cart and it calls <code>view_cart</code>, which returns the current line items, each item's quantity and line total, the running totals, and the checkout URL. Each item comes back with a <code>cart_item_key</code>.</p>
+    <p>To take something out, the assistant calls <code>remove_from_cart</code> with that exact key:</p>
+    <pre><code>remove_from_cart  { "cart_item_key": "a1b2c3d4e5f6..." }</code></pre>
+    <p>WooCommerce removes the line and returns the new cart total. If the key does not match anything in the cart, the tool says so plainly rather than reporting a removal that did not happen.</p>
+
+    <h2>Handing off to checkout</h2>
+    <p>The assistant does not run payment or capture card details. A successful add ends with two links built from your store's own URLs:</p>
+    <ul>
+      <li><strong>View Cart</strong>, pointing at your WooCommerce cart page</li>
+      <li><strong>Checkout</strong>, pointing at your WooCommerce checkout page</li>
+    </ul>
+    <p>From there the shopper completes the order through your normal checkout, with whatever gateways, taxes and shipping you already have configured. The assistant's job is to get the right items into a real cart and then step out of the way.</p>
+
+    <h2>Why the confirmation can be trusted</h2>
+    <p>The whole flow is built so a cart change is never described unless it actually happened. The card add reuses the same cart tools and the same validation the assistant would use, and reports back the verified state. The system prompt holds the model to the same line everywhere: only report success when a tool returns success, and never invent cart, order, or stock data.</p>
+    <ul>
+      <li>The add posts to a verified endpoint, so the confirmation is the cart result, not a guess.</li>
+      <li>Variable products require a chosen, in-stock variation before anything is added.</li>
+      <li>Stock is checked on the exact unit being added, the variation when one is selected.</li>
+      <li>View and remove run against the live cart by key, and failures are stated plainly.</li>
+      <li>Checkout stays in your hands; the assistant only links to your cart and checkout pages.</li>
+    </ul>
+
+    <div class="next"><a href="/docs/">← All docs</a><a href="/docs/agent-endpoints.html">Agent endpoints →</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>AI providers: Claude, GPT, Gemini</title>
+<meta name="description" content="Connect Claude, OpenAI, Gemini, Moonshot or any OpenAI-compatible endpoint. Bring your own key; the plugin never proxies it.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/ai-providers.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="AI providers: Claude, GPT, Gemini">
+<meta property="og:description" content="Connect Claude, OpenAI, Gemini, Moonshot or any OpenAI-compatible endpoint. Bring your own key; the plugin never proxies it.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/ai-providers.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI providers: Claude, GPT, Gemini">
+<meta name="twitter:description" content="Connect Claude, OpenAI, Gemini, Moonshot or any OpenAI-compatible endpoint. Bring your own key; the plugin never proxies it.">
+<meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"AI providers: Claude, GPT, Gemini","url":"https://fahadai.isupercoder.com/docs/ai-providers.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"AI providers","item":"https://fahadai.isupercoder.com/docs/ai-providers.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html">Configuration</a>
+    <a href="/docs/ai-providers.html" style="color:var(--lime)">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html">REST API</a>
+    <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / AI providers</div>
+    <h1>AI providers</h1>
+    <p class="lede">The assistant is model-agnostic. Pick the provider whose key you already hold, paste it, and you are done. You pay the model provider directly with your own key, and the plugin never proxies that key through anyone else.</p>
+
+    <h2>One assistant, thirteen providers</h2>
+    <p>The plugin ships with 13 built-in providers and an extensibility seam for more. Whichever you choose, the assistant answers from your real store data through tools, so the behaviour is consistent across models. You select the provider, paste its key, and optionally pick a model in <strong>WooCommerce &rarr; Fahad AI</strong>.</p>
+    <ul>
+      <li><strong>Anthropic Claude</strong> (Haiku, Sonnet, Opus)</li>
+      <li><strong>Moonshot AI</strong> (Kimi K2 and Moonshot V1 models)</li>
+      <li><strong>OpenAI</strong> (GPT-4o, GPT-4o mini, o4-mini)</li>
+      <li><strong>Google Gemini</strong> (2.0 Flash, 1.5 Pro, 1.5 Flash)</li>
+      <li><strong>Groq</strong>, <strong>Mistral</strong>, <strong>DeepSeek</strong>, <strong>xAI (Grok)</strong></li>
+      <li><strong>Together AI</strong>, <strong>OpenRouter</strong>, <strong>Perplexity</strong></li>
+      <li><strong>Ollama</strong> for a local, self-hosted model on your own machine</li>
+      <li><strong>Custom</strong>: any OpenAI-compatible endpoint you point it at</li>
+    </ul>
+    <div class="note">If you already run a key with one of these providers, that is the one to start with. There is no preferred vendor: the assistant grounds every product fact in your catalogue regardless of which model is behind it.</div>
+
+    <h2>Two transport paths</h2>
+    <p>Under the hood every provider resolves to one of two transports, and that is the only difference you need to understand.</p>
+    <ul>
+      <li><strong>Anthropic native path.</strong> Claude uses the Anthropic Messages API directly. This path is non-streaming: the reply is composed in one request and response, then delivered to the chat widget as soon as it is ready.</li>
+      <li><strong>OpenAI-compatible path.</strong> The other twelve providers speak the OpenAI chat format and stream their replies token by token over Server-Sent Events (SSE), so text appears in the bubble as it is generated.</li>
+    </ul>
+    <p>Either way the shopper sees a normal reply. Streaming is a delivery detail, not a feature you have to configure.</p>
+
+    <h2>Bring your own key</h2>
+    <p>Every provider is opt-in. Nothing is sent to any model until you select a provider and save its key, and each provider stores its own key and model setting independently. Billing is between you and the provider you chose; the plugin is only the client that talks to their API.</p>
+    <pre><code>POST https://api.anthropic.com/v1/messages
+Authorization: Bearer &lt;your Anthropic key&gt;   # native, non-streaming
+
+POST https://api.openai.com/v1/chat/completions
+Authorization: Bearer &lt;your OpenAI key&gt;      # OpenAI-compatible, streams via SSE</code></pre>
+    <p>For a self-hosted setup, point the <strong>Custom</strong> provider at any OpenAI-compatible base URL, or run <strong>Ollama</strong> locally so no conversation data leaves your server at all.</p>
+
+    <h2>Moonshot regions</h2>
+    <p>Moonshot AI runs two independent platforms with separate keys and model catalogues, and a key issued on one is rejected by the other. The plugin exposes a <strong>Moonshot Region</strong> setting so a key from either platform works without editing code:</p>
+    <ul>
+      <li><strong>Global</strong> uses <code>api.moonshot.ai</code></li>
+      <li><strong>China</strong> uses <code>api.moonshot.cn</code></li>
+    </ul>
+    <p>There is also a Moonshot model setting, with <code>kimi-k2.6</code> as the default alongside the other Kimi K2 and Moonshot V1 options. Pick the region that matches where your key was issued, then choose a model.</p>
+
+    <h2>When a key is wrong</h2>
+    <p>An invalid or missing key fails gracefully rather than dumping a raw error at the shopper. If the configured provider cannot be reached, the assistant first tries another provider you have keyed, then falls back to a branded, on-brand message that keeps the customer moving:</p>
+    <ol>
+      <li>The shopper sees a friendly note, not a stack trace or a 401.</li>
+      <li>The message invites them to keep searching the store.</li>
+      <li>It points them to human support, so there is never a dead end.</li>
+    </ol>
+    <p>That means a typo in a key degrades to a calm handoff, not a broken widget. Fix the key in settings and the assistant is back online on the next message.</p>
+
+    <h2>Switching providers</h2>
+    <p>You can change provider at any time. Because every reply is grounded in your store data through tools, swapping models does not change what the assistant knows about your catalogue, only how it phrases things and how quickly it streams. Save a different provider in settings and the next conversation uses it.</p>
+
+    <div class="next"><a href="/docs/">&larr; All docs</a><a href="/docs/how-it-works.html">How it works &rarr;</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce &middot; <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> &middot; <a href="/">Home</a></div></footer>
+</body>
+</html>
