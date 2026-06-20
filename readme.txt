@@ -103,6 +103,11 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.11.11 =
+Shop within your wallet balance.
+
+* Ask the assistant to find something within your store credit and it now checks your real balance and only suggests products that fit it.
+
 = 2.11.10 =
 Grounded wallet and store-credit answers.
 
