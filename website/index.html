@@ -514,14 +514,28 @@
   var items=[].slice.call(body.querySelectorAll('.s'));
   if(items.length<6)return;
   body.style.minHeight=body.offsetHeight+'px';
+  var CH=24,userIdx={0:1,3:1};                                  // ms/char; which items the shopper types
+  items.forEach(function(el,i){ if(userIdx[i]) el.setAttribute('data-text', el.textContent.trim()); });
   body.classList.add('simready');
-  var steps=[{i:0,at:400},{i:1,at:1200},{i:2,at:2300,off:1},{i:3,at:3300},{i:4,at:4100},{i:5,at:5200,off:4}];
   var timers=[];
+  function at(ms,fn){ timers.push(setTimeout(fn,ms)); }
+  function show(i){ items[i].classList.add('on'); }
+  function hide(i){ items[i].classList.remove('on'); }
+  function type(i){ var full=items[i].getAttribute('data-text'),k=0,el=items[i]; el.textContent=''; (function n(){ if(k<=full.length){ el.textContent=full.slice(0,k++); at(CH,n); } })(); }
+  function reset(){ timers.forEach(clearTimeout); timers=[]; items.forEach(function(el,i){ el.classList.remove('on'); if(userIdx[i]) el.textContent=''; }); }
   function play(){
-    timers.forEach(clearTimeout);timers=[];
-    items.forEach(function(el){el.classList.remove('on');});
-    steps.forEach(function(s){timers.push(setTimeout(function(){items[s.i].classList.add('on');if(s.off!=null)items[s.off].classList.remove('on');},s.at));});
-    timers.push(setTimeout(play,8200));
+    reset();
+    var t=450;
+    at(t,function(){ show(0); type(0); });                       // shopper types turn 1
+    t += items[0].getAttribute('data-text').length*CH + 480;
+    at(t,function(){ show(1); });                                // assistant typing dots
+    t += 1000; at(t,function(){ hide(1); show(2); });            // grounded reply + card
+    t += 1750;
+    at(t,function(){ show(3); type(3); });                       // shopper types turn 2
+    t += items[3].getAttribute('data-text').length*CH + 480;
+    at(t,function(){ show(4); });
+    t += 1000; at(t,function(){ hide(4); show(5); });
+    t += 3500; at(t,play);                                       // loop
   }
   var started=false;
   var io=new IntersectionObserver(function(es){if(es[0].isIntersecting&&!started){started=true;play();}},{threshold:0.35});
