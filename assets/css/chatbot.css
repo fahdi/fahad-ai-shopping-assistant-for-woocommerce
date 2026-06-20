@@ -63,6 +63,13 @@
 	right:          24px;
 	width:          360px;
 	height:         520px;
+	/* Never taller than the viewport (e.g. a landscape phone or a short desktop
+	   window), which would push the header + close button off the top of the screen
+	   and make the chat impossible to close. Cap to the visible height minus the
+	   bottom offset and a little top breathing room. dvh tracks the mobile URL bar;
+	   the vh line is the fallback. The fullscreen mobile rule resets this. (#126) */
+	max-height:     calc(100vh - 112px);
+	max-height:     calc(100dvh - 112px);
 	background:     var(--chatbot-bg);
 	border:         1px solid var(--chatbot-border);
 	border-radius:  var(--chatbot-radius);
@@ -164,13 +171,18 @@
 	#chatbot-messages { scroll-behavior: smooth; }
 }
 
+/* Column layout so anything appended after the bubble — the reply-feedback 👍/👎
+   toolbar (#50), in particular — stacks BELOW it instead of being squeezed into a
+   flex row to the right of the bubble. align-items keeps each message's content on
+   its own side (bot left, user right). (#127) */
 .chatbot-msg {
-	display:   flex;
-	max-width: 82%;
+	display:        flex;
+	flex-direction: column;
+	max-width:      82%;
 }
 
-.chatbot-msg.bot  { align-self: flex-start; }
-.chatbot-msg.user { align-self: flex-end;   }
+.chatbot-msg.bot  { align-self: flex-start; align-items: flex-start; }
+.chatbot-msg.user { align-self: flex-end;   align-items: flex-end;   }
 
 .chatbot-bubble {
 	padding:     10px 14px;
@@ -239,7 +251,9 @@
 	padding:       9px 13px;
 	border:        1px solid var(--chatbot-border);
 	border-radius: 8px;
-	font-size:     14px;
+	/* 16px (not 14px): iOS Safari auto-zooms the page when a focused input is under
+	   16px and never zooms back, leaving the widget oversized/misaligned. (#128) */
+	font-size:     16px;
 	font-family:   inherit;
 	outline:       none;
 	background:    var(--chatbot-bg);
@@ -301,13 +315,29 @@
 		right:         0;
 		bottom:        0;
 		width:         100%;
-		height:        100%;
+		/* dvh tracks the dynamic mobile URL bar so the input is never pushed below
+		   the visible area; vh is the fallback. max-height:none overrides the
+		   floating-panel cap — fullscreen owns the full height here. (#129) */
+		height:        100vh;
+		height:        100dvh;
+		max-height:    none;
 		border-radius: 0;
 		border:        none;
 	}
 
+	/* Keep the header clear of the status bar / notch and the input clear of the
+	   home indicator on notched phones (iOS safe areas; needs viewport-fit=cover,
+	   which the plugin sets via the theme's viewport meta). (#129) */
+	#chatbot-header {
+		padding-top: calc(14px + env(safe-area-inset-top));
+	}
+
+	#chatbot-input-area {
+		padding-bottom: calc(10px + env(safe-area-inset-bottom));
+	}
+
 	#chatbot-toggle {
-		bottom: 16px;
+		bottom: calc(16px + env(safe-area-inset-bottom));
 		right:  16px;
 	}
 }

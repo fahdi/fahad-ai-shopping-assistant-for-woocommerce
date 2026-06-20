@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<!-- viewport-fit=cover is required for env(safe-area-inset-*) to resolve on
+	     notched devices; the widget's fullscreen mobile layout relies on it. -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<title>Fahad AI widget — E2E harness</title>
+	<link rel="stylesheet" href="/assets/css/chatbot.css">
+	<style>
+		/* A little page content so the widget is tested over a real document,
+		   not a blank body. */
+		body { margin: 0; font-family: system-ui, sans-serif; }
+		main { padding: 24px; min-height: 200vh; }
+	</style>
+</head>
+<body>
+	<main>
+		<h1>Harness page</h1>
+		<p>The Fahad AI widget mounts into the root below. REST calls are mocked by Playwright.</p>
+	</main>
+
+	<!-- The exact mount point the plugin renders server-side. -->
+	<div id="fahad-ai-chatbot-root"></div>
+
+	<script>
+		// Mirror of what the plugin localizes via wp_localize_script. REST URLs are
+		// same-origin paths so Playwright's page.route('**/fahad-ai/v1/*') intercepts them.
+		window.fahadAiChatbot = {
+			botName:     'Store Assistant',
+			greeting:    'Hi! How can I help you today?',
+			accentColor: '#2563eb',
+			provider:    'moonshot',
+			streaming:   '1',
+			apiUrl:      '/wp-json/fahad-ai/v1/message',
+			streamUrl:   '/wp-json/fahad-ai/v1/stream',
+			cartUrl:     '/wp-json/fahad-ai/v1/cart',
+			feedbackUrl: '/wp-json/fahad-ai/v1/feedback',
+			nonce:       'test-nonce',
+			i18n:        {}
+		};
+	</script>
+	<script src="/assets/js/chatbot.js"></script>
+</body>
+</html>

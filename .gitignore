@@ -16,5 +16,13 @@ Thumbs.db
 .vscode/
 *.swp
 
+# Node / frontend tests
+node_modules/
+package-lock.json
+test-results/
+playwright-report/
+.playwright/
+coverage/
+
 # Compiled / build artifacts
 *.zip

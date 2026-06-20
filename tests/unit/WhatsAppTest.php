@@ -323,10 +323,13 @@ class WhatsAppTest extends TestCase {
 
 		$this->assertFalse( is_wp_error( $response ), 'A valid signed text must be accepted.' );
 		$this->assertSame( '15551234567', $captured['to'] ?? null, 'Reply goes back to the sender.' );
+		// The reply is humanized by the shared dispatch (#130): WhatsApp replies, like web
+		// replies, must contain no em-dash. The stubbed "Yes — we have…" reaches the send
+		// seam as "Yes, we have…".
 		$this->assertSame(
-			'Yes — we have several running shoes in stock.',
+			'Yes, we have several running shoes in stock.',
 			$captured['text'] ?? null,
-			'The agent reply text must be handed to the send seam.'
+			'The agent reply text (humanized, no em-dash) must be handed to the send seam.'
 		);
 	}
 

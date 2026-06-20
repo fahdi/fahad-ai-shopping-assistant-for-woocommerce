@@ -103,6 +103,16 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.11.8 =
+Mobile UI fixes, humanized replies, and a new frontend test suite.
+
+* Fixed the chat panel overflowing the screen on landscape phones and short windows (the header and close button could be pushed off-screen).
+* Reply feedback (the thumbs) now sits below the message instead of beside it.
+* The message input is now 16px so iOS Safari no longer zooms the page when you tap it.
+* The full-screen mobile panel now respects device safe areas (notch and home indicator) and uses the dynamic viewport height.
+* Assistant replies read more naturally and no longer use em-dashes.
+* Added a re-runnable Playwright end-to-end test suite for the widget across mobile, tablet, and desktop sizes.
+
 = 2.11.1 =
 WordPress.org review fixes + standards compliance.
 

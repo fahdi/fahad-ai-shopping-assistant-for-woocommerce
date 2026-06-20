@@ -222,6 +222,62 @@ class ApiHandlerTest extends TestCase {
         $this->assertStringNotContainsString( "\xCD\x84", $out, 'U+0344 combining mark leaked into output' );
     }
 
+    // ── humanized replies, no em-dashes (#130) ──────────────────────────────────
+    // Replies must read like a person, not a machine, and must never contain an
+    // em-dash (—, U+2014) or en-dash (–, U+2013). humanize_text() is a deterministic
+    // server-side guard applied to the assistant TEXT on BOTH the non-stream return
+    // and the buffered streaming chunk, so a dash the model still emits despite the
+    // prompt can never reach the shopper. The em-dash glyph below is U+2014; en-dash
+    // is U+2013.
+
+    private function humanize_text( string $text ): string {
+        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'humanize_text' );
+        return $method->invoke( $this->handler(), $text );
+    }
+
+    public function test_humanize_replaces_a_spaced_em_dash_with_a_comma(): void {
+        $in  = "We have Clothing \xE2\x80\x94 take a look.";          // U+2014
+        $this->assertSame( 'We have Clothing, take a look.', $this->humanize_text( $in ) );
+    }
+
+    public function test_humanize_replaces_an_en_dash_with_a_comma(): void {
+        $in  = "Fast \xE2\x80\x93 reliable shipping.";                 // U+2013
+        $this->assertSame( 'Fast, reliable shipping.', $this->humanize_text( $in ) );
+    }
+
+    public function test_humanize_keeps_numeric_ranges_as_a_hyphen(): void {
+        $in  = "Sizes 30\xE2\x80\x9340 are in stock.";                 // 30–40
+        $this->assertSame( 'Sizes 30-40 are in stock.', $this->humanize_text( $in ) );
+    }
+
+    public function test_humanize_passes_clean_text_through_unchanged(): void {
+        $clean = 'Sure, I can help you find a great pair of shoes today.';
+        $this->assertSame( $clean, $this->humanize_text( $clean ) );
+    }
+
+    public function test_humanize_leaves_no_em_or_en_dash_in_the_output(): void {
+        $in  = "A \xE2\x80\x94 B \xE2\x80\x93 C \xE2\x80\x94 D";
+        $out = $this->humanize_text( $in );
+        $this->assertStringNotContainsString( "\xE2\x80\x94", $out, 'em-dash leaked' );
+        $this->assertStringNotContainsString( "\xE2\x80\x93", $out, 'en-dash leaked' );
+    }
+
+    public function test_humanize_is_idempotent(): void {
+        $in   = "We have Clothing \xE2\x80\x94 take a look.";
+        $once = $this->humanize_text( $in );
+        $this->assertSame( $once, $this->humanize_text( $once ) );
+    }
+
+    public function test_system_prompt_forbids_em_dashes_and_asks_for_humanized_concise(): void {
+        Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
+
+        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+            ->invoke( $this->handler() );
+
+        $this->assertStringContainsString( 'Never use em-dashes or en-dashes', $prompt );
+        $this->assertStringContainsString( 'concise but complete', $prompt );
+    }
+
     public function test_currency_normalizer_repairs_hex_malformed_entity(): void {
         // The hex spelling of the same malformed value (&#x344;) must be repaired too —
         // the guard keys off the resulting codepoint, not the decimal/hex notation.

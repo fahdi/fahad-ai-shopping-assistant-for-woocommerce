@@ -378,7 +378,7 @@ final class Fahad_AI_API_Handler {
 						$text .= $block['text'];
 					}
 				}
-				return [ 'message' => $this->normalize_currency_entities( trim( $text ) ), 'messages' => $messages, 'products' => $cards, 'comparison' => $comparison ];
+				return [ 'message' => $this->humanize_text( $this->normalize_currency_entities( trim( $text ) ) ), 'messages' => $messages, 'products' => $cards, 'comparison' => $comparison ];
 			}
 
 			if ( 'tool_use' === $stop_reason ) {
@@ -524,7 +524,7 @@ final class Fahad_AI_API_Handler {
 
 			if ( 'stop' === $finish_reason ) {
 				return [
-					'message'    => $this->normalize_currency_entities( trim( $msg['content'] ?? '' ) ),
+					'message'    => $this->humanize_text( $this->normalize_currency_entities( trim( $msg['content'] ?? '' ) ) ),
 					'messages'   => $messages,   // returned to client (no system msg)
 					'products'   => $cards,
 					'comparison' => $comparison,
@@ -844,7 +844,12 @@ Guidelines:
 - When a customer wants to buy something, confirm the product, then use add_to_cart.
 - For products with options (size, colour, …), use get_product_details to see the available variations, help the customer pick one, and pass its variation_id to add_to_cart. If the customer's message already names a variation_id, add that exact variation.
 - Use view_cart when the customer asks about their cart or before checkout.
-- Keep responses concise and friendly. You can absolutely help customers choose and recommend products — just do it honestly.";
+- Keep responses concise and friendly. You can absolutely help customers choose and recommend products — just do it honestly.
+
+Writing style — follow exactly:
+- Write like a friendly, knowledgeable human, not a robot or a brochure. Sound natural and conversational.
+- Keep replies concise but complete and coherent: usually one or two sentences. Answer the question fully, then stop. No filler, no repetition, no restating the question.
+- Never use em-dashes or en-dashes (the long dash characters). Use commas, periods, or separate sentences instead. Plain hyphens in number ranges (for example 30-40) are fine.";
 	}
 
 	/**
@@ -1036,6 +1041,35 @@ Guidelines:
 			},
 			$text
 		);
+	}
+
+	/**
+	 * Humanize the assistant's reply text (issue #130).
+	 *
+	 * The system prompt asks the model to write like a person and to never use an
+	 * em-dash (—, U+2014) or en-dash (–, U+2013), but models ignore that often, so
+	 * this is the deterministic server-side guard applied to the assistant TEXT on
+	 * BOTH the non-stream return and the buffered streaming chunk. A dash between two
+	 * digits is a numeric range and becomes a plain hyphen (e.g. "30–40" → "30-40");
+	 * any other em/en dash (with its surrounding spaces) becomes a comma, which reads
+	 * naturally where the model used a dash to join clauses. Idempotent: re-running on
+	 * already-clean text is a no-op. Only the assistant's own prose is touched — product
+	 * data is rendered from cards, not this text.
+	 */
+	private function humanize_text( string $text ): string {
+		if ( '' === $text || ( ! str_contains( $text, "\u{2014}" ) && ! str_contains( $text, "\u{2013}" ) ) ) {
+			return $text; // No em/en dash — nothing to humanize.
+		}
+
+		// Numeric ranges keep a hyphen so "30–40" stays a range, not "30, 40".
+		$text = (string) preg_replace( '/(\d)\s*[\x{2014}\x{2013}]\s*(\d)/u', '$1-$2', $text );
+		// Any remaining em/en dash (with surrounding spaces) becomes a comma.
+		$text = (string) preg_replace( '/\s*[\x{2014}\x{2013}]\s*/u', ', ', $text );
+		// Tidy any doubled comma / run of spaces a replacement may have introduced.
+		$text = (string) preg_replace( '/,\s*,/', ',', $text );
+		$text = (string) preg_replace( '/[ \t]{2,}/', ' ', $text );
+
+		return $text;
 	}
 
 	// =========================================================================
@@ -2040,9 +2074,12 @@ Guidelines:
 			];
 		}
 
-		// Surface the assistant text (buffered) so the widget renders it.
+		// Surface the assistant text (buffered) so the widget renders it. Humanize it
+		// (strip em/en dashes, #130) before streaming — the full text is buffered here,
+		// so there is no split-dash risk. The returned $text (used for the agent loop /
+		// history) is left as the model wrote it.
 		if ( '' !== $text ) {
-			$this->sse_send( 'chunk', [ 'content' => $text ] );
+			$this->sse_send( 'chunk', [ 'content' => $this->humanize_text( $text ) ] );
 		}
 
 		return [ $text, $tool_calls, null ];
