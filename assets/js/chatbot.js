@@ -1546,4 +1546,26 @@
 			.replace(/&/g, '&amp;').replace(/</g, '&lt;')
 			.replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 	}
+
+	// ── Live-demo deep link ───────────────────────────────────────────────────
+	// Arriving via ?fahad_demo=<question> (or =1 for the built-in default) opens
+	// the panel, types the question with a typewriter effect, then sends it — a
+	// hands-free live demo, e.g. a "Try the live demo" link that lands a visitor
+	// on a store with the assistant already answering. Runs once per page load.
+	function maybeRunDemo() {
+		const q = new URLSearchParams(window.location.search).get('fahad_demo');
+		if (q === null) return;
+		const text = (q && q !== '1') ? q
+			: (i18n.demoQuestion || 'What can you help me with today?');
+		openChat();
+		(function typeChar(i) {
+			if (i < text.length) {
+				input.value = text.slice(0, i + 1);
+				setTimeout(function () { typeChar(i + 1); }, 40);
+			} else {
+				sendMessage();
+			}
+		})(0);
+	}
+	maybeRunDemo();
 })();

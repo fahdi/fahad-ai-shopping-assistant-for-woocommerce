@@ -103,6 +103,11 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.14.0 =
+Live-demo deep link.
+
+* A store can share a link like `?fahad_demo=your%20question` that opens the assistant, types the question with a typewriter effect, and sends it automatically, for a hands-free live demo. Use `?fahad_demo=1` for a built-in default question.
+
 = 2.13.1 =
 Back-in-stock alerts from chat.
 
