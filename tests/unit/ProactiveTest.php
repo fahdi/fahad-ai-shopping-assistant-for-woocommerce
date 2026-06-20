@@ -197,6 +197,19 @@ class ProactiveTest extends TestCase {
 		$this->assertStringContainsString( '₨500', $signal['message'] );
 	}
 
+	public function test_store_credit_winback_message_has_no_fake_urgency(): void {
+		// A5 win-back contract: the store-credit nudge (the grounded abandoned-cart
+		// incentive) must stay calm and factual — never manufactured urgency/scarcity
+		// (ROADMAP §6). This pins the trust property for the win-back message.
+		$balance = [ 'amount' => 500.0, 'currency' => 'PKR', 'formatted' => '₨500' ];
+		$signal  = $this->proactive()->value_signal( [ 'found' => 0, 'coupons' => [] ], $balance );
+
+		$message = strtolower( $signal['message'] );
+		foreach ( [ 'hurry', 'now ', 'today', 'limited', 'explast', 'last chance', 'expires', 'act fast', 'don\'t miss', 'only ' ] as $urgency ) {
+			$this->assertStringNotContainsString( $urgency, $message, "Win-back message must not use urgency: {$urgency}" );
+		}
+	}
+
 	public function test_zero_store_credit_is_not_a_value_signal(): void {
 		// A zero/empty balance is NOT a benefit — never nudge "you have 0 credit".
 		$balance = [ 'amount' => 0.0, 'currency' => 'PKR', 'formatted' => '₨0' ];
