@@ -540,7 +540,7 @@
     t += items[3].getAttribute('data-text').length*CH + 480;
     at(t,function(){ show(4); });
     t += 1000; at(t,function(){ hide(4); show(5); });
-    t += 3500; at(t,play);                                       // loop
+    t += 6000; at(t,play);                                       // hold the finished conversation, then replay
   }
   var started=false;
   var io=new IntersectionObserver(function(es){if(es[0].isIntersecting&&!started){started=true;play();}},{threshold:0.35});
