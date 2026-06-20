@@ -382,6 +382,6 @@ class CoverageWalletToolsTest extends TestCase {
 		// exact contract the file-scope register_pack() wires up.
 		$tools = Fahad_AI_Wallet_Tools::register( [] );
 		$names = array_column( $tools, 'name' );
-		$this->assertSame( [ 'get_wallet_balance', 'top_up', 'pay_with_credit' ], $names );
+		$this->assertSame( [ 'get_wallet_balance', 'top_up', 'pay_with_credit', 'get_referral_link' ], $names );
 	}
 }
