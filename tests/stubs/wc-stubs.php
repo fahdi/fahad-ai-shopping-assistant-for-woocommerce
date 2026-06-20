@@ -61,6 +61,9 @@ if ( ! class_exists( 'WP_REST_Response' ) ) {
         }
         public function get_data(): mixed { return $this->data; }
         public function get_status(): int { return $this->status; }
+        /** @var array<string,string> */
+        public array $headers = [];
+        public function header( string $key, string $value ): void { $this->headers[ $key ] = $value; }
     }
 }
 

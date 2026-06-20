@@ -103,6 +103,11 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.13.0 =
+Store-as-an-agent — let AI agents discover and shop your store.
+
+* New read-only endpoints under /agent for external AI agents (ChatGPT, Claude, Perplexity): an llms.txt usage guide, a structured catalogue feed, search and product lookups that reuse the same grounded data as the chat widget, and a human checkout handoff (the shopper completes payment, never the agent).
+
 = 2.12.0 =
 Merchant copilot — admin insight endpoints.
 

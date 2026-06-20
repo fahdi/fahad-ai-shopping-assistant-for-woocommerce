@@ -3,7 +3,7 @@
  * Plugin Name: Fahad AI Shopping Assistant for WooCommerce
  * Plugin URI:  https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
  * Description: AI-powered shopping assistant for WooCommerce — answers questions and manages the cart using OpenAI, Claude, Gemini, Moonshot, and other major AI providers.
- * Version:           2.12.0
+ * Version:           2.13.0
  * Author:      Fahdi Murtaza
  * Author URI:  https://github.com/fahdi
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FAHAD_AI_VERSION', '2.12.0' );
+define( 'FAHAD_AI_VERSION', '2.13.0' );
 define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -57,6 +57,7 @@ require_once FAHAD_AI_PATH . 'includes/class-tools.php';
 require_once FAHAD_AI_PATH . 'includes/class-api-handler.php';
 require_once FAHAD_AI_PATH . 'includes/class-whatsapp.php';
 require_once FAHAD_AI_PATH . 'includes/class-admin-copilot.php';
+require_once FAHAD_AI_PATH . 'includes/class-agent-gateway.php';
 require_once FAHAD_AI_PATH . 'includes/admin-settings.php';
 
 final class Fahad_AI_Chatbot {
@@ -150,6 +151,11 @@ final class Fahad_AI_Chatbot {
 		// content endpoints under /admin, each gated by the manage_woocommerce capability
 		// (NOT the storefront nonce). Grounded in real WooCommerce data; nothing writes.
 		Fahad_AI_Admin_Copilot::instance()->register_routes();
+
+		// Store-as-an-agent gateway (Epic C): read-only, grounded endpoints under /agent so
+		// external AI agents can discover (llms.txt + catalog feed), search/inspect (reusing
+		// the chat tools), and get a HUMAN checkout-handoff link — no agent-side payment.
+		Fahad_AI_Agent_Gateway::instance()->register_routes();
 	}
 
 	/**
