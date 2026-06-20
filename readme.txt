@@ -103,6 +103,11 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.11.10 =
+Grounded wallet and store-credit answers.
+
+* When a customer asks about their balance or store credit, the assistant now checks their real wallet instead of answering from memory, and asks them to sign in if they are logged out.
+
 = 2.11.9 =
 Grounded sale and discount answers.
 
