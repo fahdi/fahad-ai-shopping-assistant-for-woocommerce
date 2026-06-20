@@ -130,9 +130,12 @@
   @keyframes bubIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   .bub.user.typing-now::after{content:"";display:inline-block;width:2px;height:1.05em;margin-left:2px;vertical-align:-0.16em;background:var(--paper);animation:caret .85s steps(1,end) infinite}
   @keyframes caret{50%{opacity:0}}
+  /* subtle parallax: the mock drifts as it scrolls through the viewport (desktop, supported browsers) */
+  @keyframes mockPar{from{translate:0 14px}to{translate:0 -14px}}
+  @media(min-width:881px){@supports (animation-timeline:view()){.mock-link .mock{animation:mockPar linear both;animation-timeline:view();animation-range:cover}}}
 
   /* hero */
-  .hero{padding:84px 0 64px;position:relative;overflow:hidden}
+  .hero{padding:84px 0 64px;position:relative}
   .hero-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:56px;align-items:center}
   .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--lime-deep);display:inline-flex;align-items:center;gap:10px;margin-bottom:22px}
   .eyebrow::before{content:"";width:26px;height:1px;background:var(--lime-deep)}
@@ -237,7 +240,7 @@
     *{scroll-behavior:auto !important}
     .reveal{animation:none;opacity:1;transform:none}
     .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
-    .btn-demo::before,.btn-red::before,.pl,.marquee-track,.typing i{animation:none}
+    .btn-demo::before,.btn-red::before,.pl,.marquee-track,.typing i,.mock-link .mock{animation:none}
   }
 
   /* AI provider marquee */
