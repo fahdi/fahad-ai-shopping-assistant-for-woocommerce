@@ -128,6 +128,8 @@
   .mock-body.simready .typing.on{display:flex}
   .mock-body .s.on{animation:bubIn .36s cubic-bezier(.2,.7,.3,1) both}
   @keyframes bubIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .bub.user.typing-now::after{content:"";display:inline-block;width:2px;height:1.05em;margin-left:2px;vertical-align:-0.16em;background:var(--paper);animation:caret .85s steps(1,end) infinite}
+  @keyframes caret{50%{opacity:0}}
 
   /* hero */
   .hero{padding:84px 0 64px;position:relative;overflow:hidden}
@@ -514,15 +516,15 @@
   var items=[].slice.call(body.querySelectorAll('.s'));
   if(items.length<6)return;
   body.style.minHeight=body.offsetHeight+'px';
-  var CH=24,userIdx={0:1,3:1};                                  // ms/char; which items the shopper types
+  var CH=55,userIdx={0:1,3:1};                                  // ms/char: deliberate, perceptible per-keystroke pace
   items.forEach(function(el,i){ if(userIdx[i]) el.setAttribute('data-text', el.textContent.trim()); });
   body.classList.add('simready');
   var timers=[];
   function at(ms,fn){ timers.push(setTimeout(fn,ms)); }
   function show(i){ items[i].classList.add('on'); }
   function hide(i){ items[i].classList.remove('on'); }
-  function type(i){ var full=items[i].getAttribute('data-text'),k=0,el=items[i]; el.textContent=''; (function n(){ if(k<=full.length){ el.textContent=full.slice(0,k++); at(CH,n); } })(); }
-  function reset(){ timers.forEach(clearTimeout); timers=[]; items.forEach(function(el,i){ el.classList.remove('on'); if(userIdx[i]) el.textContent=''; }); }
+  function type(i){ var full=items[i].getAttribute('data-text'),k=0,el=items[i]; el.textContent=''; el.classList.add('typing-now'); (function n(){ if(k<=full.length){ el.textContent=full.slice(0,k++); at(CH,n); } else { el.classList.remove('typing-now'); } })(); }
+  function reset(){ timers.forEach(clearTimeout); timers=[]; items.forEach(function(el,i){ el.classList.remove('on'); if(userIdx[i]){ el.textContent=''; el.classList.remove('typing-now'); } }); }
   function play(){
     reset();
     var t=450;
