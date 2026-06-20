@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Troubleshooting common issues</title>
+<meta name="description" content="Fix the most common setup and runtime issues: blank replies, invalid keys, missing cards, and wallet not showing.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/troubleshooting.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="Troubleshooting common issues">
+<meta property="og:description" content="Fix the most common setup and runtime issues: blank replies, invalid keys, missing cards, and wallet not showing.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/troubleshooting.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Troubleshooting common issues">
+<meta name="twitter:description" content="Fix the most common setup and runtime issues: blank replies, invalid keys, missing cards, and wallet not showing.">
+<meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Troubleshooting common issues","url":"https://fahadai.isupercoder.com/docs/troubleshooting.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"Troubleshooting","item":"https://fahadai.isupercoder.com/docs/troubleshooting.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html">Configuration</a>
+    <a href="/docs/ai-providers.html">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html">REST API</a>
+    <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / Troubleshooting</div>
+    <h1>Troubleshooting</h1>
+    <p class="lede">Most issues come down to a key, a region, a missing image, or a not yet registered adapter. Here are the ones we see most often, with the exact place to look and the fix, in plain question and answer form.</p>
+
+    <h2>The assistant replies with a generic "I cannot help right now" message</h2>
+    <p>This is the graceful, branded fallback. When every configured provider fails, the assistant never shows a raw error or a dead end to the shopper. Instead it returns a friendly message and keeps the conversation open. The most common cause is an invalid or expired provider key.</p>
+    <p>To fix it, go to <strong>WooCommerce &rarr; Fahad AI</strong>, find your provider's key field (for example <em>Anthropic API Key</em> or your provider's key), and re-enter a valid key. The fields are masked password inputs, so paste the key fresh rather than editing the dots in place, then save.</p>
+    <ul>
+      <li>Confirm the key belongs to the provider you selected. Anthropic (Claude) uses its native API; every other provider uses the OpenAI-compatible API.</li>
+      <li>Check the key has not been revoked or run out of credit on the provider's side. You pay the model provider directly, so billing problems show up here.</li>
+      <li>If you configured a second provider as a fallback, the assistant tries each one in catalogue order before degrading, so make sure every key you set is valid.</li>
+    </ul>
+    <div class="note">A branded fallback reply is by design, not a crash. It means the shopper stays looked after while you fix the key behind the scenes.</div>
+
+    <h2>A streaming provider returns a blank reply</h2>
+    <p>On streaming (server-sent events) providers, a transport error mid-stream is handled by graceful degradation: the assistant sends a friendly message and a clean end-of-stream rather than leaving the bubble empty. A persistently blank reply usually points at the model or the region.</p>
+    <ol>
+      <li>Open <strong>WooCommerce &rarr; Fahad AI</strong> and check the <strong>model</strong> selected for your provider. A model id that your account cannot access for streaming will produce nothing useful. Pick a model your key is entitled to.</li>
+      <li>Check your account <strong>region</strong> with the provider. Some providers restrict certain models or streaming to specific regions, and a region mismatch can return an empty stream.</li>
+      <li>Confirm your server can hold an outbound streaming connection. Aggressive proxies, output buffering, or short timeouts can truncate the stream before any text arrives.</li>
+    </ol>
+    <p>If a quick test still shows nothing, switch that provider's model to a known-good default and ask a simple question like "what do you have for under $50?" to confirm text is flowing again.</p>
+
+    <h2>Product cards show a placeholder image instead of the real photo</h2>
+    <p>The card image comes straight from the product's featured image. When a product has no featured image set, the assistant falls back to the standard WooCommerce placeholder rather than rendering a broken image. The card itself, with the title, price, and link, is still correct and live.</p>
+    <p>To replace the placeholder, set a featured image on the product:</p>
+    <ul>
+      <li>Edit the product in <strong>Products</strong>, then set the <strong>Product image</strong> (the WooCommerce featured image) and update.</li>
+      <li>Bulk-check your catalogue for products with no featured image. Those are the ones that will show the placeholder in a card.</li>
+    </ul>
+    <p>No setting controls this. The card mirrors the catalogue: give the product a featured image and the next card for it uses that image.</p>
+
+    <h2>The wallet balance does not show for signed-in shoppers</h2>
+    <p>Wallet and store-credit answers are intentionally decoupled from any one wallet plugin. The assistant ships the tools; your wallet plugin ships the data through a provider adapter. Two conditions must both be true for a balance to appear.</p>
+    <ol>
+      <li><strong>The wallet plugin must register an adapter on the <code>fahad_ai_wallet_provider</code> filter.</strong> Until something is registered, the wallet tools degrade to a graceful "not available" and never invent a balance.</li>
+      <li><strong>The shopper must be signed in.</strong> Wallet operations are for logged-in customers only, and the assistant only ever reads the signed-in customer's own balance. Guests are blocked centrally before the tool runs.</li>
+    </ol>
+    <p>If you maintain the wallet integration, register the adapter from your plugin like this:</p>
+    <pre><code>add_filter( 'fahad_ai_wallet_provider', function () {
+    return new My_WalletPro_Adapter();
+} );</code></pre>
+    <p>The adapter is an object (or an array of callables) exposing <code>get_balance()</code>, <code>get_deposit_bonus()</code>, <code>top_up()</code>, and <code>pay_with_credit()</code>. Any operation it cannot service should return an <code>[ 'error' =&gt; string ]</code> array rather than throw. See <a href="/docs/wallet-integration.html">Wallet integration</a> for the full contract.</p>
+    <div class="note">If the adapter is registered and the shopper is signed in but the balance is still missing, check what your <code>get_balance()</code> returns. An error result is surfaced as "not available", never as a fabricated number.</div>
+
+    <h2>The assistant returns a 429 response</h2>
+    <p>A 429 with "Too many requests. Please wait a moment and try again." is the built-in per-client rate limit doing its job. The chat endpoints are public behind a nonce, so the rate limit caps how many billable AI calls and cart changes a single visitor can trigger.</p>
+    <p>It is a fixed window, keyed per client: logged-in users get a per-user bucket and guests are keyed by IP, so visitors behind a shared network are not lumped together. The defaults are 20 requests per 60 seconds.</p>
+    <p>If your store legitimately needs a higher ceiling or a different window, tune the two filters that drive it:</p>
+    <pre><code>// Raise the per-client cap from the default 20 requests.
+add_filter( 'fahad_ai_rate_limit', function () {
+    return 40;
+} );
+
+// Change the window from the default 60 seconds.
+add_filter( 'fahad_ai_rate_window', function () {
+    return 30; // seconds
+} );</code></pre>
+    <p>Returning a limit of <code>0</code> or less disables the cap entirely, which we do not recommend on a public store since the rate limit is what protects you from a single visitor running up provider spend. See <a href="/docs/hooks-filters.html">Hooks &amp; filters</a> for the full list of tunables.</p>
+
+    <div class="next"><a href="/docs/">&larr; All docs</a><a href="/docs/configuration.html">Configuration &rarr;</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce &middot; <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> &middot; <a href="/">Home</a></div></footer>
+</body>
+</html>

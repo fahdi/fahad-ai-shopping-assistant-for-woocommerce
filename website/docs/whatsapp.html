@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>WhatsApp omnichannel assistant</title>
+<meta name="description" content="Run the same grounded Fahad AI shopping assistant on a WhatsApp business number through a signed, verified webhook, with no live Meta call in core.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/whatsapp.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="WhatsApp omnichannel assistant">
+<meta property="og:description" content="Run the same grounded Fahad AI shopping assistant on a WhatsApp business number through a signed, verified webhook, with no live Meta call in core.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/whatsapp.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="WhatsApp omnichannel assistant">
+<meta name="twitter:description" content="Run the same grounded Fahad AI shopping assistant on a WhatsApp business number through a signed, verified webhook, with no live Meta call in core.">
+<meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"WhatsApp omnichannel assistant","url":"https://fahadai.isupercoder.com/docs/whatsapp.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"WhatsApp","item":"https://fahadai.isupercoder.com/docs/whatsapp.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html">Configuration</a>
+    <a href="/docs/ai-providers.html">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html">REST API</a>
+    <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / WhatsApp</div>
+    <h1>WhatsApp</h1>
+    <p class="lede">Answer the same grounded assistant on a WhatsApp business number via a signed webhook. The inbound half ships and is fully testable. The outbound send is a pluggable seam, so no live Meta call leaves your store until you wire a provider up.</p>
+
+    <h2>What ships, and what does not</h2>
+    <p>The plugin owns the inbound half of WhatsApp Business on Meta's Cloud API. It handles Meta's webhook verify handshake, checks the message signature, parses the first text message, and routes it into the same agent loop that powers the web widget. The reply text is then handed to a send seam.</p>
+    <p>The plugin does not make the live Meta HTTP call. Going live needs a Meta WhatsApp Business account plus tokens, supplied by a provider that implements the <code>fahad_ai_whatsapp_send</code> filter. With no provider hooked, the seam is a no-op, so nothing is ever sent until a merchant wires one up.</p>
+    <div class="note">The channel is off by default. It is opt-in because every inbound text drives a billable agent turn, and because a public webhook should never start processing until you have deliberately enabled it.</div>
+
+    <h2>The webhook endpoint</h2>
+    <p>One endpoint on the <code>fahad-ai/v1</code> namespace serves both methods Meta uses, matching the webhook contract:</p>
+    <pre><code>GET  /wp-json/fahad-ai/v1/whatsapp   subscription verify handshake
+POST /wp-json/fahad-ai/v1/whatsapp   signed inbound message deliveries</code></pre>
+    <p>The endpoint is public because Meta cannot send a WordPress nonce. The security boundary is not the chat nonce here. It is the verify token on the GET handshake and the <code>X-Hub-Signature-256</code> HMAC on the POST body, both enforced inside the handlers before anything else happens.</p>
+
+    <h2>GET: the verify handshake</h2>
+    <p>When you subscribe the webhook, Meta calls it with <code>hub.mode=subscribe</code>, the verify token you configured in the App dashboard, and a <code>hub.challenge</code> nonce. The plugin echoes the challenge back only when both conditions hold:</p>
+    <ul>
+      <li>the mode is <code>subscribe</code>, and</li>
+      <li>the supplied token matches the configured verify token, compared in constant time.</li>
+    </ul>
+    <p>It fails closed. An empty configured token can never match, so an unconfigured site cannot be tricked into confirming a webhook. A wrong token or any non-subscribe mode returns a 403.</p>
+
+    <h2>POST: signed inbound messages</h2>
+    <p>Order here is load-bearing, security first:</p>
+    <ol>
+      <li><strong>Signature first.</strong> Meta signs the raw request body with HMAC-SHA256, keyed by your Meta App Secret, and sends it as <code>sha256=&lt;hexdigest&gt;</code>. The plugin recomputes that over the raw body and compares with <code>hash_equals</code>, a constant-time check, before any parsing or agent work. A missing or bad signature, or an unconfigured app secret, returns 403 and nothing is processed or sent.</li>
+      <li><strong>Opt-in gate.</strong> If the channel is disabled, a valid signed delivery is acknowledged with 200, so Meta does not retry, but it is not processed.</li>
+      <li><strong>Parse one text message.</strong> The plugin reads the first text message from Meta's <code>entry[].changes[].value.messages[]</code> shape. Status webhooks, reactions, media, and empty text are acknowledged without running the agent.</li>
+      <li><strong>Route as a guest, then reply.</strong> The text runs through the same non-streaming agent loop as the web widget, and the reply is handed to the send seam, addressed to the sender.</li>
+    </ol>
+    <p>Once the signature passes, the endpoint always returns 200, even when nothing is sent. A non-200 makes Meta retry, and you never want a retry storm for a benign no text or no provider case.</p>
+
+    <h2>The signature, concretely</h2>
+    <p>The expected header value is the App Secret keyed HMAC of the exact raw body:</p>
+    <pre><code>expected = 'sha256=' . hash_hmac('sha256', $raw_body, $app_secret)
+verified = hash_equals(expected, $request_header['X-Hub-Signature-256'])</code></pre>
+    <p>If the App Secret is not configured, verification returns false and the inbound is rejected. An inbound is processed only when its signature is provably valid.</p>
+
+    <h2>Identity stays a guest</h2>
+    <p>A WhatsApp sender is treated as a guest. The plugin never auto-trusts a phone number as a logged-in WooCommerce customer, so the central login gate keeps personal-data tools blocked for an unverified identity. Building a verified phone to customer mapping is out of scope for this channel.</p>
+    <p>Secrets, the verify token and the app secret, live in options. They are never sent to the browser or fed to the model, and no phone numbers or message text are logged.</p>
+
+    <h2>The outbound send seam</h2>
+    <p>The send is a documented extension point. By default, with no provider hooked, the filter returns null and nothing is sent. A provider, a companion plugin or a future add-on that holds the merchant's WhatsApp phone number id and access token, registers the filter and makes the live Meta call:</p>
+    <pre><code>add_filter( 'fahad_ai_whatsapp_send', function ( $result, $to, $text, $ctx ) {
+    // POST https://graph.facebook.com/&lt;ver&gt;/&lt;phone_number_id&gt;/messages
+    //   Authorization: Bearer &lt;access token&gt;
+    //   body: { messaging_product: 'whatsapp', to: $to,
+    //           type: 'text', text: { body: $text } }
+    // return [ 'sent' =&gt; true, 'id' =&gt; $wamid ] on success.
+    return $result;
+}, 10, 4 );</code></pre>
+    <p>Keeping the live HTTP call out of core keeps the access token in the provider, mirrors the way the wallet provider is decoupled, and lets this scaffolding ship and be fully unit-tested without any Meta credentials.</p>
+    <div class="note">Replies are the same grounded answers as the web widget. There is no separate WhatsApp brain. The shared agent core means a question on WhatsApp is answered from your live store data, with the same tools and the same turn-level cost controls that govern the widget.</div>
+
+    <h2>Settings</h2>
+    <p>Three options drive the channel, all set in the plugin admin:</p>
+    <ul>
+      <li><code>fahad_ai_whatsapp_enabled</code>: the kill switch, off by default.</li>
+      <li><code>fahad_ai_whatsapp_verify_token</code>: the token Meta sends in the GET handshake.</li>
+      <li><code>fahad_ai_whatsapp_app_secret</code>: the Meta App Secret that keys the inbound HMAC.</li>
+    </ul>
+
+    <div class="next"><a href="/docs/">← All docs</a><a href="/docs/agent-endpoints.html">Agent endpoints →</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+</body>
+</html>

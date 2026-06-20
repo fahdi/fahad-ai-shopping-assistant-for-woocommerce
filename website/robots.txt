@@ -1,0 +1,29 @@
+# Fahad AI is an open-source assistant built so AI agents can shop a store.
+# We welcome AI crawlers and retrieval bots, and publish a machine guide at /llms.txt.
+
+User-agent: *
+Allow: /
+
+# AI assistants and retrieval crawlers are explicitly welcome here.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://fahadai.isupercoder.com/sitemap.xml

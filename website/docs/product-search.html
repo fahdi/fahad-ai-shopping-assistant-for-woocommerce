@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Grounded product search and cards</title>
+<meta name="description" content="Find products by need, category, price or what is on sale, rendered as rich cards with photo, price, stock and add-to-cart.">
+<link rel="canonical" href="https://fahadai.isupercoder.com/docs/product-search.html">
+<meta name="theme-color" content="#0c0d10">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Fahad AI">
+<meta property="og:title" content="Grounded product search and cards">
+<meta property="og:description" content="Find products by need, category, price or what is on sale, rendered as rich cards with photo, price, stock and add-to-cart.">
+<meta property="og:url" content="https://fahadai.isupercoder.com/docs/product-search.html">
+<meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Grounded product search and cards">
+<meta name="twitter:description" content="Find products by need, category, price or what is on sale, rendered as rich cards with photo, price, stock and add-to-cart.">
+<meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Grounded product search and cards","url":"https://fahadai.isupercoder.com/docs/product-search.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+</script>
+<style>
+  :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:64px 64px}
+  a{color:var(--lime-deep);text-decoration:none}a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0;color:var(--paper)}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(12,13,16,.72);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:24px;height:64px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--paper)}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.18)}
+  .nav .links{display:flex;gap:22px;margin-left:auto;font-size:14.5px}.nav .links a{color:var(--paper-soft)}.nav .links a:hover{color:var(--paper);text-decoration:none}
+  .layout{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:200px 1fr;gap:48px}
+  .side{position:sticky;top:88px;align-self:start;padding-top:40px;font-size:14px}
+  .side .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper-dim);margin:0 0 12px}
+  .side a{display:block;color:var(--paper-soft);padding:5px 0}.side a:hover{color:var(--lime);text-decoration:none}
+  article{padding:40px 0 90px;max-width:42em}
+  .crumb{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-bottom:18px}
+  .crumb a{color:var(--paper-soft)}
+  article h1{font-size:clamp(32px,5vw,46px)}
+  article .lede{font-size:19px;color:var(--paper-soft);margin:18px 0 8px}
+  article h2{font-size:24px;margin:44px 0 14px;font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+  article p{margin:14px 0;color:var(--paper-soft)}
+  article ol,article ul{color:var(--paper-soft);padding-left:22px}article li{margin:8px 0}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:var(--paper)}
+  pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;color:var(--paper-soft)}
+  pre code{background:none;border:none;padding:0}
+  .note{border-left:3px solid var(--lime);background:rgba(214,251,79,.05);border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0;color:var(--paper-soft);font-size:15.5px}
+  .next{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--paper-dim);font-size:14px;text-align:center}footer a{color:var(--paper-soft)}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}.nav .links{display:none}}
+
+  /* a11y + motion (audit) */
+  :root{color-scheme:dark}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:3px;border-radius:6px}
+  .btn-lime:focus-visible{outline-color:var(--ink);outline-offset:2px}
+  .skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--lime);color:#10130a;padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
+  section[id]{scroll-margin-top:84px}
+  .nav .links a,.foot .links a,.side a{min-height:24px}
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto !important}
+    .reveal{animation:none;opacity:1;transform:none}
+    .btn-lime:hover,.feat:hover,.c:hover,.stat:hover,#chatbot-toggle:hover{transform:none}
+  }
+  /* docs mobile sidebar (audit) */
+  @media(max-width:820px){.side{display:block;position:static;padding-top:20px;border-bottom:1px solid var(--line);margin-bottom:6px}.side a{display:inline-block;margin-right:14px}.side .lbl{margin-top:14px}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://fahadai.isupercoder.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://fahadai.isupercoder.com/docs/"},{"@type":"ListItem","position":3,"name":"Product search","item":"https://fahadai.isupercoder.com/docs/product-search.html"}]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav></div></header>
+<main id="main" class="layout">
+  <aside class="side">
+    <p class="lbl">Get started</p>
+    <a href="/docs/installation.html">Installation</a>
+    <a href="/docs/configuration.html">Configuration</a>
+    <a href="/docs/ai-providers.html">AI providers</a>
+    <p class="lbl" style="margin-top:22px">Using it</p>
+    <a href="/docs/how-it-works.html">How it works</a>
+    <a href="/docs/product-search.html" style="color:var(--lime)">Product search</a>
+    <a href="/docs/wallet-integration.html">Wallet integration</a>
+    <a href="/docs/agent-endpoints.html">Agent endpoints</a>
+    <p class="lbl" style="margin-top:22px">Reference</p>
+    <a href="/docs/rest-api.html">REST API</a>
+    <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>
+  </aside>
+  <article>
+    <div class="crumb"><a href="/docs/">Docs</a> / Product search</div>
+    <h1>Product search</h1>
+    <p class="lede">Product search is how the assistant finds real things to show a shopper. It reads your live catalogue, never its own memory, and turns matches into rich cards a customer can act on without leaving the chat.</p>
+
+    <h2>What the assistant searches with</h2>
+    <p>The assistant calls a single grounded tool, <code>search_products</code>, before it recommends anything. That tool accepts five filters, and it composes them so a shopper can be as broad or as specific as they like:</p>
+    <ul>
+      <li><code>query</code>: free text describing what the customer wants, such as a product name or a need.</li>
+      <li><code>category</code>: a category slug or name, to scope results to one part of the store.</li>
+      <li><code>min_price</code>: a lower price bound.</li>
+      <li><code>max_price</code>: an upper price bound, often the customer's stated budget.</li>
+      <li><code>on_sale</code>: when true, return only products that are genuinely discounted right now.</li>
+    </ul>
+    <p>A typical request the model makes behind the scenes looks like this:</p>
+    <pre><code>search_products({
+  "query": "running shoes",
+  "category": "footwear",
+  "max_price": 120,
+  "on_sale": true
+})</code></pre>
+    <p>Every filter is optional, so "what do you have for under $50?" becomes a simple <code>max_price</code> search, and "show me what is on sale in kitchenware" combines <code>category</code> with <code>on_sale</code>.</p>
+
+    <h2>The on-sale filter is honest</h2>
+    <p>When a customer asks about deals, discounts or clearance, the assistant sets <code>on_sale</code> to true and shows only what it returns. The filter keeps just the products that carry a real reduced price, and each card shows that product's actual sale price next to its original.</p>
+    <div class="note">The assistant never claims something is on sale from memory. If the on-sale search returns nothing, it tells the customer there are no current sales, plainly, rather than inventing a discount.</div>
+
+    <h2>An optional semantic layer for intent</h2>
+    <p>Out of the box, search runs on WooCommerce keyword matching, so it works on a fresh install with no extra setup. There is also a pluggable semantic layer that understands intent and phrasing a literal keyword search would miss, such as "shoes for flat feet".</p>
+    <p>When a semantic retriever is registered, the assistant consults it first for free-text queries. The retriever returns ranked product IDs, and those IDs are then resolved against the live catalogue, so price, sale and stock are always read fresh and never come from a cached index. If no retriever is present, or it returns nothing, search quietly falls back to the keyword path. The shopper never sees an error either way.</p>
+
+    <h2>How results become cards</h2>
+    <p>Results do not arrive as a wall of text. Each product is rendered as a rich card built from live store data, so the customer can read and act in one place. Every card carries:</p>
+    <ul>
+      <li>the product photo</li>
+      <li>the price, with the sale price shown when the item is discounted</li>
+      <li>a stock indicator that flags out-of-stock items</li>
+      <li>the star rating and review count when the product has reviews</li>
+      <li>a <strong>View</strong> link to the product page</li>
+      <li>an <strong>Add to cart</strong> button</li>
+    </ul>
+    <p>Because the cards already display the photo, price, stock and links, the assistant does not repeat those details in its written reply. It gives a short, grounded recommendation and lets the cards carry the facts.</p>
+
+    <h2>Variable products get a selector</h2>
+    <p>For a variable product, such as a shirt with several sizes or colours, the card renders a labelled variation selector. The customer picks the specific option, and the chosen variation is what gets added to the cart. Sold-out variations stay visible but disabled, so the full option set is honest about what can actually be bought.</p>
+
+    <h2>Why this stays trustworthy</h2>
+    <ol>
+      <li>The assistant always searches before it recommends, so it never describes a product it has not looked up.</li>
+      <li>Prices, sale flags and stock are read from the live product at the moment of the search, not from any cache or the model's training.</li>
+      <li>The on-sale filter only ever surfaces real discounts.</li>
+    </ol>
+    <p>The result is a shopping conversation grounded in your actual catalogue, where what the customer reads is what your store truly has.</p>
+
+    <div class="next"><a href="/docs/">← All docs</a><a href="/docs/wallet-integration.html">Wallet integration →</a></div>
+  </article>
+</main>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+</body>
+</html>
