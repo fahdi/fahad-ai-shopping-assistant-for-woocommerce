@@ -306,6 +306,22 @@ class ApiHandlerTest extends TestCase {
         $this->assertStringContainsStringIgnoringCase( 'signed in', $prompt );
     }
 
+    // ── budget shopper: shop within the wallet balance (Epic A / #141) ───────────
+    // "Find me something within my credit" must ground the budget in the real balance
+    // and constrain the search to it, so every proposed option fits.
+
+    public function test_system_prompt_shops_within_the_wallet_balance(): void {
+        Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
+
+        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+            ->invoke( $this->handler() );
+
+        // The guidance must tie the wallet balance to search_products' max_price so the
+        // results cannot exceed what the shopper can afford.
+        $this->assertStringContainsString( 'within their balance', $prompt );
+        $this->assertStringContainsString( 'as the max_price', $prompt );
+    }
+
     public function test_currency_normalizer_repairs_hex_malformed_entity(): void {
         // The hex spelling of the same malformed value (&#x344;) must be repaired too —
         // the guard keys off the resulting codepoint, not the decimal/hex notation.
