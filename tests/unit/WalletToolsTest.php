@@ -190,6 +190,63 @@ class WalletToolsTest extends TestCase {
         $this->assertArrayNotHasKey( 'formatted', $result );
     }
 
+    // ── get_referral_link (Epic A / #143) ───────────────────────────────────────
+
+    public function test_get_referral_link_returns_provider_referral_info_for_current_user(): void {
+        $provider = $this->withProvider();
+        $provider->shouldReceive( 'referral_info' )
+            ->once()
+            ->with( 5 )
+            ->andReturn( [ 'enabled' => true, 'code' => 'ABC123', 'url' => 'https://shop.test/?wpref=ABC123', 'referrer_reward' => '$10.00', 'referee_reward' => '$5.00' ] );
+
+        $result = $this->registry()->dispatch( 'get_referral_link', [] );
+
+        $this->assertArrayNotHasKey( 'error', $result );
+        $this->assertTrue( $result['enabled'] );
+        $this->assertSame( 'ABC123', $result['code'] );
+        $this->assertSame( 'https://shop.test/?wpref=ABC123', $result['url'] );
+    }
+
+    public function test_get_referral_link_uses_current_user_not_model_supplied_id(): void {
+        $provider = $this->withProvider();
+        $provider->shouldReceive( 'referral_info' )
+            ->once()
+            ->with( 5 )
+            ->andReturn( [ 'enabled' => false ] );
+
+        $this->registry()->dispatch( 'get_referral_link', [ 'user_id' => 9999 ] );
+    }
+
+    public function test_get_referral_link_without_provider_degrades_gracefully(): void {
+        $this->withNoProvider();
+
+        $result = $this->registry()->dispatch( 'get_referral_link', [] );
+
+        $this->assertArrayHasKey( 'error', $result );
+        $this->assertStringContainsString( 'not available', strtolower( $result['error'] ) );
+        $this->assertArrayNotHasKey( 'code', $result );
+    }
+
+    public function test_get_referral_link_degrades_when_op_unsupported_returns_null(): void {
+        // A provider that does not implement referral_info: self::call() isolates the
+        // failure to null, and the tool degrades gracefully (no invented referral).
+        $provider = $this->withProvider();
+        $provider->shouldReceive( 'referral_info' )->andThrow( new \BadMethodCallException() );
+
+        $result = $this->registry()->dispatch( 'get_referral_link', [] );
+
+        $this->assertArrayHasKey( 'error', $result );
+    }
+
+    public function test_get_referral_link_degrades_when_provider_returns_non_array(): void {
+        $provider = $this->withProvider();
+        $provider->shouldReceive( 'referral_info' )->once()->with( 5 )->andReturn( 'nope' );
+
+        $result = $this->registry()->dispatch( 'get_referral_link', [] );
+
+        $this->assertArrayHasKey( 'error', $result );
+    }
+
     // ── top_up (surfaces deposit bonus; validates amount) ───────────────────────
 
     public function test_top_up_surfaces_deposit_bonus_and_reports_new_balance(): void {

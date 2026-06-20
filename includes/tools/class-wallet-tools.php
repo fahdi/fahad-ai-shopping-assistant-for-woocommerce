@@ -160,6 +160,17 @@ final class Fahad_AI_Wallet_Tools {
 			'callback'    => fn( array $input ) => self::pay_with_credit( $input ),
 		];
 
+		$tools[] = [
+			'name'        => 'get_referral_link',
+			'description' => 'Get the logged-in customer\'s referral code, share link, and reward terms so you can help them refer a friend. Use this when the customer asks "how do I refer a friend?", "what\'s my referral link?", or about referral rewards. Returns { enabled, code, url, referrer_reward, referee_reward }, or { enabled:false } when the store has no referral programme. Report only the real code, link and rewards it returns; never invent a code or a reward. Requires the customer to be logged in.',
+			'parameters'  => [
+				'type'       => 'object',
+				'properties' => new stdClass(),
+			],
+			'personal'    => true,
+			'callback'    => fn( array $input ) => self::get_referral_link( $input ),
+		];
+
 		return $tools;
 	}
 
@@ -189,6 +200,29 @@ final class Fahad_AI_Wallet_Tools {
 		}
 
 		return is_array( $balance ) ? $balance : self::unavailable();
+	}
+
+	/**
+	 * The current customer's referral details (code, link, reward terms), straight from
+	 * the provider — so the assistant can help them refer a friend with REAL data, never
+	 * an invented code or reward. Always asks the provider about the current user id (the
+	 * login gate has already ensured the caller is logged in); a missing provider or an
+	 * unsupported op degrades to the graceful "not available" error.
+	 *
+	 * @return array The provider's referral info, or { error } when unavailable.
+	 */
+	private static function get_referral_link( array $input ): array {
+		$provider = self::provider();
+		if ( null === $provider ) {
+			return self::unavailable();
+		}
+
+		$info = self::call( $provider, 'referral_info', [ Fahad_AI_Auth::current_user_id() ] );
+		if ( null === $info ) {
+			return self::unavailable();
+		}
+
+		return is_array( $info ) ? $info : self::unavailable();
 	}
 
 	/**

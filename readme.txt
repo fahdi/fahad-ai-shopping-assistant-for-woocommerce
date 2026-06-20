@@ -103,6 +103,11 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.11.12 =
+Refer a friend, from chat.
+
+* Ask the assistant how to refer a friend and it now shares your real referral link, code and reward amounts (when the store runs a referral programme).
+
 = 2.11.11 =
 Shop within your wallet balance.
 

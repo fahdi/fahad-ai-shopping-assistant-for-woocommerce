@@ -322,6 +322,18 @@ class ApiHandlerTest extends TestCase {
         $this->assertStringContainsString( 'as the max_price', $prompt );
     }
 
+    // ── referral concierge (Epic A / #143) ──────────────────────────────────────
+
+    public function test_system_prompt_grounds_referrals_in_a_tool_call(): void {
+        Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
+
+        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+            ->invoke( $this->handler() );
+
+        $this->assertStringContainsString( 'get_referral_link', $prompt );
+        $this->assertStringContainsStringIgnoringCase( 'refer a friend', $prompt );
+    }
+
     public function test_currency_normalizer_repairs_hex_malformed_entity(): void {
         // The hex spelling of the same malformed value (&#x344;) must be repaired too —
         // the guard keys off the resulting codepoint, not the decimal/hex notation.
