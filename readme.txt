@@ -103,6 +103,11 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Changelog ==
 
+= 2.13.1 =
+Back-in-stock alerts from chat.
+
+* The assistant now offers to notify a customer when an out-of-stock item returns (double opt-in), using the existing stock-alert system.
+
 = 2.13.0 =
 Store-as-an-agent — let AI agents discover and shop your store.
 

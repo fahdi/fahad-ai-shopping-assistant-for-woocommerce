@@ -334,6 +334,18 @@ class ApiHandlerTest extends TestCase {
         $this->assertStringContainsStringIgnoringCase( 'refer a friend', $prompt );
     }
 
+    // ── back-in-stock concierge (adjacent / #154) ───────────────────────────────
+
+    public function test_system_prompt_grounds_back_in_stock_alerts_in_a_tool_call(): void {
+        Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
+
+        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+            ->invoke( $this->handler() );
+
+        $this->assertStringContainsString( 'subscribe_stock_alert', $prompt );
+        $this->assertStringContainsStringIgnoringCase( 'out of stock', $prompt );
+    }
+
     public function test_currency_normalizer_repairs_hex_malformed_entity(): void {
         // The hex spelling of the same malformed value (&#x344;) must be repaired too —
         // the guard keys off the resulting codepoint, not the decimal/hex notation.
