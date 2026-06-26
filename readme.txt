@@ -431,6 +431,9 @@ Under the hood:
 
 == Upgrade Notice ==
 
+= 2.14.1 =
+Maintenance release: WordPress.org guideline compliance — adds full external-service disclosure with ToS/privacy links for all providers, and moves the RAG spike report out of the plugin folder. No functional changes for shoppers or merchants.
+
 = 2.11.1 =
 Maintenance release: WordPress.org guideline compliance (HTTP API, input sanitization) and WP 7.0 confirmation. No functional changes.
 
