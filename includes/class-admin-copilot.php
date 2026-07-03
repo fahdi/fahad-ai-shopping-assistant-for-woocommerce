@@ -43,30 +43,28 @@ final class Fahad_AI_Admin_Copilot {
 	}
 
 	public function register_routes(): void {
-		$gate = [ $this, 'can_manage' ];
-
 		register_rest_route( 'fahad-ai/v1', '/admin/insights', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'rest_insights' ],
-			'permission_callback' => $gate,
+			'permission_callback' => [ $this, 'can_manage' ],
 		] );
 
 		register_rest_route( 'fahad-ai/v1', '/admin/sale-candidates', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'rest_sale_candidates' ],
-			'permission_callback' => $gate,
+			'permission_callback' => [ $this, 'can_manage' ],
 		] );
 
 		register_rest_route( 'fahad-ai/v1', '/admin/product-context', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'rest_product_context' ],
-			'permission_callback' => $gate,
+			'permission_callback' => [ $this, 'can_manage' ],
 		] );
 
 		register_rest_route( 'fahad-ai/v1', '/admin/review-drafts', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'rest_review_drafts' ],
-			'permission_callback' => $gate,
+			'permission_callback' => [ $this, 'can_manage' ],
 		] );
 	}
 

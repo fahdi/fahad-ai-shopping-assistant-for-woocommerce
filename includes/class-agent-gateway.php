@@ -37,14 +37,15 @@ final class Fahad_AI_Agent_Gateway {
 	private function __construct() {}
 
 	public function register_routes(): void {
-		$public = '__return_true'; // read-only catalog data; safe to expose to agents.
-
 		foreach ( [ 'llms', 'catalog', 'search', 'product', 'checkout-handoff' ] as $path ) {
 			$method = 'rest_' . str_replace( '-', '_', $path );
 			register_rest_route( 'fahad-ai/v1', '/agent/' . $path, [
 				'methods'             => 'GET',
 				'callback'            => [ $this, $method ],
-				'permission_callback' => $public,
+				// Intentionally public: every endpoint is read-only and returns only
+				// published catalog data (or URLs a human opens); nothing mutates the
+				// store and no private data is exposed.
+				'permission_callback' => '__return_true',
 			] );
 		}
 	}
