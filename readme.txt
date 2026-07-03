@@ -4,9 +4,9 @@ Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 2.14.1
+Stable tag: 2.14.2
 License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
 AI-powered shopping assistant for WooCommerce. Answers customer questions and manages the cart using Claude or Kimi K2.
 
@@ -43,7 +43,7 @@ Fahad AI Shopping Assistant adds an intelligent shopping assistant widget to you
 **Requirements:**
 
 * WooCommerce 7.0 or later
-* An API key from [Anthropic](https://console.anthropic.com) or [Moonshot AI](https://platform.moonshot.ai)
+* An API key from [Anthropic](https://platform.claude.com) or [Moonshot AI](https://platform.kimi.ai)
 
 **External services:**
 
@@ -114,7 +114,7 @@ Used to generate chat responses (including streaming) when Moonshot AI is select
 
 * **Endpoint:** `api.moonshot.ai` / `api.moonshot.cn`
 * **Data sent:** conversation history and tool-call results per session.
-* [Terms of Service](https://platform.moonshot.ai/docs/tos) | [Privacy Policy](https://www.moonshot.ai/privacy)
+* [Terms of Service](https://platform.kimi.ai/docs/agreement/modeluse) | [Privacy Policy](https://platform.kimi.ai/docs/agreement/userprivacy)
 
 = OpenAI =
 
@@ -130,7 +130,7 @@ Used to generate chat responses when Google Gemini is selected as the provider.
 
 * **Endpoint:** `generativelanguage.googleapis.com`
 * **Data sent:** conversation history and tool-call results per session.
-* [Terms of Service](https://ai.google.dev/terms) | [Privacy Policy](https://policies.google.com/privacy)
+* [Terms of Service](https://ai.google.dev/gemini-api/terms) | [Privacy Policy](https://policies.google.com/privacy)
 
 = Groq =
 
@@ -138,7 +138,7 @@ Used to generate chat responses when Groq is selected as the provider.
 
 * **Endpoint:** `api.groq.com`
 * **Data sent:** conversation history and tool-call results per session.
-* [Terms of Service](https://groq.com/terms-of-service/) | [Privacy Policy](https://groq.com/privacy-policy/)
+* [Terms of Service](https://groq.com/terms-of-use) | [Privacy Policy](https://groq.com/privacy-policy)
 
 = Mistral AI =
 
@@ -146,7 +146,7 @@ Used to generate chat responses when Mistral is selected as the provider.
 
 * **Endpoint:** `api.mistral.ai`
 * **Data sent:** conversation history and tool-call results per session.
-* [Terms of Service](https://mistral.ai/terms/) | [Privacy Policy](https://mistral.ai/privacy-policy/)
+* [Terms of Service](https://legal.mistral.ai/terms) | [Privacy Policy](https://legal.mistral.ai/terms/privacy-policy)
 
 = DeepSeek =
 
@@ -154,7 +154,7 @@ Used to generate chat responses when DeepSeek is selected as the provider.
 
 * **Endpoint:** `api.deepseek.com`
 * **Data sent:** conversation history and tool-call results per session.
-* [Terms of Service](https://www.deepseek.com/terms) | [Privacy Policy](https://www.deepseek.com/privacy)
+* [Terms of Service](https://cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html) | [Privacy Policy](https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html)
 
 = xAI (Grok) =
 
@@ -170,7 +170,7 @@ Used to generate chat responses when Together AI is selected as the provider.
 
 * **Endpoint:** `api.together.xyz`
 * **Data sent:** conversation history and tool-call results per session.
-* [Terms of Service](https://www.together.ai/terms) | [Privacy Policy](https://www.together.ai/privacy)
+* [Terms of Service](https://www.together.ai/terms-of-service) | [Privacy Policy](https://www.together.ai/privacy)
 
 = OpenRouter =
 
@@ -196,6 +196,14 @@ Used for semantic-search embeddings (optional feature, off by default) when Cohe
 * **Data sent:** product titles, descriptions, and attributes when the store owner builds or rebuilds the search index.
 * [Terms of Service](https://cohere.com/terms-of-use) | [Privacy Policy](https://cohere.com/privacy)
 
+= Qdrant (optional external vector database) =
+
+Used only when the store owner explicitly configures an external Qdrant server (self-hosted or Qdrant Cloud) as the semantic-search index for very large catalogs. Off by default; typical stores use the built-in database index and never contact Qdrant.
+
+* **Endpoint:** the Qdrant URL you configure (your own server or Qdrant Cloud cluster).
+* **Data sent:** product embedding vectors with product IDs, the embedding model name, and a content hash — never prices, stock levels, or customer data.
+* [Terms and Conditions](https://qdrant.tech/legal/terms_and_conditions/) | [Privacy Policy](https://qdrant.tech/legal/privacy-policy/) (apply when using Qdrant Cloud; self-hosted servers are governed by you)
+
 = Meta (WhatsApp Business Cloud API) =
 
 Used when the optional WhatsApp channel is enabled (off by default). The plugin receives inbound messages from Meta's webhook and sends replies back through the Cloud API. Enable this only if you have a Meta Business account and have configured the WhatsApp integration in Settings.
@@ -205,6 +213,14 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.2 =
+WordPress.org review fixes: working legal links, hardened WP-CLI report path, statically-verifiable REST permissions.
+
+* Replaced dead or relocated Terms of Service / Privacy Policy links (DeepSeek, Together AI, Moonshot/Kimi, Mistral, Groq, Google Gemini API) with their current canonical URLs; every link in the readme was verified live.
+* `wp fahad-ai rag-spike --report` now accepts a filename only: the report is always written inside `wp-content/uploads/fahad-ai-shopping-assistant-for-woocommerce/`, and absolute paths or `../` traversal are stripped.
+* Inlined literal `permission_callback` values (`__return_true` for the read-only public agent endpoints, capability checks for admin endpoints) so intent is statically verifiable.
+* Documented the optional external Qdrant vector database in the External services section.
 
 = 2.14.1 =
 WordPress.org compliance: external services documentation and plugin-folder write fix.
@@ -430,6 +446,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.2 =
+Maintenance release: refreshed all external-service ToS/privacy links to current URLs, confined the WP-CLI report path to the uploads directory, and made REST permission callbacks statically verifiable. No functional changes for shoppers or merchants.
 
 = 2.14.1 =
 Maintenance release: WordPress.org guideline compliance — adds full external-service disclosure with ToS/privacy links for all providers, and moves the RAG spike report out of the plugin folder. No functional changes for shoppers or merchants.

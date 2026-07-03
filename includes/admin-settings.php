@@ -589,7 +589,7 @@ function fahad_ai_settings_page(): void {
 								printf(
 									/* translators: %s: URL to Anthropic console */
 									esc_html__( 'Get your key from %s.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-									'<a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>'
+									'<a href="https://platform.claude.com" target="_blank" rel="noopener">platform.claude.com</a>'
 								);
 								?>
 							</p>
@@ -637,7 +637,7 @@ function fahad_ai_settings_page(): void {
 								printf(
 									/* translators: 1: URL to global Moonshot platform, 2: URL to China Moonshot platform */
 									esc_html__( 'Get your key from %1$s (global) or %2$s (China).', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-									'<a href="https://platform.moonshot.ai" target="_blank" rel="noopener">platform.moonshot.ai</a>',
+									'<a href="https://platform.kimi.ai" target="_blank" rel="noopener">platform.kimi.ai</a>',
 									'<a href="https://platform.moonshot.cn" target="_blank" rel="noopener">platform.moonshot.cn</a>'
 								);
 								?>
