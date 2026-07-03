@@ -94,15 +94,14 @@ Every user-facing string uses the `fahad-ai-shopping-assistant-for-woocommerce` 
 
 **Status:** slug `fahad-ai-shopping-assistant-for-woocommerce` accepted; **pending final review** (see #67). History (condensed): submitted Apr 2026 as `wc-ai-chatbot` → naming/prefix/cURL/i18n flags → renamed via "Maya" (rejected, brand-like) → final rename to "Fahad AI…"; cURL justified, text-domain fixed, nonce replaced with `authorize_request()` (nonce + rate-limit), Moonshot streaming reverted to a dedicated `curl_init()` handle (the `http_api_curl` override corrupted SSE framing).
 
-**Building the release zip** (clean — tracked files only, dev/docs pruned):
+**Building the release zip** (allow-list — only runtime files ship):
 ```bash
 cd /Users/isupercoder/Code/github/fahad-ai-shopping-assistant-for-woocommerce
 SLUG=fahad-ai-shopping-assistant-for-woocommerce
 rm -rf /tmp/fahad-build && mkdir -p /tmp/fahad-build/$SLUG
-git archive HEAD | tar -x -C /tmp/fahad-build/$SLUG
-cd /tmp/fahad-build/$SLUG && rm -rf tests .github .gitignore phpunit.xml composer.json composer.lock CLAUDE.md ROADMAP.md README.md docs
-cd /tmp/fahad-build && zip -rq /Users/isupercoder/Code/github/$SLUG-<version>.zip $SLUG
+git archive HEAD -- $SLUG.php uninstall.php readme.txt includes assets languages | tar -x -C /tmp/fahad-build/$SLUG
+cd /tmp/fahad-build && zip -rq /Users/isupercoder/Code/github/_fahad-ai-builds/$SLUG-<version>.zip $SLUG
 ```
-The zip excludes `.git`, `vendor`, `tests`, `.github`, `docs`, `CLAUDE.md`, `ROADMAP.md`, `README.md`, `composer.*`, `phpunit.xml`, `.gitignore`, `.phpunit.result.cache`.
+The zip contains ONLY the runtime allow-list: the main plugin file, `uninstall.php`, `readme.txt`, `includes/`, `assets/`, `languages/`. Everything else in the repo is dev tooling and must not ship — WP.org's automated scanner rejects zips with application/dev files (it bounced 2.14.2 over `phpcs.xml.dist`, and the zip also carried `website/`, `e2e/`, `playwright.config.ts`, `package.json`). If a new runtime directory is ever added, extend the `git archive` pathspec here and in CLAUDE.md.
 
 **Reviewer-reply pattern:** brief and direct (no AI fluff — reviewers flag it), bullet the categories addressed, request any slug change explicitly in both the email and the upload comment.

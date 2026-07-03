@@ -8,7 +8,7 @@ Concise router for this repo. To keep context lean, the detail lives in two focu
 
 ## Identity
 - Main file: `fahad-ai-shopping-assistant-for-woocommerce.php` · GitHub: https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
-- **Current version: 2.14.2**
+- **Current version: 2.14.3**
 - Requires: WordPress 6.0+ (tested up to 7.0), PHP 8.0+ (host dev runs 8.5), WooCommerce active
 - Slug / text domain (must match): `fahad-ai-shopping-assistant-for-woocommerce` (WP.org pending — see #67)
 - Prefixes: constants `FAHAD_AI_*`, classes `Fahad_AI_*`, functions/hooks/options `fahad_ai_*`, REST `fahad-ai/v1`. Full conventions table in [docs/plugin.md](docs/plugin.md).
@@ -25,7 +25,7 @@ No exceptions for code/feature PRs:
 2. **Bump the version (semver)** — patch for fixes, minor for features — in all four places: the main-file header `Version:`, `FAHAD_AI_VERSION`, `readme.txt` `Stable tag`, and this file's "Current version".
 3. **Document the change** — add a `readme.txt` changelog entry **and** an upgrade-notice entry; update `docs/*` / `ROADMAP.md` / the issue checkbox as relevant.
 4. **Branch → PR → merge to `main`** (merge commit), suite green.
-5. **Build the zip** (`git archive` of HEAD, prune dev/test/docs — see [docs/plugin.md](docs/plugin.md)) and **publish a GitHub release** whose notes describe exactly what changed.
+5. **Build the zip** (`git archive` of HEAD, allow-list of runtime files only — see [docs/plugin.md](docs/plugin.md)) and **publish a GitHub release** whose notes describe exactly what changed.
 6. Tick the item in epic **#47** (or its child issue).
 
 > Docs/planning-only changes (ROADMAP, CLAUDE.md, `docs/`, issue grooming) don't change the shipped plugin; a release for them is optional and, if cut, its notes must say "no functional plugin change."
@@ -35,12 +35,13 @@ No exceptions for code/feature PRs:
 # Tests (from the repo root)
 vendor/bin/phpunit
 
-# Build a release zip (set <version>)
+# Build a release zip (set <version>) — allow-list: ONLY runtime files ship.
+# WP.org's scanner rejects zips containing dev files (it bounced 2.14.2 over phpcs.xml.dist),
+# so never revert to a prune/deny list — it rots every time a dev file is added.
 SLUG=fahad-ai-shopping-assistant-for-woocommerce
 rm -rf /tmp/fahad-build && mkdir -p /tmp/fahad-build/$SLUG
-git archive HEAD | tar -x -C /tmp/fahad-build/$SLUG
-( cd /tmp/fahad-build/$SLUG && rm -rf tests .github .gitignore phpunit.xml composer.json composer.lock CLAUDE.md ROADMAP.md README.md docs )
-( cd /tmp/fahad-build && zip -rq /Users/isupercoder/Code/github/$SLUG-<version>.zip $SLUG )
+git archive HEAD -- $SLUG.php uninstall.php readme.txt includes assets languages | tar -x -C /tmp/fahad-build/$SLUG
+( cd /tmp/fahad-build && zip -rq /Users/isupercoder/Code/github/_fahad-ai-builds/$SLUG-<version>.zip $SLUG )
 ```
 
 For WP-CLI against the local demo store, use the Local-bundled binary (host Homebrew WP-CLI on PHP 8.4+ leaks deprecation noise to stdout) — see the project memory note.
