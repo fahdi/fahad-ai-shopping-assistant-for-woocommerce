@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.6
+Stable tag: 2.14.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.7 =
+A gentle, one-time review request appears after two weeks of configured use, so happy stores can help others find Dukandar.
+
+* Added a dismissible admin notice inviting a WordPress.org review, shown only once a provider is configured and the plugin has been active for two weeks, and only to users who can manage the assistant. Dismissing it is permanent.
 
 = 2.14.6 =
 Setup nudge: if Dukandar is active but no AI provider is configured, an admin notice now prompts you to add your API key, so an unconfigured store no longer looks broken.
@@ -473,6 +478,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.7 =
+Adds a one-time review request after two weeks of use. No breaking changes.
 
 = 2.14.6 =
 Adds a setup prompt when no AI provider is configured yet. No breaking changes.

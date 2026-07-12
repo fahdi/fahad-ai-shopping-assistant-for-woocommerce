@@ -53,6 +53,67 @@ function fahad_ai_setup_notice(): void {
 }
 
 /**
+ * Whether to invite a WordPress.org review (issue #192). Asks only after real,
+ * sustained use: a provider is configured and it has been at least two weeks since the
+ * plugin first went active, and only once (a dismissal is permanent).
+ */
+function fahad_ai_should_request_review(): bool {
+	if ( ! fahad_ai_is_provider_configured() ) {
+		return false;
+	}
+	if ( '1' === (string) get_option( 'fahad_ai_review_dismissed', '' ) ) {
+		return false;
+	}
+	$since = (int) get_option( 'fahad_ai_activated_at', 0 );
+	if ( $since <= 0 ) {
+		return false;
+	}
+	return ( time() - $since ) >= 14 * DAY_IN_SECONDS;
+}
+
+/**
+ * Review request notice (issue #192): a gentle, dismissible ask shown to managers once
+ * the plugin has proven its worth. Ratings drive the plugin's discoverability, so this
+ * captures happy stores at the moment of demonstrated value without nagging new installs.
+ */
+function fahad_ai_review_notice(): void {
+	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+		return;
+	}
+	if ( ! fahad_ai_should_request_review() ) {
+		return;
+	}
+	$review  = 'https://wordpress.org/support/plugin/fahad-ai-shopping-assistant-for-woocommerce/reviews/#new-post';
+	$dismiss = wp_nonce_url( add_query_arg( 'fahad_ai_dismiss_review', '1' ), 'fahad_ai_dismiss_review' );
+	printf(
+		'<div class="notice notice-info is-dismissible"><p>%s <a href="%s" target="_blank" rel="noopener noreferrer" class="button button-primary" style="margin-left:8px">%s</a> <a href="%s" style="margin-left:6px">%s</a></p></div>',
+		esc_html__( 'Dukandar has been answering your shoppers for a while now. If it is pulling its weight, a quick review helps other stores find it.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		esc_url( $review ),
+		esc_html__( 'Leave a review', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		esc_url( $dismiss ),
+		esc_html__( 'No thanks', 'fahad-ai-shopping-assistant-for-woocommerce' )
+	);
+}
+
+/**
+ * Handle the "No thanks" dismissal of the review request (issue #192). Nonce-protected
+ * and capability-gated; persists so the notice never returns.
+ */
+function fahad_ai_maybe_dismiss_review(): void {
+	if ( ! isset( $_GET['fahad_ai_dismiss_review'] ) ) {
+		return;
+	}
+	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+		return;
+	}
+	$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+	if ( ! wp_verify_nonce( $nonce, 'fahad_ai_dismiss_review' ) ) {
+		return;
+	}
+	update_option( 'fahad_ai_review_dismissed', '1' );
+}
+
+/**
  * Sanitize the merchant tone/persona setting to the fixed allowlist (issue #56).
  *
  * The tone maps to a vetted instruction line in the system prompt, so only the known
