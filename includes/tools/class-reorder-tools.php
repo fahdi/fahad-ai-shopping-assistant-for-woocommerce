@@ -5,9 +5,9 @@ defined( 'ABSPATH' ) || exit;
  * Reorder / "buy it again" tools (issue #52), a fast repurchase path for
  * LOGGED-IN customers only.
  *
- * A drop-in feature pack (same pattern as Fahad_AI_Order_Tools / Fahad_AI_Catalog_Tools):
+ * A drop-in feature pack (same pattern as Dukandaar_Order_Tools / Dukandaar_Catalog_Tools):
  * a self-contained class in its own file under includes/tools/ that self-registers a
- * provider at the bottom via Fahad_AI_Tool_Registry::register_pack(). The bootstrap
+ * provider at the bottom via Dukandaar_Tool_Registry::register_pack(). The bootstrap
  * (and the test bootstrap) glob-require everything here, so adding this pack is a
  * SINGLE new file, no edits to the bootstrap, the test bootstrap, or the eval harness.
  *
@@ -23,10 +23,10 @@ defined( 'ABSPATH' ) || exit;
  *
  * SECURITY IS THE WHOLE POINT, order history is PII and re-adding ANOTHER customer's
  * order is the highest-severity failure. These tools use the issue-#25 authorization
- * boundary (Fahad_AI_Auth) in BOTH of its layers (defence in depth):
+ * boundary (Dukandaar_Auth) in BOTH of its layers (defence in depth):
  *
  *   1. CENTRAL LOGIN GATE. Both tools declare `'personal' => true`, so
- *      Fahad_AI_Tool_Registry::dispatch() runs Fahad_AI_Auth::guard_logged_in()
+ *      Dukandaar_Tool_Registry::dispatch() runs Dukandaar_Auth::guard_logged_in()
  *      BEFORE the callback. A guest is blocked centrally with the standard
  *      login-required error and the callback is never reached, these tools never
  *      re-implement the guest check, so they cannot leak by forgetting it.
@@ -34,7 +34,7 @@ defined( 'ABSPATH' ) || exit;
  *   2. PER-RECORD OWNERSHIP. get_past_purchases scopes its wc_get_orders() query by
  *      `customer_id` to the current user, so the database can only ever hand back the
  *      caller's own orders (no per-record check is needed). reorder( order_id ) loads
- *      the order and then calls Fahad_AI_Auth::user_owns( $order->get_customer_id() );
+ *      the order and then calls Dukandaar_Auth::user_owns( $order->get_customer_id() );
  *      a mismatch returns a "not found"-style error (NOT "forbidden"), so we never even
  *      confirm an order exists for another user, and crucially we bail BEFORE touching
  *      the catalogue or the cart, so a foreign order's items can never be added.
@@ -45,7 +45,7 @@ defined( 'ABSPATH' ) || exit;
  * variation is verified to still belong to its parent. Nothing is fabricated; an item
  * that cannot be added is reported with a plain reason, not dropped.
  */
-final class Fahad_AI_Reorder_Tools {
+final class Dukandaar_Reorder_Tools {
 
 	/**
 	 * How many recent orders to scan for purchase history / the default reorder source.
@@ -61,7 +61,7 @@ final class Fahad_AI_Reorder_Tools {
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope).
 	 * Static because the pack holds no per-instance state, its tools call WooCommerce
-	 * order/product/cart functions and the shared Fahad_AI_Auth boundary directly.
+	 * order/product/cart functions and the shared Dukandaar_Auth boundary directly.
 	 *
 	 * Both tools carry `'personal' => true` so the registry login-gates them centrally
 	 * (the first authorization layer).
@@ -112,7 +112,7 @@ final class Fahad_AI_Reorder_Tools {
 	 * Distinct, still-available products the CURRENT customer has bought before.
 	 *
 	 * The wc_get_orders() query is scoped by `customer_id` to
-	 * Fahad_AI_Auth::current_user_id(), so it can only ever return that user's own
+	 * Dukandaar_Auth::current_user_id(), so it can only ever return that user's own
 	 * orders, the data-leakage-proof way to derive purchase history (the database
 	 * never hands back anyone else's row). The central login gate has already ensured
 	 * the caller is logged in by the time this runs.
@@ -130,7 +130,7 @@ final class Fahad_AI_Reorder_Tools {
 		$orders = wc_get_orders( [
 			// Scope to the signed-in customer ONLY. This is the boundary that keeps the
 			// result strictly the caller's own history.
-			'customer_id' => Fahad_AI_Auth::current_user_id(),
+			'customer_id' => Dukandaar_Auth::current_user_id(),
 			'limit'       => $limit,
 			'orderby'     => 'date',
 			'order'       => 'DESC',
@@ -176,7 +176,7 @@ final class Fahad_AI_Reorder_Tools {
 			return [
 				'found'    => 0,
 				'products' => [],
-				'message'  => __( 'You have no past purchases available to reorder.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message'  => __( 'You have no past purchases available to reorder.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -191,7 +191,7 @@ final class Fahad_AI_Reorder_Tools {
 	 * list.
 	 *
 	 * order_id path: loads the order and enforces the SECOND authorization layer , 
-	 * Fahad_AI_Auth::user_owns( $order->get_customer_id() ). A missing order OR one
+	 * Dukandaar_Auth::user_owns( $order->get_customer_id() ). A missing order OR one
 	 * owned by someone else collapses to the SAME "not found" error (never
 	 * "forbidden"), and we return BEFORE touching the catalogue or the cart, so a
 	 * foreign order's items can never be added. The line items' own quantities and
@@ -225,7 +225,7 @@ final class Fahad_AI_Reorder_Tools {
 
 		if ( empty( $refs ) ) {
 			return [
-				'error' => __( 'Tell me which order to reorder, or which items to add.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error' => __( 'Tell me which order to reorder, or which items to add.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -268,7 +268,7 @@ final class Fahad_AI_Reorder_Tools {
 	 */
 	private static function refs_from_order( int $order_id ): array {
 		$not_found = [
-			'error' => __( 'Order not found.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'error' => __( 'Order not found.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 		];
 
 		$order = wc_get_order( $order_id );
@@ -276,7 +276,7 @@ final class Fahad_AI_Reorder_Tools {
 		// Missing order, or, crucially, an order owned by a DIFFERENT user. Both
 		// collapse to the same "not found" so ownership is never disclosed, and we bail
 		// before touching the catalogue or the cart.
-		if ( ! $order instanceof WC_Order || ! Fahad_AI_Auth::user_owns( $order->get_customer_id() ) ) {
+		if ( ! $order instanceof WC_Order || ! Dukandaar_Auth::user_owns( $order->get_customer_id() ) ) {
 			return $not_found;
 		}
 
@@ -365,7 +365,7 @@ final class Fahad_AI_Reorder_Tools {
 		$product = wc_get_product( $product_id );
 
 		if ( ! $product instanceof WC_Product || ! $product->is_visible() ) {
-			$reason = __( 'This product is no longer available.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+			$reason = __( 'This product is no longer available.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 			return null;
 		}
 
@@ -378,7 +378,7 @@ final class Fahad_AI_Reorder_Tools {
 			$variation = wc_get_product( $variation_id );
 
 			if ( ! $variation instanceof WC_Product || (int) $variation->get_parent_id() !== $product_id ) {
-				$reason = __( 'That product option is no longer available.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+				$reason = __( 'That product option is no longer available.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 				return null;
 			}
 
@@ -386,7 +386,7 @@ final class Fahad_AI_Reorder_Tools {
 		}
 
 		if ( ! $item->is_in_stock() ) {
-			$reason = __( 'This item is currently out of stock.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+			$reason = __( 'This item is currently out of stock.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 			return null;
 		}
 
@@ -416,7 +416,7 @@ final class Fahad_AI_Reorder_Tools {
 			$unavailable[] = [
 				'product_id'   => $ref['product_id'],
 				'variation_id' => $ref['variation_id'],
-				'reason'       => $reason ?? __( 'This item is no longer available.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'reason'       => $reason ?? __( 'This item is no longer available.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 			return;
 		}
@@ -431,7 +431,7 @@ final class Fahad_AI_Reorder_Tools {
 			$unavailable[] = [
 				'product_id'   => $ref['product_id'],
 				'variation_id' => $ref['variation_id'],
-				'reason'       => __( 'This item could not be added to your cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'reason'       => __( 'This item could not be added to your cart.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 			return;
 		}
@@ -466,5 +466,5 @@ final class Fahad_AI_Reorder_Tools {
 // the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test pcov window opens; it can never be re-executed in-process.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Reorder_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Reorder_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

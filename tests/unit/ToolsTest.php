@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Tools.
+ * Unit tests for Dukandaar_Tools.
  *
  * Red → Green → Refactor cycle.
  * WP/WC functions mocked via Brain\Monkey; WC objects via Mockery.
@@ -43,10 +43,10 @@ class ToolsTest extends TestCase {
         parent::tearDown();
     }
 
-    private function tools(): Fahad_AI_Tools {
-        $ref = new ReflectionProperty( Fahad_AI_Tools::class, 'instance' );
+    private function tools(): Dukandaar_Tools {
+        $ref = new ReflectionProperty( Dukandaar_Tools::class, 'instance' );
         $ref->setValue( null, null );
-        return Fahad_AI_Tools::instance();
+        return Dukandaar_Tools::instance();
     }
 
     // ── execute() routing ─────────────────────────────────────────────────────

@@ -13,8 +13,8 @@
  * states ($5.00) is the real method cost the tool returned, never an invented
  * number or a made-up delivery date.
  *
- * estimate_delivery comes from the shipping feature pack (Fahad_AI_Shipping_Tools),
- * which self-registers via Fahad_AI_Tool_Registry::register_pack() when the test
+ * estimate_delivery comes from the shipping feature pack (Dukandaar_Shipping_Tools),
+ * which self-registers via Dukandaar_Tool_Registry::register_pack() when the test
  * bootstrap glob-loads includes/tools/*.php, exactly as the plugin bootstrap does
  * in production, so the real tool executes in the loop with no per-fixture wiring.
  */

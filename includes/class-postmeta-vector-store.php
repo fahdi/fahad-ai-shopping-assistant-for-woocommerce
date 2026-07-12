@@ -2,7 +2,7 @@
 /**
  * Default vector store: embeddings as product post meta (RAG Phase 1, S1.2, #105).
  *
- * RAG-DESIGN.md §5.1 sketched a custom `{prefix}fahad_ai_embeddings` table. This
+ * RAG-DESIGN.md §5.1 sketched a custom `{prefix}dukandaar_embeddings` table. This
  * implementation deliberately uses POST META instead, because the plugin keeps a
  * zero-custom-table convention (even analytics stores to an option) and has no
  * activation/migration machinery. Post meta is still MySQL-backed, needs no
@@ -16,15 +16,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Postmeta_Vector_Store implements Fahad_AI_Vector_Store {
+final class Dukandaar_Postmeta_Vector_Store implements Dukandaar_Vector_Store {
 
-	private const META_VECTOR = '_fahad_ai_embedding';
-	private const META_MODEL  = '_fahad_ai_embedding_model';
-	private const META_DIM    = '_fahad_ai_embedding_dim';
-	private const META_HASH   = '_fahad_ai_embedding_hash';
+	private const META_VECTOR = '_dukandaar_embedding';
+	private const META_MODEL  = '_dukandaar_embedding_model';
+	private const META_DIM    = '_dukandaar_embedding_dim';
+	private const META_HASH   = '_dukandaar_embedding_hash';
 
 	/** Option recording the model the index was last built under (§5.5). */
-	public const OPTION_INDEX_MODEL = 'fahad_ai_index_model';
+	public const OPTION_INDEX_MODEL = 'dukandaar_index_model';
 
 	public function __construct(
 		private string $model,
@@ -32,7 +32,7 @@ final class Fahad_AI_Postmeta_Vector_Store implements Fahad_AI_Vector_Store {
 	) {}
 
 	public function upsert( int $product_id, array $vector, string $model, string $content_hash ): void {
-		update_post_meta( $product_id, self::META_VECTOR, Fahad_AI_Vector_Math::pack_vector( $vector ) );
+		update_post_meta( $product_id, self::META_VECTOR, Dukandaar_Vector_Math::pack_vector( $vector ) );
 		update_post_meta( $product_id, self::META_MODEL, $model );
 		update_post_meta( $product_id, self::META_DIM, count( $vector ) );
 		update_post_meta( $product_id, self::META_HASH, $content_hash );
@@ -63,11 +63,11 @@ final class Fahad_AI_Postmeta_Vector_Store implements Fahad_AI_Vector_Store {
 			if ( ! is_string( $blob ) || '' === $blob ) {
 				continue;
 			}
-			$vector = Fahad_AI_Vector_Math::unpack_vector( $blob );
+			$vector = Dukandaar_Vector_Math::unpack_vector( $blob );
 			if ( count( $vector ) !== $dim ) {
 				continue;
 			}
-			$scored[ $id ] = Fahad_AI_Vector_Math::cosine( $query_vector, $vector );
+			$scored[ $id ] = Dukandaar_Vector_Math::cosine( $query_vector, $vector );
 		}
 
 		// Highest cosine first; deterministic tie-break by id ascending.

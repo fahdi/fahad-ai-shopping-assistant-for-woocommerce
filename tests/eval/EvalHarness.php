@@ -1,9 +1,9 @@
 <?php
 /**
- * Eval harness for the Fahad AI shopping assistant.
+ * Eval harness for the Dukandaar shopping assistant.
  *
  * This is the AI analogue of the unit tests: it drives the REAL agent loop
- * (Fahad_AI_API_Handler::run_anthropic_agent / run_openai_agent) against a
+ * (Dukandaar_API_Handler::run_anthropic_agent / run_openai_agent) against a
  * SCRIPTED LLM transport and REAL tool execution, then makes deterministic
  * assertions about which tools ran, what cards were produced, and whether the
  * model's final answer is grounded in the tool results.
@@ -56,13 +56,13 @@ final class EvalHarness {
 	 * those static packs + the filter.
 	 */
 	public static function reset_singletons(): void {
-		( new ReflectionProperty( Fahad_AI_API_Handler::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_API_Handler::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 	}
 
-	private static function handler(): Fahad_AI_API_Handler {
-		return Fahad_AI_API_Handler::instance();
+	private static function handler(): Dukandaar_API_Handler {
+		return Dukandaar_API_Handler::instance();
 	}
 
 	// =========================================================================
@@ -80,13 +80,13 @@ final class EvalHarness {
 	 */
 	public static function stub_environment( array $options = [] ): void {
 		$defaults = [
-			'fahad_ai_provider'           => 'anthropic',
-			'fahad_ai_anthropic_api_key'  => 'test-anthropic-key',
-			'fahad_ai_anthropic_model'    => 'claude-haiku-4-5-20251001',
-			'fahad_ai_moonshot_api_key'   => 'test-moonshot-key',
-			'fahad_ai_moonshot_model'     => 'kimi-k2.6',
-			'fahad_ai_moonshot_region'    => 'global',
-			'fahad_ai_system_prompt'      => '',
+			'dukandaar_provider'           => 'anthropic',
+			'dukandaar_anthropic_api_key'  => 'test-anthropic-key',
+			'dukandaar_anthropic_model'    => 'claude-haiku-4-5-20251001',
+			'dukandaar_moonshot_api_key'   => 'test-moonshot-key',
+			'dukandaar_moonshot_model'     => 'kimi-k2.6',
+			'dukandaar_moonshot_region'    => 'global',
+			'dukandaar_system_prompt'      => '',
 		];
 		$opts = array_merge( $defaults, $options );
 
@@ -460,8 +460,8 @@ final class EvalHarness {
 	 * Drive the real agent loop for a provider, then reconstruct the tool trace
 	 * (names, inputs, results) from the loop's own returned transcript.
 	 *
-	 * We deliberately do NOT wrap or subclass Fahad_AI_Tools (it is `final`, and
-	 * the goal is to touch no production code). The real Fahad_AI_Tools runs
+	 * We deliberately do NOT wrap or subclass Dukandaar_Tools (it is `final`, and
+	 * the goal is to touch no production code). The real Dukandaar_Tools runs
 	 * inside the loop against the WooCommerce stubs, and the loop records each
 	 * tool_use/tool_calls block plus its tool_result content into the returned
 	 * `messages` array, so we parse that transcript to recover the trace.
@@ -485,10 +485,10 @@ final class EvalHarness {
 		// The OpenAI-compatible loop is generalised (run_openai_agent), parameterised by
 		// a provider id; the moonshot preset rides it. Anthropic keeps its native loop.
 		if ( 'anthropic' === $provider ) {
-			$ref    = new ReflectionMethod( Fahad_AI_API_Handler::class, 'run_anthropic_agent' );
+			$ref    = new ReflectionMethod( Dukandaar_API_Handler::class, 'run_anthropic_agent' );
 			$result = $ref->invoke( self::handler(), $messages );
 		} else {
-			$ref    = new ReflectionMethod( Fahad_AI_API_Handler::class, 'run_openai_agent' );
+			$ref    = new ReflectionMethod( Dukandaar_API_Handler::class, 'run_openai_agent' );
 			$result = $ref->invoke( self::handler(), $messages, $provider );
 		}
 

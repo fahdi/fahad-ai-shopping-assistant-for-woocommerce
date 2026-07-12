@@ -6,8 +6,8 @@
 // pcov coverage collection over the full suite needs more than the default 128M
 // (the assertion-event exporter + per-test coverage maps add up). Raise it here so
 // `composer test:coverage` runs without per-command -d flags on any machine.
-$fahad_ai_mem = trim( (string) ini_get( 'memory_limit' ) );
-if ( '-1' !== $fahad_ai_mem && (int) $fahad_ai_mem < 512 ) {
+$dukandaar_mem = trim( (string) ini_get( 'memory_limit' ) );
+if ( '-1' !== $dukandaar_mem && (int) $dukandaar_mem < 512 ) {
 	ini_set( 'memory_limit', '512M' );
 }
 
@@ -47,14 +47,14 @@ require_once dirname( __DIR__ ) . '/includes/class-visual-search.php';
 require_once dirname( __DIR__ ) . '/includes/class-tools.php';
 
 // Load every drop-in feature tool pack, exactly like the plugin bootstrap. Each
-// file under includes/tools/ self-registers via Fahad_AI_Tool_Registry::register_pack(),
+// file under includes/tools/ self-registers via Dukandaar_Tool_Registry::register_pack(),
 // so a new pack drops in here with no edits to this bootstrap. Sorted for a
 // deterministic load order. (The registry class is required above first, so the
 // packs' file-scope register_pack() calls resolve.)
-$fahad_ai_pack_files = glob( dirname( __DIR__ ) . '/includes/tools/*.php' ) ?: [];
-sort( $fahad_ai_pack_files );
-foreach ( $fahad_ai_pack_files as $fahad_ai_pack_file ) {
-	require_once $fahad_ai_pack_file;
+$dukandaar_pack_files = glob( dirname( __DIR__ ) . '/includes/tools/*.php' ) ?: [];
+sort( $dukandaar_pack_files );
+foreach ( $dukandaar_pack_files as $dukandaar_pack_file ) {
+	require_once $dukandaar_pack_file;
 }
 
 require_once dirname( __DIR__ ) . '/includes/class-api-handler.php';

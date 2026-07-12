@@ -6,9 +6,9 @@
  * eval (canned embeddings) and the spike CLI (real embeddings):
  *  - keyword_rank: token-overlap baseline, a stand-in for the existing keyword
  *    search leg, good at literal tokens (SKUs, exact words).
- *  - vector_rank:  cosine over embeddings (Fahad_AI_Vector_Math), candidates above
+ *  - vector_rank:  cosine over embeddings (Dukandaar_Vector_Math), candidates above
  *    a similarity threshold, good at intent/synonyms.
- *  - hybrid_rank:  RRF fusion of the two legs (Fahad_AI_Rrf).
+ *  - hybrid_rank:  RRF fusion of the two legs (Dukandaar_Rrf).
  *
  * Each leg returns only its CANDIDATES (no overlap / cos ≤ threshold are dropped),
  * matching how the real legs behave (keyword returns matches; vector returns its
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Rag_Spike_Retriever {
+final class Dukandaar_Rag_Spike_Retriever {
 
 	/**
 	 * Rank docs by query-token overlap, best first, excluding zero-overlap docs.
@@ -59,7 +59,7 @@ final class Fahad_AI_Rag_Spike_Retriever {
 	public static function vector_rank( array $query_vec, array $doc_vecs, float $threshold = 0.0 ): array {
 		$scored = [];
 		foreach ( $doc_vecs as $id => $vec ) {
-			$cos = Fahad_AI_Vector_Math::cosine( $query_vec, $vec );
+			$cos = Dukandaar_Vector_Math::cosine( $query_vec, $vec );
 			if ( $cos > $threshold ) {
 				$scored[ (int) $id ] = $cos;
 			}
@@ -75,8 +75,8 @@ final class Fahad_AI_Rag_Spike_Retriever {
 	 * @param array<int,int> $vector
 	 * @return array<int,int> fused ids, best first.
 	 */
-	public static function hybrid_rank( array $keyword, array $vector, int $k = Fahad_AI_Rrf::DEFAULT_K ): array {
-		return Fahad_AI_Rrf::fuse( [ $keyword, $vector ], $k );
+	public static function hybrid_rank( array $keyword, array $vector, int $k = Dukandaar_Rrf::DEFAULT_K ): array {
+		return Dukandaar_Rrf::fuse( [ $keyword, $vector ], $k );
 	}
 
 	/** Lowercase, split on non-word characters (Unicode-aware), drop empties. */

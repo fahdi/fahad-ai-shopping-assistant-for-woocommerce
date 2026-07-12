@@ -11,7 +11,7 @@
  *
  * A real vision-embeddings provider is NOT available, so this is TESTED SCAFFOLDING
  * behind a provider seam, going live needs a vision/embeddings backend. There is NO real
- * outbound vision-API call anywhere; the actual ranking is a `fahad_ai_visual_retriever`
+ * outbound vision-API call anywhere; the actual ranking is a `dukandaar_visual_retriever`
  * filter a provider implements (exactly the shape #60 uses for text). These tests pin the
  * security- and contract-critical PHP:
  *
@@ -62,16 +62,16 @@ class VisualSearchTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Visual_Search::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Visual_Search::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh singleton (reset between cases via reflection). */
-	private function visual(): Fahad_AI_Visual_Search {
-		( new ReflectionProperty( Fahad_AI_Visual_Search::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Visual_Search::instance();
+	private function visual(): Dukandaar_Visual_Search {
+		( new ReflectionProperty( Dukandaar_Visual_Search::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Visual_Search::instance();
 	}
 
 	/**
@@ -82,7 +82,7 @@ class VisualSearchTest extends TestCase {
 	 * @param callable $retriever fn( $value, array $image, array $filters ): mixed
 	 */
 	private function registerRetriever( callable $retriever ): void {
-		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )
+		Monkey\Filters\expectApplied( 'dukandaar_visual_retriever' )
 			->andReturnUsing( $retriever );
 	}
 
@@ -94,7 +94,7 @@ class VisualSearchTest extends TestCase {
 	 */
 	private function image( array $overrides = [] ): array {
 		return array_merge( [
-			'tmp_name' => '/tmp/fahad-ai-upload.jpg',
+			'tmp_name' => '/tmp/dukandaar-upload.jpg',
 			'name'     => 'look.jpg',
 			'type'     => 'image/jpeg',
 			'size'     => 250 * 1024, // 250 KB, comfortably under the default ceiling.
@@ -238,7 +238,7 @@ class VisualSearchTest extends TestCase {
 	public function test_oversized_image_is_rejected_before_retrieval(): void {
 		// An image over the size ceiling is rejected with a clean WP_Error and the seam is
 		// NEVER consulted, no retrieval, no resolution, no fatal. (Default ceiling is 5 MB.)
-		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
+		Monkey\Filters\expectApplied( 'dukandaar_visual_retriever' )->never();
 		Functions\expect( 'wc_get_product' )->never();
 
 		$result = $this->visual()->search( $this->image( [ 'size' => 6 * 1024 * 1024 ] ) );
@@ -250,7 +250,7 @@ class VisualSearchTest extends TestCase {
 	public function test_invalid_mime_type_is_rejected_before_retrieval(): void {
 		// A non-image MIME (e.g. a disguised PDF/script) is rejected cleanly and the seam is
 		// never consulted, the content-safety / unsafe-upload guard.
-		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
+		Monkey\Filters\expectApplied( 'dukandaar_visual_retriever' )->never();
 		Functions\expect( 'wc_get_product' )->never();
 
 		$result = $this->visual()->search( $this->image( [ 'type' => 'application/pdf', 'name' => 'invoice.pdf' ] ) );
@@ -262,7 +262,7 @@ class VisualSearchTest extends TestCase {
 	public function test_empty_or_missing_image_is_rejected(): void {
 		// A request with no usable image reference (no tmp_name, no url, no data) is a clean
 		// 400, never a fatal on a missing key.
-		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
+		Monkey\Filters\expectApplied( 'dukandaar_visual_retriever' )->never();
 
 		$result = $this->visual()->search( [] );
 
@@ -273,7 +273,7 @@ class VisualSearchTest extends TestCase {
 	public function test_zero_byte_image_is_rejected(): void {
 		// A zero-byte upload (truncated / failed transfer) is rejected as a bad request,
 		// never passed to a provider.
-		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
+		Monkey\Filters\expectApplied( 'dukandaar_visual_retriever' )->never();
 
 		$result = $this->visual()->search( $this->image( [ 'size' => 0 ] ) );
 
@@ -438,7 +438,7 @@ class VisualSearchTest extends TestCase {
 	public function test_rest_handler_rejects_oversized_upload_with_wp_error(): void {
 		// An oversized upload through the REST surface returns the WP_Error (413) straight to
 		// the client, the seam is never consulted.
-		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
+		Monkey\Filters\expectApplied( 'dukandaar_visual_retriever' )->never();
 
 		$request = Mockery::mock( 'WP_REST_Request' );
 		$request->shouldReceive( 'get_file_params' )->andReturn( [ 'image' => $this->image( [ 'size' => 6 * 1024 * 1024 ] ) ] );

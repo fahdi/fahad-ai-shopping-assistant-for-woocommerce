@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage gap tests for Fahad_AI_Relevance_Metrics (RAG Phase 0, S0.4).
+ * Coverage gap tests for Dukandaar_Relevance_Metrics (RAG Phase 0, S0.4).
  *
  * Targets the precision@k non-positive-k guard clause (early return 0.0) and
  * the related edge paths not exercised by RelevanceMetricsTest. The class is a
@@ -17,7 +17,7 @@ class CoverageRelevanceMetricsTest extends TestCase {
 	 * `if ( $k <= 0 ) { return 0.0; }` guard (avoids division by zero).
 	 */
 	public function test_precision_at_k_with_zero_k_returns_zero(): void {
-		$result = Fahad_AI_Relevance_Metrics::precision_at_k( [ 1, 2, 3 ], [ 2 ], 0 );
+		$result = Dukandaar_Relevance_Metrics::precision_at_k( [ 1, 2, 3 ], [ 2 ], 0 );
 		$this->assertSame( 0.0, $result );
 	}
 
@@ -25,7 +25,7 @@ class CoverageRelevanceMetricsTest extends TestCase {
 	 * The same guard fires for any negative k.
 	 */
 	public function test_precision_at_k_with_negative_k_returns_zero(): void {
-		$result = Fahad_AI_Relevance_Metrics::precision_at_k( [ 1, 2, 3 ], [ 2 ], -5 );
+		$result = Dukandaar_Relevance_Metrics::precision_at_k( [ 1, 2, 3 ], [ 2 ], -5 );
 		$this->assertSame( 0.0, $result );
 	}
 
@@ -34,7 +34,7 @@ class CoverageRelevanceMetricsTest extends TestCase {
 	 * confirming it is the k-check (not the data) driving the 0.0 result.
 	 */
 	public function test_precision_at_k_zero_k_with_empty_relevant_returns_zero(): void {
-		$result = Fahad_AI_Relevance_Metrics::precision_at_k( [ 1, 2, 3 ], [], 0 );
+		$result = Dukandaar_Relevance_Metrics::precision_at_k( [ 1, 2, 3 ], [], 0 );
 		$this->assertSame( 0.0, $result );
 	}
 }

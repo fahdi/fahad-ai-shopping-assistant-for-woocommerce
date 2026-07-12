@@ -1,8 +1,8 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Rag_Spike (RAG Phase 0, S0.5).
+ * Unit tests for Dukandaar_Rag_Spike (RAG Phase 0, S0.5).
  *
- * The reusable spike engine behind the `wp fahad-ai rag-spike` command:
+ * The reusable spike engine behind the `wp dukandaar rag-spike` command:
  *  - compare(): scores keyword/vector/hybrid recall@k over a catalog + queries
  *  - scan_latency(): synthetic brute-force cosine scan benchmark to project the
  *    MySQL-default latency at catalog sizes the demo store can't reach yet.
@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 class RagSpikeTest extends TestCase {
 
 	public function test_compare_scores_all_three_modes_over_the_golden_set(): void {
-		$result = Fahad_AI_Rag_Spike::compare(
+		$result = Dukandaar_Rag_Spike::compare(
 			RagGoldenSet::texts(),
 			RagGoldenSet::vectors(),
 			RagGoldenSet::queries(),
@@ -35,7 +35,7 @@ class RagSpikeTest extends TestCase {
 	}
 
 	public function test_scan_latency_returns_well_formed_timing(): void {
-		$stats = Fahad_AI_Rag_Spike::scan_latency( 200, 512, 5 );
+		$stats = Dukandaar_Rag_Spike::scan_latency( 200, 512, 5 );
 
 		$this->assertSame( 200, $stats['size'] );
 		$this->assertSame( 512, $stats['dim'] );

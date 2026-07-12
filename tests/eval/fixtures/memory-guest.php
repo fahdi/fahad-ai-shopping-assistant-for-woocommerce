@@ -4,9 +4,9 @@
  *
  * The memory tools (set_memory_consent, remember_preference, get_preferences,
  * forget_preferences) are auth-gated personal-data tools: they self-register via
- * Fahad_AI_Tool_Registry::register_pack() and declare `'personal' => true`, so the
- * registry's central login gate (Fahad_AI_Tool_Registry::dispatch →
- * Fahad_AI_Auth::guard_logged_in) blocks a guest BEFORE the callback runs and returns
+ * Dukandaar_Tool_Registry::register_pack() and declare `'personal' => true`, so the
+ * registry's central login gate (Dukandaar_Tool_Registry::dispatch →
+ * Dukandaar_Auth::guard_logged_in) blocks a guest BEFORE the callback runs and returns
  * the standard login-required error. Personalization is strictly OPT-IN and per-user,
  * so there is nothing a guest (id 0) can consent to or have remembered. The model,
  * seeing it cannot store anything for an unauthenticated visitor, must escalate the

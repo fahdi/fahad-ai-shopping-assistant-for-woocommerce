@@ -1,12 +1,12 @@
 <?php
 /**
- * Coverage top-up for Fahad_AI_Stock_Alert_Tools (issue #51 tool surface).
+ * Coverage top-up for Dukandaar_Stock_Alert_Tools (issue #51 tool surface).
  *
  * Sibling: StockAlertToolsTest.php already drives the happy paths, the
  * no-fake-scarcity refusal, invalid-email, missing-product, dedupe, price_drop,
  * and PII-masking branches. This suite closes the one remaining executable gap in
  * includes/tools/class-stock-alert-tools.php: the subscribe-FAILURE branch
- * (lines 146-148), where Fahad_AI_Stock_Alerts::instance()->subscribe() returns a
+ * (lines 146-148), where Dukandaar_Stock_Alerts::instance()->subscribe() returns a
  * non-ok result and the tool surfaces it as an `error` (NOT a `subscribed`).
  *
  * Reaching that branch through the production dispatch path requires subscribe()
@@ -43,7 +43,7 @@ class CoverageStockAlertToolsTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
-		$this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+		$this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
 		$this->options = [];
 
@@ -72,8 +72,8 @@ class CoverageStockAlertToolsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
-		( new ReflectionProperty( Fahad_AI_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+		( new ReflectionProperty( Dukandaar_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
@@ -83,15 +83,15 @@ class CoverageStockAlertToolsTest extends TestCase {
 	 * fresh store singleton, exactly what the file-scope self-registration does in
 	 * production.
 	 */
-	private function registry(): Fahad_AI_Tool_Registry {
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
+	private function registry(): Dukandaar_Tool_Registry {
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
 
-		Fahad_AI_Tool_Registry::reset_packs();
-		Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Stock_Alert_Tools', 'register' ] );
+		Dukandaar_Tool_Registry::reset_packs();
+		Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Stock_Alert_Tools', 'register' ] );
 
-		return Fahad_AI_Tool_Registry::instance();
+		return Dukandaar_Tool_Registry::instance();
 	}
 
 	/** Mock an out-of-stock simple product (so the back-in-stock path is valid). */
@@ -107,7 +107,7 @@ class CoverageStockAlertToolsTest extends TestCase {
 
 	/** Stored subscription rows (raw option value). */
 	private function rows(): array {
-		return $this->options[ Fahad_AI_Stock_Alerts::OPTION ] ?? [];
+		return $this->options[ Dukandaar_Stock_Alerts::OPTION ] ?? [];
 	}
 
 	/**
@@ -117,20 +117,20 @@ class CoverageStockAlertToolsTest extends TestCase {
 	 */
 	private function seedAtCap(): void {
 		$rows = [];
-		for ( $i = 0; $i < Fahad_AI_Stock_Alerts::MAX_SUBSCRIPTIONS; $i++ ) {
+		for ( $i = 0; $i < Dukandaar_Stock_Alerts::MAX_SUBSCRIPTIONS; $i++ ) {
 			$rows[ 'seed-' . $i ] = [
 				'id'           => 'seed-' . $i,
 				'product_id'   => 1000 + $i,
 				'variation_id' => 0,
 				'email'        => 'seed' . $i . '@example.com',
-				'type'         => Fahad_AI_Stock_Alerts::TYPE_BACK_IN_STOCK,
+				'type'         => Dukandaar_Stock_Alerts::TYPE_BACK_IN_STOCK,
 				'status'       => 'pending',
 				'created'      => 1,
 				'confirmed'    => 0,
 				'sent'         => 0,
 			];
 		}
-		$this->options[ Fahad_AI_Stock_Alerts::OPTION ] = $rows;
+		$this->options[ Dukandaar_Stock_Alerts::OPTION ] = $rows;
 	}
 
 	// ── the remaining gap: subscribe() FAILS, the tool reports its error ──────────
@@ -166,7 +166,7 @@ class CoverageStockAlertToolsTest extends TestCase {
 		// integer count (not assertCount on the 5000-row array), so PHPUnit's assertion
 		// event does not recursively export the whole array and exhaust memory under
 		// coverage collection.
-		$this->assertSame( Fahad_AI_Stock_Alerts::MAX_SUBSCRIPTIONS, count( $this->rows() ) );
+		$this->assertSame( Dukandaar_Stock_Alerts::MAX_SUBSCRIPTIONS, count( $this->rows() ) );
 		// And the raw email never leaks into the model-facing error result (PII).
 		$this->assertStringNotContainsString( 'jane@example.com', json_encode( $res ) );
 	}

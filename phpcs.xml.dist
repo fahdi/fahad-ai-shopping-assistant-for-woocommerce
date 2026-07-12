@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<ruleset name="Fahad AI Shopping Assistant">
+<ruleset name="Dukandaar AI Shopping Assistant">
 	<description>WordPress Coding Standards + PHP cross-version compatibility for the plugin.</description>
 
 	<!-- What to scan: plugin PHP only. -->
@@ -35,7 +35,7 @@
 			- short array syntax `[]` (used throughout; the WP `array()` rule is legacy),
 			- inline associative arrays (e.g. `[ 'response' => 403 ]`),
 			- `class-{shortname}.php` filenames without the global prefix
-			  (matches class-api-handler.php = Fahad_AI_API_Handler, etc.).
+			  (matches class-api-handler.php = Dukandaar_API_Handler, etc.).
 		-->
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
 		<exclude name="WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound"/>
@@ -46,9 +46,9 @@
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
-				<element value="fahad_ai"/>
-				<element value="FAHAD_AI"/>
-				<element value="Fahad_AI"/>
+				<element value="dukandaar"/>
+				<element value="DUKANDAAR"/>
+				<element value="Dukandaar"/>
 			</property>
 		</properties>
 	</rule>
@@ -56,7 +56,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="fahad-ai-shopping-assistant-for-woocommerce"/>
+				<element value="dukandaar-ai-shopping-assistant-for-woocommerce"/>
 			</property>
 		</properties>
 	</rule>
@@ -69,10 +69,10 @@
 	<rule ref="WordPress.Security.ValidatedSanitizedInput">
 		<properties>
 			<property name="customSanitizingFunctions" type="array">
-				<element value="fahad_ai_sanitize_provider"/>
-				<element value="fahad_ai_sanitize_tone"/>
-				<element value="fahad_ai_sanitize_languages"/>
-				<element value="fahad_ai_sanitize_tool_list"/>
+				<element value="dukandaar_sanitize_provider"/>
+				<element value="dukandaar_sanitize_tone"/>
+				<element value="dukandaar_sanitize_languages"/>
+				<element value="dukandaar_sanitize_tool_list"/>
 			</property>
 		</properties>
 	</rule>

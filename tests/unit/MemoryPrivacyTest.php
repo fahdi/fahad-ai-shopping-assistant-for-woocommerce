@@ -3,14 +3,14 @@
  * Unit tests for the memory pack's GDPR privacy hooks (issue #59).
  *
  * The opt-in cross-session memory (issue #20) stores two per-user meta rows, the
- * consent flag (fahad_ai_memory_optin) and the bounded preferences map
- * (fahad_ai_preferences). This suite proves those rows participate in WordPress'
+ * consent flag (dukandaar_memory_optin) and the bounded preferences map
+ * (dukandaar_preferences). This suite proves those rows participate in WordPress'
  * core privacy tools:
  *
- *   - EXPORT: wp_privacy_personal_data_exporters → Fahad_AI_Memory_Tools::gdpr_export()
+ *   - EXPORT: wp_privacy_personal_data_exporters → Dukandaar_Memory_Tools::gdpr_export()
  *     returns the user's stored preferences AND consent state, resolved from the
  *     subject's email (the shape WordPress' "Export personal data" tool consumes).
- *   - ERASE: wp_privacy_personal_data_erasers → Fahad_AI_Memory_Tools::gdpr_erase()
+ *   - ERASE: wp_privacy_personal_data_erasers → Dukandaar_Memory_Tools::gdpr_erase()
  *     DELETES every memory row (consent + preferences) for that user, leaving NO
  *     residue, and reports the WordPress eraser response shape.
  *   - CYCLE: a consent → store → erase round-trip leaves the meta map empty (the
@@ -39,11 +39,11 @@ class MemoryPrivacyTest extends TestCase {
 
     use MockeryPHPUnitIntegration;
 
-    /** Consent flag user-meta key (mirrors Fahad_AI_Memory_Tools::OPTIN_META). */
-    private const OPTIN_META = 'fahad_ai_memory_optin';
+    /** Consent flag user-meta key (mirrors Dukandaar_Memory_Tools::OPTIN_META). */
+    private const OPTIN_META = 'dukandaar_memory_optin';
 
-    /** Preferences map user-meta key (mirrors Fahad_AI_Memory_Tools::PREFS_META). */
-    private const PREFS_META = 'fahad_ai_preferences';
+    /** Preferences map user-meta key (mirrors Dukandaar_Memory_Tools::PREFS_META). */
+    private const PREFS_META = 'dukandaar_preferences';
 
     /**
      * In-memory stand-in for WordPress user meta, keyed by "{$user_id}:{$key}".
@@ -122,29 +122,29 @@ class MemoryPrivacyTest extends TestCase {
     // ── filter registration ──────────────────────────────────────────────────────
 
     public function test_register_exporter_adds_a_keyed_exporter_with_a_callback(): void {
-        $exporters = Fahad_AI_Memory_Tools::register_exporter( [] );
+        $exporters = Dukandaar_Memory_Tools::register_exporter( [] );
 
-        $this->assertArrayHasKey( 'fahad-ai-memory', $exporters );
-        $this->assertArrayHasKey( 'exporter_friendly_name', $exporters['fahad-ai-memory'] );
-        $this->assertIsCallable( $exporters['fahad-ai-memory']['callback'] );
+        $this->assertArrayHasKey( 'dukandaar-memory', $exporters );
+        $this->assertArrayHasKey( 'exporter_friendly_name', $exporters['dukandaar-memory'] );
+        $this->assertIsCallable( $exporters['dukandaar-memory']['callback'] );
     }
 
     public function test_register_eraser_adds_a_keyed_eraser_with_a_callback(): void {
-        $erasers = Fahad_AI_Memory_Tools::register_eraser( [] );
+        $erasers = Dukandaar_Memory_Tools::register_eraser( [] );
 
-        $this->assertArrayHasKey( 'fahad-ai-memory', $erasers );
-        $this->assertArrayHasKey( 'eraser_friendly_name', $erasers['fahad-ai-memory'] );
-        $this->assertIsCallable( $erasers['fahad-ai-memory']['callback'] );
+        $this->assertArrayHasKey( 'dukandaar-memory', $erasers );
+        $this->assertArrayHasKey( 'eraser_friendly_name', $erasers['dukandaar-memory'] );
+        $this->assertIsCallable( $erasers['dukandaar-memory']['callback'] );
     }
 
     public function test_register_filters_preserve_existing_entries(): void {
-        $exporters = Fahad_AI_Memory_Tools::register_exporter( [ 'other' => [ 'x' => 1 ] ] );
-        $erasers   = Fahad_AI_Memory_Tools::register_eraser( [ 'other' => [ 'y' => 2 ] ] );
+        $exporters = Dukandaar_Memory_Tools::register_exporter( [ 'other' => [ 'x' => 1 ] ] );
+        $erasers   = Dukandaar_Memory_Tools::register_eraser( [ 'other' => [ 'y' => 2 ] ] );
 
         $this->assertArrayHasKey( 'other', $exporters );
-        $this->assertArrayHasKey( 'fahad-ai-memory', $exporters );
+        $this->assertArrayHasKey( 'dukandaar-memory', $exporters );
         $this->assertArrayHasKey( 'other', $erasers );
-        $this->assertArrayHasKey( 'fahad-ai-memory', $erasers );
+        $this->assertArrayHasKey( 'dukandaar-memory', $erasers );
     }
 
     // ── EXPORT ────────────────────────────────────────────────────────────────────
@@ -154,14 +154,14 @@ class MemoryPrivacyTest extends TestCase {
         $this->meta['7:' . self::OPTIN_META] = '1';
         $this->meta['7:' . self::PREFS_META] = [ 'favorite_color' => 'blue', 'size' => 'large' ];
 
-        $result = Fahad_AI_Memory_Tools::gdpr_export( 'jane@example.com' );
+        $result = Dukandaar_Memory_Tools::gdpr_export( 'jane@example.com' );
 
         $this->assertTrue( $result['done'] );
         $this->assertArrayHasKey( 'data', $result );
         $this->assertCount( 1, $result['data'] );
 
         $group = $result['data'][0];
-        $this->assertSame( 'fahad-ai-memory', $group['group_id'] );
+        $this->assertSame( 'dukandaar-memory', $group['group_id'] );
         $this->assertNotEmpty( $group['item_id'] ); // a stable per-user item id is present
 
         // Flatten the exported name => value pairs for assertion.
@@ -182,7 +182,7 @@ class MemoryPrivacyTest extends TestCase {
         // An explicit opt-out is still a recorded choice (flag present, falsey) → exportable.
         $this->meta['7:' . self::OPTIN_META] = '0';
 
-        $result = Fahad_AI_Memory_Tools::gdpr_export( 'jane@example.com' );
+        $result = Dukandaar_Memory_Tools::gdpr_export( 'jane@example.com' );
 
         $this->assertTrue( $result['done'] );
         // The consent state is reported as a record that this user opted out.
@@ -198,7 +198,7 @@ class MemoryPrivacyTest extends TestCase {
         $this->seedUser( 'jane@example.com', 7 );
         // User exists but never touched the feature (no consent flag, no prefs) → nothing
         // to export. This is also the post-erase state (the cycle test relies on it).
-        $result = Fahad_AI_Memory_Tools::gdpr_export( 'jane@example.com' );
+        $result = Dukandaar_Memory_Tools::gdpr_export( 'jane@example.com' );
 
         $this->assertSame( [], $result['data'] );
         $this->assertTrue( $result['done'] );
@@ -206,7 +206,7 @@ class MemoryPrivacyTest extends TestCase {
 
     public function test_exporter_for_unknown_email_returns_empty_done(): void {
         // No user seeded → get_user_by returns false.
-        $result = Fahad_AI_Memory_Tools::gdpr_export( 'nobody@example.com' );
+        $result = Dukandaar_Memory_Tools::gdpr_export( 'nobody@example.com' );
 
         $this->assertSame( [], $result['data'] );
         $this->assertTrue( $result['done'] );
@@ -219,7 +219,7 @@ class MemoryPrivacyTest extends TestCase {
         $this->meta['7:' . self::PREFS_META] = [ 'mine' => 'jane-value' ];
         $this->meta['8:' . self::PREFS_META] = [ 'theirs' => 'bob-secret' ];
 
-        $result = Fahad_AI_Memory_Tools::gdpr_export( 'jane@example.com' );
+        $result = Dukandaar_Memory_Tools::gdpr_export( 'jane@example.com' );
 
         // Only Jane's (id 7) data is surfaced; Bob's (id 8) row is never read.
         $this->assertNotEmpty( $result['data'] );
@@ -238,7 +238,7 @@ class MemoryPrivacyTest extends TestCase {
         $this->meta['7:' . self::OPTIN_META] = '1';
         $this->meta['7:' . self::PREFS_META] = [ 'favorite_color' => 'blue' ];
 
-        $result = Fahad_AI_Memory_Tools::gdpr_erase( 'jane@example.com' );
+        $result = Dukandaar_Memory_Tools::gdpr_erase( 'jane@example.com' );
 
         // WordPress eraser response shape.
         $this->assertTrue( $result['items_removed'] );
@@ -254,7 +254,7 @@ class MemoryPrivacyTest extends TestCase {
     public function test_eraser_reports_nothing_removed_when_user_had_no_memory(): void {
         $this->seedUser( 'jane@example.com', 7 );
         // User exists but never used the memory feature.
-        $result = Fahad_AI_Memory_Tools::gdpr_erase( 'jane@example.com' );
+        $result = Dukandaar_Memory_Tools::gdpr_erase( 'jane@example.com' );
 
         $this->assertFalse( $result['items_removed'] );
         $this->assertFalse( $result['items_retained'] );
@@ -265,7 +265,7 @@ class MemoryPrivacyTest extends TestCase {
         // No user seeded; also seed an unrelated user's data that MUST survive.
         $this->meta['8:' . self::PREFS_META] = [ 'theirs' => 'bob-secret' ];
 
-        $result = Fahad_AI_Memory_Tools::gdpr_erase( 'nobody@example.com' );
+        $result = Dukandaar_Memory_Tools::gdpr_erase( 'nobody@example.com' );
 
         $this->assertFalse( $result['items_removed'] );
         $this->assertTrue( $result['done'] );
@@ -280,7 +280,7 @@ class MemoryPrivacyTest extends TestCase {
         $this->meta['8:' . self::OPTIN_META] = '1';
         $this->meta['8:' . self::PREFS_META] = [ 'theirs' => 'secret' ];
 
-        Fahad_AI_Memory_Tools::gdpr_erase( 'jane@example.com' );
+        Dukandaar_Memory_Tools::gdpr_erase( 'jane@example.com' );
 
         // Jane (7) is purged; Bob (8) is fully intact.
         $this->assertArrayNotHasKey( '7:' . self::OPTIN_META, $this->meta );
@@ -308,7 +308,7 @@ class MemoryPrivacyTest extends TestCase {
         $this->assertNotEmpty( $this->meta );
 
         // 3. GDPR erase.
-        $result = Fahad_AI_Memory_Tools::gdpr_erase( 'jane@example.com' );
+        $result = Dukandaar_Memory_Tools::gdpr_erase( 'jane@example.com' );
         $this->assertTrue( $result['items_removed'] );
 
         // No residue whatsoever for the subject.
@@ -319,7 +319,7 @@ class MemoryPrivacyTest extends TestCase {
         $this->assertSame( [], array_values( $remaining ), 'GDPR erase must leave no memory meta for the subject.' );
 
         // And a subsequent export confirms nothing is left to export.
-        $export = Fahad_AI_Memory_Tools::gdpr_export( 'jane@example.com' );
+        $export = Dukandaar_Memory_Tools::gdpr_export( 'jane@example.com' );
         $this->assertSame( [], $export['data'] );
     }
 }

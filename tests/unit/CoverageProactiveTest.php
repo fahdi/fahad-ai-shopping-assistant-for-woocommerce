@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental line-coverage tests for Fahad_AI_Proactive (issue #65).
+ * Supplemental line-coverage tests for Dukandaar_Proactive (issue #65).
  *
  * Companion to ProactiveTest: this file pins the remaining defensive / branch paths
  * that ProactiveTest does not exercise, a malformed coupons result, the no-description
@@ -45,15 +45,15 @@ class CoverageProactiveTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Proactive::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Proactive::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh singleton (reset between cases via reflection). */
-	private function proactive(): Fahad_AI_Proactive {
-		( new ReflectionProperty( Fahad_AI_Proactive::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Proactive::instance();
+	private function proactive(): Dukandaar_Proactive {
+		( new ReflectionProperty( Dukandaar_Proactive::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Proactive::instance();
 	}
 
 	// ── first_valid_coupon(): malformed 'coupons' that is not an array ───────────────

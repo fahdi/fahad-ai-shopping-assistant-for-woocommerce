@@ -11,7 +11,7 @@
 <link rel="canonical" href="https://fahadai.isupercoder.com/docs/wallet-integration.html">
 <meta name="theme-color" content="#0c0d10">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="Fahad AI">
+<meta property="og:site_name" content="Dukandaar">
 <meta property="og:title" content="Wallet integration with WalletPro">
 <meta property="og:description" content="Read a signed-in shopper's real store credit, shop within their balance, and surface referral links when WalletPro is installed.">
 <meta property="og:url" content="https://fahadai.isupercoder.com/docs/wallet-integration.html">
@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{ "@context":"https://schema.org","@type":"TechArticle","headline":"Wallet integration with WalletPro","url":"https://fahadai.isupercoder.com/docs/wallet-integration.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Wallet integration with WalletPro","url":"https://fahadai.isupercoder.com/docs/wallet-integration.html","isPartOf":{"@type":"WebSite","name":"Dukandaar","url":"https://fahadai.isupercoder.com/"} }
 </script>
 <style>
   :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
@@ -112,7 +112,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Dukandaar</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
 <main id="main" class="layout">
   <aside class="side">
     <p class="lbl">Get started</p>
@@ -134,9 +134,9 @@
     <p class="lede">When a wallet plugin is active, the assistant can read a signed-in shopper's real store credit, shop within that balance, and share their real referral link. WalletPro ships the adapter that connects it, so the assistant talks to the wallet ledger without ever depending on it directly.</p>
 
     <h2>How the connection works</h2>
-    <p>The assistant core never hard-depends on any wallet plugin. Instead it resolves a provider adapter at runtime through a WordPress filter, <code>fahad_ai_wallet_provider</code>. The wallet plugin owns the money ledger; the assistant ships the tools that talk to it. Either side can change independently.</p>
+    <p>The assistant core never hard-depends on any wallet plugin. Instead it resolves a provider adapter at runtime through a WordPress filter, <code>dukandaar_wallet_provider</code>. The wallet plugin owns the money ledger; the assistant ships the tools that talk to it. Either side can change independently.</p>
     <p>WalletPro registers its adapter on that filter, so on a store running WalletPro the integration is automatic with no glue code to write:</p>
-    <pre><code>add_filter( 'fahad_ai_wallet_provider', fn() => new My_WalletPro_Adapter() );</code></pre>
+    <pre><code>add_filter( 'dukandaar_wallet_provider', fn() => new My_WalletPro_Adapter() );</code></pre>
     <p>The adapter is an object (or an array of callables) that exposes a small contract: read the balance, quote a deposit bonus, add funds, charge credit, and return referral details. Every amount is a float in the store currency. Anything the wallet cannot service is returned as an <code>error</code>, never thrown, so a failure is always a clean no-op on the assistant's side.</p>
 
     <h2>The wallet tools</h2>
@@ -168,7 +168,7 @@
     <div class="next"><a href="/docs/">← All docs</a><a href="/docs/agent-endpoints.html">Agent endpoints →</a></div>
   </article>
 </main>
-<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
 <script>(function(){function s(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('fa-theme',t);}catch(e){}document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(t==='light'));});}document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var c=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';s(c==='light'?'dark':'light');});var c0=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(c0==='light'));});})();</script>
 </body>
 </html>

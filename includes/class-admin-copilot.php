@@ -2,7 +2,7 @@
 /**
  * Merchant AI copilot, admin-side REST surface (Epic B).
  *
- * A read-only / draft-only set of endpoints under fahad-ai/v1/admin, ALL gated by the
+ * A read-only / draft-only set of endpoints under dukandaar/v1/admin, ALL gated by the
  * manage_woocommerce capability (NOT the storefront nonce). Each returns GROUNDED data
  * straight from WooCommerce so the admin copilot can reason over real numbers and never
  * invent them:
@@ -16,16 +16,16 @@
  *
  * Nothing here writes store data; the copilot proposes and the merchant applies.
  *
- * @package Fahad_AI
+ * @package Dukandaar
  */
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Admin_Copilot {
+final class Dukandaar_Admin_Copilot {
 
-	private static ?Fahad_AI_Admin_Copilot $instance = null;
+	private static ?Dukandaar_Admin_Copilot $instance = null;
 
-	public static function instance(): Fahad_AI_Admin_Copilot {
+	public static function instance(): Dukandaar_Admin_Copilot {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}
@@ -43,25 +43,25 @@ final class Fahad_AI_Admin_Copilot {
 	}
 
 	public function register_routes(): void {
-		register_rest_route( 'fahad-ai/v1', '/admin/insights', [
+		register_rest_route( 'dukandaar/v1', '/admin/insights', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'rest_insights' ],
 			'permission_callback' => [ $this, 'can_manage' ],
 		] );
 
-		register_rest_route( 'fahad-ai/v1', '/admin/sale-candidates', [
+		register_rest_route( 'dukandaar/v1', '/admin/sale-candidates', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'rest_sale_candidates' ],
 			'permission_callback' => [ $this, 'can_manage' ],
 		] );
 
-		register_rest_route( 'fahad-ai/v1', '/admin/product-context', [
+		register_rest_route( 'dukandaar/v1', '/admin/product-context', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'rest_product_context' ],
 			'permission_callback' => [ $this, 'can_manage' ],
 		] );
 
-		register_rest_route( 'fahad-ai/v1', '/admin/review-drafts', [
+		register_rest_route( 'dukandaar/v1', '/admin/review-drafts', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'rest_review_drafts' ],
 			'permission_callback' => [ $this, 'can_manage' ],
@@ -151,7 +151,7 @@ final class Fahad_AI_Admin_Copilot {
 	public function rest_product_context( WP_REST_Request $request ) {
 		$product = $this->product( (int) $request->get_param( 'product_id' ) );
 		if ( null === $product ) {
-			return new WP_Error( 'fahad_ai_not_found', __( 'Product not found.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 404 ] );
+			return new WP_Error( 'dukandaar_not_found', __( 'Product not found.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 404 ] );
 		}
 		return rest_ensure_response( $this->product_context( $product ) );
 	}

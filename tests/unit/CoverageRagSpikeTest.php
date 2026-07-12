@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage tests for Fahad_AI_Rag_Spike, the private percentile() helper.
+ * Coverage tests for Dukandaar_Rag_Spike, the private percentile() helper.
  *
  * scan_latency() never feeds percentile() an empty list (it forces
  * $trials = max(1, $trials), so at least one timing always exists), so the
@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 class CoverageRagSpikeTest extends TestCase {
 
 	private function percentile( array $sorted, int $p ): float {
-		$method = new ReflectionMethod( Fahad_AI_Rag_Spike::class, 'percentile' );
+		$method = new ReflectionMethod( Dukandaar_Rag_Spike::class, 'percentile' );
 		return $method->invoke( null, $sorted, $p );
 	}
 

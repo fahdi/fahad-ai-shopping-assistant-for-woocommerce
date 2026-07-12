@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental coverage tests for Fahad_AI_Providers::catalog(), the two defensive
+ * Supplemental coverage tests for Dukandaar_Providers::catalog(), the two defensive
  * fallbacks that the primary ProvidersTest does not exercise:
  *
  *   - line 238: the filter returns a NON-array → catalog() ignores it and rebuilds
@@ -62,14 +62,14 @@ class CoverageProvidersTest extends TestCase {
 		// must NOT trust it, it returns the built-in presets unchanged.
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $hook, $value = null ) {
-				if ( 'fahad_ai_providers' === $hook ) {
+				if ( 'dukandaar_providers' === $hook ) {
 					return 'totally-not-an-array';
 				}
 				return $value;
 			}
 		);
 
-		$catalog = Fahad_AI_Providers::catalog();
+		$catalog = Dukandaar_Providers::catalog();
 
 		$this->assertIsArray( $catalog, 'A non-array filter result is replaced by the preset array.' );
 		foreach ( self::BUILT_IN_IDS as $id ) {
@@ -85,14 +85,14 @@ class CoverageProvidersTest extends TestCase {
 		// null is also a non-array; same defensive path (line 238).
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $hook, $value = null ) {
-				if ( 'fahad_ai_providers' === $hook ) {
+				if ( 'dukandaar_providers' === $hook ) {
 					return null;
 				}
 				return $value;
 			}
 		);
 
-		$catalog = Fahad_AI_Providers::catalog();
+		$catalog = Dukandaar_Providers::catalog();
 
 		$this->assertIsArray( $catalog );
 		$this->assertArrayHasKey( 'anthropic', $catalog );
@@ -106,14 +106,14 @@ class CoverageProvidersTest extends TestCase {
 		// so catalog() restores the built-in floor rather than shipping no providers.
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $hook, $value = null ) {
-				if ( 'fahad_ai_providers' === $hook ) {
+				if ( 'dukandaar_providers' === $hook ) {
 					return [];
 				}
 				return $value;
 			}
 		);
 
-		$catalog = Fahad_AI_Providers::catalog();
+		$catalog = Dukandaar_Providers::catalog();
 
 		$this->assertNotEmpty( $catalog, 'An empty filter result must not yield an empty catalog.' );
 		$this->assertArrayHasKey( 'anthropic', $catalog, 'The built-in floor survives an emptying filter.' );
@@ -126,7 +126,7 @@ class CoverageProvidersTest extends TestCase {
 		// therefore empty → line 256 restores the presets.
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $hook, $value = null ) {
-				if ( 'fahad_ai_providers' === $hook ) {
+				if ( 'dukandaar_providers' === $hook ) {
 					return [
 						''            => [ 'label' => 'empty id' ],   // empty id → dropped
 						'scalar'      => 'not-an-array',             // non-array preset → dropped
@@ -145,7 +145,7 @@ class CoverageProvidersTest extends TestCase {
 			}
 		);
 
-		$catalog = Fahad_AI_Providers::catalog();
+		$catalog = Dukandaar_Providers::catalog();
 
 		// None of the junk ids leaked through...
 		$this->assertArrayNotHasKey( '', $catalog );
@@ -164,7 +164,7 @@ class CoverageProvidersTest extends TestCase {
 		// strictly the empty-catalog floor, not "always merge in the built-ins".
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $hook, $value = null ) {
-				if ( 'fahad_ai_providers' === $hook ) {
+				if ( 'dukandaar_providers' === $hook ) {
 					return [
 						'junk' => 'nope',
 						'acme' => [
@@ -173,8 +173,8 @@ class CoverageProvidersTest extends TestCase {
 							'base_url'      => 'https://api.acme.example/v1',
 							'default_model' => 'acme-1',
 							'models'        => [ 'acme-1' ],
-							'key_option'    => 'fahad_ai_acme_api_key',
-							'model_option'  => 'fahad_ai_acme_model',
+							'key_option'    => 'dukandaar_acme_api_key',
+							'model_option'  => 'dukandaar_acme_model',
 						],
 					];
 				}
@@ -182,7 +182,7 @@ class CoverageProvidersTest extends TestCase {
 			}
 		);
 
-		$catalog = Fahad_AI_Providers::catalog();
+		$catalog = Dukandaar_Providers::catalog();
 
 		$this->assertSame( [ 'acme' ], array_keys( $catalog ), 'A surviving entry is authoritative; no preset fallback.' );
 		$this->assertArrayNotHasKey( 'anthropic', $catalog );

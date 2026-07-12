@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Reorder_Tools (issue #52: reorder / buy-it-again, auth-gated).
+ * Unit tests for Dukandaar_Reorder_Tools (issue #52: reorder / buy-it-again, auth-gated).
  *
  * Red → Green → Refactor. Conventions mirror OrderToolsTest / CouponToolsTest:
  * WP/WC functions mocked via Brain\Monkey; WC objects via Mockery; the registry
@@ -9,9 +9,9 @@
  *
  * The two reorder tools (get_past_purchases, reorder) are NOT built-ins, they ship
  * as a drop-in feature pack that self-registers a provider via
- * Fahad_AI_Tool_Registry::register_pack() at file load. Every test registers the
+ * Dukandaar_Tool_Registry::register_pack() at file load. Every test registers the
  * reorder pack's REAL provider through register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration +
+ * Dukandaar_Tool_Registry::instance()->dispatch(), so the production registration +
  * merge + dispatch path (INCLUDING the central login gate for `personal` tools) is
  * what is under test.
  *
@@ -41,7 +41,7 @@ class ReorderToolsTest extends TestCase {
      * Snapshot of the registry's static pack providers, restored in tearDown so a
      * test here neither inherits another suite's packs nor leaks the reorder pack we
      * register for our own cases. (Pack providers are static so they survive a
-     * singleton instance reset, see Fahad_AI_Tool_Registry::register_pack.)
+     * singleton instance reset, see Dukandaar_Tool_Registry::register_pack.)
      *
      * @var array<int, callable>
      */
@@ -51,7 +51,7 @@ class ReorderToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         Functions\stubs( [
             'absint'              => fn( $n ) => abs( (int) $n ),
@@ -72,7 +72,7 @@ class ReorderToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
@@ -85,14 +85,14 @@ class ReorderToolsTest extends TestCase {
      * self-registration does in production. Registering it explicitly (after clearing
      * the static list) keeps the test hermetic and order-independent.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Reorder_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Reorder_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     /**

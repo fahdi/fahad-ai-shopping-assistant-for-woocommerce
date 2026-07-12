@@ -14,8 +14,8 @@
  * deliberately emits NO product cards, so this case asserts on the comparison payload
  * rather than min_cards.
  *
- * compare_products comes from the comparison feature pack (Fahad_AI_Comparison_Tools),
- * which self-registers via Fahad_AI_Tool_Registry::register_pack() when the test
+ * compare_products comes from the comparison feature pack (Dukandaar_Comparison_Tools),
+ * which self-registers via Dukandaar_Tool_Registry::register_pack() when the test
  * bootstrap glob-loads includes/tools/*.php, exactly as the plugin bootstrap does in
  * production, so the real comparison tool executes in the loop with no per-fixture
  * wiring.

@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Recommendation_Tools (issue #16: recommendations & cross-sell).
+ * Unit tests for Dukandaar_Recommendation_Tools (issue #16: recommendations & cross-sell).
  *
  * Red → Green → Refactor. Conventions mirror CatalogToolsTest: WP/WC functions
  * mocked via Brain\Monkey; WC objects via Mockery; singletons reset via reflection;
@@ -9,9 +9,9 @@
  *
  * The two recommendation tools (get_recommendations, get_cross_sells) are NOT
  * built-ins, they ship as a drop-in feature pack that self-registers a provider
- * via Fahad_AI_Tool_Registry::register_pack() at file load. Every test registers
+ * via Dukandaar_Tool_Registry::register_pack() at file load. Every test registers
  * the pack's REAL provider through register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration +
+ * Dukandaar_Tool_Registry::instance()->dispatch(), so the production registration +
  * merge + dispatch path is what is under test.
  */
 
@@ -35,7 +35,7 @@ class RecommendationToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         // Tool-layer stubs (mirror CatalogToolsTest::setUp) so the shared product
         // formatter the recommendation tools reuse can run against mocked products.
@@ -59,7 +59,7 @@ class RecommendationToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
@@ -72,14 +72,14 @@ class RecommendationToolsTest extends TestCase {
      * self-registration does in production. Registered explicitly (after clearing
      * the static list) so the test is hermetic and order-independent.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Recommendation_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Recommendation_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     /** Default "happy path" product mock (mirrors CatalogToolsTest::mockProduct). */
@@ -139,7 +139,7 @@ class RecommendationToolsTest extends TestCase {
         // login-gated, a guest can ask for suggestions. (Private members are
         // reflection-accessible by default since PHP 8.1, so no setAccessible() , 
         // which is a deprecated no-op on 8.5; mirrors CouponToolsTest.)
-        $map = ( new ReflectionMethod( Fahad_AI_Tool_Registry::class, 'get_tools' ) )->invoke( $this->registry() );
+        $map = ( new ReflectionMethod( Dukandaar_Tool_Registry::class, 'get_tools' ) )->invoke( $this->registry() );
 
         $this->assertArrayHasKey( 'get_recommendations', $map );
         $this->assertArrayHasKey( 'get_cross_sells', $map );

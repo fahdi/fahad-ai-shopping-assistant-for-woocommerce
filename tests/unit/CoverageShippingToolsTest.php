@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental line-coverage tests for Fahad_AI_Shipping_Tools (issue #19).
+ * Supplemental line-coverage tests for Dukandaar_Shipping_Tools (issue #19).
  *
  * The primary suite (ShippingToolsTest) drives the tool through its overridable
  * seam (a stub subclass that replaces resolve_zone_methods() with canned data),
@@ -8,7 +8,7 @@
  * stack, and a couple of private-helper branches it feeds never execute there.
  *
  * This file closes those gaps WITHOUT a live WooCommerce install by exercising
- * the REAL Fahad_AI_Shipping_Tools class against the WC_Shipping_* CLASS stubs
+ * the REAL Dukandaar_Shipping_Tools class against the WC_Shipping_* CLASS stubs
  * the test bootstrap already defines (tests/stubs/wc-stubs.php): the stub
  * WC_Shipping_Zones::get_zone_matching_package() returns a concrete zone with a
  * real flat_rate WC_Shipping_Method, so resolve_zone_methods() runs end to end
@@ -48,7 +48,7 @@ class CoverageShippingToolsTest extends TestCase {
 
 	/** Invoke a private/protected static method on the REAL pack class via reflection. */
 	private function invokeStatic( string $method, ...$args ) {
-		$ref = new ReflectionMethod( Fahad_AI_Shipping_Tools::class, $method );
+		$ref = new ReflectionMethod( Dukandaar_Shipping_Tools::class, $method );
 		return $ref->invokeArgs( null, $args );
 	}
 

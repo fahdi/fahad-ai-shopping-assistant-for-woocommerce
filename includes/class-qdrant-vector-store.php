@@ -3,7 +3,7 @@
  * Qdrant external vector store, opt-in scale tier (RAG Phase 3, S3.2, #113).
  *
  * For very large catalogs that outgrow the MySQL/MariaDB backends, point the
- * index at a managed/self-hosted Qdrant. Registered via the fahad_ai_vector_store
+ * index at a managed/self-hosted Qdrant. Registered via the dukandaar_vector_store
  * filter only when configured (URL + key); otherwise the default backend is used,
  * so a typical install is unaffected. A transport failure throws, the retriever
  * catches it and falls back to keyword search (RAG-DESIGN.md §2.4, §6.2).
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Qdrant_Vector_Store implements Fahad_AI_Vector_Store {
+final class Dukandaar_Qdrant_Vector_Store implements Dukandaar_Vector_Store {
 
 	public function __construct(
 		private string $url,
@@ -82,7 +82,7 @@ final class Fahad_AI_Qdrant_Vector_Store implements Fahad_AI_Vector_Store {
 	}
 
 	public function rebuild_required(): bool {
-		return (string) get_option( Fahad_AI_Postmeta_Vector_Store::OPTION_INDEX_MODEL, '' ) !== $this->model;
+		return (string) get_option( Dukandaar_Postmeta_Vector_Store::OPTION_INDEX_MODEL, '' ) !== $this->model;
 	}
 
 	/** Issue a Qdrant request; returns the decoded body or throws (transport/HTTP error). */
@@ -99,12 +99,12 @@ final class Fahad_AI_Qdrant_Vector_Store implements Fahad_AI_Vector_Store {
 		$response = 'POST' === $method ? wp_remote_post( $endpoint, $args ) : wp_remote_request( $endpoint, $args );
 
 		if ( is_wp_error( $response ) ) {
-			throw new Fahad_AI_Embedding_Exception( esc_html( 'Qdrant transport error: ' . $response->get_error_message() ), true );
+			throw new Dukandaar_Embedding_Exception( esc_html( 'Qdrant transport error: ' . $response->get_error_message() ), true );
 		}
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( $code < 200 || $code >= 300 ) {
 			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- message escaped; 2nd arg is a bool flag.
-			throw new Fahad_AI_Embedding_Exception( esc_html( sprintf( 'Qdrant returned HTTP %d.', $code ) ), 429 === $code || $code >= 500 );
+			throw new Dukandaar_Embedding_Exception( esc_html( sprintf( 'Qdrant returned HTTP %d.', $code ) ), 429 === $code || $code >= 500 );
 		}
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		return is_array( $data ) ? $data : [];
@@ -115,17 +115,17 @@ final class Fahad_AI_Qdrant_Vector_Store implements Fahad_AI_Vector_Store {
 	 * URL/key/collection options; a blank URL leaves the default backend in place.
 	 */
 	public static function register(): void {
-		$url = (string) get_option( 'fahad_ai_qdrant_url', '' );
+		$url = (string) get_option( 'dukandaar_qdrant_url', '' );
 		if ( '' === $url ) {
 			return;
 		}
 		add_filter(
-			'fahad_ai_vector_store',
+			'dukandaar_vector_store',
 			static function ( $fallback, $model ) use ( $url ) {
 				$store = new self(
 					$url,
-					(string) get_option( 'fahad_ai_qdrant_key', '' ),
-					(string) get_option( 'fahad_ai_qdrant_collection', 'fahad_ai_products' ),
+					(string) get_option( 'dukandaar_qdrant_key', '' ),
+					(string) get_option( 'dukandaar_qdrant_collection', 'dukandaar_products' ),
 					$model
 				);
 				return $store->is_available() ? $store : $fallback;

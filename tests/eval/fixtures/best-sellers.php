@@ -10,8 +10,8 @@
  * reuse the existing product-card rendering, via the convention-based emitter),
  * and that the answer invents no product/price (grounded).
  *
- * get_top_products comes from the catalog feature pack (Fahad_AI_Catalog_Tools),
- * which self-registers via Fahad_AI_Tool_Registry::register_pack() when the test
+ * get_top_products comes from the catalog feature pack (Dukandaar_Catalog_Tools),
+ * which self-registers via Dukandaar_Tool_Registry::register_pack() when the test
  * bootstrap glob-loads includes/tools/*.php, exactly as the plugin bootstrap does
  * in production, so the real catalog tool executes in the loop with no per-fixture
  * wiring.

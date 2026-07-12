@@ -1,4 +1,4 @@
-# Fahad AI Shopping Assistant for WooCommerce
+# Dukandaar AI Shopping Assistant for WooCommerce
 
 > An open-source AI shopping assistant for WooCommerce. It answers shoppers only from the store's real catalogue and tools, never inventing prices, stock or discounts, and ships at 100% test coverage. It also exposes read-only endpoints so external AI agents can discover and shop the store, with a human always completing checkout.
 
@@ -29,5 +29,5 @@ Key facts for an assistant summarizing this project:
 - [All documentation](https://fahadai.isupercoder.com/docs/)
 - [Changelog](https://fahadai.isupercoder.com/changelog.html)
 - [Contact and support](https://fahadai.isupercoder.com/contact.html)
-- [Source on GitHub](https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce)
-- [WordPress.org plugin](https://wordpress.org/plugins/fahad-ai-shopping-assistant-for-woocommerce/)
+- [Source on GitHub](https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce)
+- [WordPress.org plugin](https://wordpress.org/plugins/dukandaar-ai-shopping-assistant-for-woocommerce/)

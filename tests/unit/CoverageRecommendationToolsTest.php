@@ -1,9 +1,9 @@
 <?php
 /**
- * Supplemental line-coverage tests for Fahad_AI_Recommendation_Tools (issue #16).
+ * Supplemental line-coverage tests for Dukandaar_Recommendation_Tools (issue #16).
  *
  * Companion to RecommendationToolsTest: this suite drives the remaining branches
- * of the free-text search fallback (Fahad_AI_Recommendation_Tools::from_search)
+ * of the free-text search fallback (Dukandaar_Recommendation_Tools::from_search)
  * and the empty/non-numeric price gate in within_budget that the primary suite,
  * which uses numerically-priced products and a relation-based happy path, does not
  * reach:
@@ -20,7 +20,7 @@
  * list is snapshotted in setUp and restored in tearDown so this suite neither
  * inherits another suite's packs nor leaks its own; every test registers the
  * pack's REAL provider through register_pack() and dispatches through the live
- * Fahad_AI_Tool_Registry, so the production registration + merge + dispatch path
+ * Dukandaar_Tool_Registry, so the production registration + merge + dispatch path
  * is what is exercised.
  */
 
@@ -44,7 +44,7 @@ class CoverageRecommendationToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         // Tool-layer stubs (mirror RecommendationToolsTest::setUp) so the shared
         // product formatter the recommendation tools reuse can run against mocks.
@@ -66,7 +66,7 @@ class CoverageRecommendationToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
@@ -78,14 +78,14 @@ class CoverageRecommendationToolsTest extends TestCase {
      * pack's REAL provider via register_pack(), exactly the pack's file-scope
      * self-registration, so the test is hermetic and order-independent.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Recommendation_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Recommendation_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     /** Default "happy path" product mock (mirrors RecommendationToolsTest::mockProduct). */

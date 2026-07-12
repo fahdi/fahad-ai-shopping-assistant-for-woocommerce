@@ -1,8 +1,8 @@
-/* Fahad AI Shopping Assistant, vanilla JS, no dependencies */
+/* Dukandaar AI Shopping Assistant, vanilla JS, no dependencies */
 (function () {
 	'use strict';
 
-	const cfg = window.fahadAiChatbot;
+	const cfg = window.dukandaarChatbot;
 	// defensive: cfg is always localized server-side, so this guard is unreachable in practice
 	/* v8 ignore next */
 	if (!cfg) return;
@@ -79,7 +79,7 @@
 	let   replyIndex      = 0;
 
 	// ── Build widget HTML ─────────────────────────────────────────────────────
-	const root = document.getElementById('fahad-ai-chatbot-root');
+	const root = document.getElementById('dukandaar-chatbot-root');
 	// defensive: the mount point is always server-rendered, so this guard is unreachable in practice
 	/* v8 ignore next */
 	if (!root) return;
@@ -221,7 +221,7 @@
 
 	// ── Proactive, consented, value-gated nudge (issue #65) ─────────────────────
 	// A SINGLE, dismissible message offering REAL help. The decision to show one, and
-	// the message itself, is made SERVER-SIDE (Fahad_AI_Proactive): cfg.proactive is
+	// the message itself, is made SERVER-SIDE (Dukandaar_Proactive): cfg.proactive is
 	// present ONLY when the merchant enabled it AND a grounded value signal exists right
 	// now (a coupon that actually applies, or unused store credit). The widget therefore
 	// can never invent a nudge or fabricate urgency; it only renders the grounded text
@@ -240,7 +240,7 @@
 		const cap = Number(p.frequencyCap) || 0;
 		if (cap <= 0) return; // Non-positive cap → never nudge (mirrors the server gate).
 
-		const storageKey = p.storageKey || 'fahad_ai_proactive_v1';
+		const storageKey = p.storageKey || 'dukandaar_proactive_v1';
 
 		// Per-visitor state {shown:int, dismissed:bool}. sessionStorage scopes it to the
 		// session (a fresh tab/visit may nudge again, within the cap); a try/catch + an
@@ -260,7 +260,7 @@
 			catch (e) { /* storage blocked, memFallback still enforces the cap this page */ }
 		}
 
-		// Client-side mirror of Fahad_AI_Proactive::is_eligible(): under cap, not
+		// Client-side mirror of Dukandaar_Proactive::is_eligible(): under cap, not
 		// dismissed. (enabled / value / positive-cap were already checked above.)
 		function eligible() {
 			const s = readState();
@@ -1548,12 +1548,12 @@
 	}
 
 	// ── Live-demo deep link ───────────────────────────────────────────────────
-	// Arriving via ?fahad_demo=<question> (or =1 for the built-in default) opens
+	// Arriving via ?dukandaar_demo=<question> (or =1 for the built-in default) opens
 	// the panel, types the question with a typewriter effect, then sends it, a
 	// hands-free live demo, e.g. a "Try the live demo" link that lands a visitor
 	// on a store with the assistant already answering. Runs once per page load.
 	function maybeRunDemo() {
-		const q = new URLSearchParams(window.location.search).get('fahad_demo');
+		const q = new URLSearchParams(window.location.search).get('dukandaar_demo');
 		if (q === null) return;
 		const text = (q && q !== '1') ? q
 			: (i18n.demoQuestion || 'What can you help me with today?');

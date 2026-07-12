@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage tests for Fahad_AI_WhatsApp (issue #62), the lines the behavioural
+ * Coverage tests for Dukandaar_WhatsApp (issue #62), the lines the behavioural
  * WhatsAppTest does not already exercise: register_routes() (the REST route
  * declaration) and the three "no usable text message" branches inside the private
  * first_text_message() parser (non-array payload, non-text message type, and a
@@ -49,16 +49,16 @@ class CoverageWhatsappTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_WhatsApp::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_API_Handler::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_WhatsApp::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_API_Handler::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh singleton (reset between cases via reflection). */
-	private function whatsapp(): Fahad_AI_WhatsApp {
-		( new ReflectionProperty( Fahad_AI_WhatsApp::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_WhatsApp::instance();
+	private function whatsapp(): Dukandaar_WhatsApp {
+		( new ReflectionProperty( Dukandaar_WhatsApp::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_WhatsApp::instance();
 	}
 
 	/**
@@ -78,7 +78,7 @@ class CoverageWhatsappTest extends TestCase {
 	}
 
 	/**
-	 * Capture any fahad_ai_whatsapp_send invocations into $sent (by reference) while
+	 * Capture any dukandaar_whatsapp_send invocations into $sent (by reference) while
 	 * keeping the identity behaviour for every other filter. Returns nothing; the seam
 	 * stays a no-op (returns null), so the handler reports "not sent".
 	 *
@@ -87,7 +87,7 @@ class CoverageWhatsappTest extends TestCase {
 	private function capture_send_seam( array &$sent ): void {
 		Functions\when( 'apply_filters' )->alias(
 			function ( $hook, $value = null ) use ( &$sent ) {
-				if ( 'fahad_ai_whatsapp_send' === $hook ) {
+				if ( 'dukandaar_whatsapp_send' === $hook ) {
 					$sent[] = func_get_args();
 				}
 				return $value;
@@ -98,7 +98,7 @@ class CoverageWhatsappTest extends TestCase {
 	// ── register_routes(): the REST route declaration (lines 117–133) ───────────────
 
 	public function test_register_routes_registers_the_whatsapp_endpoint(): void {
-		// register_routes() declares ONE endpoint on fahad-ai/v1 carrying both a GET
+		// register_routes() declares ONE endpoint on dukandaar/v1 carrying both a GET
 		// (verify handshake) and a POST (inbound delivery) handler. We stub
 		// register_rest_route to capture the exact arguments and assert the contract:
 		// namespace, route, both methods, their callbacks/permission, and that the GET
@@ -115,7 +115,7 @@ class CoverageWhatsappTest extends TestCase {
 		$whatsapp->register_routes();
 
 		$this->assertIsArray( $captured, 'register_rest_route must be called.' );
-		$this->assertSame( 'fahad-ai/v1', $captured['namespace'] );
+		$this->assertSame( 'dukandaar/v1', $captured['namespace'] );
 		$this->assertSame( '/whatsapp', $captured['route'] );
 
 		$config = $captured['config'];
@@ -153,8 +153,8 @@ class CoverageWhatsappTest extends TestCase {
 		// A correctly-signed body whose JSON decodes to a NON-array (here a bare JSON
 		// string) must yield no message: first_text_message returns null at the
 		// is_array guard, so the delivery is acked (200) with nothing sent.
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
 
 		$raw = json_encode( 'just-a-string' ); // decodes to the scalar string, not an array.
 		$sig = $this->sign( $raw, 'app-secret' );
@@ -173,8 +173,8 @@ class CoverageWhatsappTest extends TestCase {
 	public function test_signed_invalid_json_payload_is_acked_without_sending(): void {
 		// Outright malformed JSON also decodes to null (not an array): same null path,
 		// same benign ack, no parse error escapes, nothing is sent.
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
 
 		$raw = '{not valid json';
 		$sig = $this->sign( $raw, 'app-secret' );
@@ -194,8 +194,8 @@ class CoverageWhatsappTest extends TestCase {
 	public function test_signed_non_text_message_type_is_acked_without_sending(): void {
 		// A delivery whose message exists but is NOT type=text (here an image) hits the
 		// `continue` at the type check, so no text is extracted: null → ack, no send.
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
 
 		$raw = json_encode( [
 			'object' => 'whatsapp_business_account',
@@ -227,8 +227,8 @@ class CoverageWhatsappTest extends TestCase {
 		// A type=text message whose body is whitespace-only trims to '' → the empty-text
 		// guard `continue`s, no message is returned, and the delivery is acked with no
 		// send. (Empty/whitespace-only text is deliberately treated as no message.)
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
 
 		$raw = json_encode( [
 			'object' => 'whatsapp_business_account',
@@ -258,8 +258,8 @@ class CoverageWhatsappTest extends TestCase {
 		// A type=text message with real text but an EMPTY `from` also hits the same
 		// guard (the OR on `'' === $from`): no recipient to reply to, so it is skipped
 		// and the delivery is acked with nothing sent.
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
 
 		$raw = json_encode( [
 			'object' => 'whatsapp_business_account',

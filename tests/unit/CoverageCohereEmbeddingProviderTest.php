@@ -1,6 +1,6 @@
 <?php
 /**
- * Line-coverage tests for Fahad_AI_Cohere_Embedding_Provider.
+ * Line-coverage tests for Dukandaar_Cohere_Embedding_Provider.
  *
  * Targets the guard/branch paths the happy-path suite (MultilingualProviderTest)
  * does not reach:
@@ -40,12 +40,12 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 	// ── model() accessor (line 29) ──────────────────────────────────────────────
 
 	public function test_model_returns_the_default_when_unspecified(): void {
-		$p = new Fahad_AI_Cohere_Embedding_Provider( 'co-key' );
+		$p = new Dukandaar_Cohere_Embedding_Provider( 'co-key' );
 		$this->assertSame( 'embed-multilingual-v3.0', $p->model() );
 	}
 
 	public function test_model_returns_the_configured_value(): void {
-		$p = new Fahad_AI_Cohere_Embedding_Provider( 'co-key', 'embed-english-v3.0' );
+		$p = new Dukandaar_Cohere_Embedding_Provider( 'co-key', 'embed-english-v3.0' );
 		$this->assertSame( 'embed-english-v3.0', $p->model() );
 	}
 
@@ -53,12 +53,12 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 
 	public function test_dimensions_returns_the_default_when_unspecified(): void {
 		// The provider's documented default vector width is 1024.
-		$p = new Fahad_AI_Cohere_Embedding_Provider( 'co-key' );
+		$p = new Dukandaar_Cohere_Embedding_Provider( 'co-key' );
 		$this->assertSame( 1024, $p->dimensions() );
 	}
 
 	public function test_dimensions_returns_the_configured_value(): void {
-		$p = new Fahad_AI_Cohere_Embedding_Provider( 'co-key', 'embed-multilingual-v3.0', 256 );
+		$p = new Dukandaar_Cohere_Embedding_Provider( 'co-key', 'embed-multilingual-v3.0', 256 );
 		$this->assertSame( 256, $p->dimensions() );
 	}
 
@@ -69,7 +69,7 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 		// wp_remote_post is never reached by expecting it zero times.
 		Functions\expect( 'wp_remote_post' )->never();
 
-		$out = ( new Fahad_AI_Cohere_Embedding_Provider( 'co-key' ) )->embed( [] );
+		$out = ( new Dukandaar_Cohere_Embedding_Provider( 'co-key' ) )->embed( [] );
 
 		$this->assertSame( [], $out );
 	}
@@ -79,7 +79,7 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 		// so the same early return applies.
 		Functions\expect( 'wp_remote_post' )->never();
 
-		$out = ( new Fahad_AI_Cohere_Embedding_Provider( 'co-key' ) )->embed( [] + [] );
+		$out = ( new Dukandaar_Cohere_Embedding_Provider( 'co-key' ) )->embed( [] + [] );
 
 		$this->assertSame( [], $out );
 	}
@@ -89,12 +89,12 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 	public function test_embed_throws_terminal_exception_when_no_key_configured(): void {
 		Functions\expect( 'wp_remote_post' )->never();
 
-		$provider = new Fahad_AI_Cohere_Embedding_Provider( '' );
+		$provider = new Dukandaar_Cohere_Embedding_Provider( '' );
 
 		try {
 			$provider->embed( [ 'something to embed' ] );
-			$this->fail( 'Expected a Fahad_AI_Embedding_Exception when no key is configured.' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+			$this->fail( 'Expected a Dukandaar_Embedding_Exception when no key is configured.' );
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertSame( 'No Cohere API key configured.', $e->getMessage() );
 			$this->assertFalse( $e->is_retryable(), 'A missing key is terminal, not retryable.' );
 		}
@@ -106,12 +106,12 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 		$wp_error = new WP_Error( 'http_request_failed', 'Connection timed out' );
 		Functions\when( 'wp_remote_post' )->justReturn( $wp_error );
 
-		$provider = new Fahad_AI_Cohere_Embedding_Provider( 'co-key' );
+		$provider = new Dukandaar_Cohere_Embedding_Provider( 'co-key' );
 
 		try {
 			$provider->embed( [ 'x' ] );
 			$this->fail( 'Expected a transport exception.' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			// The error message from the WP_Error is surfaced in the exception text.
 			$this->assertStringContainsString( 'Cohere transport error', $e->getMessage() );
 			$this->assertStringContainsString( 'Connection timed out', $e->getMessage() );
@@ -129,9 +129,9 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( '{}' );
 
 		try {
-			( new Fahad_AI_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'x' ] );
+			( new Dukandaar_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'x' ] );
 			$this->fail( 'Expected an HTTP-status exception.' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertStringContainsString( 'Cohere API returned HTTP 429', $e->getMessage() );
 			$this->assertTrue( $e->is_retryable(), '429 is transient → retryable.' );
 		}
@@ -144,9 +144,9 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( '{}' );
 
 		try {
-			( new Fahad_AI_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'x' ] );
+			( new Dukandaar_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'x' ] );
 			$this->fail( 'Expected an HTTP-status exception.' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertStringContainsString( 'Cohere API returned HTTP 503', $e->getMessage() );
 			$this->assertTrue( $e->is_retryable(), '5xx is transient → retryable.' );
 		}
@@ -159,9 +159,9 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( '{}' );
 
 		try {
-			( new Fahad_AI_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'x' ] );
+			( new Dukandaar_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'x' ] );
 			$this->fail( 'Expected an HTTP-status exception.' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertStringContainsString( 'Cohere API returned HTTP 400', $e->getMessage() );
 			$this->assertFalse( $e->is_retryable(), '4xx (non-429) is terminal.' );
 		}
@@ -175,12 +175,12 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_response_code' )->justReturn( 200 );
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( json_encode( [ 'embeddings' => [] ] ) );
 
-		$provider = new Fahad_AI_Cohere_Embedding_Provider( 'co-key' );
+		$provider = new Dukandaar_Cohere_Embedding_Provider( 'co-key' );
 
 		try {
 			$provider->embed( [ 'x' ] );
 			$this->fail( 'Expected a malformed-response exception.' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertSame( 'Malformed Cohere response.', $e->getMessage() );
 			// A bad shape from a 200 is not worth retrying, it is terminal.
 			$this->assertFalse( $e->is_retryable() );
@@ -194,10 +194,10 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_response_code' )->justReturn( 200 );
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( json_encode( [ 'embeddings' => [ 'float' => 'nope' ] ] ) );
 
-		$this->expectException( Fahad_AI_Embedding_Exception::class );
+		$this->expectException( Dukandaar_Embedding_Exception::class );
 		$this->expectExceptionMessage( 'Malformed Cohere response.' );
 
-		( new Fahad_AI_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'x' ] );
+		( new Dukandaar_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'x' ] );
 	}
 
 	// ── happy path also re-covered here so the file is self-contained ───────────
@@ -210,7 +210,7 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 			json_encode( [ 'embeddings' => [ 'float' => [ [ 1, '2.5' ], [ 0.1, 0.2 ] ] ] ] )
 		);
 
-		$out = ( new Fahad_AI_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'a', 'b' ] );
+		$out = ( new Dukandaar_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'a', 'b' ] );
 
 		$this->assertSame( [ [ 1.0, 2.5 ], [ 0.1, 0.2 ] ], $out );
 	}

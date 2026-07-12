@@ -11,16 +11,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Indexer {
+final class Dukandaar_Indexer {
 
-	public const ACTION_EMBED     = 'fahad_ai_embed_product';
-	public const ACTION_DELETE    = 'fahad_ai_delete_embedding';
-	public const GROUP            = 'fahad-ai-embeddings';
-	public const OPTION_DAILY_CAP = 'fahad_ai_embed_daily_cap';
+	public const ACTION_EMBED     = 'dukandaar_embed_product';
+	public const ACTION_DELETE    = 'dukandaar_delete_embedding';
+	public const GROUP            = 'dukandaar-embeddings';
+	public const OPTION_DAILY_CAP = 'dukandaar_embed_daily_cap';
 
 	public function __construct(
-		private Fahad_AI_Embedding_Provider $provider,
-		private Fahad_AI_Vector_Store $store
+		private Dukandaar_Embedding_Provider $provider,
+		private Dukandaar_Vector_Store $store
 	) {}
 
 	/** Wire product lifecycle + the async action handlers. */
@@ -38,13 +38,13 @@ final class Fahad_AI_Indexer {
 	 * embedded, false if it skipped (unchanged text, over the cap, or no text).
 	 */
 	public function index_fields( int $product_id, array $fields ): bool {
-		$doc = Fahad_AI_Embedding_Document::compose( $fields );
+		$doc = Dukandaar_Embedding_Document::compose( $fields );
 		if ( '' === $doc ) {
 			$this->store->delete( $product_id );
 			return false;
 		}
 
-		$hash = Fahad_AI_Embedding_Document::content_hash( $doc );
+		$hash = Dukandaar_Embedding_Document::content_hash( $doc );
 		if ( $hash === $this->store->content_hash( $product_id ) ) {
 			return false; // embedded text unchanged, a price/stock-only edit never re-embeds
 		}
@@ -80,8 +80,8 @@ final class Fahad_AI_Indexer {
 	public function index_fields_safe( int $product_id, array $fields ): bool {
 		try {
 			return $this->index_fields( $product_id, $fields );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
-			Fahad_AI_Index_Health::record_failure( $e->getMessage() );
+		} catch ( Dukandaar_Embedding_Exception $e ) {
+			Dukandaar_Index_Health::record_failure( $e->getMessage() );
 			if ( $e->is_retryable() ) {
 				throw $e;
 			}
@@ -126,7 +126,7 @@ final class Fahad_AI_Indexer {
 	}
 
 	private static function cap_key(): string {
-		return 'fahad_ai_embed_count_' . gmdate( 'Ymd' );
+		return 'dukandaar_embed_count_' . gmdate( 'Ymd' );
 	}
 
 	/** Coalesced async re-embed (unique=true folds rapid repeated saves). */
@@ -144,23 +144,23 @@ final class Fahad_AI_Indexer {
 
 	/** Action Scheduler handler: embed one product (no-op without a provider). */
 	public static function handle_embed_action( $product_id ): void {
-		if ( ! Fahad_AI_Embeddings::enabled() ) {
+		if ( ! Dukandaar_Embeddings::enabled() ) {
 			return; // semantic search off, don't embed
 		}
-		$provider = Fahad_AI_Embeddings::provider();
+		$provider = Dukandaar_Embeddings::provider();
 		if ( ! $provider || ! $provider->is_available() ) {
 			return;
 		}
-		$store = Fahad_AI_Vector_Stores::resolve( $provider->model(), $provider->dimensions() );
+		$store = Dukandaar_Vector_Stores::resolve( $provider->model(), $provider->dimensions() );
 		( new self( $provider, $store ) )->reindex_product( (int) $product_id );
 	}
 
 	/** Action Scheduler handler: remove one product's embedding. */
 	public static function handle_delete_action( $product_id ): void {
-		$provider = Fahad_AI_Embeddings::provider();
+		$provider = Dukandaar_Embeddings::provider();
 		$model    = $provider ? $provider->model() : '';
 		$dims     = $provider ? $provider->dimensions() : 0;
-		Fahad_AI_Vector_Stores::resolve( $model, $dims )->delete( (int) $product_id );
+		Dukandaar_Vector_Stores::resolve( $model, $dims )->delete( (int) $product_id );
 	}
 
 	/** Compose the embeddable fields from a WooCommerce product. */

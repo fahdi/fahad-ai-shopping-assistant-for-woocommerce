@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage top-up for Fahad_AI_Feedback (issue #50 store).
+ * Coverage top-up for Dukandaar_Feedback (issue #50 store).
  *
  * The sibling FeedbackTest.php already exercises record() / aggregates() /
  * flag() / recent_down() / flagged() / retention end-to-end. It stubs
@@ -72,20 +72,20 @@ class CoverageFeedbackTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Feedback::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Feedback::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh store singleton (reset between cases via reflection). */
-	private function store(): Fahad_AI_Feedback {
-		( new ReflectionProperty( Fahad_AI_Feedback::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Feedback::instance();
+	private function store(): Dukandaar_Feedback {
+		( new ReflectionProperty( Dukandaar_Feedback::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Feedback::instance();
 	}
 
 	/** All stored feedback rows (the raw option value). */
 	private function rows(): array {
-		return $this->options[ Fahad_AI_Feedback::OPTION ] ?? [];
+		return $this->options[ Dukandaar_Feedback::OPTION ] ?? [];
 	}
 
 	// ── new_id(): md5 fallback when wp_generate_uuid4 is unavailable ────────────
@@ -136,7 +136,7 @@ class CoverageFeedbackTest extends TestCase {
 		// this runtime, so the function_exists guard is true). Feed a multibyte
 		// reason longer than the cap and assert it is truncated to MAX_REASON_LENGTH
 		// *characters*, and not chopped mid-character into invalid UTF-8.
-		$reason = str_repeat( 'é', Fahad_AI_Feedback::MAX_REASON_LENGTH + 50 );
+		$reason = str_repeat( 'é', Dukandaar_Feedback::MAX_REASON_LENGTH + 50 );
 
 		$res = $this->store()->record( 'down', $reason, 'conv-1', 'msg-1' );
 		$this->assertTrue( $res['ok'] ?? false );
@@ -144,7 +144,7 @@ class CoverageFeedbackTest extends TestCase {
 		$stored = $this->rows()[ $res['id'] ]['reason'];
 
 		$this->assertSame(
-			Fahad_AI_Feedback::MAX_REASON_LENGTH,
+			Dukandaar_Feedback::MAX_REASON_LENGTH,
 			mb_strlen( $stored ),
 			'A multibyte reason must be capped to MAX_REASON_LENGTH characters.'
 		);

@@ -1,13 +1,13 @@
 <?php
 /**
- * Coverage tests for Fahad_AI_Semantic_Search, drives the seam's defensive
+ * Coverage tests for Dukandaar_Semantic_Search, drives the seam's defensive
  * branches the sibling SemanticSearchTest does not reach: the per-query limit
  * break, the callable (Shape 2) retriever path (including a throwing provider),
  * a callable that resolves to a non-array, and non-numeric candidate skipping.
  *
  * Unlike the sibling (which exercises the seam end-to-end through
- * Fahad_AI_Tools::execute), these tests call the public static
- * Fahad_AI_Semantic_Search::retrieve() directly so each branch in retrieve()
+ * Dukandaar_Tools::execute), these tests call the public static
+ * Dukandaar_Semantic_Search::retrieve() directly so each branch in retrieve()
  * and its private ranked_ids() is executed in isolation. Conventions mirror
  * SemanticSearchTest / ApiHandlerTest: Brain\Monkey for WP/WC functions,
  * Mockery for WC_Product objects, the Tools singleton reset via reflection.
@@ -43,9 +43,9 @@ class CoverageSemanticSearchTest extends TestCase {
 			'get_the_terms'               => fn() => [],
 		] );
 
-		// Reset the Tools singleton so retrieve()'s Fahad_AI_Tools::instance()
+		// Reset the Tools singleton so retrieve()'s Dukandaar_Tools::instance()
 		// call cannot leak state between tests.
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
 	}
 
 	protected function tearDown(): void {
@@ -80,7 +80,7 @@ class CoverageSemanticSearchTest extends TestCase {
 	 * provider to return (ids, a callable, a scalar, …).
 	 */
 	private function registerRetriever( callable $retriever ): void {
-		Monkey\Filters\expectApplied( 'fahad_ai_semantic_retriever' )
+		Monkey\Filters\expectApplied( 'dukandaar_semantic_retriever' )
 			->andReturnUsing( $retriever );
 	}
 
@@ -99,7 +99,7 @@ class CoverageSemanticSearchTest extends TestCase {
 
 		$this->registerRetriever( fn( $value, $query, $filters ) => [ 31, 12, 77 ] );
 
-		$result = Fahad_AI_Semantic_Search::retrieve( 'shoes for flat feet', [ 'limit' => 2 ] );
+		$result = Dukandaar_Semantic_Search::retrieve( 'shoes for flat feet', [ 'limit' => 2 ] );
 
 		$this->assertCount( 2, $result );
 		$this->assertSame( [ 31, 12 ], array_column( $result, 'id' ) );
@@ -117,7 +117,7 @@ class CoverageSemanticSearchTest extends TestCase {
 		$this->registerRetriever( fn( $value, $query, $filters ) => [ 5, 6 ] );
 
 		// limit 0 is set, so max(1,0)=1 → exactly one card, then break.
-		$result = Fahad_AI_Semantic_Search::retrieve( 'x', [ 'limit' => 0 ] );
+		$result = Dukandaar_Semantic_Search::retrieve( 'x', [ 'limit' => 0 ] );
 
 		$this->assertCount( 1, $result );
 		$this->assertSame( [ 5 ], array_column( $result, 'id' ) );
@@ -134,7 +134,7 @@ class CoverageSemanticSearchTest extends TestCase {
 
 		$this->registerRetriever( fn( $value, $query, $filters ) => [ 5, 6 ] );
 
-		$result = Fahad_AI_Semantic_Search::retrieve( 'x', [] );
+		$result = Dukandaar_Semantic_Search::retrieve( 'x', [] );
 
 		$this->assertCount( 2, $result );
 		$this->assertSame( [ 5, 6 ], array_column( $result, 'id' ) );
@@ -157,7 +157,7 @@ class CoverageSemanticSearchTest extends TestCase {
 		$this->registerRetriever( fn( $value, $query, $filters ) => $callable );
 
 		$filters = [ 'category' => 'jackets', 'min_price' => 20.0, 'max_price' => 100.0 ];
-		$result  = Fahad_AI_Semantic_Search::retrieve( 'rainy hike', $filters );
+		$result  = Dukandaar_Semantic_Search::retrieve( 'rainy hike', $filters );
 
 		// The callable received the SAME query + filters retrieve() was handed.
 		$this->assertSame( 'rainy hike', $seen['query'] );
@@ -178,7 +178,7 @@ class CoverageSemanticSearchTest extends TestCase {
 		};
 		$this->registerRetriever( fn( $value, $query, $filters ) => $boom );
 
-		$result = Fahad_AI_Semantic_Search::retrieve( 'anything', [] );
+		$result = Dukandaar_Semantic_Search::retrieve( 'anything', [] );
 
 		$this->assertSame( [], $result );
 	}
@@ -192,7 +192,7 @@ class CoverageSemanticSearchTest extends TestCase {
 		$callable = fn( $query, $filters ) => 'not-an-array';
 		$this->registerRetriever( fn( $value, $query, $filters ) => $callable );
 
-		$result = Fahad_AI_Semantic_Search::retrieve( 'q', [] );
+		$result = Dukandaar_Semantic_Search::retrieve( 'q', [] );
 
 		$this->assertSame( [], $result );
 	}
@@ -206,7 +206,7 @@ class CoverageSemanticSearchTest extends TestCase {
 
 		$this->registerRetriever( fn( $value, $query, $filters ) => 42 );
 
-		$result = Fahad_AI_Semantic_Search::retrieve( 'q', [] );
+		$result = Dukandaar_Semantic_Search::retrieve( 'q', [] );
 
 		$this->assertSame( [], $result );
 	}
@@ -227,7 +227,7 @@ class CoverageSemanticSearchTest extends TestCase {
 			fn( $value, $query, $filters ) => [ 'abc', null, new stdClass(), 3, 0, -5, '3', '9' ]
 		);
 
-		$result = Fahad_AI_Semantic_Search::retrieve( 'mixed junk', [] );
+		$result = Dukandaar_Semantic_Search::retrieve( 'mixed junk', [] );
 
 		// Only 3 and 9 survive, in first-seen order, with no duplicate of 3.
 		$this->assertSame( [ 3, 9 ], array_column( $result, 'id' ) );
@@ -242,7 +242,7 @@ class CoverageSemanticSearchTest extends TestCase {
 
 		$this->registerRetriever( fn( $value, $query, $filters ) => null );
 
-		$result = Fahad_AI_Semantic_Search::retrieve( 'q', [] );
+		$result = Dukandaar_Semantic_Search::retrieve( 'q', [] );
 
 		$this->assertSame( [], $result );
 	}

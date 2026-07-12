@@ -33,8 +33,8 @@ class CostControlsTest extends TestCase {
 	}
 
 	/** retry_base_ms = 0 keeps the test fast (no real sleep). */
-	private function provider(): Fahad_AI_OpenAI_Embedding_Provider {
-		return new Fahad_AI_OpenAI_Embedding_Provider( 'sk-test', 'text-embedding-3-small', 3, 0 );
+	private function provider(): Dukandaar_OpenAI_Embedding_Provider {
+		return new Dukandaar_OpenAI_Embedding_Provider( 'sk-test', 'text-embedding-3-small', 3, 0 );
 	}
 
 	private function codes( array $sequence ): void {
@@ -72,7 +72,7 @@ class CostControlsTest extends TestCase {
 		try {
 			$this->provider()->embed( [ 'x' ] );
 			$this->fail( 'expected exception' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertTrue( $e->is_retryable() );
 			$this->assertSame( 3, $calls, 'initial attempt + 2 retries, then gives up' );
 		}
@@ -87,7 +87,7 @@ class CostControlsTest extends TestCase {
 		try {
 			$this->provider()->embed( [ 'x' ] );
 			$this->fail( 'expected exception' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertFalse( $e->is_retryable() );
 			$this->assertSame( 1, $calls, '4xx fails fast, no retry' );
 		}
@@ -99,16 +99,16 @@ class CostControlsTest extends TestCase {
 		Functions\when( 'set_transient' )->alias( function ( $k, $v ) use ( &$transients ) { $transients[ $k ] = $v; return true; } );
 		Functions\when( 'wc_get_products' )->alias( static fn( $args ) => isset( $args['s'] ) ? [ 10 ] : [ 10, 12 ] );
 
-		$provider = Mockery::mock( Fahad_AI_Embedding_Provider::class );
+		$provider = Mockery::mock( Dukandaar_Embedding_Provider::class );
 		$provider->allows( 'model' )->andReturn( 'text-embedding-3-small' );
 		$provider->allows( 'dimensions' )->andReturn( 3 );
 		$provider->allows( 'is_available' )->andReturn( true );
 		$provider->shouldReceive( 'embed' )->once()->andReturn( [ [ 1.0, 0.0, 0.0 ] ] ); // exactly ONE embed across two searches
 
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'query' )->andReturn( [ 12, 10 ] );
 
-		$retriever = new Fahad_AI_Retriever( $provider, $store );
+		$retriever = new Dukandaar_Retriever( $provider, $store );
 		$first  = $retriever->search( 'warm jacket', [], 10 );
 		$second = $retriever->search( 'warm jacket', [], 10 ); // identical -> served from cache
 		$this->assertSame( $first, $second );

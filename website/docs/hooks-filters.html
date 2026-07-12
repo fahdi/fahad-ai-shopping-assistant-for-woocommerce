@@ -11,7 +11,7 @@
 <link rel="canonical" href="https://fahadai.isupercoder.com/docs/hooks-filters.html">
 <meta name="theme-color" content="#0c0d10">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="Fahad AI">
+<meta property="og:site_name" content="Dukandaar">
 <meta property="og:title" content="Hooks and filters for developers">
 <meta property="og:description" content="Extend the assistant: register tools, supply a wallet provider, filter the system prompt, and tune rate limits.">
 <meta property="og:url" content="https://fahadai.isupercoder.com/docs/hooks-filters.html">
@@ -23,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{ "@context":"https://schema.org","@type":"TechArticle","headline":"Hooks and filters for developers","url":"https://fahadai.isupercoder.com/docs/hooks-filters.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Hooks and filters for developers","url":"https://fahadai.isupercoder.com/docs/hooks-filters.html","isPartOf":{"@type":"WebSite","name":"Dukandaar","url":"https://fahadai.isupercoder.com/"} }
 </script>
 <style>
   :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
@@ -111,7 +111,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Dukandaar</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
 <main id="main" class="layout">
   <aside class="side">
     <p class="lbl">Get started</p>
@@ -133,8 +133,8 @@
     <p class="lede">The assistant is built to be extended without forking it. A handful of WordPress filters let an add-on register new tools, supply a wallet or image-search provider, shape the system prompt, route outbound WhatsApp, and tune the per-client rate limit. Each seam is decoupled on purpose: with nothing hooked, the capability simply stays dormant.</p>
 
     <h2>Register tools with a name, schema and callback</h2>
-    <p>Tools are how the model reads and acts on real store data. The plugin ships its built-in WooCommerce tools, then exposes the full list to add-ons through the <code>fahad_ai_register_tools</code> filter. Append an entry with a unique <code>name</code>, a <code>description</code> shown to the model, a JSON Schema <code>parameters</code> block, and a <code>callback</code> with the signature <code>fn( array $input ): array</code>.</p>
-    <pre><code>add_filter( 'fahad_ai_register_tools', function ( array $tools ) {
+    <p>Tools are how the model reads and acts on real store data. The plugin ships its built-in WooCommerce tools, then exposes the full list to add-ons through the <code>dukandaar_register_tools</code> filter. Append an entry with a unique <code>name</code>, a <code>description</code> shown to the model, a JSON Schema <code>parameters</code> block, and a <code>callback</code> with the signature <code>fn( array $input ): array</code>.</p>
+    <pre><code>add_filter( 'dukandaar_register_tools', function ( array $tools ) {
     $tools[] = [
         'name'        =&gt; 'loyalty_points',
         'description' =&gt; 'Get the logged-in customer loyalty points balance.',
@@ -144,11 +144,11 @@
     return $tools;
 } );</code></pre>
     <p>Invalid entries are skipped, and a callback that throws is isolated, so a misbehaving add-on cannot fatal a request. The callback return value is sent back to the model as the tool result, so keep it to plain, grounded data.</p>
-    <div class="note">First-party feature packs that ship inside the plugin use a separate, filter-free path, <code>Fahad_AI_Tool_Registry::register_pack()</code>, where a pack drops into <code>includes/tools/</code> as one new file with no bootstrap edits. The <code>fahad_ai_register_tools</code> filter is the seam for your own add-ons, and it runs after the packs so you can still override a name.</div>
+    <div class="note">First-party feature packs that ship inside the plugin use a separate, filter-free path, <code>Dukandaar_Tool_Registry::register_pack()</code>, where a pack drops into <code>includes/tools/</code> as one new file with no bootstrap edits. The <code>dukandaar_register_tools</code> filter is the seam for your own add-ons, and it runs after the packs so you can still override a name.</div>
 
     <h2>Supply a wallet provider</h2>
-    <p>Store credit is the differentiator, and it is also money-sensitive, so the assistant core never depends on any wallet plugin. The wallet tools resolve a provider adapter at runtime through <code>fahad_ai_wallet_provider</code>. Return an object (or an array of callables keyed by the same operation names).</p>
-    <pre><code>add_filter( 'fahad_ai_wallet_provider', fn() =&gt; new My_WalletPro_Adapter() );</code></pre>
+    <p>Store credit is the differentiator, and it is also money-sensitive, so the assistant core never depends on any wallet plugin. The wallet tools resolve a provider adapter at runtime through <code>dukandaar_wallet_provider</code>. Return an object (or an array of callables keyed by the same operation names).</p>
+    <pre><code>add_filter( 'dukandaar_wallet_provider', fn() =&gt; new My_WalletPro_Adapter() );</code></pre>
     <p>The adapter exposes these operations. All amounts are floats in the store currency, and any operation you cannot service should return an <code>[ 'error' =&gt; string ]</code> array rather than throw or report a success it did not perform.</p>
     <ul>
       <li><code>get_balance( int $user_id ): array</code> returns <code>[ 'amount', 'currency', 'formatted' ]</code>.</li>
@@ -159,28 +159,28 @@
     <p>The ledger and its atomicity belong to your provider. The tool layer only guarantees it never creates an unsafe condition: it validates amounts before touching you, checks sufficient balance before a debit is even attempted, never fabricates a balance, and acts only on the current logged-in user. See the <a href="/docs/wallet-integration.html">wallet integration</a> page for the full contract.</p>
 
     <h2>Filter the system prompt</h2>
-    <p>The <code>fahad_ai_system_prompt</code> filter receives the base prompt (the default body or the merchant custom prompt) so you can inject context, for example a returning customer's stored preferences. Return a string.</p>
-    <pre><code>add_filter( 'fahad_ai_system_prompt', function ( $prompt ) {
+    <p>The <code>dukandaar_system_prompt</code> filter receives the base prompt (the default body or the merchant custom prompt) so you can inject context, for example a returning customer's stored preferences. Return a string.</p>
+    <pre><code>add_filter( 'dukandaar_system_prompt', function ( $prompt ) {
     return $prompt . "\n\nThis customer prefers vegan products.";
 } );</code></pre>
     <div class="note">The trust guardrails are appended after this filter returns, not passed through it. Neither this hook, a merchant custom prompt, nor any config field can drop or override the anti dark-pattern policy. You can add to the prompt, you cannot remove the guardrails.</div>
 
     <h2>Tune the rate limit</h2>
-    <p>Each client is held to a request count inside a time window. Both are overridable: <code>fahad_ai_rate_limit</code> sets the number of requests (default 20), and <code>fahad_ai_rate_window</code> sets the window in seconds (default one minute).</p>
-    <pre><code>add_filter( 'fahad_ai_rate_limit',  fn() =&gt; 40 );                   // 40 requests
-add_filter( 'fahad_ai_rate_window', fn() =&gt; 2 * MINUTE_IN_SECONDS ); // per 2 minutes</code></pre>
+    <p>Each client is held to a request count inside a time window. Both are overridable: <code>dukandaar_rate_limit</code> sets the number of requests (default 20), and <code>dukandaar_rate_window</code> sets the window in seconds (default one minute).</p>
+    <pre><code>add_filter( 'dukandaar_rate_limit',  fn() =&gt; 40 );                   // 40 requests
+add_filter( 'dukandaar_rate_window', fn() =&gt; 2 * MINUTE_IN_SECONDS ); // per 2 minutes</code></pre>
     <p>Raising these costs more provider tokens per visitor, so move them deliberately. Lowering them tightens abuse protection at the cost of stricter limits for genuine shoppers.</p>
 
     <h2>Plug in an image-search provider</h2>
-    <p>Visual search stays dormant until a provider is hooked. The <code>fahad_ai_visual_retriever</code> filter receives a validated image descriptor and structured filters, and returns ranked product IDs, best first. Two shapes are accepted: return the IDs directly, or return a callable retriever to register once.</p>
-    <pre><code>add_filter( 'fahad_ai_visual_retriever', function ( $ids, $image, $filters ) {
+    <p>Visual search stays dormant until a provider is hooked. The <code>dukandaar_visual_retriever</code> filter receives a validated image descriptor and structured filters, and returns ranked product IDs, best first. Two shapes are accepted: return the IDs directly, or return a callable retriever to register once.</p>
+    <pre><code>add_filter( 'dukandaar_visual_retriever', function ( $ids, $image, $filters ) {
     return My_Vision_Backend::rank( $image, $filters ); // int[] best first
 }, 10, 3 );</code></pre>
     <p>The plugin validates every upload before the seam is consulted, so the provider only ever sees a size-bounded payload with an allowed image type. The retriever returns IDs only, never price or stock, and <code>$filters</code> carries <code>category</code>, <code>min_price</code>, <code>max_price</code> and <code>limit</code> so you can pre-filter the scan.</p>
 
     <h2>Send outbound WhatsApp</h2>
-    <p>The core makes no live Meta call. The <code>fahad_ai_whatsapp_send</code> filter is the outbound seam: with no provider hooked it returns <code>null</code> and nothing is sent. A provider posts to the Graph API and returns a result array.</p>
-    <pre><code>add_filter( 'fahad_ai_whatsapp_send', function ( $result, $to, $text, $ctx ) {
+    <p>The core makes no live Meta call. The <code>dukandaar_whatsapp_send</code> filter is the outbound seam: with no provider hooked it returns <code>null</code> and nothing is sent. A provider posts to the Graph API and returns a result array.</p>
+    <pre><code>add_filter( 'dukandaar_whatsapp_send', function ( $result, $to, $text, $ctx ) {
     // POST to the WhatsApp Cloud API with your phone number id + token.
     // return [ 'sent' =&gt; true, 'id' =&gt; $wamid ] on success.
     return $result;
@@ -193,7 +193,7 @@ add_filter( 'fahad_ai_rate_window', fn() =&gt; 2 * MINUTE_IN_SECONDS ); // per 2
     <div class="next"><a href="/docs/">&larr; All docs</a><a href="/docs/rest-api.html">REST API &rarr;</a></div>
   </article>
 </main>
-<footer><div>GPL-2.0 for WooCommerce &middot; <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> &middot; <a href="/">Home</a></div></footer>
+<footer><div>GPL-2.0 for WooCommerce &middot; <a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> &middot; <a href="/">Home</a></div></footer>
 <script>(function(){function s(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('fa-theme',t);}catch(e){}document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(t==='light'));});}document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var c=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';s(c==='light'?'dark':'light');});var c0=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(c0==='light'));});})();</script>
 </body>
 </html>

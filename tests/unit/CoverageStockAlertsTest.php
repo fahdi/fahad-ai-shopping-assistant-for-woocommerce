@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage-focused unit tests for Fahad_AI_Stock_Alerts (issue #51 store/notifier).
+ * Coverage-focused unit tests for Dukandaar_Stock_Alerts (issue #51 store/notifier).
  *
  * Sibling StockAlertsTest.php already exercises the happy-path lifecycle (subscribe /
  * confirm / unsubscribe / notify / erase / tokens). THIS file drives the remaining
@@ -112,32 +112,32 @@ class CoverageStockAlertsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
 		$_GET = [];
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh store singleton (reset between cases via reflection). */
-	private function store(): Fahad_AI_Stock_Alerts {
-		( new ReflectionProperty( Fahad_AI_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Stock_Alerts::instance();
+	private function store(): Dukandaar_Stock_Alerts {
+		( new ReflectionProperty( Dukandaar_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Stock_Alerts::instance();
 	}
 
 	/** All stored subscription rows (the raw option value). */
 	private function rows(): array {
-		return $this->options[ Fahad_AI_Stock_Alerts::OPTION ] ?? [];
+		return $this->options[ Dukandaar_Stock_Alerts::OPTION ] ?? [];
 	}
 
 	/** Build a confirmed row directly in the option store for notifier tests. */
 	private function seedConfirmed( int $product_id, int $variation_id, string $type, string $email = 'who@x.com', int $sent = 0 ): string {
-		$store = Fahad_AI_Stock_Alerts::instance();
+		$store = Dukandaar_Stock_Alerts::instance();
 		$id    = $store->subscribe( $product_id, $email, $variation_id, $type )['id'];
 		$store->confirm( $id, $store->token( 'confirm', $id ) );
 		if ( $sent > 0 ) {
-			$subs                  = $this->options[ Fahad_AI_Stock_Alerts::OPTION ];
+			$subs                  = $this->options[ Dukandaar_Stock_Alerts::OPTION ];
 			$subs[ $id ]['sent']   = $sent;
-			$this->options[ Fahad_AI_Stock_Alerts::OPTION ] = $subs;
+			$this->options[ Dukandaar_Stock_Alerts::OPTION ] = $subs;
 		}
 		return $id;
 	}
@@ -146,9 +146,9 @@ class CoverageStockAlertsTest extends TestCase {
 
 	public function test_init_hooks_registers_all_woocommerce_and_wp_hooks(): void {
 		// Reset singleton so instance() inside init_hooks builds a clean object.
-		( new ReflectionProperty( Fahad_AI_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
 
-		Fahad_AI_Stock_Alerts::init_hooks();
+		Dukandaar_Stock_Alerts::init_hooks();
 
 		$hooks = array_column( $this->actions, 0 );
 		$this->assertContains( 'woocommerce_product_set_stock', $hooks );
@@ -162,7 +162,7 @@ class CoverageStockAlertsTest extends TestCase {
 		$this->assertContains( 'wp_privacy_personal_data_erasers', array_column( $this->filters, 0 ) );
 
 		// All callbacks target the same singleton instance.
-		$self = Fahad_AI_Stock_Alerts::instance();
+		$self = Dukandaar_Stock_Alerts::instance();
 		foreach ( $this->actions as [ $hook, $cb, $priority ] ) {
 			$this->assertSame( $self, $cb[0] );
 		}
@@ -174,10 +174,10 @@ class CoverageStockAlertsTest extends TestCase {
 		// Pre-fill the option with exactly MAX_SUBSCRIPTIONS rows (none matching the
 		// new dedupe id), so a genuinely new subscribe is over the cap.
 		$full = [];
-		for ( $i = 0; $i < Fahad_AI_Stock_Alerts::MAX_SUBSCRIPTIONS; $i++ ) {
+		for ( $i = 0; $i < Dukandaar_Stock_Alerts::MAX_SUBSCRIPTIONS; $i++ ) {
 			$full[ 'row' . $i ] = [ 'email' => "f$i@x.com", 'type' => 'back_in_stock', 'product_id' => $i ];
 		}
-		$this->options[ Fahad_AI_Stock_Alerts::OPTION ] = $full;
+		$this->options[ Dukandaar_Stock_Alerts::OPTION ] = $full;
 
 		$res = $this->store()->subscribe( 777, 'new@x.com', 0, 'back_in_stock' );
 
@@ -186,7 +186,7 @@ class CoverageStockAlertsTest extends TestCase {
 		// Nothing added: still exactly the cap. Assert the integer count (not assertCount
 		// on the 5000-row array) so the assertion event does not export the whole array
 		// and exhaust memory under coverage collection.
-		$this->assertSame( Fahad_AI_Stock_Alerts::MAX_SUBSCRIPTIONS, count( $this->rows() ) );
+		$this->assertSame( Dukandaar_Stock_Alerts::MAX_SUBSCRIPTIONS, count( $this->rows() ) );
 	}
 
 	public function test_subscribe_at_cap_still_dedupes_an_existing_watch_idempotently(): void {
@@ -196,11 +196,11 @@ class CoverageStockAlertsTest extends TestCase {
 		$id    = $first['id'];
 
 		// Pad the option up to the cap WITHOUT removing the existing row.
-		$subs = $this->options[ Fahad_AI_Stock_Alerts::OPTION ];
-		for ( $i = count( $subs ); $i < Fahad_AI_Stock_Alerts::MAX_SUBSCRIPTIONS; $i++ ) {
+		$subs = $this->options[ Dukandaar_Stock_Alerts::OPTION ];
+		for ( $i = count( $subs ); $i < Dukandaar_Stock_Alerts::MAX_SUBSCRIPTIONS; $i++ ) {
 			$subs[ 'pad' . $i ] = [ 'email' => "p$i@x.com", 'type' => 'price_drop', 'product_id' => $i ];
 		}
-		$this->options[ Fahad_AI_Stock_Alerts::OPTION ] = $subs;
+		$this->options[ Dukandaar_Stock_Alerts::OPTION ] = $subs;
 
 		$again = $store->subscribe( 42, 'jane@example.com', 0, 'back_in_stock' );
 
@@ -461,7 +461,7 @@ class CoverageStockAlertsTest extends TestCase {
 
 	public function test_maybe_handle_request_does_nothing_for_an_unknown_action(): void {
 		$store = $this->store();
-		$_GET  = [ Fahad_AI_Stock_Alerts::QUERY_VAR => 'bogus', 'sub' => 'x', 'token' => 'y' ];
+		$_GET  = [ Dukandaar_Stock_Alerts::QUERY_VAR => 'bogus', 'sub' => 'x', 'token' => 'y' ];
 
 		$store->maybe_handle_request();
 
@@ -474,7 +474,7 @@ class CoverageStockAlertsTest extends TestCase {
 		$id    = $store->subscribe( 42, 'jane@example.com', 0, 'back_in_stock' )['id'];
 		$token = $store->token( 'confirm', $id );
 
-		$_GET = [ Fahad_AI_Stock_Alerts::QUERY_VAR => 'confirm', 'sub' => $id, 'token' => $token ];
+		$_GET = [ Dukandaar_Stock_Alerts::QUERY_VAR => 'confirm', 'sub' => $id, 'token' => $token ];
 		$store->maybe_handle_request();
 
 		$this->assertCount( 1, $this->died );
@@ -486,7 +486,7 @@ class CoverageStockAlertsTest extends TestCase {
 		$store = $this->store();
 		$id    = $store->subscribe( 42, 'jane@example.com', 0, 'back_in_stock' )['id'];
 
-		$_GET = [ Fahad_AI_Stock_Alerts::QUERY_VAR => 'confirm', 'sub' => $id, 'token' => 'forged' ];
+		$_GET = [ Dukandaar_Stock_Alerts::QUERY_VAR => 'confirm', 'sub' => $id, 'token' => 'forged' ];
 		$store->maybe_handle_request();
 
 		$this->assertCount( 1, $this->died );
@@ -500,7 +500,7 @@ class CoverageStockAlertsTest extends TestCase {
 		$id    = $store->subscribe( 42, 'jane@example.com', 0, 'back_in_stock' )['id'];
 		$token = $store->token( 'unsubscribe', $id );
 
-		$_GET = [ Fahad_AI_Stock_Alerts::QUERY_VAR => 'unsubscribe', 'sub' => $id, 'token' => $token ];
+		$_GET = [ Dukandaar_Stock_Alerts::QUERY_VAR => 'unsubscribe', 'sub' => $id, 'token' => $token ];
 		$store->maybe_handle_request();
 
 		$this->assertCount( 1, $this->died );
@@ -512,7 +512,7 @@ class CoverageStockAlertsTest extends TestCase {
 		$store = $this->store();
 		$id    = $store->subscribe( 42, 'jane@example.com', 0, 'back_in_stock' )['id'];
 
-		$_GET = [ Fahad_AI_Stock_Alerts::QUERY_VAR => 'unsubscribe', 'sub' => $id, 'token' => 'forged' ];
+		$_GET = [ Dukandaar_Stock_Alerts::QUERY_VAR => 'unsubscribe', 'sub' => $id, 'token' => 'forged' ];
 		$store->maybe_handle_request();
 
 		$this->assertCount( 1, $this->died );
@@ -523,7 +523,7 @@ class CoverageStockAlertsTest extends TestCase {
 	public function test_maybe_handle_request_defaults_missing_sub_and_token_to_empty(): void {
 		$store = $this->store();
 		// Only the action present → id + token default to '' (the isset() false arms).
-		$_GET = [ Fahad_AI_Stock_Alerts::QUERY_VAR => 'confirm' ];
+		$_GET = [ Dukandaar_Stock_Alerts::QUERY_VAR => 'confirm' ];
 
 		$store->maybe_handle_request();
 
@@ -535,7 +535,7 @@ class CoverageStockAlertsTest extends TestCase {
 	public function test_render_page_uses_the_stock_alert_title(): void {
 		$store = $this->store();
 		$id    = $store->subscribe( 42, 'jane@example.com', 0, 'back_in_stock' )['id'];
-		$_GET  = [ Fahad_AI_Stock_Alerts::QUERY_VAR => 'confirm', 'sub' => $id, 'token' => $store->token( 'confirm', $id ) ];
+		$_GET  = [ Dukandaar_Stock_Alerts::QUERY_VAR => 'confirm', 'sub' => $id, 'token' => $store->token( 'confirm', $id ) ];
 
 		$store->maybe_handle_request();
 
@@ -548,11 +548,11 @@ class CoverageStockAlertsTest extends TestCase {
 		$store   = $this->store();
 		$erasers = $store->register_eraser( [ 'existing' => [ 'x' => 'y' ] ] );
 
-		$this->assertArrayHasKey( 'fahad-ai-stock-alerts', $erasers );
+		$this->assertArrayHasKey( 'dukandaar-stock-alerts', $erasers );
 		$this->assertArrayHasKey( 'existing', $erasers ); // preserves existing erasers
 		$this->assertSame(
 			[ $store, 'gdpr_erase' ],
-			$erasers['fahad-ai-stock-alerts']['callback']
+			$erasers['dukandaar-stock-alerts']['callback']
 		);
 	}
 

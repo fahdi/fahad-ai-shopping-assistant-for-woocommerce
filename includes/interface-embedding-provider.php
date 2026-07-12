@@ -3,8 +3,8 @@
  * Embedding provider contract (RAG Phase 1, S1.1, #104).
  *
  * Decouples the vector pipeline from any one vendor. The default implementation
- * is OpenAI (Fahad_AI_OpenAI_Embedding_Provider); an add-on can swap in
- * Cohere/Voyage/self-hosted via the `fahad_ai_embedding_provider` filter without
+ * is OpenAI (Dukandaar_OpenAI_Embedding_Provider); an add-on can swap in
+ * Cohere/Voyage/self-hosted via the `dukandaar_embedding_provider` filter without
  * touching core. Embeddings are OPTIONAL, until a provider is available the
  * assistant runs keyword-only, exactly as today (RAG-DESIGN.md §3, §4.3).
  */
@@ -14,14 +14,14 @@
 defined( 'ABSPATH' ) || exit;
 // @codeCoverageIgnoreEnd
 
-interface Fahad_AI_Embedding_Provider {
+interface Dukandaar_Embedding_Provider {
 
 	/**
 	 * Embed a batch of texts.
 	 *
 	 * @param string[] $texts
 	 * @return array<int, array<int, float>> One vector per input, in input order.
-	 * @throws Fahad_AI_Embedding_Exception On any failure.
+	 * @throws Dukandaar_Embedding_Exception On any failure.
 	 */
 	public function embed( array $texts ): array;
 

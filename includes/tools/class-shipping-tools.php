@@ -7,9 +7,9 @@ defined( 'ABSPATH' ) || exit;
  * Removes the "will it arrive / how much is shipping?" blocker by letting the
  * agent quote real shipping COSTS for a destination, plus a delivery WINDOW only
  * where one is genuinely derivable. A drop-in feature pack following the
- * reference pattern in Fahad_AI_Catalog_Tools: a self-contained class in its own
+ * reference pattern in Dukandaar_Catalog_Tools: a self-contained class in its own
  * file under includes/tools/ that self-registers a provider at file scope via
- * Fahad_AI_Tool_Registry::register_pack(), no bootstrap, test-bootstrap, or
+ * Dukandaar_Tool_Registry::register_pack(), no bootstrap, test-bootstrap, or
  * harness edits.
  *
  * Tool provided:
@@ -41,7 +41,7 @@ defined( 'ABSPATH' ) || exit;
  * `final`, SOLELY so the test suite can subclass it to override the one
  * resolve_zone_methods() seam. No production code subclasses it.
  */
-class Fahad_AI_Shipping_Tools {
+class Dukandaar_Shipping_Tools {
 
 	/**
 	 * Append the shipping tool to the registry's tool list.
@@ -107,7 +107,7 @@ class Fahad_AI_Shipping_Tools {
 		if ( '' === $country ) {
 			return [
 				'available' => false,
-				'message'   => __( 'Please tell me the destination country (and ideally the state/region and postcode) so I can check shipping options.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message'   => __( 'Please tell me the destination country (and ideally the state/region and postcode) so I can check shipping options.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -123,7 +123,7 @@ class Fahad_AI_Shipping_Tools {
 				'available' => false,
 				'message'   => sprintf(
 					/* translators: %s: destination country code or name */
-					__( 'I couldn\'t determine shipping for %s. Please double-check the destination (country, and a state/region or postcode if you have one), we may not ship there, or no shipping method is configured for that location.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'I couldn\'t determine shipping for %s. Please double-check the destination (country, and a state/region or postcode if you have one), we may not ship there, or no shipping method is configured for that location.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$country
 				),
 			];
@@ -154,7 +154,7 @@ class Fahad_AI_Shipping_Tools {
 
 		// Honest note when WooCommerce gives us no delivery date to report.
 		if ( ! $window_available ) {
-			$result['note'] = __( 'A precise delivery date isn\'t available, these are the shipping options and their costs. Delivery time depends on the carrier.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+			$result['note'] = __( 'A precise delivery date isn\'t available, these are the shipping options and their costs. Delivery time depends on the carrier.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 		}
 
 		return $result;
@@ -356,5 +356,5 @@ class Fahad_AI_Shipping_Tools {
 // file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at require time during bootstrap, before PHPUnit's per-test pcov window opens, so it is never measurable.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Shipping_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Shipping_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

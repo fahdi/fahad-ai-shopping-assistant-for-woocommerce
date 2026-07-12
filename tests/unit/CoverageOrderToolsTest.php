@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage top-up for Fahad_AI_Order_Tools (issue #17).
+ * Coverage top-up for Dukandaar_Order_Tools (issue #17).
  *
  * The sibling OrderToolsTest covers the registration, happy paths, ownership
  * bypass, PII minimization, and guest-block. This file closes the remaining
@@ -31,7 +31,7 @@ class CoverageOrderToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         Functions\stubs( [
             'absint'              => fn( $n ) => abs( (int) $n ),
@@ -49,7 +49,7 @@ class CoverageOrderToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
@@ -58,14 +58,14 @@ class CoverageOrderToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the order tools, registered the
      * exact same way the pack's file-scope self-registration does in production.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Order_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Order_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     // ── invalid order_id guard (the early return, before any lookup) ─────────────

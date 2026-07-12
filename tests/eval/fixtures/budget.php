@@ -17,8 +17,8 @@
  * stayed within budget.
  *
  * get_recommendations comes from the recommendation feature pack
- * (Fahad_AI_Recommendation_Tools), which self-registers via
- * Fahad_AI_Tool_Registry::register_pack() when the test bootstrap glob-loads
+ * (Dukandaar_Recommendation_Tools), which self-registers via
+ * Dukandaar_Tool_Registry::register_pack() when the test bootstrap glob-loads
  * includes/tools/*.php, so the real tool executes in the loop with no per-fixture
  * wiring (the free-text need path uses wc_get_products only).
  */

@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplementary coverage tests for Fahad_AI_Tool_Registry.
+ * Supplementary coverage tests for Dukandaar_Tool_Registry.
  *
  * Targets the validation guard branches and reset() path that the primary
  * ToolRegistryTest does not exercise: a non-array entry in the tool list, an
@@ -27,7 +27,7 @@ class CoverageToolRegistryTest extends TestCase {
         Monkey\setUp();
 
         $this->pack_snapshot = $this->snapshot_packs();
-        Fahad_AI_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::reset_packs();
 
         // Tool-layer stubs so the five real built-ins build cleanly and
         // get_tools() can read the merchant tool-gating option (default: none
@@ -57,20 +57,20 @@ class CoverageToolRegistryTest extends TestCase {
 
     /** Read the registry's static pack-provider list via reflection. */
     private function snapshot_packs(): array {
-        $prop = new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' );
+        $prop = new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' );
         return (array) $prop->getValue();
     }
 
     /** Restore the registry's static pack-provider list via reflection. */
     private function restore_packs( array $providers ): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $providers );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $providers );
     }
 
     /** Fresh registry + tools singletons with the cached tool list cleared. */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
-        return Fahad_AI_Tool_Registry::instance();
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+        return Dukandaar_Tool_Registry::instance();
     }
 
     // ── validate(): non-array entries are skipped (line 280) ──────────────────
@@ -82,7 +82,7 @@ class CoverageToolRegistryTest extends TestCase {
      */
     public function test_non_array_entry_is_skipped(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 // Garbage non-array entries a misbehaving add-on might append.
                 $tools[] = 'not-an-array';
                 $tools[] = 42;
@@ -106,7 +106,7 @@ class CoverageToolRegistryTest extends TestCase {
      */
     public function test_valid_entry_survives_alongside_non_array_junk(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = 7; // non-array, must be skipped (line 280)
                 $tools[] = [
                     'name'        => 'good_tool',
@@ -133,7 +133,7 @@ class CoverageToolRegistryTest extends TestCase {
      */
     public function test_entry_with_non_string_description_is_skipped(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'array_desc',
                     'description' => [ 'not', 'a', 'string' ], // invalid type
@@ -154,7 +154,7 @@ class CoverageToolRegistryTest extends TestCase {
      */
     public function test_entry_missing_description_is_skipped_but_valid_sibling_registers(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'       => 'no_description',
                     // 'description' intentionally omitted.
@@ -192,7 +192,7 @@ class CoverageToolRegistryTest extends TestCase {
         $contribute = true;
 
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) use ( &$contribute ) {
-            if ( 'fahad_ai_register_tools' === $hook && $contribute ) {
+            if ( 'dukandaar_register_tools' === $hook && $contribute ) {
                 $tools[] = [
                     'name'        => 'ephemeral',
                     'description' => 'Present only while $contribute is true.',
@@ -242,13 +242,13 @@ class CoverageToolRegistryTest extends TestCase {
 
     /**
      * Register a third-party tool, then mark it disabled via the
-     * `fahad_ai_disabled_tools` option. apply_tool_gating() must drop it from the
+     * `dukandaar_disabled_tools` option. apply_tool_gating() must drop it from the
      * built list (drives array_flip + the foreach/unset of a non-protected tool),
      * while every other tool survives.
      */
     public function test_disabled_third_party_tool_is_gated_out(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'wallet_balance',
                     'description' => 'Disabled by the merchant from admin.',
@@ -261,7 +261,7 @@ class CoverageToolRegistryTest extends TestCase {
 
         // Merchant disabled wallet_balance (overrides the empty default stub).
         Functions\when( 'get_option' )->alias(
-            fn( $key, $default = '' ) => 'fahad_ai_disabled_tools' === $key ? [ 'wallet_balance' ] : $default
+            fn( $key, $default = '' ) => 'dukandaar_disabled_tools' === $key ? [ 'wallet_balance' ] : $default
         );
 
         $names = array_column( $this->registry()->specs(), 'name' );
@@ -282,7 +282,7 @@ class CoverageToolRegistryTest extends TestCase {
      */
     public function test_builtin_tool_cannot_be_disabled_even_if_listed(): void {
         Functions\when( 'get_option' )->alias(
-            fn( $key, $default = '' ) => 'fahad_ai_disabled_tools' === $key ? [ 'search_products' ] : $default
+            fn( $key, $default = '' ) => 'dukandaar_disabled_tools' === $key ? [ 'search_products' ] : $default
         );
 
         $names = array_column( $this->registry()->specs(), 'name' );
@@ -300,7 +300,7 @@ class CoverageToolRegistryTest extends TestCase {
      */
     public function test_non_string_disabled_entry_is_ignored(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'loyalty_points',
                     'description' => 'Add-on tool the merchant disabled.',
@@ -312,7 +312,7 @@ class CoverageToolRegistryTest extends TestCase {
         } );
 
         Functions\when( 'get_option' )->alias(
-            fn( $key, $default = '' ) => 'fahad_ai_disabled_tools' === $key
+            fn( $key, $default = '' ) => 'dukandaar_disabled_tools' === $key
                 ? [ 42, 'loyalty_points', 'never_registered' ]
                 : $default
         );
@@ -332,7 +332,7 @@ class CoverageToolRegistryTest extends TestCase {
      */
     public function test_non_array_disabled_option_is_treated_as_no_gating(): void {
         Functions\when( 'get_option' )->alias(
-            fn( $key, $default = '' ) => 'fahad_ai_disabled_tools' === $key ? 'corrupt' : $default
+            fn( $key, $default = '' ) => 'dukandaar_disabled_tools' === $key ? 'corrupt' : $default
         );
 
         $names = array_column( $this->registry()->specs(), 'name' );

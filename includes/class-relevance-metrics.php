@@ -9,7 +9,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Relevance_Metrics {
+final class Dukandaar_Relevance_Metrics {
 
 	/**
 	 * Fraction of relevant items appearing in the top-k retrieved.

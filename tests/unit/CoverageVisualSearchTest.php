@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental line-coverage tests for Fahad_AI_Visual_Search (issue #63 seam).
+ * Supplemental line-coverage tests for Dukandaar_Visual_Search (issue #63 seam).
  *
  * The primary behaviour is pinned by VisualSearchTest. This file targets the residual
  * uncovered lines that the primary suite does not exercise:
@@ -50,28 +50,28 @@ class CoverageVisualSearchTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Visual_Search::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Visual_Search::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh singleton (reset between cases via reflection). */
-	private function visual(): Fahad_AI_Visual_Search {
-		( new ReflectionProperty( Fahad_AI_Visual_Search::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Visual_Search::instance();
+	private function visual(): Dukandaar_Visual_Search {
+		( new ReflectionProperty( Dukandaar_Visual_Search::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Visual_Search::instance();
 	}
 
 	/** Register a stub visual retriever on the seam filter for one test. */
 	private function registerRetriever( callable $retriever ): void {
-		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )
+		Monkey\Filters\expectApplied( 'dukandaar_visual_retriever' )
 			->andReturnUsing( $retriever );
 	}
 
 	/** A valid uploaded-image descriptor in the $_FILES shape (comfortably under the ceiling). */
 	private function image( array $overrides = [] ): array {
 		return array_merge( [
-			'tmp_name' => '/tmp/fahad-ai-upload.jpg',
+			'tmp_name' => '/tmp/dukandaar-upload.jpg',
 			'name'     => 'look.jpg',
 			'type'     => 'image/jpeg',
 			'size'     => 250 * 1024,
@@ -100,7 +100,7 @@ class CoverageVisualSearchTest extends TestCase {
 
 	public function test_register_routes_wires_the_visual_search_post_endpoint(): void {
 		// The class owns its own REST endpoint (mirroring the WhatsApp channel). register_routes
-		// must register POST fahad-ai/v1/visual-search with handle_search as the callback and the
+		// must register POST dukandaar/v1/visual-search with handle_search as the callback and the
 		// shared authorize_request gate as the permission callback, proving the billable lookup
 		// is CSRF-protected and rate-capped exactly like a chat turn.
 		$captured = null;
@@ -115,7 +115,7 @@ class CoverageVisualSearchTest extends TestCase {
 		$visual  = $this->visual();
 		$visual->register_routes( $gate );
 
-		$this->assertSame( 'fahad-ai/v1', $captured['namespace'] );
+		$this->assertSame( 'dukandaar/v1', $captured['namespace'] );
 		$this->assertSame( '/visual-search', $captured['route'] );
 		$this->assertSame( 'POST', $captured['args']['methods'] );
 		// Callback is bound to handle_search on this very instance.
@@ -130,7 +130,7 @@ class CoverageVisualSearchTest extends TestCase {
 		// A multipart request that carries NO 'image' file part hits the `: []` fallback, so
 		// search() receives an empty descriptor and returns the 400 "no image" validation
 		// WP_Error straight to the client, never a fatal, never a stray retrieval.
-		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
+		Monkey\Filters\expectApplied( 'dukandaar_visual_retriever' )->never();
 		Functions\expect( 'wc_get_product' )->never();
 
 		$request = Mockery::mock( 'WP_REST_Request' );
@@ -140,7 +140,7 @@ class CoverageVisualSearchTest extends TestCase {
 		$response = $this->visual()->handle_search( $request );
 
 		$this->assertInstanceOf( WP_Error::class, $response );
-		$this->assertSame( 'fahad_ai_visual_no_image', $response->get_error_code() );
+		$this->assertSame( 'dukandaar_visual_no_image', $response->get_error_code() );
 		$this->assertSame( 400, $response->data['status'] ?? 0 );
 	}
 
@@ -148,7 +148,7 @@ class CoverageVisualSearchTest extends TestCase {
 		// Defensive: even if the 'image' part is present but is NOT an array (malformed
 		// multipart), the guard still collapses to [] (line 122) and the request 400s rather
 		// than passing a scalar on to validation.
-		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
+		Monkey\Filters\expectApplied( 'dukandaar_visual_retriever' )->never();
 		Functions\expect( 'wc_get_product' )->never();
 
 		$request = Mockery::mock( 'WP_REST_Request' );
@@ -192,7 +192,7 @@ class CoverageVisualSearchTest extends TestCase {
 		// renders the "too large" message via format_bytes' KB branch (lines 445-446). 2048
 		// bytes formats as "2 KB" (trailing .0 trimmed).
 		Functions\when( 'apply_filters' )->alias( function ( $hook, $value = null ) {
-			if ( 'fahad_ai_visual_max_bytes' === $hook ) {
+			if ( 'dukandaar_visual_max_bytes' === $hook ) {
 				return 2048; // 2 KB ceiling
 			}
 			return $value; // identity for the retriever seam (never reached here)
@@ -212,7 +212,7 @@ class CoverageVisualSearchTest extends TestCase {
 		// KB branch (e.g. 1536 bytes → "1.5 KB"), confirming the rtrim logic keeps a real
 		// fractional digit rather than stripping it.
 		Functions\when( 'apply_filters' )->alias( function ( $hook, $value = null ) {
-			if ( 'fahad_ai_visual_max_bytes' === $hook ) {
+			if ( 'dukandaar_visual_max_bytes' === $hook ) {
 				return 1536; // 1.5 KB
 			}
 			return $value;
@@ -229,7 +229,7 @@ class CoverageVisualSearchTest extends TestCase {
 		// Filter the ceiling BELOW 1 KB so format_bytes falls all the way through to the bare
 		// bytes branch (line 448 `return $bytes . ' B'`). A 1000-byte ceiling renders "1000 B".
 		Functions\when( 'apply_filters' )->alias( function ( $hook, $value = null ) {
-			if ( 'fahad_ai_visual_max_bytes' === $hook ) {
+			if ( 'dukandaar_visual_max_bytes' === $hook ) {
 				return 1000; // < 1 KB → bytes branch
 			}
 			return $value;

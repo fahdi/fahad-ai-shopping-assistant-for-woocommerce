@@ -35,7 +35,7 @@ class MariaDbVectorStoreTest extends TestCase {
 	}
 
 	public function test_implements_the_vector_store_interface(): void {
-		$this->assertInstanceOf( Fahad_AI_Vector_Store::class, new Fahad_AI_MariaDb_Vector_Store( 'm', 3 ) );
+		$this->assertInstanceOf( Dukandaar_Vector_Store::class, new Dukandaar_MariaDb_Vector_Store( 'm', 3 ) );
 	}
 
 	/** Fresh mock per case, stacking allows() on one mock makes the first return win. */
@@ -44,7 +44,7 @@ class MariaDbVectorStoreTest extends TestCase {
 		$wpdb->prefix    = 'wp_';
 		$wpdb->allows( 'db_server_info' )->andReturn( $server_info );
 		$GLOBALS['wpdb'] = $wpdb;
-		return ( new Fahad_AI_MariaDb_Vector_Store( 'm', 3 ) )->is_available();
+		return ( new Dukandaar_MariaDb_Vector_Store( 'm', 3 ) )->is_available();
 	}
 
 	public function test_is_available_only_on_mariadb_11_7_plus(): void {
@@ -61,18 +61,18 @@ class MariaDbVectorStoreTest extends TestCase {
 			static function ( $sql ) use ( &$captured ) { $captured = $sql; return [ '10', '12' ]; }
 		);
 
-		$ids = ( new Fahad_AI_MariaDb_Vector_Store( 'text-embedding-3-small', 3 ) )->query( [ 1.0, 0.0, 0.0 ], 5, [ 10, 11, 12 ] );
+		$ids = ( new Dukandaar_MariaDb_Vector_Store( 'text-embedding-3-small', 3 ) )->query( [ 1.0, 0.0, 0.0 ], 5, [ 10, 11, 12 ] );
 
 		$this->assertSame( [ 10, 12 ], $ids, 'returns ints from get_col' );
 		$this->assertStringContainsStringIgnoringCase( 'VEC_DISTANCE_COSINE', $captured );
-		$this->assertStringContainsString( 'wp_fahad_ai_vectors', $captured );
+		$this->assertStringContainsString( 'wp_dukandaar_vectors', $captured );
 		$this->assertStringContainsString( 'IN (10,11,12)', $captured, 'candidate pre-filter' );
 		$this->assertStringContainsString( 'model', $captured, 'model filter (never mix models)' );
 	}
 
 	public function test_query_short_circuits_with_no_candidates(): void {
 		$this->wpdb->shouldNotReceive( 'get_col' );
-		$this->assertSame( [], ( new Fahad_AI_MariaDb_Vector_Store( 'm', 3 ) )->query( [ 1.0 ], 5, [] ) );
+		$this->assertSame( [], ( new Dukandaar_MariaDb_Vector_Store( 'm', 3 ) )->query( [ 1.0 ], 5, [] ) );
 	}
 
 	// ── Store factory: auto-detect, default-safe ────────────────────────────────
@@ -81,8 +81,8 @@ class MariaDbVectorStoreTest extends TestCase {
 		$this->wpdb->allows( 'db_server_info' )->andReturn( '11.7.2-MariaDB' );
 		Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
 		$this->assertInstanceOf(
-			Fahad_AI_MariaDb_Vector_Store::class,
-			Fahad_AI_Vector_Stores::resolve( 'text-embedding-3-small', 512 )
+			Dukandaar_MariaDb_Vector_Store::class,
+			Dukandaar_Vector_Stores::resolve( 'text-embedding-3-small', 512 )
 		);
 	}
 
@@ -90,8 +90,8 @@ class MariaDbVectorStoreTest extends TestCase {
 		$this->wpdb->allows( 'db_server_info' )->andReturn( '8.0.35' );
 		Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
 		$this->assertInstanceOf(
-			Fahad_AI_Postmeta_Vector_Store::class,
-			Fahad_AI_Vector_Stores::resolve( 'text-embedding-3-small', 512 )
+			Dukandaar_Postmeta_Vector_Store::class,
+			Dukandaar_Vector_Stores::resolve( 'text-embedding-3-small', 512 )
 		);
 	}
 }

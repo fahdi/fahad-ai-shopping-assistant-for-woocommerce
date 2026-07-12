@@ -1,6 +1,6 @@
 <?php
 /**
- * COVERAGE-COMPLETION tests for Fahad_AI_Analytics (issue #49).
+ * COVERAGE-COMPLETION tests for Dukandaar_Analytics (issue #49).
  *
  * Sibling AnalyticsTest.php already drives the headline behaviour (record, NO-PII
  * masking, the dashboard aggregates, retention, export/delete, opt-out). This file
@@ -86,20 +86,20 @@ class CoverageAnalyticsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh store singleton (reset between cases via reflection). */
-	private function store(): Fahad_AI_Analytics {
-		( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Analytics::instance();
+	private function store(): Dukandaar_Analytics {
+		( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Analytics::instance();
 	}
 
 	/** All stored analytics rows (the raw option value). */
 	private function rows(): array {
-		return $this->options[ Fahad_AI_Analytics::OPTION ] ?? [];
+		return $this->options[ Dukandaar_Analytics::OPTION ] ?? [];
 	}
 
 	/** The first stored row. */
@@ -114,7 +114,7 @@ class CoverageAnalyticsTest extends TestCase {
 			[
 				'question'         => 'do you have running shoes',
 				'tools'            => [ 'search_products' ],
-				'outcome'          => Fahad_AI_Analytics::OUTCOME_ANSWERED,
+				'outcome'          => Dukandaar_Analytics::OUTCOME_ANSWERED,
 				'product_surfaced' => true,
 				'added_to_cart'    => false,
 				'tokens'           => 0,
@@ -130,8 +130,8 @@ class CoverageAnalyticsTest extends TestCase {
 	 * host runs PHP 8.x where private methods are reachable directly on PHP 8.1+
 	 * once the method object is obtained; matches the sibling's reflection style).
 	 */
-	private function call_private( Fahad_AI_Analytics $store, string $method, array $args = [] ) {
-		$ref = new ReflectionMethod( Fahad_AI_Analytics::class, $method );
+	private function call_private( Dukandaar_Analytics $store, string $method, array $args = [] ) {
+		$ref = new ReflectionMethod( Dukandaar_Analytics::class, $method );
 		return $ref->invokeArgs( $store, $args );
 	}
 
@@ -336,9 +336,9 @@ class CoverageAnalyticsTest extends TestCase {
 		// (`to`) must drop the row whose `created` is AFTER it (the $ts > $to branch).
 		$store = $this->store();
 
-		$this->options[ Fahad_AI_Analytics::OPTION ] = [
-			'early' => [ 'id' => 'early', 'question' => 'within',  'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'e', 'created' => 1000 ],
-			'late'  => [ 'id' => 'late',  'question' => 'too new', 'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'l', 'created' => 9000 ],
+		$this->options[ Dukandaar_Analytics::OPTION ] = [
+			'early' => [ 'id' => 'early', 'question' => 'within',  'tools' => [], 'outcome' => Dukandaar_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'e', 'created' => 1000 ],
+			'late'  => [ 'id' => 'late',  'question' => 'too new', 'tools' => [], 'outcome' => Dukandaar_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'l', 'created' => 9000 ],
 		];
 
 		// Upper bound only: keep rows created <= 5000, drop the `late` row (9000 > 5000).
@@ -354,8 +354,8 @@ class CoverageAnalyticsTest extends TestCase {
 		// The filter is `$ts > $to` → a row created EXACTLY at `to` is kept (inclusive).
 		$store = $this->store();
 
-		$this->options[ Fahad_AI_Analytics::OPTION ] = [
-			'edge' => [ 'id' => 'edge', 'question' => 'boundary', 'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'b', 'created' => 5000 ],
+		$this->options[ Dukandaar_Analytics::OPTION ] = [
+			'edge' => [ 'id' => 'edge', 'question' => 'boundary', 'tools' => [], 'outcome' => Dukandaar_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'b', 'created' => 5000 ],
 		];
 
 		$unanswered = $store->unanswered( 50, [ 'to' => 5000 ] );

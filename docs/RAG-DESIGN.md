@@ -1,7 +1,7 @@
 # RAG / Semantic Product Retrieval, Design Document
 
 Status: **Research + Design (no code yet).** This document is for review, not implementation.
-Plugin: Fahad AI Shopping Assistant for WooCommerce, `v2.4.0` (canonical repo, branch `main`).
+Plugin: Dukandaar AI Shopping Assistant for WooCommerce, `v2.4.0` (canonical repo, branch `main`).
 Scope: a retrieval-augmented-generation layer over the store's **product catalog**, backed by a vector index, so the assistant retrieves semantically relevant products as agent context instead of relying only on WooCommerce keyword search. Closes ROADMAP issue **#60 (Semantic / vector search)**.
 
 > This document is decision-oriented. Section 7 states a concrete **recommended default** and the **2–3 decisions the client must make**. Everything before it is the reasoning, with comparison tables and cited sources.
@@ -14,7 +14,7 @@ Scope: a retrieval-augmented-generation layer over the store's **product catalog
 
 All product discovery currently flows through one mechanism: WooCommerce's literal keyword search.
 
-- `Fahad_AI_Tools::search_products()` (`includes/class-tools.php`) calls `wc_get_products()` with `'s' => $query` and `'orderby' => 'relevance'`. WooCommerce's `'s'` search is a **substring `LIKE` match against post title + excerpt/content**, it is not stemmed, not synonym-aware, not semantic.
+- `Dukandaar_Tools::search_products()` (`includes/class-tools.php`) calls `wc_get_products()` with `'s' => $query` and `'orderby' => 'relevance'`. WooCommerce's `'s'` search is a **substring `LIKE` match against post title + excerpt/content**, it is not stemmed, not synonym-aware, not semantic.
 - The code already acknowledges the weakness: when an exact search returns nothing it runs `relax_query()` (drops sizes/colours/filler stop-words, de-pluralises) and then `token_search()` (an OR-of-terms scored by hit count). These are hand-rolled patches over the fact that the underlying match is literal.
 - `get_recommendations()`'s free-text `need` fallback (`includes/tools/class-recommendation-tools.php`) does the **same** `wc_get_products( 's' => $need )` search, so "something for a rainy hike" only matches products whose text literally contains those words.
 
@@ -22,8 +22,8 @@ All product discovery currently flows through one mechanism: WooCommerce's liter
 
 ### 1.2 What we keep (these are strengths, not to be thrown away)
 
-- **Tool registry seam.** `Fahad_AI_Tool_Registry` already layers tools: built-ins → first-party packs (`register_pack()`) → the `fahad_ai_register_tools` filter. A semantic retriever drops in as **one new file under `includes/tools/`** with zero bootstrap edits, the same drop-in pattern as `class-catalog-tools.php`. This is the cleanest possible integration point.
-- **Card emission is convention-based, not name-based.** `Fahad_AI_API_Handler::tool_result_cards()` emits product cards from the **shape** of a tool result (`{ found, products[] }` where each product is a `format_product_summary()` shape). A new retrieval tool that returns that shape renders as cards **for free** across all three agent paths (Anthropic non-stream, Moonshot non-stream, Moonshot SSE).
+- **Tool registry seam.** `Dukandaar_Tool_Registry` already layers tools: built-ins → first-party packs (`register_pack()`) → the `dukandaar_register_tools` filter. A semantic retriever drops in as **one new file under `includes/tools/`** with zero bootstrap edits, the same drop-in pattern as `class-catalog-tools.php`. This is the cleanest possible integration point.
+- **Card emission is convention-based, not name-based.** `Dukandaar_API_Handler::tool_result_cards()` emits product cards from the **shape** of a tool result (`{ found, products[] }` where each product is a `format_product_summary()` shape). A new retrieval tool that returns that shape renders as cards **for free** across all three agent paths (Anthropic non-stream, Moonshot non-stream, Moonshot SSE).
 - **Live truth stays live.** `format_product_summary()` reads price/stock/sale/rating straight from `WC_Product` at call time. We must preserve this: **never embed or cache price/stock**, they change and must stay live (see §5.4).
 - **Eval harness.** `tests/eval/` drives the real agent loop against scripted LLM turns + real tool execution, with deterministic checkers (grounding, scarcity, budget). This is the natural home for **relevance@k** golden queries (§6).
 
@@ -188,13 +188,13 @@ Pre-filtering by category/stock/price before the scan is also the primary scale 
 
 ### 4.5 How retrieved products reach the model (integration with the agent loop)
 
-Add **one new tool**, `semantic_search` (or fold semantic retrieval into `search_products` behind a setting, see §7.3), implemented in a new `includes/tools/class-semantic-tools.php` that self-registers via `Fahad_AI_Tool_Registry::register_pack()`.
+Add **one new tool**, `semantic_search` (or fold semantic retrieval into `search_products` behind a setting, see §7.3), implemented in a new `includes/tools/class-semantic-tools.php` that self-registers via `Dukandaar_Tool_Registry::register_pack()`.
 
-- The tool returns the **canonical `{ found, products[] }` shape** built from `Fahad_AI_Tools::format_product_summary()`. Because card emission is convention-based (`tool_result_cards()` keys off result shape, not tool name), retrieved products render as cards in all three agent paths **with no API-handler changes**.
+- The tool returns the **canonical `{ found, products[] }` shape** built from `Dukandaar_Tools::format_product_summary()`. Because card emission is convention-based (`tool_result_cards()` keys off result shape, not tool name), retrieved products render as cards in all three agent paths **with no API-handler changes**.
 - Live price/stock are read by `format_product_summary()` at call time, so the model and the cards always see current data even though retrieval used embeddings.
 - The model receives the trimmed copy (`trim_tool_result()` keeps id/name/price/in_stock/on_sale) and grounds its prose in it, the existing grounding checker still applies.
 
-No changes to `class-api-handler.php` are required for MVP. (A later refinement could let the API handler inject a small "top related products" block via the existing `fahad_ai_system_prompt` filter, but the tool path is cleaner and keeps retrieval model-driven.)
+No changes to `class-api-handler.php` are required for MVP. (A later refinement could let the API handler inject a small "top related products" block via the existing `dukandaar_system_prompt` filter, but the tool path is cleaner and keeps retrieval model-driven.)
 
 ---
 
@@ -202,7 +202,7 @@ No changes to `class-api-handler.php` are required for MVP. (A later refinement 
 
 ### 5.1 Storage schema (default MySQL backend)
 
-A single custom table created on activation (`dbDelta`), prefixed `{$wpdb->prefix}fahad_ai_embeddings`:
+A single custom table created on activation (`dbDelta`), prefixed `{$wpdb->prefix}dukandaar_embeddings`:
 
 | Column | Type | Purpose |
 |---|---|---|
@@ -234,7 +234,7 @@ add_action( 'woocommerce_update_product', $enqueue_reembed );   // fires on prod
 add_action( 'woocommerce_new_product',    $enqueue_reembed );
 add_action( 'before_delete_post',         $enqueue_delete );     // and 'wp_trash_post'
 // enqueue:
-as_enqueue_async_action( 'fahad_ai_embed_product', [ 'product_id' => $id ], 'fahad-ai-embeddings', true /* unique */ );
+as_enqueue_async_action( 'dukandaar_embed_product', [ 'product_id' => $id ], 'dukandaar-embeddings', true /* unique */ );
 ```
 
 The `unique => true` flag coalesces rapid repeated saves of the same product. A `content_hash` check inside the handler means a save that didn't change the embedded fields (e.g. a price-only edit) is a no-op, **price changes never trigger a re-embed** because price isn't embedded.
@@ -245,7 +245,7 @@ Price, stock, sale status, ratings, read live from `WC_Product` at retrieval tim
 
 ### 5.5 Versioning embeddings on model change
 
-The active model + dimensions are an option (`fahad_ai_embedding_model`, `fahad_ai_embedding_dims`). Each row stores the `model`/`dim` it was built with. When the admin changes the model:
+The active model + dimensions are an option (`dukandaar_embedding_model`, `dukandaar_embedding_dims`). Each row stores the `model`/`dim` it was built with. When the admin changes the model:
 - Mark the index **stale** (don't silently mix models, comparing vectors from different models is meaningless).
 - Offer a "Rebuild index" action that backfills under the new model, then flips a pointer. Until rebuilt, **fall back to keyword search** so the assistant never errors.
 
@@ -303,14 +303,14 @@ This is chosen because it is the **only design that runs on every WooCommerce ho
 ### 7.4 Proposed interfaces (sketch, for review, not final)
 
 ```php
-interface Fahad_AI_Embedding_Provider {
+interface Dukandaar_Embedding_Provider {
     /** @param string[] $texts @return float[][] one vector per input, same order */
     public function embed( array $texts ): array;
     public function model(): string;   // e.g. 'text-embedding-3-small'
     public function dimensions(): int; // e.g. 512
 }
 
-interface Fahad_AI_Vector_Store {
+interface Dukandaar_Vector_Store {
     public function upsert( int $product_id, array $vector, string $model, string $content_hash ): void;
     public function delete( int $product_id ): void;
     /** @return int[] product IDs ranked by similarity, after $filters (category/price/stock) */
@@ -319,21 +319,21 @@ interface Fahad_AI_Vector_Store {
     public function rebuild_required(): bool; // model/dim changed since last build?
 }
 
-// Backends: Fahad_AI_MySQL_Vector_Store (default), Fahad_AI_MariaDb_Vector_Store
-//           (auto when VEC_DISTANCE_COSINE present), Fahad_AI_External_Vector_Store (Qdrant).
+// Backends: Dukandaar_MySQL_Vector_Store (default), Dukandaar_MariaDb_Vector_Store
+//           (auto when VEC_DISTANCE_COSINE present), Dukandaar_External_Vector_Store (Qdrant).
 
-final class Fahad_AI_Indexer {       // compose text, hash, batch-embed, upsert; AS-driven
+final class Dukandaar_Indexer {       // compose text, hash, batch-embed, upsert; AS-driven
     public function backfill(): void;            // bulk
     public function reindex_product( int $id ): void;  // incremental (async handler)
 }
 
-final class Fahad_AI_Retriever {     // the hybrid brain
-    /** keyword leg (reuse Fahad_AI_Tools search) + vector leg + RRF fuse + live filters */
+final class Dukandaar_Retriever {     // the hybrid brain
+    /** keyword leg (reuse Dukandaar_Tools search) + vector leg + RRF fuse + live filters */
     public function search( string $query, array $filters, int $k ): array; // -> product summaries
 }
 ```
 
-The `EmbeddingProvider` is selected by a `fahad_ai_embedding_provider` factory + a `fahad_ai_embedding_provider` filter (mirroring the existing provider pattern). The `VectorStore` is selected by capability detection with an override filter. Both default to "off / keyword-only" until a key is configured.
+The `EmbeddingProvider` is selected by a `dukandaar_embedding_provider` factory + a `dukandaar_embedding_provider` filter (mirroring the existing provider pattern). The `VectorStore` is selected by capability detection with an override filter. Both default to "off / keyword-only" until a key is configured.
 
 ### 7.5 Phased implementation plan
 

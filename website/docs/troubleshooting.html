@@ -11,7 +11,7 @@
 <link rel="canonical" href="https://fahadai.isupercoder.com/docs/troubleshooting.html">
 <meta name="theme-color" content="#0c0d10">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="Fahad AI">
+<meta property="og:site_name" content="Dukandaar">
 <meta property="og:title" content="Troubleshooting common issues">
 <meta property="og:description" content="Fix the most common setup and runtime issues: blank replies, invalid keys, missing cards, and wallet not showing.">
 <meta property="og:url" content="https://fahadai.isupercoder.com/docs/troubleshooting.html">
@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{ "@context":"https://schema.org","@type":"TechArticle","headline":"Troubleshooting common issues","url":"https://fahadai.isupercoder.com/docs/troubleshooting.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Troubleshooting common issues","url":"https://fahadai.isupercoder.com/docs/troubleshooting.html","isPartOf":{"@type":"WebSite","name":"Dukandaar","url":"https://fahadai.isupercoder.com/"} }
 </script>
 <style>
   :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
@@ -112,7 +112,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Dukandaar</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
 <main id="main" class="layout">
   <aside class="side">
     <p class="lbl">Get started</p>
@@ -135,7 +135,7 @@
 
     <h2>The assistant replies with a generic "I cannot help right now" message</h2>
     <p>This is the graceful, branded fallback. When every configured provider fails, the assistant never shows a raw error or a dead end to the shopper. Instead it returns a friendly message and keeps the conversation open. The most common cause is an invalid or expired provider key.</p>
-    <p>To fix it, go to <strong>WooCommerce &rarr; Fahad AI</strong>, find your provider's key field (for example <em>Anthropic API Key</em> or your provider's key), and re-enter a valid key. The fields are masked password inputs, so paste the key fresh rather than editing the dots in place, then save.</p>
+    <p>To fix it, go to <strong>WooCommerce &rarr; Dukandaar</strong>, find your provider's key field (for example <em>Anthropic API Key</em> or your provider's key), and re-enter a valid key. The fields are masked password inputs, so paste the key fresh rather than editing the dots in place, then save.</p>
     <ul>
       <li>Confirm the key belongs to the provider you selected. Anthropic (Claude) uses its native API; every other provider uses the OpenAI-compatible API.</li>
       <li>Check the key has not been revoked or run out of credit on the provider's side. You pay the model provider directly, so billing problems show up here.</li>
@@ -146,7 +146,7 @@
     <h2>A streaming provider returns a blank reply</h2>
     <p>On streaming (server-sent events) providers, a transport error mid-stream is handled by graceful degradation: the assistant sends a friendly message and a clean end-of-stream rather than leaving the bubble empty. A persistently blank reply usually points at the model or the region.</p>
     <ol>
-      <li>Open <strong>WooCommerce &rarr; Fahad AI</strong> and check the <strong>model</strong> selected for your provider. A model id that your account cannot access for streaming will produce nothing useful. Pick a model your key is entitled to.</li>
+      <li>Open <strong>WooCommerce &rarr; Dukandaar</strong> and check the <strong>model</strong> selected for your provider. A model id that your account cannot access for streaming will produce nothing useful. Pick a model your key is entitled to.</li>
       <li>Check your account <strong>region</strong> with the provider. Some providers restrict certain models or streaming to specific regions, and a region mismatch can return an empty stream.</li>
       <li>Confirm your server can hold an outbound streaming connection. Aggressive proxies, output buffering, or short timeouts can truncate the stream before any text arrives.</li>
     </ol>
@@ -164,11 +164,11 @@
     <h2>The wallet balance does not show for signed-in shoppers</h2>
     <p>Wallet and store-credit answers are intentionally decoupled from any one wallet plugin. The assistant ships the tools; your wallet plugin ships the data through a provider adapter. Two conditions must both be true for a balance to appear.</p>
     <ol>
-      <li><strong>The wallet plugin must register an adapter on the <code>fahad_ai_wallet_provider</code> filter.</strong> Until something is registered, the wallet tools degrade to a graceful "not available" and never invent a balance.</li>
+      <li><strong>The wallet plugin must register an adapter on the <code>dukandaar_wallet_provider</code> filter.</strong> Until something is registered, the wallet tools degrade to a graceful "not available" and never invent a balance.</li>
       <li><strong>The shopper must be signed in.</strong> Wallet operations are for logged-in customers only, and the assistant only ever reads the signed-in customer's own balance. Guests are blocked centrally before the tool runs.</li>
     </ol>
     <p>If you maintain the wallet integration, register the adapter from your plugin like this:</p>
-    <pre><code>add_filter( 'fahad_ai_wallet_provider', function () {
+    <pre><code>add_filter( 'dukandaar_wallet_provider', function () {
     return new My_WalletPro_Adapter();
 } );</code></pre>
     <p>The adapter is an object (or an array of callables) exposing <code>get_balance()</code>, <code>get_deposit_bonus()</code>, <code>top_up()</code>, and <code>pay_with_credit()</code>. Any operation it cannot service should return an <code>[ 'error' =&gt; string ]</code> array rather than throw. See <a href="/docs/wallet-integration.html">Wallet integration</a> for the full contract.</p>
@@ -179,12 +179,12 @@
     <p>It is a fixed window, keyed per client: logged-in users get a per-user bucket and guests are keyed by IP, so visitors behind a shared network are not lumped together. The defaults are 20 requests per 60 seconds.</p>
     <p>If your store legitimately needs a higher ceiling or a different window, tune the two filters that drive it:</p>
     <pre><code>// Raise the per-client cap from the default 20 requests.
-add_filter( 'fahad_ai_rate_limit', function () {
+add_filter( 'dukandaar_rate_limit', function () {
     return 40;
 } );
 
 // Change the window from the default 60 seconds.
-add_filter( 'fahad_ai_rate_window', function () {
+add_filter( 'dukandaar_rate_window', function () {
     return 30; // seconds
 } );</code></pre>
     <p>Returning a limit of <code>0</code> or less disables the cap entirely, which we do not recommend on a public store since the rate limit is what protects you from a single visitor running up provider spend. See <a href="/docs/hooks-filters.html">Hooks &amp; filters</a> for the full list of tunables.</p>
@@ -192,7 +192,7 @@ add_filter( 'fahad_ai_rate_window', function () {
     <div class="next"><a href="/docs/">&larr; All docs</a><a href="/docs/configuration.html">Configuration &rarr;</a></div>
   </article>
 </main>
-<footer><div>GPL-2.0 for WooCommerce &middot; <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> &middot; <a href="/">Home</a></div></footer>
+<footer><div>GPL-2.0 for WooCommerce &middot; <a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> &middot; <a href="/">Home</a></div></footer>
 <script>(function(){function s(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('fa-theme',t);}catch(e){}document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(t==='light'));});}document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var c=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';s(c==='light'?'dark':'light');});var c0=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(c0==='light'));});})();</script>
 </body>
 </html>

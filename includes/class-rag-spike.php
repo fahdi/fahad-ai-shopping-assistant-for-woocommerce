@@ -2,7 +2,7 @@
 /**
  * RAG spike engine (RAG Phase 0, S0.5).
  *
- * Two reusable measurements behind the `wp fahad-ai rag-spike` command:
+ * Two reusable measurements behind the `wp dukandaar rag-spike` command:
  *  - compare():      keyword/vector/hybrid recall@k over a catalog + golden queries
  *                    (the relevance gate, reusing the tested primitives).
  *  - scan_latency():  a synthetic brute-force cosine scan over packed float32 BLOBs
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Rag_Spike {
+final class Dukandaar_Rag_Spike {
 
 	/**
 	 * Score keyword / vector / hybrid recall@k over a catalog and golden queries.
@@ -29,15 +29,15 @@ final class Fahad_AI_Rag_Spike {
 		$sum  = [ 'keyword' => 0.0, 'vector' => 0.0, 'hybrid' => 0.0 ];
 
 		foreach ( $queries as $q ) {
-			$keyword = Fahad_AI_Rag_Spike_Retriever::keyword_rank( $q['query'], $texts );
-			$vector  = Fahad_AI_Rag_Spike_Retriever::vector_rank( $q['vec'], $vecs );
-			$hybrid  = Fahad_AI_Rag_Spike_Retriever::hybrid_rank( $keyword, $vector );
+			$keyword = Dukandaar_Rag_Spike_Retriever::keyword_rank( $q['query'], $texts );
+			$vector  = Dukandaar_Rag_Spike_Retriever::vector_rank( $q['vec'], $vecs );
+			$hybrid  = Dukandaar_Rag_Spike_Retriever::hybrid_rank( $keyword, $vector );
 
 			$row = [
 				'name'    => (string) ( $q['name'] ?? $q['query'] ),
-				'keyword' => Fahad_AI_Relevance_Metrics::recall_at_k( $keyword, $q['relevant'], $k ),
-				'vector'  => Fahad_AI_Relevance_Metrics::recall_at_k( $vector, $q['relevant'], $k ),
-				'hybrid'  => Fahad_AI_Relevance_Metrics::recall_at_k( $hybrid, $q['relevant'], $k ),
+				'keyword' => Dukandaar_Relevance_Metrics::recall_at_k( $keyword, $q['relevant'], $k ),
+				'vector'  => Dukandaar_Relevance_Metrics::recall_at_k( $vector, $q['relevant'], $k ),
+				'hybrid'  => Dukandaar_Relevance_Metrics::recall_at_k( $hybrid, $q['relevant'], $k ),
 			];
 			foreach ( [ 'keyword', 'vector', 'hybrid' ] as $mode ) {
 				$sum[ $mode ] += $row[ $mode ];
@@ -69,7 +69,7 @@ final class Fahad_AI_Rag_Spike {
 			for ( $j = 0; $j < $dim; $j++ ) {
 				$v[ $j ] = sin( $i * 0.7 + $j * 0.013 );
 			}
-			$blobs[] = Fahad_AI_Vector_Math::pack_vector( $v );
+			$blobs[] = Dukandaar_Vector_Math::pack_vector( $v );
 		}
 
 		$trials  = max( 1, $trials );
@@ -81,7 +81,7 @@ final class Fahad_AI_Rag_Spike {
 			}
 			$start = microtime( true );
 			foreach ( $blobs as $blob ) {
-				Fahad_AI_Vector_Math::cosine( $query, Fahad_AI_Vector_Math::unpack_vector( $blob ) );
+				Dukandaar_Vector_Math::cosine( $query, Dukandaar_Vector_Math::unpack_vector( $blob ) );
 			}
 			$timings[] = ( microtime( true ) - $start ) * 1000.0;
 		}

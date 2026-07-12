@@ -11,7 +11,7 @@
 <link rel="canonical" href="https://fahadai.isupercoder.com/docs/proactive-nudges.html">
 <meta name="theme-color" content="#0c0d10">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="Fahad AI">
+<meta property="og:site_name" content="Dukandaar">
 <meta property="og:title" content="Proactive, consented nudges">
 <meta property="og:description" content="A single, dismissible, value-gated nudge offering real help, a genuine coupon or unused store credit, never fake urgency.">
 <meta property="og:url" content="https://fahadai.isupercoder.com/docs/proactive-nudges.html">
@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{ "@context":"https://schema.org","@type":"TechArticle","headline":"Proactive, consented nudges","url":"https://fahadai.isupercoder.com/docs/proactive-nudges.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Proactive, consented nudges","url":"https://fahadai.isupercoder.com/docs/proactive-nudges.html","isPartOf":{"@type":"WebSite","name":"Dukandaar","url":"https://fahadai.isupercoder.com/"} }
 </script>
 <style>
   :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
@@ -112,7 +112,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Dukandaar</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
 <main id="main" class="layout">
   <aside class="side">
     <p class="lbl">Get started</p>
@@ -136,7 +136,7 @@
     <p>This is the one feature in the plugin that is easiest to turn into spam, so the bar is set high on purpose. A trigger such as idling on the page is allowed to choose <em>when</em> to surface a message, but a trigger alone never produces a nudge. There has to be a grounded value signal that exists right now, or the shopper sees nothing.</p>
 
     <h2>The server-side gate</h2>
-    <p>A small PHP helper, <code>Fahad_AI_Proactive</code>, owns the decision. It runs on the server where every rule is unit testable, rather than trusting client JavaScript that could be tampered with. The widget receives, at most, a tiny pre-approved config; it can render that config and enforce the frequency cap, but it can never invent a deal.</p>
+    <p>A small PHP helper, <code>Dukandaar_Proactive</code>, owns the decision. It runs on the server where every rule is unit testable, rather than trusting client JavaScript that could be tampered with. The widget receives, at most, a tiny pre-approved config; it can render that config and enforce the frequency cap, but it can never invent a deal.</p>
     <p>A nudge is eligible only when every one of these holds:</p>
     <ul>
       <li>The merchant turned it on. The kill-switch defaults to off, so proactive messages are strictly opt-in.</li>
@@ -166,7 +166,7 @@
     <h2>Frequency cap, dismissal, and memory</h2>
     <p>The cap bounds how many times a proactive message may appear in a single visit. The default is once per session. Set it to zero to turn proactive messages off without changing anything else.</p>
     <p>When a shopper dismisses a nudge, that choice is remembered for the session so it does not reappear. The widget mirrors the server's eligibility check client side and stores the show count plus the dismissal under a stable key in <code>sessionStorage</code>. If storage is blocked by a privacy mode, it degrades to at most once per page rather than looping.</p>
-    <pre><code>// what the widget remembers, per visitor, under fahad_ai_proactive_v1
+    <pre><code>// what the widget remembers, per visitor, under dukandaar_proactive_v1
 { "shown": 1, "dismissed": false }</code></pre>
     <p>The nudge itself is accessible: it is a labelled region announced through a polite live region, both actions are real keyboard-operable buttons, and Escape dismisses it.</p>
 
@@ -176,13 +176,13 @@
 You have $12.00 in store credit. Want to use it on this order?</code></pre>
 
     <h2>Turning it on</h2>
-    <p>Open <strong>WooCommerce, then Fahad AI</strong>, and find the <strong>Proactive Assist</strong> section.</p>
+    <p>Open <strong>WooCommerce, then Dukandaar</strong>, and find the <strong>Proactive Assist</strong> section.</p>
     <ol>
       <li>Tick <strong>Proactive Nudges</strong> to let the assistant offer a real, applicable deal or unused store credit. It is off until you do this.</li>
       <li>Set <strong>Max Nudges Per Visit</strong>. One is recommended; zero turns proactive messages off.</li>
       <li>Save. The nudge will only appear for a shopper when a grounded coupon or positive balance exists at that moment.</li>
     </ol>
-    <div class="note">A site can adjust or fully suppress the resolved config through the <code>fahad_ai_proactive_config</code> filter without editing plugin code. Returning an empty array suppresses the nudge for that request. See <a href="/docs/hooks-filters.html">Hooks and filters</a>.</div>
+    <div class="note">A site can adjust or fully suppress the resolved config through the <code>dukandaar_proactive_config</code> filter without editing plugin code. Returning an empty array suppresses the nudge for that request. See <a href="/docs/hooks-filters.html">Hooks and filters</a>.</div>
 
     <h2>What it never does</h2>
     <ul>
@@ -195,7 +195,7 @@ You have $12.00 in store credit. Want to use it on this order?</code></pre>
     <div class="next"><a href="/docs/">← All docs</a><a href="/docs/wallet-integration.html">Wallet integration →</a></div>
   </article>
 </main>
-<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
 <script>(function(){function s(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('fa-theme',t);}catch(e){}document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(t==='light'));});}document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var c=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';s(c==='light'?'dark':'light');});var c0=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(c0==='light'));});})();</script>
 </body>
 </html>

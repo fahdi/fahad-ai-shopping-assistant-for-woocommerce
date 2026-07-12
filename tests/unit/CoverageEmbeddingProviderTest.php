@@ -6,7 +6,7 @@
  * file-scope guard `defined( 'ABSPATH' ) || exit;` (line 12). The interface is the
  * vector pipeline's vendor-decoupling seam (RAG Phase 1, S1.1, #104): the default
  * implementation is OpenAI, and an add-on can swap in Cohere/Voyage/self-hosted via
- * the `fahad_ai_embedding_provider` filter without touching core.
+ * the `dukandaar_embedding_provider` filter without touching core.
  *
  * Coverage note (the guard line). The interface is loaded once by tests/bootstrap.php,
  * BEFORE any test runs, i.e. outside the per-test pcov collection window, so the
@@ -59,7 +59,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 			'ABSPATH is defined, so the file-scope guard short-circuits before exit.'
 		);
 		$this->assertTrue(
-			interface_exists( 'Fahad_AI_Embedding_Provider', false ),
+			interface_exists( 'Dukandaar_Embedding_Provider', false ),
 			'The interface loaded, the guard fell through rather than exiting.'
 		);
 	}
@@ -71,9 +71,9 @@ class CoverageEmbeddingProviderTest extends TestCase {
 	 * drift in the seam every provider implementation must satisfy.
 	 */
 	public function test_interface_declares_the_full_embedding_provider_contract(): void {
-		$this->assertTrue( interface_exists( 'Fahad_AI_Embedding_Provider' ) );
+		$this->assertTrue( interface_exists( 'Dukandaar_Embedding_Provider' ) );
 
-		$ref     = new ReflectionClass( 'Fahad_AI_Embedding_Provider' );
+		$ref     = new ReflectionClass( 'Dukandaar_Embedding_Provider' );
 		$methods = array_map(
 			static fn( ReflectionMethod $m ) => $m->getName(),
 			$ref->getMethods()
@@ -104,7 +104,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 	 * probes return string/int/bool respectively.
 	 */
 	public function test_method_signatures_match_what_the_pipeline_expects(): void {
-		$ref = new ReflectionClass( 'Fahad_AI_Embedding_Provider' );
+		$ref = new ReflectionClass( 'Dukandaar_Embedding_Provider' );
 
 		// embed( array $texts ): array
 		$embed = $ref->getMethod( 'embed' );
@@ -138,7 +138,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 	 * relies on to pair vectors back with their source texts.
 	 */
 	public function test_contract_is_implementable_and_type_checks(): void {
-		$provider = new class() implements Fahad_AI_Embedding_Provider {
+		$provider = new class() implements Dukandaar_Embedding_Provider {
 			public function embed( array $texts ): array {
 				// One deterministic 2-d vector per input, preserving input order.
 				return array_map(
@@ -160,7 +160,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 			}
 		};
 
-		$this->assertInstanceOf( Fahad_AI_Embedding_Provider::class, $provider );
+		$this->assertInstanceOf( Dukandaar_Embedding_Provider::class, $provider );
 
 		$vectors = $provider->embed( [ 'a', 'bbb' ] );
 		$this->assertCount( 2, $vectors, 'One vector per input.' );
@@ -182,7 +182,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 	 * accept an implementation whose is_available() returns false.
 	 */
 	public function test_an_unavailable_provider_satisfies_the_contract(): void {
-		$provider = new class() implements Fahad_AI_Embedding_Provider {
+		$provider = new class() implements Dukandaar_Embedding_Provider {
 			public function embed( array $texts ): array {
 				return [];
 			}
@@ -197,7 +197,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 			}
 		};
 
-		$this->assertInstanceOf( Fahad_AI_Embedding_Provider::class, $provider );
+		$this->assertInstanceOf( Dukandaar_Embedding_Provider::class, $provider );
 		$this->assertFalse( $provider->is_available(), 'Unavailable providers signal keyword-only fallback.' );
 		$this->assertSame( '', $provider->model() );
 		$this->assertSame( 0, $provider->dimensions() );

@@ -14,11 +14,11 @@ defined( 'ABSPATH' ) || exit;
  * that plugin's internals, so it talks to it through a PROVIDER ADAPTER resolved at
  * runtime via a WordPress filter:
  *
- *     $provider = apply_filters( 'fahad_ai_wallet_provider', null );
+ *     $provider = apply_filters( 'dukandaar_wallet_provider', null );
  *
  * The wallet plugin registers the adapter:
  *
- *     add_filter( 'fahad_ai_wallet_provider', fn() => new My_WalletPro_Adapter() );
+ *     add_filter( 'dukandaar_wallet_provider', fn() => new My_WalletPro_Adapter() );
  *
  * The assistant ships these TOOLS; the wallet plugin ships the PROVIDER. Either side
  * can change independently. (This pack itself self-registers via the first-party
@@ -70,15 +70,15 @@ defined( 'ABSPATH' ) || exit;
  *      the tool never fabricates a balance or a "paid". The assistant holds no balance,
  *      so a provider failure is a clean no-op on our side (no partial/rolled-back state
  *      to reconcile, the debit is ONE atomic provider call, never split here).
- *   4. CURRENT-USER-ONLY. Every operation acts on Fahad_AI_Auth::current_user_id();
+ *   4. CURRENT-USER-ONLY. Every operation acts on Dukandaar_Auth::current_user_id();
  *      a user id in the model INPUT is ignored, so the model cannot touch another
  *      customer's wallet. (The `personal` flag below blocks guests centrally; using the
  *      current user id enforces per-user ownership.)
  *
  * ─── AUTH: personal-data tools, login-gated centrally (issue #25) ──────────────────
  *
- * All three tools declare `'personal' => true`, so Fahad_AI_Tool_Registry::dispatch()
- * runs Fahad_AI_Auth::guard_logged_in() BEFORE the callback, a guest is blocked
+ * All three tools declare `'personal' => true`, so Dukandaar_Tool_Registry::dispatch()
+ * runs Dukandaar_Auth::guard_logged_in() BEFORE the callback, a guest is blocked
  * centrally with the standard login-required error and the provider is never touched.
  *
  * ─── GRACEFUL DEGRADATION ──────────────────────────────────────────────────────────
@@ -89,7 +89,7 @@ defined( 'ABSPATH' ) || exit;
  * provider exists) is the simplest path AND lets the model honestly explain that the
  * store has no wallet, instead of the capability silently vanishing.
  */
-final class Fahad_AI_Wallet_Tools {
+final class Dukandaar_Wallet_Tools {
 
 	/**
 	 * The graceful "no wallet plugin" error. Centralized so every tool degrades with
@@ -101,7 +101,7 @@ final class Fahad_AI_Wallet_Tools {
 		return [
 			'error' => __(
 				'Wallet is not available on this store.',
-				'fahad-ai-shopping-assistant-for-woocommerce'
+				'dukandaar-ai-shopping-assistant-for-woocommerce'
 			),
 		];
 	}
@@ -111,7 +111,7 @@ final class Fahad_AI_Wallet_Tools {
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope).
 	 * Static because the pack holds no per-instance state, its tools resolve the
-	 * wallet provider via the filter and call the shared Fahad_AI_Auth boundary.
+	 * wallet provider via the filter and call the shared Dukandaar_Auth boundary.
 	 *
 	 * All three tools carry `'personal' => true` so the registry login-gates them
 	 * centrally (the first authorization layer).
@@ -181,7 +181,7 @@ final class Fahad_AI_Wallet_Tools {
 	/**
 	 * Current customer's wallet balance, straight from the provider.
 	 *
-	 * Always asks the provider about Fahad_AI_Auth::current_user_id(), never a user
+	 * Always asks the provider about Dukandaar_Auth::current_user_id(), never a user
 	 * id from the model input, so the model cannot read another customer's balance.
 	 * With no provider, degrades to the graceful "not available" error (no invented
 	 * balance). The central login gate has already ensured the caller is logged in.
@@ -194,7 +194,7 @@ final class Fahad_AI_Wallet_Tools {
 			return self::unavailable();
 		}
 
-		$balance = self::call( $provider, 'get_balance', [ Fahad_AI_Auth::current_user_id() ] );
+		$balance = self::call( $provider, 'get_balance', [ Dukandaar_Auth::current_user_id() ] );
 		if ( null === $balance ) {
 			return self::unavailable();
 		}
@@ -217,7 +217,7 @@ final class Fahad_AI_Wallet_Tools {
 			return self::unavailable();
 		}
 
-		$info = self::call( $provider, 'referral_info', [ Fahad_AI_Auth::current_user_id() ] );
+		$info = self::call( $provider, 'referral_info', [ Dukandaar_Auth::current_user_id() ] );
 		if ( null === $info ) {
 			return self::unavailable();
 		}
@@ -247,7 +247,7 @@ final class Fahad_AI_Wallet_Tools {
 			return self::unavailable();
 		}
 
-		$user_id = Fahad_AI_Auth::current_user_id();
+		$user_id = Dukandaar_Auth::current_user_id();
 
 		// Surface the deposit bonus honestly so the model can mention it (read-only;
 		// a missing/unsupported bonus op is simply "no bonus", never an error).
@@ -301,7 +301,7 @@ final class Fahad_AI_Wallet_Tools {
 			return self::unavailable();
 		}
 
-		$user_id = Fahad_AI_Auth::current_user_id();
+		$user_id = Dukandaar_Auth::current_user_id();
 
 		// (2) Sufficient-balance gate, read first, refuse before any debit attempt.
 		$balance = self::call( $provider, 'get_balance', [ $user_id ] );
@@ -312,7 +312,7 @@ final class Fahad_AI_Wallet_Tools {
 			return [
 				'error' => __(
 					'Insufficient wallet balance to cover this amount.',
-					'fahad-ai-shopping-assistant-for-woocommerce'
+					'dukandaar-ai-shopping-assistant-for-woocommerce'
 				),
 			];
 		}
@@ -357,7 +357,7 @@ final class Fahad_AI_Wallet_Tools {
 	 * @return object|array|null
 	 */
 	private static function provider() {
-		$provider = apply_filters( 'fahad_ai_wallet_provider', null );
+		$provider = apply_filters( 'dukandaar_wallet_provider', null );
 
 		if ( is_object( $provider ) || is_array( $provider ) ) {
 			return $provider;
@@ -435,7 +435,7 @@ final class Fahad_AI_Wallet_Tools {
 		return [
 			'error' => __(
 				'Please provide an amount greater than zero.',
-				'fahad-ai-shopping-assistant-for-woocommerce'
+				'dukandaar-ai-shopping-assistant-for-woocommerce'
 			),
 		];
 	}
@@ -446,5 +446,5 @@ final class Fahad_AI_Wallet_Tools {
 // in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require_once time, before PHPUnit's per-test pcov window, so it can never be measured in-process (the callable it wires is verified by test_pack_self_registration_references_a_callable_register).
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Wallet_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Wallet_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

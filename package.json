@@ -1,8 +1,8 @@
 {
-  "name": "fahad-ai-shopping-assistant-for-woocommerce",
+  "name": "dukandaar-ai-shopping-assistant-for-woocommerce",
   "version": "2.11.8",
   "private": true,
-  "description": "Frontend test harness (Playwright E2E + Vitest) for the Fahad AI Shopping Assistant widget.",
+  "description": "Frontend test harness (Playwright E2E + Vitest) for the Dukandaar AI Shopping Assistant widget.",
   "scripts": {
     "serve:harness": "node e2e/server.mjs",
     "test:e2e": "playwright test",

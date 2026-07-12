@@ -15,8 +15,8 @@
  * verbatim fragment of a returned review, so it grounds; a made-up quote or a
  * never-returned price would fail the check.
  *
- * get_product_reviews comes from the reviews feature pack (Fahad_AI_Reviews_Tools),
- * which self-registers via Fahad_AI_Tool_Registry::register_pack() when the test
+ * get_product_reviews comes from the reviews feature pack (Dukandaar_Reviews_Tools),
+ * which self-registers via Dukandaar_Tool_Registry::register_pack() when the test
  * bootstrap glob-loads includes/tools/*.php, exactly as the plugin bootstrap does
  * in production, so the real reviews tool executes in the loop with no per-fixture
  * wiring. The declarative `wc.reviews` block drives the approved-review comments

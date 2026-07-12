@@ -8,7 +8,7 @@
 
 | | Anthropic (Claude) | Moonshot AI (Kimi K2) |
 |---|---|---|
-| Endpoint | `api.anthropic.com/v1/messages` | `{base}/v1/chat/completions` (`base` from `moonshot_base_url()`: `api.moonshot.ai` global / `api.moonshot.cn` china, per `fahad_ai_moonshot_region`) |
+| Endpoint | `api.anthropic.com/v1/messages` | `{base}/v1/chat/completions` (`base` from `moonshot_base_url()`: `api.moonshot.ai` global / `api.moonshot.cn` china, per `dukandaar_moonshot_region`) |
 | Auth | `x-api-key` | `Authorization: Bearer` |
 | Tool format | `input_schema` (JSON Schema) | OpenAI-compatible (`parameters`, `type:"function"`) |
 | System prompt | top-level `system` field | first `role:system` message |
@@ -20,7 +20,7 @@ Neutral tool specs live once and are mapped per provider (`get_anthropic_tools()
 
 ## Agentic loop
 
-Three loops in `Fahad_AI_API_Handler`, all capped at `$max = 8` iterations:
+Three loops in `Dukandaar_API_Handler`, all capped at `$max = 8` iterations:
 - `run_anthropic_agent()`, non-streaming.
 - `run_moonshot_agent()`, non-streaming, OpenAI-shaped.
 - `run_stream_agent()` + `stream_one_turn()`, streaming; emits SSE `chunk`/`tool`/`products`/`comparison`/`done`/`error`.
@@ -33,17 +33,17 @@ Per tool call the sequence is: **execute → surface cards/comparison from the F
 
 ## Tools, registry & extensibility
 
-`Fahad_AI_Tool_Registry` (singleton) is the dispatch layer:
-- `get_tools()` layers **built-ins → feature packs → `apply_filters('fahad_ai_register_tools', $tools)`**.
+`Dukandaar_Tool_Registry` (singleton) is the dispatch layer:
+- `get_tools()` layers **built-ins → feature packs → `apply_filters('dukandaar_register_tools', $tools)`**.
 - `specs()` returns provider-facing specs with **no `callback`/`personal` leakage** (verified by tests).
-- `dispatch($name,$input)`: unknown tool → error; try/catch isolation; **central login gate**, a tool declaring `'personal' => true` is blocked for guests via `Fahad_AI_Auth::guard_logged_in()` before its callback runs.
+- `dispatch($name,$input)`: unknown tool → error; try/catch isolation; **central login gate**, a tool declaring `'personal' => true` is blocked for guests via `Dukandaar_Auth::guard_logged_in()` before its callback runs.
 - `register_pack(callable)`, static provider list that survives per-test singleton resets.
 
 **Drop-in feature packs.** The bootstrap glob-loads `includes/tools/*.php`; each pack self-registers via `register_pack()`. Adding a pack needs **zero** shared-wiring edits, this is what made the v2.0 features conflict-free to build in parallel.
 
 **Adding a tool from another plugin** (the supported extension path):
 ```php
-add_filter( 'fahad_ai_register_tools', function ( array $tools ) {
+add_filter( 'dukandaar_register_tools', function ( array $tools ) {
     $tools[] = [
         'name' => 'my_tool',
         'description' => '…',
@@ -61,7 +61,7 @@ add_filter( 'fahad_ai_register_tools', function ( array $tools ) {
 
 ## System prompt & trust guardrails (#24)
 
-`get_system_prompt()` builds the default prompt and runs `apply_filters('fahad_ai_system_prompt', …)` in **both** the custom and default branches (so the memory pack can append a preferences block, and merchant config can extend it). The policy is consolidated inline and is **absolute**:
+`get_system_prompt()` builds the default prompt and runs `apply_filters('dukandaar_system_prompt', …)` in **both** the custom and default branches (so the memory pack can append a preferences block, and merchant config can extend it). The policy is consolidated inline and is **absolute**:
 - No fake urgency/scarcity; only real, tool-reported stock numbers.
 - Respect a stated budget; never push above it.
 - Disclose upsells/cross-sells as optional; only real, applicable coupons/wallet bonuses.
@@ -74,7 +74,7 @@ These are enforced by deterministic offline checkers (below) so they cannot sile
 
 ## Privacy & auth boundary (#25)
 
-`Fahad_AI_Auth` (stateless static): `is_logged_in()`, `current_user_id()`, `guard_logged_in()` (returns `true` or a `requires_login` error array), `user_owns($owner_id, ?$user_id)` (a guest, id 0, owns nothing), `mask_email()`. Two layers, by design:
+`Dukandaar_Auth` (stateless static): `is_logged_in()`, `current_user_id()`, `guard_logged_in()` (returns `true` or a `requires_login` error array), `user_owns($owner_id, ?$user_id)` (a guest, id 0, owns nothing), `mask_email()`. Two layers, by design:
 1. **Login gate (central)**, `'personal' => true` tools are gated in `dispatch()` before the callback.
 2. **Per-record ownership (in the callback)**, order/wallet/memory tools compute the record owner and call `user_owns()`; a logged-in user cannot read another user's record (returns "not found", not "forbidden", doesn't leak existence).
 
@@ -84,7 +84,7 @@ Keep PII out of model context and logs (`mask_email`, "not found" phrasing).
 
 - `trim_tool_result()`, shrinks ONLY the JSON fed back to the model; cards/SSE keep full data (grounding intact).
 - `apply_token_budget()`, bounds outgoing context (no-op at the default budget 0); preserves the system message, latest turn, and in-progress tool loop.
-- `resolve_model()` + `apply_filters('fahad_ai_model', …)`, routing seam (e.g. a cheap model for greetings, a capable one for reasoning); default is the configured model unchanged.
+- `resolve_model()` + `apply_filters('dukandaar_model', …)`, routing seam (e.g. a cheap model for greetings, a capable one for reasoning); default is the configured model unchanged.
 
 ## Eval harness (#21)
 
@@ -92,4 +92,4 @@ Keep PII out of model context and logs (`mask_email`, "not found" phrasing).
 
 ## Wallet decoupling (#18)
 
-Wallet tools are **decoupled**: they expose a `fahad_ai_wallet_provider` filter and stay dormant ("Wallet is not available on this store") until a provider adapter (e.g. WalletPro/Account Funds) registers via that filter. Money-safety must mirror the Account Funds invariants (no double-spend, compensating rollback). This keeps "AI + wallet" a clean cross-plugin bundle, not core coupling (ROADMAP §5).
+Wallet tools are **decoupled**: they expose a `dukandaar_wallet_provider` filter and stay dormant ("Wallet is not available on this store") until a provider adapter (e.g. WalletPro/Account Funds) registers via that filter. Money-safety must mirror the Account Funds invariants (no double-spend, compensating rollback). This keeps "AI + wallet" a clean cross-plugin bundle, not core coupling (ROADMAP §5).

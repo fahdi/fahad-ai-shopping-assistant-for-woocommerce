@@ -1,5 +1,5 @@
 {
-    "name": "fahdi/fahad-ai-shopping-assistant-for-woocommerce",
+    "name": "fahdi/dukandaar-ai-shopping-assistant-for-woocommerce",
     "description": "AI-powered WooCommerce shopping assistant",
     "type": "wordpress-plugin",
     "require": {
@@ -16,7 +16,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "FahadAi\\Tests\\": "tests/"
+            "DukandaarAi\\Tests\\": "tests/"
         }
     },
     "scripts": {

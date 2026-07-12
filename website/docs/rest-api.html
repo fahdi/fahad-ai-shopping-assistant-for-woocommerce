@@ -7,24 +7,24 @@
 <meta name="color-scheme" content="dark light">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>REST API endpoint reference</title>
-<meta name="description" content="The fahad-ai/v1 REST endpoints for the Fahad AI assistant: chat, cart, feedback, admin and agent routes, plus the permission gate that guards each one.">
+<meta name="description" content="The dukandaar/v1 REST endpoints for the Dukandaar assistant: chat, cart, feedback, admin and agent routes, plus the permission gate that guards each one.">
 <link rel="canonical" href="https://fahadai.isupercoder.com/docs/rest-api.html">
 <meta name="theme-color" content="#0c0d10">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="Fahad AI">
+<meta property="og:site_name" content="Dukandaar">
 <meta property="og:title" content="REST API endpoint reference">
-<meta property="og:description" content="The fahad-ai/v1 REST endpoints for the Fahad AI assistant: chat, cart, feedback, admin and agent routes, plus the permission gate that guards each one.">
+<meta property="og:description" content="The dukandaar/v1 REST endpoints for the Dukandaar assistant: chat, cart, feedback, admin and agent routes, plus the permission gate that guards each one.">
 <meta property="og:url" content="https://fahadai.isupercoder.com/docs/rest-api.html">
 <meta property="og:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="REST API endpoint reference">
-<meta name="twitter:description" content="The fahad-ai/v1 REST endpoints for the Fahad AI assistant: chat, cart, feedback, admin and agent routes, plus the permission gate that guards each one.">
+<meta name="twitter:description" content="The dukandaar/v1 REST endpoints for the Dukandaar assistant: chat, cart, feedback, admin and agent routes, plus the permission gate that guards each one.">
 <meta name="twitter:image" content="https://fahadai.isupercoder.com/og-image-1200x630.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{ "@context":"https://schema.org","@type":"TechArticle","headline":"REST API endpoint reference","url":"https://fahadai.isupercoder.com/docs/rest-api.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"REST API endpoint reference","url":"https://fahadai.isupercoder.com/docs/rest-api.html","isPartOf":{"@type":"WebSite","name":"Dukandaar","url":"https://fahadai.isupercoder.com/"} }
 </script>
 <style>
   :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
@@ -112,7 +112,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Dukandaar</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
 <main id="main" class="layout">
   <aside class="side">
     <p class="lbl">Get started</p>
@@ -131,11 +131,11 @@
   <article>
     <div class="crumb"><a href="/docs/">Docs</a> / REST API</div>
     <h1>REST API</h1>
-    <p class="lede">Every server route the plugin adds lives under the <code>fahad-ai/v1</code> namespace. This page lists each endpoint, its method, the permission gate that protects it, and the shape of what it returns. Nothing here is invented; it mirrors the routes the plugin registers on your store.</p>
+    <p class="lede">Every server route the plugin adds lives under the <code>dukandaar/v1</code> namespace. This page lists each endpoint, its method, the permission gate that protects it, and the shape of what it returns. Nothing here is invented; it mirrors the routes the plugin registers on your store.</p>
 
     <h2>Namespace and base URL</h2>
-    <p>All routes are registered against the WordPress REST API under the <code>fahad-ai/v1</code> namespace, so the base path on your site is:</p>
-    <pre><code>https://your-store.com/wp-json/fahad-ai/v1/</code></pre>
+    <p>All routes are registered against the WordPress REST API under the <code>dukandaar/v1</code> namespace, so the base path on your site is:</p>
+    <pre><code>https://your-store.com/wp-json/dukandaar/v1/</code></pre>
     <p>The endpoints fall into four groups, each with a different security boundary: the storefront chat endpoints, the admin copilot endpoints, the WhatsApp webhook, and the store-as-an-agent gateway.</p>
 
     <h2>How the storefront endpoints are gated</h2>
@@ -145,8 +145,8 @@
       <li><strong>Per client rate limit.</strong> A fixed window counter caps how many billable calls and cart mutations any one client can trigger. It is keyed per user when logged in, otherwise per IP. The default is 20 requests per 60 seconds. When the window is exhausted the request returns <code>429</code>.</li>
     </ul>
     <p>Both limits are adjustable with filters, covered in <a href="/docs/hooks-filters.html">Hooks &amp; filters</a>:</p>
-    <pre><code>add_filter( 'fahad_ai_rate_limit', fn() =&gt; 40 );   // requests per window
-add_filter( 'fahad_ai_rate_window', fn() =&gt; 30 );  // window length in seconds</code></pre>
+    <pre><code>add_filter( 'dukandaar_rate_limit', fn() =&gt; 40 );   // requests per window
+add_filter( 'dukandaar_rate_window', fn() =&gt; 30 );  // window length in seconds</code></pre>
     <div class="note">A nonce alone is public, so it is never treated as authorization. The rate limit is what actually protects you from a single client running up provider cost or spamming cart changes.</div>
 
     <h2>Storefront chat endpoints</h2>
@@ -193,7 +193,7 @@ add_filter( 'fahad_ai_rate_window', fn() =&gt; 30 );  // window length in second
       <li>The <code>GET</code> request is Meta's verification handshake, checked against your configured verify token and echoing back the challenge.</li>
       <li>The <code>POST</code> request carries inbound messages and is validated by the <code>X-Hub-Signature-256</code> HMAC signature.</li>
     </ul>
-    <p>The outbound send is a pluggable seam (<code>fahad_ai_whatsapp_send</code>); no live Meta call ships in core.</p>
+    <p>The outbound send is a pluggable seam (<code>dukandaar_whatsapp_send</code>); no live Meta call ships in core.</p>
 
     <h2>Admin copilot endpoints</h2>
     <p>The merchant copilot routes live under <code>/admin</code>. They are gated by the <code>manage_woocommerce</code> capability, not the storefront nonce, so only store managers can reach them. Every one is read only or draft only; nothing here writes to your store. All are <code>GET</code> requests grounded in real WooCommerce data.</p>
@@ -246,7 +246,7 @@ GET     /agent/checkout-handoff   public read              { note, items }</code
     <div class="next"><a href="/docs/">← All docs</a><a href="/docs/hooks-filters.html">Hooks &amp; filters →</a></div>
   </article>
 </main>
-<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
 <script>(function(){function s(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('fa-theme',t);}catch(e){}document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(t==='light'));});}document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var c=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';s(c==='light'?'dark':'light');});var c0=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(c0==='light'));});})();</script>
 </body>
 </html>

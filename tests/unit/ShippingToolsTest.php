@@ -1,16 +1,16 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Shipping_Tools (issue #19: shipping & delivery estimate).
+ * Unit tests for Dukandaar_Shipping_Tools (issue #19: shipping & delivery estimate).
  *
  * Red → Green → Refactor. Conventions mirror CatalogToolsTest: WP/WC functions
  * mocked via Brain\Monkey, singletons reset via reflection, and the pack's REAL
- * provider registered through Fahad_AI_Tool_Registry::register_pack() so the
+ * provider registered through Dukandaar_Tool_Registry::register_pack() so the
  * production registration + merge + dispatch path is what is under test.
  *
  * The WooCommerce shipping API is awkward to mock, WC_Shipping_Zones is a
  * concrete class with a STATIC matcher and zone/method OBJECTS, none of which
  * Brain\Monkey (a FUNCTION mocker) can intercept. So the pack isolates every WC
- * shipping touch behind one overridable seam, Fahad_AI_Shipping_Tools::resolve_zone_methods(),
+ * shipping touch behind one overridable seam, Dukandaar_Shipping_Tools::resolve_zone_methods(),
  * which returns either a normalized list of { id, title, cost, delivery_window }
  * descriptors or null (no matching zone). These tests drive a tiny subclass that
  * overrides that seam with canned data, so the cost-shaping, window-derivation,
@@ -39,11 +39,11 @@ class ShippingToolsTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
-		$this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+		$this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
 		// Seam-test scratch state cleared between cases.
-		Fahad_AI_Shipping_Tools_Stub::$zone_methods = null;
-		Fahad_AI_Shipping_Tools_Stub::$captured_package = null;
+		Dukandaar_Shipping_Tools_Stub::$zone_methods = null;
+		Dukandaar_Shipping_Tools_Stub::$captured_package = null;
 
 		Functions\stubs( [
 			'sanitize_text_field' => fn( $s ) => is_string( $s ) ? trim( $s ) : $s,
@@ -58,7 +58,7 @@ class ShippingToolsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
@@ -68,14 +68,14 @@ class ShippingToolsTest extends TestCase {
 	 * via the pack's REAL provider, exactly what the file-scope self-registration
 	 * does in production.
 	 */
-	private function registry(): Fahad_AI_Tool_Registry {
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+	private function registry(): Dukandaar_Tool_Registry {
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-		Fahad_AI_Tool_Registry::reset_packs();
-		Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Shipping_Tools', 'register' ] );
+		Dukandaar_Tool_Registry::reset_packs();
+		Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Shipping_Tools', 'register' ] );
 
-		return Fahad_AI_Tool_Registry::instance();
+		return Dukandaar_Tool_Registry::instance();
 	}
 
 	// ── registration ──────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ class ShippingToolsTest extends TestCase {
 		// Shipping rates are not customer-specific data, so the tool must NOT be
 		// login-gated (no `personal` flag), guests asking "how much is shipping?"
 		// must get an answer.
-		$get_tools = new ReflectionMethod( Fahad_AI_Tool_Registry::class, 'get_tools' );
+		$get_tools = new ReflectionMethod( Dukandaar_Tool_Registry::class, 'get_tools' );
 		$built     = $get_tools->invoke( $this->registry() );
 
 		$this->assertArrayHasKey( 'estimate_delivery', $built );
@@ -135,7 +135,7 @@ class ShippingToolsTest extends TestCase {
 
 		$this->dispatch( [ 'country' => 'gb', 'state' => 'ENG', 'postcode' => 'SW1A 1AA' ] );
 
-		$package = Fahad_AI_Shipping_Tools_Stub::$captured_package;
+		$package = Dukandaar_Shipping_Tools_Stub::$captured_package;
 		$this->assertIsArray( $package );
 		$this->assertArrayHasKey( 'destination', $package );
 		$this->assertSame( 'GB', $package['destination']['country'] ); // upper-cased
@@ -225,7 +225,7 @@ class ShippingToolsTest extends TestCase {
 		$this->assertArrayHasKey( 'message', $result );
 		$this->assertMatchesRegularExpression( '/(country|destination|where)/i', $result['message'] );
 		// The seam must NOT have been consulted without a destination.
-		$this->assertNull( Fahad_AI_Shipping_Tools_Stub::$captured_package );
+		$this->assertNull( Dukandaar_Shipping_Tools_Stub::$captured_package );
 	}
 
 	public function test_blank_country_string_returns_guidance(): void {
@@ -233,7 +233,7 @@ class ShippingToolsTest extends TestCase {
 
 		$this->assertFalse( $result['available'] );
 		$this->assertArrayHasKey( 'message', $result );
-		$this->assertNull( Fahad_AI_Shipping_Tools_Stub::$captured_package );
+		$this->assertNull( Dukandaar_Shipping_Tools_Stub::$captured_package );
 	}
 
 	// ── never fabricates: dispatch through the registry isolates throws ─────────
@@ -241,7 +241,7 @@ class ShippingToolsTest extends TestCase {
 	public function test_dispatch_isolates_a_throwing_seam(): void {
 		// If the WC seam throws, the registry's error isolation must catch it, the
 		// tool must never fatal the request.
-		Fahad_AI_Shipping_Tools_Stub::$zone_methods = 'throw';
+		Dukandaar_Shipping_Tools_Stub::$zone_methods = 'throw';
 
 		$result = $this->dispatch( [ 'country' => 'US' ] );
 
@@ -301,7 +301,7 @@ class ShippingToolsTest extends TestCase {
 
 	/** Invoke a private static helper on the real pack class via reflection. */
 	private function invokePrivate( string $method, ...$args ) {
-		$ref = new ReflectionMethod( Fahad_AI_Shipping_Tools::class, $method );
+		$ref = new ReflectionMethod( Dukandaar_Shipping_Tools::class, $method );
 		return $ref->invokeArgs( null, $args );
 	}
 
@@ -310,17 +310,17 @@ class ShippingToolsTest extends TestCase {
 	 * data, then dispatch estimate_delivery through the real registry.
 	 */
 	private function dispatch( array $input ): array {
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-		Fahad_AI_Tool_Registry::reset_packs();
-		Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Shipping_Tools_Stub', 'register' ] );
+		Dukandaar_Tool_Registry::reset_packs();
+		Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Shipping_Tools_Stub', 'register' ] );
 
-		return Fahad_AI_Tool_Registry::instance()->dispatch( 'estimate_delivery', $input );
+		return Dukandaar_Tool_Registry::instance()->dispatch( 'estimate_delivery', $input );
 	}
 
 	private function stubZoneMethods( ?array $methods ): void {
-		Fahad_AI_Shipping_Tools_Stub::$zone_methods = $methods;
+		Dukandaar_Shipping_Tools_Stub::$zone_methods = $methods;
 	}
 }
 
@@ -330,7 +330,7 @@ class ShippingToolsTest extends TestCase {
  * seam" the recipe calls for, production code stays decoupled from WC internals
  * behind resolve_zone_methods().
  */
-class Fahad_AI_Shipping_Tools_Stub extends Fahad_AI_Shipping_Tools {
+class Dukandaar_Shipping_Tools_Stub extends Dukandaar_Shipping_Tools {
 
 	/** @var array<int,array>|string|null Canned descriptors, 'throw', or null (no zone). */
 	public static $zone_methods = null;

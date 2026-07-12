@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Returns_Tools (issue #53: returns & exchange / RMA assistant,
+ * Unit tests for Dukandaar_Returns_Tools (issue #53: returns & exchange / RMA assistant,
  * auth-gated).
  *
  * Red → Green → Refactor. Conventions mirror OrderToolsTest / ReorderToolsTest:
@@ -10,9 +10,9 @@
  *
  * The two returns tools (check_return_eligibility, request_return) are NOT built-ins , 
  * they ship as a drop-in feature pack that self-registers a provider via
- * Fahad_AI_Tool_Registry::register_pack() at file load. Every test registers the
+ * Dukandaar_Tool_Registry::register_pack() at file load. Every test registers the
  * returns pack's REAL provider through register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration +
+ * Dukandaar_Tool_Registry::instance()->dispatch(), so the production registration +
  * merge + dispatch path (INCLUDING the central login gate for `personal` tools) is
  * what is under test.
  *
@@ -44,7 +44,7 @@ class ReturnsToolsTest extends TestCase {
      * Snapshot of the registry's static pack providers, restored in tearDown so a test
      * here neither inherits another suite's packs nor leaks the returns pack we register
      * for our own cases. (Pack providers are static so they survive a singleton instance
-     * reset, see Fahad_AI_Tool_Registry::register_pack.)
+     * reset, see Dukandaar_Tool_Registry::register_pack.)
      *
      * @var array<int, callable>
      */
@@ -54,7 +54,7 @@ class ReturnsToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         Functions\stubs( [
             'absint'              => fn( $n ) => abs( (int) $n ),
@@ -79,7 +79,7 @@ class ReturnsToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
@@ -92,14 +92,14 @@ class ReturnsToolsTest extends TestCase {
      * does in production. Registering it explicitly (after clearing the static list) keeps
      * the test hermetic and order-independent.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Returns_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Returns_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     /** A unix timestamp `$days` days before the pinned NOW. */
@@ -162,11 +162,11 @@ class ReturnsToolsTest extends TestCase {
         // get_meta stub that switches on the key avoids ambiguous overlapping expectations.
         $store = (object) [ 'rma' => $spec['meta']['rma'] ?? [] ];
         $o->shouldReceive( 'get_meta' )->andReturnUsing(
-            fn( $key = '', $single = true ) => '_fahad_ai_rma_requests' === $key ? $store->rma : ''
+            fn( $key = '', $single = true ) => '_dukandaar_rma_requests' === $key ? $store->rma : ''
         );
         $o->shouldReceive( 'update_meta_data' )->andReturnUsing(
             function ( $key, $value ) use ( $store ) {
-                if ( '_fahad_ai_rma_requests' === $key ) {
+                if ( '_dukandaar_rma_requests' === $key ) {
                     $store->rma = $value;
                 }
             }
@@ -252,7 +252,7 @@ class ReturnsToolsTest extends TestCase {
         ] );
         Functions\when( 'wc_get_order' )->justReturn( $order );
         Functions\when( 'apply_filters' )->alias( function ( $hook, $value = null ) {
-            return 'fahad_ai_return_window_days' === $hook ? 60 : $value;
+            return 'dukandaar_return_window_days' === $hook ? 60 : $value;
         } );
 
         $result = $this->registry()->dispatch( 'check_return_eligibility', [ 'order_id' => 100 ] );
@@ -440,7 +440,7 @@ class ReturnsToolsTest extends TestCase {
 
         $this->assertTrue( $result['recorded'] );
         // The RMA landed in the order meta (one record carrying the reason).
-        $stored = $order->get_meta( '_fahad_ai_rma_requests' );
+        $stored = $order->get_meta( '_dukandaar_rma_requests' );
         $this->assertIsArray( $stored );
         $this->assertCount( 1, $stored );
         $this->assertSame( 'Too small', $stored[0]['reason'] );
@@ -471,7 +471,7 @@ class ReturnsToolsTest extends TestCase {
         $this->assertTrue( $second['already_requested'] );
 
         // And the stored meta holds exactly ONE request, not two.
-        $stored = $order->get_meta( '_fahad_ai_rma_requests' );
+        $stored = $order->get_meta( '_dukandaar_rma_requests' );
         $this->assertCount( 1, $stored );
     }
 
@@ -486,7 +486,7 @@ class ReturnsToolsTest extends TestCase {
             'items'            => [ [ 'product_id' => 10, 'name' => 'Blue Hoodie' ] ],
         ] );
         // No RMA may be written for an ineligible order.
-        $order->shouldReceive( 'update_meta_data' )->with( '_fahad_ai_rma_requests', Mockery::any() )->never();
+        $order->shouldReceive( 'update_meta_data' )->with( '_dukandaar_rma_requests', Mockery::any() )->never();
         Functions\when( 'wc_get_order' )->justReturn( $order );
 
         $result = $this->registry()->dispatch( 'request_return', [
@@ -503,7 +503,7 @@ class ReturnsToolsTest extends TestCase {
 
     public function test_request_return_requires_at_least_one_item(): void {
         $order = $this->mockOrder( [ 'id' => 100, 'customer_id' => 5, 'status' => 'completed', 'created_days_ago' => 4 ] );
-        $order->shouldReceive( 'update_meta_data' )->with( '_fahad_ai_rma_requests', Mockery::any() )->never();
+        $order->shouldReceive( 'update_meta_data' )->with( '_dukandaar_rma_requests', Mockery::any() )->never();
         Functions\when( 'wc_get_order' )->justReturn( $order );
 
         $result = $this->registry()->dispatch( 'request_return', [ 'order_id' => 100, 'items' => [], 'reason' => 'n/a' ] );

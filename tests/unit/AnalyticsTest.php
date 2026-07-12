@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Analytics (issue #49: owner analytics &
+ * Unit tests for Dukandaar_Analytics (issue #49: owner analytics &
  * "unanswered questions" dashboard, the privacy-safe event STORE behind it).
  *
  * Red → Green → Refactor. Conventions mirror FeedbackTest / StockAlertsTest: WP
@@ -56,7 +56,7 @@ class AnalyticsTest extends TestCase {
 			'wp_generate_uuid4'       => fn() => 'uuid-' . md5( uniqid( '', true ) ),
 		] );
 
-		// The store reuses Fahad_AI_Auth::mask_email() for the email-masking layer,
+		// The store reuses Dukandaar_Auth::mask_email() for the email-masking layer,
 		// which only needs trim(); provide it as a pass-through so the helper works
 		// without a full WP environment.
 		Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
@@ -80,20 +80,20 @@ class AnalyticsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh store singleton (reset between cases via reflection). */
-	private function store(): Fahad_AI_Analytics {
-		( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Analytics::instance();
+	private function store(): Dukandaar_Analytics {
+		( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Analytics::instance();
 	}
 
 	/** All stored analytics rows (the raw option value). */
 	private function rows(): array {
-		return $this->options[ Fahad_AI_Analytics::OPTION ] ?? [];
+		return $this->options[ Dukandaar_Analytics::OPTION ] ?? [];
 	}
 
 	/** The first stored row (via a local, so reset() never gets a function return). */
@@ -108,7 +108,7 @@ class AnalyticsTest extends TestCase {
 			[
 				'question'         => 'do you have running shoes',
 				'tools'            => [ 'search_products' ],
-				'outcome'          => Fahad_AI_Analytics::OUTCOME_ANSWERED,
+				'outcome'          => Dukandaar_Analytics::OUTCOME_ANSWERED,
 				'product_surfaced' => true,
 				'added_to_cart'    => false,
 				'tokens'           => 0,
@@ -124,7 +124,7 @@ class AnalyticsTest extends TestCase {
 	public function test_record_stores_a_turn_event_with_the_expected_fields(): void {
 		$res = $this->store()->record( $this->event( [
 			'tools'   => [ 'search_products', 'get_product_details' ],
-			'outcome' => Fahad_AI_Analytics::OUTCOME_ANSWERED,
+			'outcome' => Dukandaar_Analytics::OUTCOME_ANSWERED,
 		] ) );
 
 		$this->assertTrue( $res['ok'] ?? false );
@@ -134,7 +134,7 @@ class AnalyticsTest extends TestCase {
 		$this->assertCount( 1, $rows );
 
 		$row = reset( $rows );
-		$this->assertSame( Fahad_AI_Analytics::OUTCOME_ANSWERED, $row['outcome'] );
+		$this->assertSame( Dukandaar_Analytics::OUTCOME_ANSWERED, $row['outcome'] );
 		$this->assertSame( [ 'search_products', 'get_product_details' ], $row['tools'] );
 		$this->assertTrue( (bool) $row['product_surfaced'] );
 		$this->assertArrayHasKey( 'created', $row );
@@ -157,7 +157,7 @@ class AnalyticsTest extends TestCase {
 		$store->record( $this->event( [ 'tools' => $many ] ) );
 
 		$row = $this->first_row();
-		$this->assertLessThanOrEqual( Fahad_AI_Analytics::MAX_TOOLS, count( $row['tools'] ) );
+		$this->assertLessThanOrEqual( Dukandaar_Analytics::MAX_TOOLS, count( $row['tools'] ) );
 		// Each retained tool name is a clean slug (sanitize_key lower-cases / trims).
 		foreach ( $row['tools'] as $tool ) {
 			$this->assertSame( $tool, strtolower( trim( $tool ) ) );
@@ -213,7 +213,7 @@ class AnalyticsTest extends TestCase {
 
 		$row = $this->first_row();
 		$this->assertLessThanOrEqual(
-			Fahad_AI_Analytics::MAX_QUESTION_LENGTH,
+			Dukandaar_Analytics::MAX_QUESTION_LENGTH,
 			strlen( $row['question'] ),
 			'The question snippet must be capped at MAX_QUESTION_LENGTH characters.'
 		);
@@ -224,7 +224,7 @@ class AnalyticsTest extends TestCase {
 		$store->record( $this->event( [ 'conversation_ref' => str_repeat( 'c', 1000 ) ] ) );
 
 		$this->assertLessThanOrEqual(
-			Fahad_AI_Analytics::MAX_REF_LENGTH,
+			Dukandaar_Analytics::MAX_REF_LENGTH,
 			strlen( $this->first_row()['conversation_ref'] )
 		);
 	}
@@ -234,7 +234,7 @@ class AnalyticsTest extends TestCase {
 	public function test_record_is_a_noop_when_analytics_is_disabled(): void {
 		// The merchant opt-out: with the enabled flag explicitly off, record() stores
 		// nothing (negligible-overhead short-circuit).
-		$this->options[ Fahad_AI_Analytics::OPTION_ENABLED ] = 0;
+		$this->options[ Dukandaar_Analytics::OPTION_ENABLED ] = 0;
 
 		$res = $this->store()->record( $this->event() );
 
@@ -281,11 +281,11 @@ class AnalyticsTest extends TestCase {
 
 	public function test_unanswered_surfaces_abstain_escalate_and_no_tool_match(): void {
 		$store = $this->store();
-		$store->record( $this->event( [ 'question' => 'gift wrap?',    'outcome' => Fahad_AI_Analytics::OUTCOME_ABSTAINED ] ) );
-		$store->record( $this->event( [ 'question' => 'speak to human', 'outcome' => Fahad_AI_Analytics::OUTCOME_ESCALATED ] ) );
-		$store->record( $this->event( [ 'question' => 'weather today',  'outcome' => Fahad_AI_Analytics::OUTCOME_NO_TOOL_MATCH ] ) );
+		$store->record( $this->event( [ 'question' => 'gift wrap?',    'outcome' => Dukandaar_Analytics::OUTCOME_ABSTAINED ] ) );
+		$store->record( $this->event( [ 'question' => 'speak to human', 'outcome' => Dukandaar_Analytics::OUTCOME_ESCALATED ] ) );
+		$store->record( $this->event( [ 'question' => 'weather today',  'outcome' => Dukandaar_Analytics::OUTCOME_NO_TOOL_MATCH ] ) );
 		// An answered turn must NOT appear in the couldn't-answer list.
-		$store->record( $this->event( [ 'question' => 'red shoes',      'outcome' => Fahad_AI_Analytics::OUTCOME_ANSWERED ] ) );
+		$store->record( $this->event( [ 'question' => 'red shoes',      'outcome' => Dukandaar_Analytics::OUTCOME_ANSWERED ] ) );
 
 		$unanswered = $store->unanswered( 50 );
 
@@ -343,10 +343,10 @@ class AnalyticsTest extends TestCase {
 		// independent of wall-clock time. Two "old" rows and one "recent" row.
 		$old    = 1000;
 		$recent = 100000;
-		$this->options[ Fahad_AI_Analytics::OPTION ] = [
-			'r1' => [ 'id' => 'r1', 'question' => 'old one',   'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'x', 'created' => $old ],
-			'r2' => [ 'id' => 'r2', 'question' => 'old two',   'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'y', 'created' => $old ],
-			'r3' => [ 'id' => 'r3', 'question' => 'recent one', 'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'z', 'created' => $recent ],
+		$this->options[ Dukandaar_Analytics::OPTION ] = [
+			'r1' => [ 'id' => 'r1', 'question' => 'old one',   'tools' => [], 'outcome' => Dukandaar_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'x', 'created' => $old ],
+			'r2' => [ 'id' => 'r2', 'question' => 'old two',   'tools' => [], 'outcome' => Dukandaar_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'y', 'created' => $old ],
+			'r3' => [ 'id' => 'r3', 'question' => 'recent one', 'tools' => [], 'outcome' => Dukandaar_Analytics::OUTCOME_ABSTAINED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'z', 'created' => $recent ],
 		];
 
 		// Window that includes only the recent row.
@@ -362,18 +362,18 @@ class AnalyticsTest extends TestCase {
 	public function test_retention_cap_bounds_the_stored_row_count(): void {
 		$store = $this->store();
 
-		$over = Fahad_AI_Analytics::MAX_ENTRIES + 25;
+		$over = Dukandaar_Analytics::MAX_ENTRIES + 25;
 		for ( $i = 0; $i < $over; $i++ ) {
 			$store->record( $this->event( [ 'conversation_ref' => 'c' . $i ] ) );
 		}
 
-		$this->assertLessThanOrEqual( Fahad_AI_Analytics::MAX_ENTRIES, count( $this->rows() ) );
+		$this->assertLessThanOrEqual( Dukandaar_Analytics::MAX_ENTRIES, count( $this->rows() ) );
 	}
 
 	public function test_retention_cap_drops_oldest_first(): void {
 		$store = $this->store();
 
-		$total = Fahad_AI_Analytics::MAX_ENTRIES + 5;
+		$total = Dukandaar_Analytics::MAX_ENTRIES + 5;
 		for ( $i = 0; $i < $total; $i++ ) {
 			$store->record( $this->event( [ 'conversation_ref' => 'conv-' . $i ] ) );
 		}
@@ -389,12 +389,12 @@ class AnalyticsTest extends TestCase {
 		$store = $this->store();
 
 		$now    = time();
-		$oldTs  = $now - ( ( Fahad_AI_Analytics::MAX_AGE_DAYS + 5 ) * DAY_IN_SECONDS );
+		$oldTs  = $now - ( ( Dukandaar_Analytics::MAX_AGE_DAYS + 5 ) * DAY_IN_SECONDS );
 		$freshTs = $now - DAY_IN_SECONDS;
 
-		$this->options[ Fahad_AI_Analytics::OPTION ] = [
-			'old'   => [ 'id' => 'old',   'question' => 'stale',  'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ANSWERED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'o', 'created' => $oldTs ],
-			'fresh' => [ 'id' => 'fresh', 'question' => 'recent', 'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ANSWERED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'f', 'created' => $freshTs ],
+		$this->options[ Dukandaar_Analytics::OPTION ] = [
+			'old'   => [ 'id' => 'old',   'question' => 'stale',  'tools' => [], 'outcome' => Dukandaar_Analytics::OUTCOME_ANSWERED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'o', 'created' => $oldTs ],
+			'fresh' => [ 'id' => 'fresh', 'question' => 'recent', 'tools' => [], 'outcome' => Dukandaar_Analytics::OUTCOME_ANSWERED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'f', 'created' => $freshTs ],
 		];
 
 		$store->purge_expired();
@@ -407,9 +407,9 @@ class AnalyticsTest extends TestCase {
 	public function test_record_purges_expired_rows_lazily(): void {
 		$store = $this->store();
 
-		$oldTs = time() - ( ( Fahad_AI_Analytics::MAX_AGE_DAYS + 5 ) * DAY_IN_SECONDS );
-		$this->options[ Fahad_AI_Analytics::OPTION ] = [
-			'old' => [ 'id' => 'old', 'question' => 'stale', 'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ANSWERED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'o', 'created' => $oldTs ],
+		$oldTs = time() - ( ( Dukandaar_Analytics::MAX_AGE_DAYS + 5 ) * DAY_IN_SECONDS );
+		$this->options[ Dukandaar_Analytics::OPTION ] = [
+			'old' => [ 'id' => 'old', 'question' => 'stale', 'tools' => [], 'outcome' => Dukandaar_Analytics::OUTCOME_ANSWERED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'o', 'created' => $oldTs ],
 		];
 
 		// Recording a new turn opportunistically evicts the stale row.
@@ -450,7 +450,7 @@ class AnalyticsTest extends TestCase {
 	// ── corrupted option resilience ─────────────────────────────────────────────
 
 	public function test_a_corrupted_option_is_treated_as_empty(): void {
-		$this->options[ Fahad_AI_Analytics::OPTION ] = 'corrupted-not-an-array';
+		$this->options[ Dukandaar_Analytics::OPTION ] = 'corrupted-not-an-array';
 
 		$res = $this->store()->record( $this->event() );
 

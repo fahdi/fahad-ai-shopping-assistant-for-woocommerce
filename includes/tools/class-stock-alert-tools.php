@@ -13,12 +13,12 @@ require_once dirname( __DIR__ ) . '/class-stock-alerts.php';
 /**
  * Back-in-stock & price-drop alert tool (issue #51), the agent-facing surface.
  *
- * A drop-in feature pack (same pattern as Fahad_AI_Catalog_Tools): a self-contained
+ * A drop-in feature pack (same pattern as Dukandaar_Catalog_Tools): a self-contained
  * class in its own file under includes/tools/ that self-registers a provider at the
- * bottom via Fahad_AI_Tool_Registry::register_pack(). The bootstrap (and the test
+ * bottom via Dukandaar_Tool_Registry::register_pack(). The bootstrap (and the test
  * bootstrap) glob-require everything here, so adding this pack is just new files , 
  * NO edits to the plugin bootstrap, the test bootstrap, the registry, or the agent
- * loop. The persistence + notification engine lives in Fahad_AI_Stock_Alerts; this
+ * loop. The persistence + notification engine lives in Dukandaar_Stock_Alerts; this
  * class is only the tool the model calls.
  *
  * Tool provided:
@@ -39,13 +39,13 @@ require_once dirname( __DIR__ ) . '/class-stock-alerts.php';
  * ─── CONSENT / ANTI-SPAM ─────────────────────────────────────────────────────────
  *
  * The tool records a PENDING subscription only and asks the shopper to confirm via a
- * link emailed to them (double opt-in, handled by Fahad_AI_Stock_Alerts). It does
+ * link emailed to them (double opt-in, handled by Dukandaar_Stock_Alerts). It does
  * NOT activate the alert. This, not the model's word, is the anti-spam guarantee.
  *
  * ─── PRIVACY ─────────────────────────────────────────────────────────────────────
  *
  * The shopper's email is PII. The tool RESULT (which the model sees) never echoes the
- * raw address, at most a masked form via Fahad_AI_Auth::mask_email, so the address
+ * raw address, at most a masked form via Dukandaar_Auth::mask_email, so the address
  * stays out of model context. The real (unmasked) address lives only in the store and
  * the confirmation email envelope.
  *
@@ -53,14 +53,14 @@ require_once dirname( __DIR__ ) . '/class-stock-alerts.php';
  * giving an email, so it is not login-gated. Authorization for the later
  * confirm/unsubscribe actions is the signed token, not a session.
  */
-final class Fahad_AI_Stock_Alert_Tools {
+final class Dukandaar_Stock_Alert_Tools {
 
 	/**
 	 * Append the stock-alert tool to the registry's tool list.
 	 *
 	 * Registered as a pack provider (see register_pack() at file scope). Static , 
 	 * the pack holds no per-instance state; it delegates to the
-	 * Fahad_AI_Stock_Alerts singleton.
+	 * Dukandaar_Stock_Alerts singleton.
 	 *
 	 * @param array $tools Existing tool definitions.
 	 * @return array Tools with the stock-alert tool appended.
@@ -94,7 +94,7 @@ final class Fahad_AI_Stock_Alert_Tools {
 	 *
 	 * Grounds the in-stock check in the real product, REFUSES a back-in-stock alert
 	 * for an in-stock item (no fake scarcity), then records a pending double-opt-in
-	 * subscription via Fahad_AI_Stock_Alerts and tells the shopper to confirm by
+	 * subscription via Dukandaar_Stock_Alerts and tells the shopper to confirm by
 	 * email. Never echoes the raw email back (PII): the model-facing result carries a
 	 * masked address only, and the unmasked address lives only in the store + the
 	 * confirmation email.
@@ -105,12 +105,12 @@ final class Fahad_AI_Stock_Alert_Tools {
 		$product_id   = absint( $input['product_id'] ?? 0 );
 		$variation_id = absint( $input['variation_id'] ?? 0 );
 		$email        = sanitize_email( (string) ( $input['email'] ?? '' ) );
-		$type         = sanitize_text_field( (string) ( $input['type'] ?? Fahad_AI_Stock_Alerts::TYPE_BACK_IN_STOCK ) );
+		$type         = sanitize_text_field( (string) ( $input['type'] ?? Dukandaar_Stock_Alerts::TYPE_BACK_IN_STOCK ) );
 
 		// Validate email early so a clearly-bad address is rejected before any lookup.
 		if ( ! is_email( $email ) ) {
 			return [
-				'error' => __( 'I need a valid email address to set up the alert.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error' => __( 'I need a valid email address to set up the alert.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -120,20 +120,20 @@ final class Fahad_AI_Stock_Alert_Tools {
 
 		if ( ! $product instanceof WC_Product ) {
 			return [
-				'error' => __( 'I could not find that product, so I cannot set up an alert for it.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error' => __( 'I could not find that product, so I cannot set up an alert for it.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
-		$type = ( Fahad_AI_Stock_Alerts::TYPE_PRICE_DROP === $type )
-			? Fahad_AI_Stock_Alerts::TYPE_PRICE_DROP
-			: Fahad_AI_Stock_Alerts::TYPE_BACK_IN_STOCK;
+		$type = ( Dukandaar_Stock_Alerts::TYPE_PRICE_DROP === $type )
+			? Dukandaar_Stock_Alerts::TYPE_PRICE_DROP
+			: Dukandaar_Stock_Alerts::TYPE_BACK_IN_STOCK;
 
 		// NO FAKE SCARCITY: a back-in-stock alert for an IN-STOCK item is refused.
-		if ( Fahad_AI_Stock_Alerts::TYPE_BACK_IN_STOCK === $type && $product->is_in_stock() ) {
+		if ( Dukandaar_Stock_Alerts::TYPE_BACK_IN_STOCK === $type && $product->is_in_stock() ) {
 			return [
 				'refused' => true,
 				'reason'  => 'in_stock',
-				'message' => __( 'That item is in stock right now, so there is no need for a back-in-stock alert, you can buy it now. I can watch it for a price drop instead if you like.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message' => __( 'That item is in stock right now, so there is no need for a back-in-stock alert, you can buy it now. I can watch it for a price drop instead if you like.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -143,11 +143,11 @@ final class Fahad_AI_Stock_Alert_Tools {
 		$parent       = $product->get_parent_id();
 		$store_product = ( $variation_id > 0 && $parent > 0 ) ? $parent : $product_id;
 
-		$result = Fahad_AI_Stock_Alerts::instance()->subscribe( $store_product, $email, $variation_id, $type );
+		$result = Dukandaar_Stock_Alerts::instance()->subscribe( $store_product, $email, $variation_id, $type );
 
 		if ( empty( $result['ok'] ) ) {
 			return [
-				'error' => $result['error'] ?? __( 'I could not set up that alert. Please try again.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error' => $result['error'] ?? __( 'I could not set up that alert. Please try again.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -156,8 +156,8 @@ final class Fahad_AI_Stock_Alert_Tools {
 			'pending'    => true,
 			'type'       => $type,
 			// Masked, not raw, keep the address out of model context.
-			'email'      => Fahad_AI_Auth::mask_email( $email ),
-			'message'    => __( 'Almost done! I have set up the alert and sent a confirmation link to your email, click it to activate the alert. You can unsubscribe anytime in one click.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'email'      => Dukandaar_Auth::mask_email( $email ),
+			'message'    => __( 'Almost done! I have set up the alert and sent a confirmation link to your email, click it to activate the alert. You can unsubscribe anytime in one click.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 		];
 	}
 }
@@ -167,19 +167,19 @@ final class Fahad_AI_Stock_Alert_Tools {
 // the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test pcov window.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Stock_Alert_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Stock_Alert_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd
 
 // Wire the store's WooCommerce + WordPress hooks (stock/price notifications and the
 // confirm/unsubscribe + GDPR handlers). Guarded with function_exists so this file can
 // be glob-loaded by the unit-test bootstrap (which loads tool packs before
 // Brain\Monkey patches WordPress functions per-test) without fataling on a missing
-// add_action, the unit suites exercise Fahad_AI_Stock_Alerts directly and stub WP
+// add_action, the unit suites exercise Dukandaar_Stock_Alerts directly and stub WP
 // functions themselves; in WordPress add_action is always defined so the hooks are
-// registered for real. Mirrors how Fahad_AI_Memory_Tools wires its filter.
+// registered for real. Mirrors how Dukandaar_Memory_Tools wires its filter.
 // @codeCoverageIgnoreStart
 // Reason: file-scope hook-wiring guard runs once at bootstrap require time, before PHPUnit's per-test pcov window.
 if ( function_exists( 'add_action' ) && function_exists( 'add_filter' ) ) {
-	Fahad_AI_Stock_Alerts::init_hooks();
+	Dukandaar_Stock_Alerts::init_hooks();
 }
 // @codeCoverageIgnoreEnd

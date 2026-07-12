@@ -18,16 +18,16 @@
  * All endpoints are read-only and expose only published catalog data; the handoff only
  * returns URLs. Nothing here mutates the store or charges anyone.
  *
- * @package Fahad_AI
+ * @package Dukandaar
  */
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Agent_Gateway {
+final class Dukandaar_Agent_Gateway {
 
-	private static ?Fahad_AI_Agent_Gateway $instance = null;
+	private static ?Dukandaar_Agent_Gateway $instance = null;
 
-	public static function instance(): Fahad_AI_Agent_Gateway {
+	public static function instance(): Dukandaar_Agent_Gateway {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}
@@ -39,7 +39,7 @@ final class Fahad_AI_Agent_Gateway {
 	public function register_routes(): void {
 		foreach ( [ 'llms', 'catalog', 'search', 'product', 'checkout-handoff' ] as $path ) {
 			$method = 'rest_' . str_replace( '-', '_', $path );
-			register_rest_route( 'fahad-ai/v1', '/agent/' . $path, [
+			register_rest_route( 'dukandaar/v1', '/agent/' . $path, [
 				'methods'             => 'GET',
 				'callback'            => [ $this, $method ],
 				// Intentionally public: every endpoint is read-only and returns only
@@ -54,8 +54,8 @@ final class Fahad_AI_Agent_Gateway {
 
 	public function rest_llms( WP_REST_Request $request ) {
 		$store   = (string) get_bloginfo( 'name' );
-		$catalog = rest_url( 'fahad-ai/v1/agent/catalog' );
-		$search  = rest_url( 'fahad-ai/v1/agent/search' );
+		$catalog = rest_url( 'dukandaar/v1/agent/catalog' );
+		$search  = rest_url( 'dukandaar/v1/agent/search' );
 
 		$body = "# {$store}, AI agent guide\n"
 			. "\n"
@@ -101,13 +101,13 @@ final class Fahad_AI_Agent_Gateway {
 
 	public function rest_search( WP_REST_Request $request ) {
 		$query  = sanitize_text_field( (string) $request->get_param( 'q' ) );
-		$result = Fahad_AI_Tool_Registry::instance()->dispatch( 'search_products', [ 'query' => $query ] );
+		$result = Dukandaar_Tool_Registry::instance()->dispatch( 'search_products', [ 'query' => $query ] );
 		return rest_ensure_response( $result );
 	}
 
 	public function rest_product( WP_REST_Request $request ) {
 		$id     = (int) $request->get_param( 'id' );
-		$result = Fahad_AI_Tool_Registry::instance()->dispatch( 'get_product_details', [ 'product_id' => $id ] );
+		$result = Dukandaar_Tool_Registry::instance()->dispatch( 'get_product_details', [ 'product_id' => $id ] );
 		return rest_ensure_response( $result );
 	}
 
@@ -116,7 +116,7 @@ final class Fahad_AI_Agent_Gateway {
 	public function rest_checkout_handoff( WP_REST_Request $request ) {
 		$ids = $this->parse_ids( $request->get_param( 'ids' ) );
 		if ( empty( $ids ) ) {
-			return new WP_Error( 'fahad_ai_no_products', __( 'No products specified.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 400 ] );
+			return new WP_Error( 'dukandaar_no_products', __( 'No products specified.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 400 ] );
 		}
 
 		// A WooCommerce add-to-cart URL a HUMAN opens to populate their own cart, then
@@ -132,7 +132,7 @@ final class Fahad_AI_Agent_Gateway {
 		}
 
 		return rest_ensure_response( [
-			'note'  => __( 'Open these links in a browser to add the items and check out. Payment is completed by the shopper, not the agent.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'note'  => __( 'Open these links in a browser to add the items and check out. Payment is completed by the shopper, not the agent.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			'items' => $handoff,
 		] );
 	}

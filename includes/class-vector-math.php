@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Vector_Math {
+final class Dukandaar_Vector_Math {
 
 	/**
 	 * Pack a float vector to its little-endian float32 binary form.

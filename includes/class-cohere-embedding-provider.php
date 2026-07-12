@@ -15,7 +15,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Cohere_Embedding_Provider implements Fahad_AI_Embedding_Provider {
+final class Dukandaar_Cohere_Embedding_Provider implements Dukandaar_Embedding_Provider {
 
 	private const ENDPOINT = 'https://api.cohere.com/v2/embed';
 
@@ -43,7 +43,7 @@ final class Fahad_AI_Cohere_Embedding_Provider implements Fahad_AI_Embedding_Pro
 			return [];
 		}
 		if ( ! $this->is_available() ) {
-			throw new Fahad_AI_Embedding_Exception( 'No Cohere API key configured.', false );
+			throw new Dukandaar_Embedding_Exception( 'No Cohere API key configured.', false );
 		}
 
 		$response = wp_remote_post(
@@ -66,19 +66,19 @@ final class Fahad_AI_Cohere_Embedding_Provider implements Fahad_AI_Embedding_Pro
 		);
 
 		if ( is_wp_error( $response ) ) {
-			throw new Fahad_AI_Embedding_Exception( esc_html( 'Cohere transport error: ' . $response->get_error_message() ), true );
+			throw new Dukandaar_Embedding_Exception( esc_html( 'Cohere transport error: ' . $response->get_error_message() ), true );
 		}
 
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $code ) {
 			$retryable = ( 429 === $code || $code >= 500 );
 			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- message is escaped; 2nd arg is a bool flag, not output.
-			throw new Fahad_AI_Embedding_Exception( esc_html( sprintf( 'Cohere API returned HTTP %d.', $code ) ), $retryable );
+			throw new Dukandaar_Embedding_Exception( esc_html( sprintf( 'Cohere API returned HTTP %d.', $code ) ), $retryable );
 		}
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( empty( $data['embeddings']['float'] ) || ! is_array( $data['embeddings']['float'] ) ) {
-			throw new Fahad_AI_Embedding_Exception( 'Malformed Cohere response.', false );
+			throw new Dukandaar_Embedding_Exception( 'Malformed Cohere response.', false );
 		}
 
 		return array_map(

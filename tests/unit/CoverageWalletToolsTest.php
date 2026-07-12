@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental line-coverage tests for Fahad_AI_Wallet_Tools.
+ * Supplemental line-coverage tests for Dukandaar_Wallet_Tools.
  *
  * The primary behavioural suite lives in WalletToolsTest (it drives every tool
  * through the production registry dispatch path with a Mockery provider). This
@@ -20,10 +20,10 @@
  *     adapter must be caught and turned into null, never fatal the request).
  *
  * Conventions mirror WalletToolsTest exactly: Brain\Monkey for WP/Woo functions,
- * the wallet PROVIDER injected through the `fahad_ai_wallet_provider` filter, and the
+ * the wallet PROVIDER injected through the `dukandaar_wallet_provider` filter, and the
  * registry singleton + static pack list snapshotted/restored so a case here neither
  * inherits another suite's packs nor leaks the wallet pack we register. Everything
- * runs through Fahad_AI_Tool_Registry::instance()->dispatch(), the real path.
+ * runs through Dukandaar_Tool_Registry::instance()->dispatch(), the real path.
  *
  * Unlike the headline suite, several cases here inject a PLAIN provider (an array of
  * closures, or an object missing a method) rather than a Mockery mock, that is the
@@ -53,7 +53,7 @@ class CoverageWalletToolsTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
-		$this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+		$this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
 		// Default to a logged-in customer (id 5) so the central login gate passes and
 		// the tool callbacks actually run (the branches under test live in them).
@@ -69,7 +69,7 @@ class CoverageWalletToolsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
@@ -79,20 +79,20 @@ class CoverageWalletToolsTest extends TestCase {
 	 * Tools + registry singletons, then registers the wallet pack's REAL provider,
 	 * exactly as the pack's file-scope self-registration does in production.
 	 */
-	private function registry(): Fahad_AI_Tool_Registry {
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+	private function registry(): Dukandaar_Tool_Registry {
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-		Fahad_AI_Tool_Registry::reset_packs();
-		Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Wallet_Tools', 'register' ] );
+		Dukandaar_Tool_Registry::reset_packs();
+		Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Wallet_Tools', 'register' ] );
 
-		return Fahad_AI_Tool_Registry::instance();
+		return Dukandaar_Tool_Registry::instance();
 	}
 
 	/**
-	 * Register an arbitrary wallet provider value on the `fahad_ai_wallet_provider`
+	 * Register an arbitrary wallet provider value on the `dukandaar_wallet_provider`
 	 * filter for the duration of the test, passing every OTHER hook (notably the
-	 * registry's own `fahad_ai_register_tools`) through to its default so the tool
+	 * registry's own `dukandaar_register_tools`) through to its default so the tool
 	 * list still builds normally.
 	 *
 	 * @param object|array|null $provider The provider to resolve (object, array of
@@ -101,7 +101,7 @@ class CoverageWalletToolsTest extends TestCase {
 	private function provide( $provider ): void {
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $hook, $value = null ) use ( $provider ) {
-				return ( 'fahad_ai_wallet_provider' === $hook ) ? $provider : $value;
+				return ( 'dukandaar_wallet_provider' === $hook ) ? $provider : $value;
 			}
 		);
 	}
@@ -368,19 +368,19 @@ class CoverageWalletToolsTest extends TestCase {
 	// ── file-scope self-registration (413) ──────────────────────────────────────
 
 	/**
-	 * The pack file self-registers via Fahad_AI_Tool_Registry::register_pack() at file
+	 * The pack file self-registers via Dukandaar_Tool_Registry::register_pack() at file
 	 * scope (line 413) the moment it is require'd, the only wiring needed. The bootstrap
 	 * glob-requires includes/tools/*.php, so the class is loaded and its register()
 	 * method is a valid, callable pack provider. Asserting that proves the file-scope
 	 * registration call references a real, invokable provider.
 	 */
 	public function test_pack_self_registration_references_a_callable_register(): void {
-		$this->assertTrue( class_exists( 'Fahad_AI_Wallet_Tools' ) );
-		$this->assertTrue( is_callable( [ 'Fahad_AI_Wallet_Tools', 'register' ] ) );
+		$this->assertTrue( class_exists( 'Dukandaar_Wallet_Tools' ) );
+		$this->assertTrue( is_callable( [ 'Dukandaar_Wallet_Tools', 'register' ] ) );
 
 		// And register() really appends the three wallet tools onto a tool list, the
 		// exact contract the file-scope register_pack() wires up.
-		$tools = Fahad_AI_Wallet_Tools::register( [] );
+		$tools = Dukandaar_Wallet_Tools::register( [] );
 		$names = array_column( $tools, 'name' );
 		$this->assertSame( [ 'get_wallet_balance', 'top_up', 'pay_with_credit', 'get_referral_link' ], $names );
 	}

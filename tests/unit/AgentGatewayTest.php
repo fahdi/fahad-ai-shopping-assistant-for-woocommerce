@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Agent_Gateway (Epic C, store-as-an-agent).
+ * Unit tests for Dukandaar_Agent_Gateway (Epic C, store-as-an-agent).
  *
  * Covers route registration, the llms.txt + catalog feed, the tool-reusing search /
  * product endpoints, and the human checkout handoff, every branch, so an agent can
@@ -21,7 +21,7 @@ final class AgentGatewayTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		Monkey\setUp();
-		$this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+		$this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
 		Functions\when( 'rest_ensure_response' )->alias( static fn ( $x ) => $x );
 		Functions\when( 'wp_strip_all_tags' )->alias( static fn ( $s ) => trim( (string) strip_tags( (string) $s ) ) );
@@ -32,22 +32,22 @@ final class AgentGatewayTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
-		( new ReflectionProperty( Fahad_AI_Agent_Gateway::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+		( new ReflectionProperty( Dukandaar_Agent_Gateway::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
-	private function gateway(): Fahad_AI_Agent_Gateway {
-		( new ReflectionProperty( Fahad_AI_Agent_Gateway::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Agent_Gateway::instance();
+	private function gateway(): Dukandaar_Agent_Gateway {
+		( new ReflectionProperty( Dukandaar_Agent_Gateway::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Agent_Gateway::instance();
 	}
 
 	/** Reset the registry/Tools singletons so the gateway dispatches the REAL built-in tools. */
 	private function resetRegistry(): void {
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
-		Fahad_AI_Tool_Registry::reset_packs();
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+		Dukandaar_Tool_Registry::reset_packs();
 	}
 
 	public function test_register_routes_registers_the_agent_endpoints(): void {
@@ -71,7 +71,7 @@ final class AgentGatewayTest extends TestCase {
 		$body     = $response->get_data();
 
 		$this->assertStringContainsString( 'Test Store', $body );
-		$this->assertStringContainsString( 'https://shop.test/wp-json/fahad-ai/v1/agent/catalog', $body );
+		$this->assertStringContainsString( 'https://shop.test/wp-json/dukandaar/v1/agent/catalog', $body );
 		$this->assertStringContainsString( 'Do not fabricate', $body );
 	}
 
@@ -138,6 +138,6 @@ final class AgentGatewayTest extends TestCase {
 		$result = $this->gateway()->rest_checkout_handoff( new WP_REST_Request( [ 'ids' => '' ] ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'fahad_ai_no_products', $result->get_error_code() );
+		$this->assertSame( 'dukandaar_no_products', $result->get_error_code() );
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Tool_Registry.
+ * Unit tests for Dukandaar_Tool_Registry.
  *
  * Red → Green → Refactor cycle.
  * WP/WC functions mocked via Brain\Monkey; WC objects via Mockery; singletons
@@ -8,7 +8,7 @@
  *
  * The registry is the single source of truth for tool specs (fed to the LLM)
  * AND tool execution (dispatch). Built-ins are seeded in code and then exposed
- * to third parties through `apply_filters( 'fahad_ai_register_tools', $tools )`.
+ * to third parties through `apply_filters( 'dukandaar_register_tools', $tools )`.
  */
 
 use Brain\Monkey;
@@ -41,7 +41,7 @@ class ToolRegistryTest extends TestCase {
         Monkey\setUp();
 
         $this->pack_snapshot = $this->snapshot_packs();
-        Fahad_AI_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::reset_packs();
 
         // Mirror the tool-layer stubs ToolsTest uses, so a real built-in tool
         // (search_products) can execute through dispatch().
@@ -72,24 +72,24 @@ class ToolRegistryTest extends TestCase {
 
     /** Read the registry's static pack-provider list via reflection. */
     private function snapshot_packs(): array {
-        $prop = new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' );
+        $prop = new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' );
         return (array) $prop->getValue();
     }
 
     /** Restore the registry's static pack-provider list via reflection. */
     private function restore_packs( array $providers ): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $providers );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $providers );
     }
 
     /**
      * Fresh registry instance with the cached tool list cleared.
-     * Also resets Fahad_AI_Tools so the built-in callbacks bind to a clean
+     * Also resets Dukandaar_Tools so the built-in callbacks bind to a clean
      * tools singleton.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
-        return Fahad_AI_Tool_Registry::instance();
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+        return Dukandaar_Tool_Registry::instance();
     }
 
     // ── built-in registration ───────────────────────────────────────────────
@@ -150,7 +150,7 @@ class ToolRegistryTest extends TestCase {
         // A third-party tool whose callback throws must NOT bubble the exception
         // up and fatal the request, dispatch returns an error array instead.
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'boom',
                     'description' => 'Always explodes.',
@@ -179,7 +179,7 @@ class ToolRegistryTest extends TestCase {
         $invoked = false;
 
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) use ( &$invoked ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'wallet_balance',
                     'description' => 'Return the customer wallet balance.',
@@ -232,7 +232,7 @@ class ToolRegistryTest extends TestCase {
     public function test_register_pack_tool_is_advertised_and_dispatchable(): void {
         $invoked = false;
 
-        Fahad_AI_Tool_Registry::register_pack(
+        Dukandaar_Tool_Registry::register_pack(
             static function ( array $tools ) use ( &$invoked ): array {
                 $tools[] = [
                     'name'        => 'pack_tool',
@@ -277,7 +277,7 @@ class ToolRegistryTest extends TestCase {
      * static (survive instance reset); only the built tool LIST is per-instance.
      */
     public function test_registered_packs_survive_a_singleton_instance_reset(): void {
-        Fahad_AI_Tool_Registry::register_pack(
+        Dukandaar_Tool_Registry::register_pack(
             static function ( array $tools ): array {
                 $tools[] = [
                     'name'        => 'durable_pack_tool',
@@ -291,15 +291,15 @@ class ToolRegistryTest extends TestCase {
 
         // First build, then blow away the instance (NOT the static provider list).
         $this->assertContains( 'durable_pack_tool', array_column( $this->registry()->specs(), 'name' ) );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
         // A brand-new instance must rebuild its list and STILL include the pack.
-        $names = array_column( Fahad_AI_Tool_Registry::instance()->specs(), 'name' );
+        $names = array_column( Dukandaar_Tool_Registry::instance()->specs(), 'name' );
         $this->assertContains( 'durable_pack_tool', $names, 'pack provider was lost on singleton reset' );
     }
 
     /**
-     * The first-party pack path and the third-party `fahad_ai_register_tools`
+     * The first-party pack path and the third-party `dukandaar_register_tools`
      * filter must COEXIST: a tool from each is present and dispatchable in the same
      * registry. This proves the refactor layered packs in front of the filter
      * without breaking the established add-on extension point.
@@ -309,7 +309,7 @@ class ToolRegistryTest extends TestCase {
         $filter_ran = false;
 
         // First-party pack contributes pack_tool.
-        Fahad_AI_Tool_Registry::register_pack(
+        Dukandaar_Tool_Registry::register_pack(
             static function ( array $tools ) use ( &$pack_ran ): array {
                 $tools[] = [
                     'name'        => 'pack_tool',
@@ -326,7 +326,7 @@ class ToolRegistryTest extends TestCase {
 
         // Third-party add-on contributes wallet_balance via the public filter.
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) use ( &$filter_ran ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'wallet_balance',
                     'description' => 'Third-party wallet balance.',
@@ -360,7 +360,7 @@ class ToolRegistryTest extends TestCase {
 
     public function test_entry_missing_callback_is_skipped(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'no_callback',
                     'description' => 'Has a spec but no callback.',
@@ -379,7 +379,7 @@ class ToolRegistryTest extends TestCase {
 
     public function test_entry_with_non_callable_callback_is_skipped(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'bad_callback',
                     'description' => 'Callback is a string, not callable.',
@@ -395,7 +395,7 @@ class ToolRegistryTest extends TestCase {
 
     public function test_entry_missing_name_is_skipped(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'description' => 'No name at all.',
                     'parameters'  => [ 'type' => 'object', 'properties' => new stdClass() ],
@@ -411,7 +411,7 @@ class ToolRegistryTest extends TestCase {
 
     public function test_entry_with_invalid_parameters_schema_is_skipped(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 // parameters missing the required 'properties' key.
                 $tools[] = [
                     'name'        => 'bad_schema',
@@ -436,7 +436,7 @@ class ToolRegistryTest extends TestCase {
      */
     private function register_personal_tool( bool &$invoked ): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) use ( &$invoked ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'order_status',
                     'description' => 'Look up the caller\'s most recent order status.',
@@ -477,7 +477,7 @@ class ToolRegistryTest extends TestCase {
     /**
      * For a logged-in caller the central gate is satisfied, so dispatch() proceeds
      * to the personal tool's callback exactly like a normal tool. (Per-RECORD
-     * ownership is still the callback's job, see Fahad_AI_Auth::user_owns.)
+     * ownership is still the callback's job, see Dukandaar_Auth::user_owns.)
      */
     public function test_personal_tool_runs_for_logged_in_user(): void {
         Functions\when( 'is_user_logged_in' )->justReturn( true );
@@ -502,7 +502,7 @@ class ToolRegistryTest extends TestCase {
 
         $invoked = false;
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) use ( &$invoked ) {
-            if ( 'fahad_ai_register_tools' === $hook ) {
+            if ( 'dukandaar_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'store_hours',
                     'description' => 'Public store hours, no login needed.',

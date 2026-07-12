@@ -1,6 +1,6 @@
 <?php
 /**
- * Line-coverage hardening for Fahad_AI_Catalog_Tools (includes/tools/class-catalog-tools.php).
+ * Line-coverage hardening for Dukandaar_Catalog_Tools (includes/tools/class-catalog-tools.php).
  *
  * Companion to CatalogToolsTest: this suite drives EVERY reachable statement and
  * branch of the catalog pack through the production register_pack() + dispatch()
@@ -11,7 +11,7 @@
  * list snapshotted/restored so this suite neither inherits nor leaks packs.
  *
  * NOTE on the one residual uncovered line (the file-scope
- * `Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Catalog_Tools', 'register' ] );`
+ * `Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Catalog_Tools', 'register' ] );`
  * at the bottom of the source file): that statement is a load-time side effect
  * that runs exactly ONCE when the bootstrap require_once's the file, BEFORE
  * pcov's per-test collection window opens, so it is never attributed to a test.
@@ -43,7 +43,7 @@ class CoverageCatalogToolsTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
-		$this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+		$this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
 		// Tool-layer stubs (mirror CatalogToolsTest::setUp) so the shared product
 		// formatter the catalog tools reuse runs against mocked products.
@@ -65,7 +65,7 @@ class CoverageCatalogToolsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
@@ -75,14 +75,14 @@ class CoverageCatalogToolsTest extends TestCase {
 	 * through the pack's REAL provider, the same path the file-scope
 	 * self-registration uses in production.
 	 */
-	private function registry(): Fahad_AI_Tool_Registry {
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+	private function registry(): Dukandaar_Tool_Registry {
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-		Fahad_AI_Tool_Registry::reset_packs();
-		Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Catalog_Tools', 'register' ] );
+		Dukandaar_Tool_Registry::reset_packs();
+		Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Catalog_Tools', 'register' ] );
 
-		return Fahad_AI_Tool_Registry::instance();
+		return Dukandaar_Tool_Registry::instance();
 	}
 
 	/** Minimal product mock that the shared formatter can summarise. */
@@ -110,14 +110,14 @@ class CoverageCatalogToolsTest extends TestCase {
 		// registry. Call it directly against a known base list to assert it APPENDS
 		// (does not replace) and preserves order: get_top_products then list_categories.
 		$base  = [ [ 'name' => 'pre_existing' ] ];
-		$tools = Fahad_AI_Catalog_Tools::register( $base );
+		$tools = Dukandaar_Catalog_Tools::register( $base );
 
 		$names = array_column( $tools, 'name' );
 		$this->assertSame( [ 'pre_existing', 'get_top_products', 'list_categories' ], $names );
 	}
 
 	public function test_register_top_products_entry_is_well_formed_with_callback(): void {
-		$tools = array_column( Fahad_AI_Catalog_Tools::register( [] ), null, 'name' );
+		$tools = array_column( Dukandaar_Catalog_Tools::register( [] ), null, 'name' );
 
 		$entry = $tools['get_top_products'];
 		$this->assertIsString( $entry['description'] );
@@ -129,7 +129,7 @@ class CoverageCatalogToolsTest extends TestCase {
 	}
 
 	public function test_register_list_categories_entry_is_well_formed_with_callback(): void {
-		$tools = array_column( Fahad_AI_Catalog_Tools::register( [] ), null, 'name' );
+		$tools = array_column( Dukandaar_Catalog_Tools::register( [] ), null, 'name' );
 
 		$entry = $tools['list_categories'];
 		$this->assertIsString( $entry['description'] );
@@ -141,7 +141,7 @@ class CoverageCatalogToolsTest extends TestCase {
 	public function test_top_products_callback_closure_forwards_input(): void {
 		// Invoking the registered closure (rather than dispatch) executes the
 		// fn( array $input ) => self::get_top_products( $input ) arrow on its own.
-		$tools    = array_column( Fahad_AI_Catalog_Tools::register( [] ), null, 'name' );
+		$tools    = array_column( Dukandaar_Catalog_Tools::register( [] ), null, 'name' );
 		$callback = $tools['get_top_products']['callback'];
 
 		Functions\when( 'wc_get_products' )->justReturn( [] );
@@ -152,7 +152,7 @@ class CoverageCatalogToolsTest extends TestCase {
 	}
 
 	public function test_list_categories_callback_closure_forwards_input(): void {
-		$tools    = array_column( Fahad_AI_Catalog_Tools::register( [] ), null, 'name' );
+		$tools    = array_column( Dukandaar_Catalog_Tools::register( [] ), null, 'name' );
 		$callback = $tools['list_categories']['callback'];
 
 		Functions\when( 'get_terms' )->justReturn( [] );

@@ -3,9 +3,9 @@
  * Fixture: a GUEST asks "where's my order?" → grounded escalate to log in (issue #17).
  *
  * The order tools (get_my_orders, get_order_status) are auth-gated personal-data
- * tools: they self-register via Fahad_AI_Tool_Registry::register_pack() and declare
+ * tools: they self-register via Dukandaar_Tool_Registry::register_pack() and declare
  * `'personal' => true`, so the registry's central login gate
- * (Fahad_AI_Tool_Registry::dispatch → Fahad_AI_Auth::guard_logged_in) blocks a guest
+ * (Dukandaar_Tool_Registry::dispatch → Dukandaar_Auth::guard_logged_in) blocks a guest
  * BEFORE the callback runs and returns the standard login-required error. The model,
  * seeing it has no authenticated order data, must escalate the guest to log in and , 
  * the anti-hallucination point of the feature, invent NO order number, status, or

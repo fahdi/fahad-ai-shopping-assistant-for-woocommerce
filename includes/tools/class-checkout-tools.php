@@ -8,9 +8,9 @@ defined( 'ABSPATH' ) || exit;
  * blockers right before purchase by letting the agent ground its answers in the
  * REAL session cart, shipping options and coupon savings, then hand the shopper
  * off to the WooCommerce checkout. A drop-in feature pack following the reference
- * pattern in Fahad_AI_Catalog_Tools / Fahad_AI_Shipping_Tools: a self-contained
+ * pattern in Dukandaar_Catalog_Tools / Dukandaar_Shipping_Tools: a self-contained
  * class in its own file under includes/tools/ that self-registers a provider at
- * file scope via Fahad_AI_Tool_Registry::register_pack(), no bootstrap,
+ * file scope via Dukandaar_Tool_Registry::register_pack(), no bootstrap,
  * test-bootstrap, or harness edits.
  *
  * Tools provided (all operate on the SHARED session cart, so NONE is personal /
@@ -42,7 +42,7 @@ defined( 'ABSPATH' ) || exit;
  * apply_coupon_code). Those WC surfaces, WC()->cart, WC()->session,
  * WC()->shipping(), WC_Shipping_Zones, WC_Discounts, are concrete classes /
  * singletons that Brain\Monkey (a FUNCTION mocker) cannot intercept, so the unit
- * suite drives a tiny subclass (Fahad_AI_Checkout_Tools_Stub) that overrides the
+ * suite drives a tiny subclass (Dukandaar_Checkout_Tools_Stub) that overrides the
  * seams with canned data. Everything else is pure array shaping / decision logic
  * over those normalized snapshots.
  *
@@ -50,7 +50,7 @@ defined( 'ABSPATH' ) || exit;
  * `final`, SOLELY so the test suite can subclass it to override the seams. No
  * production code subclasses it.
  */
-class Fahad_AI_Checkout_Tools {
+class Dukandaar_Checkout_Tools {
 
 	/**
 	 * Append the checkout-assist tools to the registry's tool list.
@@ -137,7 +137,7 @@ class Fahad_AI_Checkout_Tools {
 		if ( ! empty( $cart['empty'] ) ) {
 			return [
 				'empty'        => true,
-				'message'      => __( 'Your cart is empty, so there is nothing to check out yet. Add something and I can summarise your order.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message'      => __( 'Your cart is empty, so there is nothing to check out yet. Add something and I can summarise your order.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'checkout_url' => self::checkout_url(),
 				'cart_url'     => self::cart_url(),
 			];
@@ -180,7 +180,7 @@ class Fahad_AI_Checkout_Tools {
 		if ( '' === $method_id ) {
 			return [
 				'success' => false,
-				'error'   => __( 'Please tell me which shipping method to use. I can list the available options from your order summary.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error'   => __( 'Please tell me which shipping method to use. I can list the available options from your order summary.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -191,7 +191,7 @@ class Fahad_AI_Checkout_Tools {
 				'success' => false,
 				'error'   => sprintf(
 					/* translators: %s: the shipping method id the model tried to select */
-					__( '"%s" is not a shipping method available for this order. Please choose one of the methods offered for your destination.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( '"%s" is not a shipping method available for this order. Please choose one of the methods offered for your destination.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$method_id
 				),
 				'methods' => $shipping['methods'],
@@ -203,7 +203,7 @@ class Fahad_AI_Checkout_Tools {
 		if ( ! $ok ) {
 			return [
 				'success' => false,
-				'error'   => __( 'I could not set that shipping method just now. Please try again.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error'   => __( 'I could not set that shipping method just now. Please try again.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -245,7 +245,7 @@ class Fahad_AI_Checkout_Tools {
 		if ( null === $best ) {
 			return [
 				'applied' => false,
-				'message' => __( 'I couldn\'t find a valid discount code that applies to your cart right now, so there\'s no coupon to add.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message' => __( 'I couldn\'t find a valid discount code that applies to your cart right now, so there\'s no coupon to add.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -276,7 +276,7 @@ class Fahad_AI_Checkout_Tools {
 				'recommended' => true,
 				'message'     => sprintf(
 					/* translators: 1: coupon code, 2: formatted saving amount */
-					__( 'The best code I found is %1$s, which would save about %2$s. Want me to apply it?', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'The best code I found is %1$s, which would save about %2$s. Want me to apply it?', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$base['code'],
 					self::money( (string) $saving )
 				),
@@ -292,7 +292,7 @@ class Fahad_AI_Checkout_Tools {
 				'applied' => false,
 				'error'   => sprintf(
 					/* translators: %s: the coupon code that WooCommerce rejected at apply time */
-					__( 'I tried to apply %s but the store rejected it, it may have just expired or stopped being applicable. No discount was added.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'I tried to apply %s but the store rejected it, it may have just expired or stopped being applicable. No discount was added.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$base['code']
 				),
 			] );
@@ -305,7 +305,7 @@ class Fahad_AI_Checkout_Tools {
 			'applied' => true,
 			'message' => sprintf(
 				/* translators: 1: coupon code, 2: formatted saving amount */
-				__( 'Applied %1$s, you saved about %2$s.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				__( 'Applied %1$s, you saved about %2$s.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				$base['code'],
 				self::money( (string) $saving )
 			),
@@ -707,5 +707,5 @@ class Fahad_AI_Checkout_Tools {
 // file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test PCOV coverage window opens.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Checkout_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Checkout_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

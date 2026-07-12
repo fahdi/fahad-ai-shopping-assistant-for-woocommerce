@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_API_Handler.
+ * Unit tests for Dukandaar_API_Handler.
  *
  * Covers:
  *  - sanitize_messages() , input validation & sanitization
@@ -32,11 +32,11 @@ class ApiHandlerTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
-        Fahad_AI_Tool_Registry::reset_packs();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        Dukandaar_Tool_Registry::reset_packs();
         // Clear any registry list cached by a previous test so the next build sees
         // the now-empty pack list (the built-in contract, not packs).
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
         // Note: sanitize_textarea_field is intentionally NOT stubbed here.
         // Tests that need pass-through behaviour add it individually;
@@ -51,15 +51,15 @@ class ApiHandlerTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
 
-    private function handler(): Fahad_AI_API_Handler {
-        $ref = new ReflectionProperty( Fahad_AI_API_Handler::class, 'instance' );
+    private function handler(): Dukandaar_API_Handler {
+        $ref = new ReflectionProperty( Dukandaar_API_Handler::class, 'instance' );
         $ref->setValue( null, null );
-        return Fahad_AI_API_Handler::instance();
+        return Dukandaar_API_Handler::instance();
     }
 
     // ── stream_one_turn uses the WordPress HTTP API, not raw cURL (WP.org guideline) ──
@@ -69,7 +69,7 @@ class ApiHandlerTest extends TestCase {
     // raw-cURL transport was removed.
 
     public function test_stream_one_turn_uses_http_api_and_parses_message(): void {
-        $this->set_option_alias( [ 'fahad_ai_moonshot_api_key' => 'k', 'fahad_ai_moonshot_model' => 'kimi-k2.6' ] );
+        $this->set_option_alias( [ 'dukandaar_moonshot_api_key' => 'k', 'dukandaar_moonshot_model' => 'kimi-k2.6' ] );
         Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
         Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
         Functions\when( 'wp_remote_post' )->justReturn( [ 'is_eval' => true ] );
@@ -86,7 +86,7 @@ class ApiHandlerTest extends TestCase {
             ] )
         );
 
-        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'stream_one_turn' );
+        $m = new ReflectionMethod( Dukandaar_API_Handler::class, 'stream_one_turn' );
         ob_start();
         [ $text, $tool_calls, $error ] = $m->invoke( $this->handler(), [ [ 'role' => 'user', 'content' => 'hi' ] ], 'moonshot', 0 );
         ob_end_clean();
@@ -105,7 +105,7 @@ class ApiHandlerTest extends TestCase {
     // turn and records the newly-sent ids, so each product appears at most once.
 
     public function test_dedupe_cards_drops_a_product_already_streamed_this_turn(): void {
-        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'dedupe_cards' );
+        $m = new ReflectionMethod( Dukandaar_API_Handler::class, 'dedupe_cards' );
         $h = $this->handler();
 
         $sent = [];
@@ -122,7 +122,7 @@ class ApiHandlerTest extends TestCase {
     }
 
     public function test_dedupe_cards_keeps_unseen_products_and_records_them(): void {
-        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'dedupe_cards' );
+        $m = new ReflectionMethod( Dukandaar_API_Handler::class, 'dedupe_cards' );
         $h = $this->handler();
 
         $sent  = [ 14 => true ];
@@ -136,7 +136,7 @@ class ApiHandlerTest extends TestCase {
     public function test_dedupe_cards_keeps_cards_without_a_usable_id(): void {
         // Defence in depth: a card with no/zero id cannot be deduped reliably, so it
         // passes through rather than being silently dropped.
-        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'dedupe_cards' );
+        $m = new ReflectionMethod( Dukandaar_API_Handler::class, 'dedupe_cards' );
         $h = $this->handler();
 
         $sent  = [];
@@ -153,7 +153,7 @@ class ApiHandlerTest extends TestCase {
     public function test_system_prompt_forbids_currency_entities(): void {
         Functions\when( 'apply_filters' )->alias( fn( $tag, $value ) => $value );
 
-        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+        $prompt = ( new ReflectionMethod( Dukandaar_API_Handler::class, 'get_system_prompt' ) )
             ->invoke( $this->handler() );
 
         $this->assertStringContainsString( 'Never use HTML entities', $prompt );
@@ -169,7 +169,7 @@ class ApiHandlerTest extends TestCase {
     public function test_system_prompt_requires_a_summary_line_with_cards(): void {
         Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
 
-        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+        $prompt = ( new ReflectionMethod( Dukandaar_API_Handler::class, 'get_system_prompt' ) )
             ->invoke( $this->handler() );
 
         // The rule must be phrased as an unconditional requirement, not a soft "you
@@ -188,7 +188,7 @@ class ApiHandlerTest extends TestCase {
     // combining/control character. A raw symbol passes through untouched.
 
     private function normalize_currency_entities( string $text ): string {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'normalize_currency_entities' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'normalize_currency_entities' );
         return $method->invoke( $this->handler(), $text );
     }
 
@@ -231,7 +231,7 @@ class ApiHandlerTest extends TestCase {
     // is U+2013.
 
     private function humanize_text( string $text ): string {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'humanize_text' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'humanize_text' );
         return $method->invoke( $this->handler(), $text );
     }
 
@@ -271,7 +271,7 @@ class ApiHandlerTest extends TestCase {
     public function test_system_prompt_forbids_em_dashes_and_asks_for_humanized_concise(): void {
         Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
 
-        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+        $prompt = ( new ReflectionMethod( Dukandaar_API_Handler::class, 'get_system_prompt' ) )
             ->invoke( $this->handler() );
 
         $this->assertStringContainsString( 'Never use em-dashes or en-dashes', $prompt );
@@ -285,7 +285,7 @@ class ApiHandlerTest extends TestCase {
     public function test_system_prompt_grounds_sale_questions_in_a_tool_call(): void {
         Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
 
-        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+        $prompt = ( new ReflectionMethod( Dukandaar_API_Handler::class, 'get_system_prompt' ) )
             ->invoke( $this->handler() );
 
         $this->assertStringContainsString( 'on_sale', $prompt );
@@ -299,7 +299,7 @@ class ApiHandlerTest extends TestCase {
     public function test_system_prompt_grounds_wallet_balance_in_a_tool_call(): void {
         Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
 
-        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+        $prompt = ( new ReflectionMethod( Dukandaar_API_Handler::class, 'get_system_prompt' ) )
             ->invoke( $this->handler() );
 
         $this->assertStringContainsString( 'get_wallet_balance', $prompt );
@@ -313,7 +313,7 @@ class ApiHandlerTest extends TestCase {
     public function test_system_prompt_shops_within_the_wallet_balance(): void {
         Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
 
-        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+        $prompt = ( new ReflectionMethod( Dukandaar_API_Handler::class, 'get_system_prompt' ) )
             ->invoke( $this->handler() );
 
         // The guidance must tie the wallet balance to search_products' max_price so the
@@ -327,7 +327,7 @@ class ApiHandlerTest extends TestCase {
     public function test_system_prompt_grounds_referrals_in_a_tool_call(): void {
         Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
 
-        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+        $prompt = ( new ReflectionMethod( Dukandaar_API_Handler::class, 'get_system_prompt' ) )
             ->invoke( $this->handler() );
 
         $this->assertStringContainsString( 'get_referral_link', $prompt );
@@ -339,7 +339,7 @@ class ApiHandlerTest extends TestCase {
     public function test_system_prompt_grounds_back_in_stock_alerts_in_a_tool_call(): void {
         Functions\when( 'apply_filters' )->alias( static fn( $tag, $value = null ) => $value );
 
-        $prompt = ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' ) )
+        $prompt = ( new ReflectionMethod( Dukandaar_API_Handler::class, 'get_system_prompt' ) )
             ->invoke( $this->handler() );
 
         $this->assertStringContainsString( 'subscribe_stock_alert', $prompt );
@@ -368,7 +368,7 @@ class ApiHandlerTest extends TestCase {
     // cart tool and dispatches it; an unknown action is rejected before any work.
 
     public function test_cart_action_tool_maps_actions(): void {
-        $m = new ReflectionMethod( Fahad_AI_API_Handler::class, 'cart_action_tool' );
+        $m = new ReflectionMethod( Dukandaar_API_Handler::class, 'cart_action_tool' );
         $h = $this->handler();
 
         $this->assertSame( 'add_to_cart',      $m->invoke( $h, 'add' ) );
@@ -389,14 +389,14 @@ class ApiHandlerTest extends TestCase {
     }
 
     // ── reply feedback endpoint (#50) ────────────────────────────────────────────
-    // POST fahad-ai/v1/feedback → handle_feedback(): validates the rating, sanitizes
+    // POST dukandaar/v1/feedback → handle_feedback(): validates the rating, sanitizes
     // the optional reason + opaque conversation/message refs, and delegates to the
-    // Fahad_AI_Feedback store (option-backed, telemetry-only, NO PII). A junk rating
+    // Dukandaar_Feedback store (option-backed, telemetry-only, NO PII). A junk rating
     // is rejected with a 400 before anything is stored; a valid rating is recorded
     // and the store's id is echoed back so the client can reflect the chosen state.
 
     /**
-     * Back handle_feedback's Fahad_AI_Feedback store with the in-memory option map so
+     * Back handle_feedback's Dukandaar_Feedback store with the in-memory option map so
      * these endpoint tests assert what was persisted end-to-end (the handler is on a
      * `final` class, so we drive the real store rather than mocking it).
      */
@@ -431,7 +431,7 @@ class ApiHandlerTest extends TestCase {
 
         $this->assertTrue( is_wp_error( $result ), 'A junk rating must return a WP_Error.' );
         // Nothing persisted for a bad rating.
-        $this->assertSame( [], $this->options[ Fahad_AI_Feedback::OPTION ] ?? [] );
+        $this->assertSame( [], $this->options[ Dukandaar_Feedback::OPTION ] ?? [] );
     }
 
     public function test_handle_feedback_stores_a_valid_rating_and_returns_ok(): void {
@@ -443,13 +443,13 @@ class ApiHandlerTest extends TestCase {
         $this->feedback_option_seam();
         $this->stub_rest_ensure_response();
         // Reset the store singleton so it reads our seam, not a prior test's.
-        ( new ReflectionProperty( Fahad_AI_Feedback::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Feedback::class, 'instance' ) )->setValue( null, null );
 
         $result = $this->handler()->handle_feedback( $this->feedback_request( 'down', 'wrong answer', 'conv-1', 'msg-1' ) );
         $data   = $this->response_data( $result );
 
         $this->assertTrue( $data['ok'] ?? false, 'A valid rating must be accepted.' );
-        $rows = $this->options[ Fahad_AI_Feedback::OPTION ] ?? [];
+        $rows = $this->options[ Dukandaar_Feedback::OPTION ] ?? [];
         $this->assertCount( 1, $rows, 'Exactly one feedback row must be persisted.' );
         $this->assertSame( 'down', reset( $rows )['rating'] );
     }
@@ -624,23 +624,23 @@ class ApiHandlerTest extends TestCase {
         }
     }
 
-    // ── get_system_prompt(), passes through the fahad_ai_system_prompt filter ──
+    // ── get_system_prompt(), passes through the dukandaar_system_prompt filter ──
     // (issue #20: cross-session memory injects a compact preferences block here,
     // WITHOUT editing the agent-loop methods, the only change to the handler is the
     // apply_filters() wrap. These tests prove the filter is applied and that the
     // default prompt is unchanged when no filter modifies it.)
 
     private function get_system_prompt(): string {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'get_system_prompt' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'get_system_prompt' );
         return $method->invoke( $this->handler() );
     }
 
     public function test_system_prompt_passes_through_the_filter(): void {
-        // A hooked modification on `fahad_ai_system_prompt` must be reflected in the
+        // A hooked modification on `dukandaar_system_prompt` must be reflected in the
         // returned prompt, this is the seam the memory pack uses to append prefs.
         Functions\when( 'apply_filters' )->alias(
             static fn( $hook, $value = null ) =>
-                'fahad_ai_system_prompt' === $hook ? $value . "\n\n[INJECTED BLOCK]" : $value
+                'dukandaar_system_prompt' === $hook ? $value . "\n\n[INJECTED BLOCK]" : $value
         );
 
         $prompt = $this->get_system_prompt();
@@ -661,7 +661,7 @@ class ApiHandlerTest extends TestCase {
 
         $this->get_system_prompt();
 
-        $this->assertContains( 'fahad_ai_system_prompt', $applied_hooks );
+        $this->assertContains( 'dukandaar_system_prompt', $applied_hooks );
     }
 
     public function test_system_prompt_is_unchanged_when_no_filter_modifies_it(): void {
@@ -700,11 +700,11 @@ class ApiHandlerTest extends TestCase {
         // An admin-set custom prompt short-circuits the default text but must STILL go
         // through the filter, so memory injection works regardless of a custom prompt.
         Functions\when( 'get_option' )->alias(
-            fn( $key, $default = '' ) => 'fahad_ai_system_prompt' === $key ? 'Custom store prompt.' : $default
+            fn( $key, $default = '' ) => 'dukandaar_system_prompt' === $key ? 'Custom store prompt.' : $default
         );
         Functions\when( 'apply_filters' )->alias(
             static fn( $hook, $value = null ) =>
-                'fahad_ai_system_prompt' === $hook ? $value . ' [PREFS]' : $value
+                'dukandaar_system_prompt' === $hook ? $value . ' [PREFS]' : $value
         );
 
         $prompt = $this->get_system_prompt();
@@ -718,7 +718,7 @@ class ApiHandlerTest extends TestCase {
         // guardrails entirely absent. They are now appended after the merchant text AND
         // after the filter, so the anti-feature policy can never be dropped by config.
         Functions\when( 'get_option' )->alias(
-            fn( $key, $default = '' ) => 'fahad_ai_system_prompt' === $key ? 'Sell hard, no rules.' : $default
+            fn( $key, $default = '' ) => 'dukandaar_system_prompt' === $key ? 'Sell hard, no rules.' : $default
         );
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
 
@@ -732,7 +732,7 @@ class ApiHandlerTest extends TestCase {
     // ── moonshot_base_url() region selection ──────────────────────────────────
 
     private function moonshot_base_url(): string {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'moonshot_base_url' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'moonshot_base_url' );
         return $method->invoke( $this->handler() );
     }
 
@@ -744,7 +744,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_base_url_uses_china_endpoint_when_region_is_china(): void {
         Functions\when( 'get_option' )->alias(
-            fn( $key, $default = '' ) => 'fahad_ai_moonshot_region' === $key ? 'china' : $default
+            fn( $key, $default = '' ) => 'dukandaar_moonshot_region' === $key ? 'china' : $default
         );
 
         $this->assertSame( 'https://api.moonshot.cn', $this->moonshot_base_url() );
@@ -752,7 +752,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_base_url_uses_global_endpoint_for_any_non_china_value(): void {
         Functions\when( 'get_option' )->alias(
-            fn( $key, $default = '' ) => 'fahad_ai_moonshot_region' === $key ? 'global' : $default
+            fn( $key, $default = '' ) => 'dukandaar_moonshot_region' === $key ? 'global' : $default
         );
 
         $this->assertSame( 'https://api.moonshot.ai', $this->moonshot_base_url() );
@@ -761,7 +761,7 @@ class ApiHandlerTest extends TestCase {
     // ── tool_result_cards(), product card payload for the widget ─────────────
 
     private function tool_result_cards( string $tool, array $result ): array {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'tool_result_cards' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'tool_result_cards' );
         return $method->invoke( $this->handler(), $tool, $result );
     }
 
@@ -1025,7 +1025,7 @@ class ApiHandlerTest extends TestCase {
     // (so the widget shows one comparison table, not a table plus redundant cards).
 
     private function tool_result_comparison( string $tool, array $result ): array {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'tool_result_comparison' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'tool_result_comparison' );
         return $method->invoke( $this->handler(), $tool, $result );
     }
 
@@ -1149,7 +1149,7 @@ class ApiHandlerTest extends TestCase {
     // passes).
 
     private function trim_tool_result( string $tool, array $result ): array {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'trim_tool_result' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'trim_tool_result' );
         return $method->invoke( $this->handler(), $tool, $result );
     }
 
@@ -1352,7 +1352,7 @@ class ApiHandlerTest extends TestCase {
         Functions\when( 'apply_filters' )->alias(
             static function ( $hook, $value = null, $tool = null, $full = null ) {
                 // A hook that disables trimming returns the full result untouched.
-                return 'fahad_ai_trim_tool_result' === $hook ? $full : $value;
+                return 'dukandaar_trim_tool_result' === $hook ? $full : $value;
             }
         );
 
@@ -1368,7 +1368,7 @@ class ApiHandlerTest extends TestCase {
         $seen = [];
         Functions\when( 'apply_filters' )->alias(
             static function ( $hook, $value = null, $tool = null, $full = null ) use ( &$seen ) {
-                if ( 'fahad_ai_trim_tool_result' === $hook ) {
+                if ( 'dukandaar_trim_tool_result' === $hook ) {
                     $seen = [ 'tool' => $tool, 'full' => $full ];
                 }
                 return $value;
@@ -1383,14 +1383,14 @@ class ApiHandlerTest extends TestCase {
     }
 
     // ── apply_token_budget(), bound the outgoing context (issue #23) ───────────
-    // A configurable per-conversation budget (option + filter fahad_ai_token_budget,
+    // A configurable per-conversation budget (option + filter dukandaar_token_budget,
     // default 0 = unlimited) caps the context. Token size is estimated with a
     // char/÷4 proxy. When over budget, the OLDEST non-essential history is dropped
     // while the system prompt (if present), the latest user turn, and the most recent
     // tool results survive. An in-progress tool loop is never broken.
 
     private function apply_token_budget( array $messages ): array {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'apply_token_budget' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'apply_token_budget' );
         return $method->invoke( $this->handler(), $messages );
     }
 
@@ -1412,7 +1412,7 @@ class ApiHandlerTest extends TestCase {
     }
 
     public function test_budget_under_limit_leaves_messages_unchanged(): void {
-        $this->set_option_alias( [ 'fahad_ai_token_budget' => 100000 ] );
+        $this->set_option_alias( [ 'dukandaar_token_budget' => 100000 ] );
 
         $messages = [
             [ 'role' => 'user', 'content' => 'short' ],
@@ -1425,7 +1425,7 @@ class ApiHandlerTest extends TestCase {
     public function test_budget_drops_oldest_history_when_over_limit(): void {
         // A tiny budget forces the oldest history out. The latest user turn must
         // survive; the very first (oldest) message must be dropped.
-        $this->set_option_alias( [ 'fahad_ai_token_budget' => 50 ] );
+        $this->set_option_alias( [ 'dukandaar_token_budget' => 50 ] );
 
         $messages = [
             [ 'role' => 'user', 'content' => str_repeat( 'OLDEST ', 200 ) ],      // ~1400 chars
@@ -1447,7 +1447,7 @@ class ApiHandlerTest extends TestCase {
     public function test_budget_keeps_system_message_and_latest_turn(): void {
         // Moonshot passes a leading system message in the array. Even over budget,
         // the system prompt and the latest user turn (plus its tool loop) survive.
-        $this->set_option_alias( [ 'fahad_ai_token_budget' => 60 ] );
+        $this->set_option_alias( [ 'dukandaar_token_budget' => 60 ] );
 
         $messages = [
             [ 'role' => 'system', 'content' => 'SYSTEM PROMPT keep me' ],
@@ -1468,7 +1468,7 @@ class ApiHandlerTest extends TestCase {
         // The latest user turn is followed by an assistant tool_use + a user
         // tool_result (an in-progress Anthropic loop). The budget must NOT split that
         // pair off, everything from the latest user turn to the end is protected.
-        $this->set_option_alias( [ 'fahad_ai_token_budget' => 80 ] );
+        $this->set_option_alias( [ 'dukandaar_token_budget' => 80 ] );
 
         $messages = [
             [ 'role' => 'user', 'content' => str_repeat( 'ancient ', 300 ) ],
@@ -1488,11 +1488,11 @@ class ApiHandlerTest extends TestCase {
     }
 
     public function test_budget_is_filterable(): void {
-        // The option default can be overridden by the fahad_ai_token_budget filter.
+        // The option default can be overridden by the dukandaar_token_budget filter.
         // Here the option is unset (would be unlimited) but the filter sets a small
         // budget, so older history is dropped.
         Functions\when( 'apply_filters' )->alias(
-            static fn( $hook, $value = null ) => 'fahad_ai_token_budget' === $hook ? 50 : $value
+            static fn( $hook, $value = null ) => 'dukandaar_token_budget' === $hook ? 50 : $value
         );
 
         $messages = [
@@ -1510,11 +1510,11 @@ class ApiHandlerTest extends TestCase {
     // ── resolve_model(), configurable model routing (issue #23) ────────────────
     // Routing lets a hook pick a cheaper/faster model for simple turns and a more
     // capable one for reasoning. The DEFAULT must preserve today's behaviour: the
-    // configured model is returned unchanged unless a fahad_ai_model filter overrides
+    // configured model is returned unchanged unless a dukandaar_model filter overrides
     // it. The chosen model flows into the request payload.
 
     private function resolve_model( string $default, string $provider, array $context = [] ): string {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'resolve_model' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'resolve_model' );
         return $method->invoke( $this->handler(), $default, $provider, $context );
     }
 
@@ -1531,7 +1531,7 @@ class ApiHandlerTest extends TestCase {
     public function test_resolve_model_can_be_overridden_by_filter(): void {
         Functions\when( 'apply_filters' )->alias(
             static fn( $hook, $value = null, $provider = null, $context = null ) =>
-                'fahad_ai_model' === $hook ? 'claude-opus-4-8' : $value
+                'dukandaar_model' === $hook ? 'claude-opus-4-8' : $value
         );
 
         $this->assertSame(
@@ -1544,7 +1544,7 @@ class ApiHandlerTest extends TestCase {
         $seen = [];
         Functions\when( 'apply_filters' )->alias(
             static function ( $hook, $value = null, $provider = null, $context = null ) use ( &$seen ) {
-                if ( 'fahad_ai_model' === $hook ) {
+                if ( 'dukandaar_model' === $hook ) {
                     $seen = [ 'default' => $value, 'provider' => $provider, 'context' => $context ];
                 }
                 return $value;
@@ -1562,7 +1562,7 @@ class ApiHandlerTest extends TestCase {
         // Defence in depth: a misbehaving filter returning a non-string must not
         // poison the payload, the configured default stands.
         Functions\when( 'apply_filters' )->alias(
-            static fn( $hook, $value = null ) => 'fahad_ai_model' === $hook ? null : $value
+            static fn( $hook, $value = null ) => 'dukandaar_model' === $hook ? null : $value
         );
 
         $this->assertSame(
@@ -1572,11 +1572,11 @@ class ApiHandlerTest extends TestCase {
     }
 
     public function test_anthropic_payload_uses_the_routed_model(): void {
-        // End-to-end seam check: a fahad_ai_model override flows into the Anthropic
+        // End-to-end seam check: a dukandaar_model override flows into the Anthropic
         // request payload (asserted via the captured wp_remote_post body).
-        $this->set_option_alias( [ 'fahad_ai_anthropic_api_key' => 'k', 'fahad_ai_anthropic_model' => 'claude-haiku-4-5-20251001' ] );
+        $this->set_option_alias( [ 'dukandaar_anthropic_api_key' => 'k', 'dukandaar_anthropic_model' => 'claude-haiku-4-5-20251001' ] );
         Functions\when( 'apply_filters' )->alias(
-            static fn( $hook, $value = null ) => 'fahad_ai_model' === $hook ? 'claude-opus-4-8' : $value
+            static fn( $hook, $value = null ) => 'dukandaar_model' === $hook ? 'claude-opus-4-8' : $value
         );
         Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
 
@@ -1593,7 +1593,7 @@ class ApiHandlerTest extends TestCase {
         // wp_remote_post above is not a WP_Error, so it correctly reports false , 
         // do NOT redefine it via Brain\Monkey (Patchwork "DefinedTooEarly").
 
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'call_anthropic' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'call_anthropic' );
         $method->invoke( $this->handler(), [ [ 'role' => 'user', 'content' => 'hi' ] ] );
 
         $this->assertSame( 'claude-opus-4-8', $captured['model'] );
@@ -1608,7 +1608,7 @@ class ApiHandlerTest extends TestCase {
     // helper must load the cart and emit the session cookie when none has been sent.
 
     private function prime_cart_session(): void {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'prime_cart_session' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'prime_cart_session' );
         $method->invoke( $this->handler() );
     }
 
@@ -1638,17 +1638,17 @@ class ApiHandlerTest extends TestCase {
     //   degraded_response(), the friendly, NON-error fallback when all providers fail.
 
     private function has_provider_key( string $provider ): bool {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'has_provider_key' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'has_provider_key' );
         return $method->invoke( $this->handler(), $provider );
     }
 
     private function provider_chain(): array {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'provider_chain' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'provider_chain' );
         return $method->invoke( $this->handler() );
     }
 
     private function degraded_response( array $messages = [] ): array {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'degraded_response' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'degraded_response' );
         return $method->invoke( $this->handler(), $messages );
     }
 
@@ -1656,8 +1656,8 @@ class ApiHandlerTest extends TestCase {
 
     public function test_has_provider_key_true_when_key_set(): void {
         $this->set_option_alias( [
-            'fahad_ai_anthropic_api_key' => 'sk-ant-123',
-            'fahad_ai_moonshot_api_key'  => 'sk-moon-456',
+            'dukandaar_anthropic_api_key' => 'sk-ant-123',
+            'dukandaar_moonshot_api_key'  => 'sk-moon-456',
         ] );
 
         $this->assertTrue( $this->has_provider_key( 'anthropic' ) );
@@ -1672,8 +1672,8 @@ class ApiHandlerTest extends TestCase {
 
         // An explicitly empty string is also "no key".
         $this->set_option_alias( [
-            'fahad_ai_anthropic_api_key' => '',
-            'fahad_ai_moonshot_api_key'  => '',
+            'dukandaar_anthropic_api_key' => '',
+            'dukandaar_moonshot_api_key'  => '',
         ] );
         $this->assertFalse( $this->has_provider_key( 'anthropic' ) );
         $this->assertFalse( $this->has_provider_key( 'moonshot' ) );
@@ -1681,7 +1681,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_has_provider_key_reads_the_matching_option_per_provider(): void {
         // Only the moonshot key is set → only moonshot reports true.
-        $this->set_option_alias( [ 'fahad_ai_moonshot_api_key' => 'sk-moon' ] );
+        $this->set_option_alias( [ 'dukandaar_moonshot_api_key' => 'sk-moon' ] );
 
         $this->assertTrue( $this->has_provider_key( 'moonshot' ) );
         $this->assertFalse( $this->has_provider_key( 'anthropic' ) );
@@ -1692,9 +1692,9 @@ class ApiHandlerTest extends TestCase {
     public function test_provider_chain_configured_moonshot_with_both_keys(): void {
         // configured = moonshot, both keys present → moonshot first, anthropic fallback.
         $this->set_option_alias( [
-            'fahad_ai_provider'          => 'moonshot',
-            'fahad_ai_anthropic_api_key' => 'sk-ant',
-            'fahad_ai_moonshot_api_key'  => 'sk-moon',
+            'dukandaar_provider'          => 'moonshot',
+            'dukandaar_anthropic_api_key' => 'sk-ant',
+            'dukandaar_moonshot_api_key'  => 'sk-moon',
         ] );
 
         $this->assertSame( [ 'moonshot', 'anthropic' ], $this->provider_chain() );
@@ -1703,9 +1703,9 @@ class ApiHandlerTest extends TestCase {
     public function test_provider_chain_configured_anthropic_with_both_keys(): void {
         // configured = anthropic, both keys present → anthropic first, moonshot fallback.
         $this->set_option_alias( [
-            'fahad_ai_provider'          => 'anthropic',
-            'fahad_ai_anthropic_api_key' => 'sk-ant',
-            'fahad_ai_moonshot_api_key'  => 'sk-moon',
+            'dukandaar_provider'          => 'anthropic',
+            'dukandaar_anthropic_api_key' => 'sk-ant',
+            'dukandaar_moonshot_api_key'  => 'sk-moon',
         ] );
 
         $this->assertSame( [ 'anthropic', 'moonshot' ], $this->provider_chain() );
@@ -1715,8 +1715,8 @@ class ApiHandlerTest extends TestCase {
         // The provider option defaults to 'anthropic' (matching handle_message's
         // existing default), so with both keys the chain leads with anthropic.
         $this->set_option_alias( [
-            'fahad_ai_anthropic_api_key' => 'sk-ant',
-            'fahad_ai_moonshot_api_key'  => 'sk-moon',
+            'dukandaar_anthropic_api_key' => 'sk-ant',
+            'dukandaar_moonshot_api_key'  => 'sk-moon',
         ] );
 
         $this->assertSame( [ 'anthropic', 'moonshot' ], $this->provider_chain() );
@@ -1726,8 +1726,8 @@ class ApiHandlerTest extends TestCase {
         // configured = anthropic but ONLY the anthropic key exists → chain is just
         // [anthropic]; the keyless moonshot is filtered out (no pointless fallback).
         $this->set_option_alias( [
-            'fahad_ai_provider'          => 'anthropic',
-            'fahad_ai_anthropic_api_key' => 'sk-ant',
+            'dukandaar_provider'          => 'anthropic',
+            'dukandaar_anthropic_api_key' => 'sk-ant',
         ] );
 
         $this->assertSame( [ 'anthropic' ], $this->provider_chain() );
@@ -1737,8 +1737,8 @@ class ApiHandlerTest extends TestCase {
         // configured = anthropic but only the MOONSHOT key exists. The configured
         // provider has no key, so the chain is just the keyed fallback [moonshot].
         $this->set_option_alias( [
-            'fahad_ai_provider'         => 'anthropic',
-            'fahad_ai_moonshot_api_key' => 'sk-moon',
+            'dukandaar_provider'         => 'anthropic',
+            'dukandaar_moonshot_api_key' => 'sk-moon',
         ] );
 
         $this->assertSame( [ 'moonshot' ], $this->provider_chain() );
@@ -1747,7 +1747,7 @@ class ApiHandlerTest extends TestCase {
     public function test_provider_chain_empty_when_no_keys(): void {
         // No keys configured at all → empty chain (handle_message keeps its existing
         // no-key WP_Error in this case).
-        $this->set_option_alias( [ 'fahad_ai_provider' => 'moonshot' ] );
+        $this->set_option_alias( [ 'dukandaar_provider' => 'moonshot' ] );
 
         $this->assertSame( [], $this->provider_chain() );
     }
@@ -1756,9 +1756,9 @@ class ApiHandlerTest extends TestCase {
         // Each provider appears at most once regardless of configuration, the
         // dispatch tries each provider a single time (bounded, no loop).
         $this->set_option_alias( [
-            'fahad_ai_provider'          => 'moonshot',
-            'fahad_ai_anthropic_api_key' => 'sk-ant',
-            'fahad_ai_moonshot_api_key'  => 'sk-moon',
+            'dukandaar_provider'          => 'moonshot',
+            'dukandaar_anthropic_api_key' => 'sk-ant',
+            'dukandaar_moonshot_api_key'  => 'sk-moon',
         ] );
 
         $chain = $this->provider_chain();
@@ -1801,8 +1801,8 @@ class ApiHandlerTest extends TestCase {
         // Hardening: the friendly message must never surface a key or raw exception
         // text. Even with keys configured, the degraded copy is generic.
         $this->set_option_alias( [
-            'fahad_ai_anthropic_api_key' => 'sk-ant-SECRET',
-            'fahad_ai_moonshot_api_key'  => 'sk-moon-SECRET',
+            'dukandaar_anthropic_api_key' => 'sk-ant-SECRET',
+            'dukandaar_moonshot_api_key'  => 'sk-moon-SECRET',
         ] );
 
         $message = $this->degraded_response()['message'];
@@ -1839,7 +1839,7 @@ class ApiHandlerTest extends TestCase {
     // after every provider has failed. With no key at all it keeps the existing
     // no-key WP_Error.
     //
-    // Fahad_AI_API_Handler is `final`, so we do NOT partial-mock it (Mockery cannot
+    // Dukandaar_API_Handler is `final`, so we do NOT partial-mock it (Mockery cannot
     // replace methods on a final class). Instead we drive the REAL dispatch end to
     // end, handle_message → run_*_agent → call_* → wp_remote_post, against a
     // SCRIPTED transport (the eval-harness pattern). wp_remote_post is routed BY URL
@@ -1915,14 +1915,14 @@ class ApiHandlerTest extends TestCase {
         Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
 
         // Owner analytics (#49): handle_message now records a privacy-safe turn event
-        // via Fahad_AI_Analytics on every resolved (or degraded) turn. Analytics is ON
+        // via Dukandaar_Analytics on every resolved (or degraded) turn. Analytics is ON
         // by default, so these end-to-end dispatch tests exercise that path, give the
         // store a harmless option seam (it persists with update_option) and a stable id
         // so the recording neither fatals on an unstubbed function nor pollutes state.
         // The recording is fire-and-forget here; the store has its own unit tests.
         Functions\when( 'update_option' )->justReturn( true );
         Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid-analytics' );
-        ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
 
         Functions\when( 'wp_remote_post' )->alias(
             static function ( $url, $args = [] ) use ( $anthropic, $moonshot, $counts ) {
@@ -1965,8 +1965,8 @@ class ApiHandlerTest extends TestCase {
         // configured = moonshot with a key → moonshot is tried first; on success its
         // result is returned and the anthropic endpoint is never called.
         $this->set_option_alias( [
-            'fahad_ai_provider'         => 'moonshot',
-            'fahad_ai_moonshot_api_key' => 'sk-moon',
+            'dukandaar_provider'         => 'moonshot',
+            'dukandaar_moonshot_api_key' => 'sk-moon',
         ] );
         Functions\when( 'sanitize_textarea_field' )->returnArg();
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
@@ -1992,9 +1992,9 @@ class ApiHandlerTest extends TestCase {
         // dispatch transparently falls back to anthropic and returns ITS result.
         // Bounded: each provider endpoint is hit exactly once.
         $this->set_option_alias( [
-            'fahad_ai_provider'          => 'moonshot',
-            'fahad_ai_anthropic_api_key' => 'sk-ant',
-            'fahad_ai_moonshot_api_key'  => 'sk-moon',
+            'dukandaar_provider'          => 'moonshot',
+            'dukandaar_anthropic_api_key' => 'sk-ant',
+            'dukandaar_moonshot_api_key'  => 'sk-moon',
         ] );
         Functions\when( 'sanitize_textarea_field' )->returnArg();
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
@@ -2020,9 +2020,9 @@ class ApiHandlerTest extends TestCase {
         // is returned (NOT a WP_Error), each provider endpoint hit exactly once
         // (bounded retries, cost does not balloon), and no key leaks into the copy.
         $this->set_option_alias( [
-            'fahad_ai_provider'          => 'moonshot',
-            'fahad_ai_anthropic_api_key' => 'sk-ant-SECRET',
-            'fahad_ai_moonshot_api_key'  => 'sk-moon-SECRET',
+            'dukandaar_provider'          => 'moonshot',
+            'dukandaar_anthropic_api_key' => 'sk-ant-SECRET',
+            'dukandaar_moonshot_api_key'  => 'sk-moon-SECRET',
         ] );
         Functions\when( 'sanitize_textarea_field' )->returnArg();
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
@@ -2054,8 +2054,8 @@ class ApiHandlerTest extends TestCase {
         // anthropic key → chain is [anthropic], its result returns verbatim and the
         // moonshot endpoint is never touched.
         $this->set_option_alias( [
-            'fahad_ai_provider'          => 'anthropic',
-            'fahad_ai_anthropic_api_key' => 'sk-ant',
+            'dukandaar_provider'          => 'anthropic',
+            'dukandaar_anthropic_api_key' => 'sk-ant',
         ] );
         Functions\when( 'sanitize_textarea_field' )->returnArg();
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
@@ -2083,7 +2083,7 @@ class ApiHandlerTest extends TestCase {
     // with NO setAccessible (host runs PHP 8.5). The store's own bounds/masking are
     // unit-tested in AnalyticsTest; here we prove the loop feeds it the right event.
 
-    /** Back Fahad_AI_Analytics with the in-memory option map + reset its singleton. */
+    /** Back Dukandaar_Analytics with the in-memory option map + reset its singleton. */
     private function analytics_option_seam(): void {
         Functions\when( 'get_option' )->alias( fn( $name, $default = false ) => $this->options[ $name ] ?? $default );
         Functions\when( 'update_option' )->alias( function ( $name, $value ) {
@@ -2094,18 +2094,18 @@ class ApiHandlerTest extends TestCase {
         Functions\when( 'sanitize_textarea_field' )->alias( static fn( $s ) => is_string( $s ) ? trim( $s ) : '' );
         Functions\when( 'sanitize_key' )->alias( static fn( $s ) => is_string( $s ) ? strtolower( trim( $s ) ) : '' );
         Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid-fixed' );
-        ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
     }
 
     /** Invoke the private record_turn_analytics() (no setAccessible, PHP 8.5 safe). */
     private function record_turn_analytics( array $input, array $result, string $hint = '', array $overrides = [] ): void {
-        ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'record_turn_analytics' ) )
+        ( new ReflectionMethod( Dukandaar_API_Handler::class, 'record_turn_analytics' ) )
             ->invoke( $this->handler(), $input, $result, $hint, $overrides );
     }
 
     /** The single persisted analytics row. */
     private function analytics_row(): array {
-        $rows = $this->options[ Fahad_AI_Analytics::OPTION ] ?? [];
+        $rows = $this->options[ Dukandaar_Analytics::OPTION ] ?? [];
         return (array) reset( $rows );
     }
 
@@ -2132,7 +2132,7 @@ class ApiHandlerTest extends TestCase {
         $this->record_turn_analytics( $input, $result );
 
         $row = $this->analytics_row();
-        $this->assertSame( Fahad_AI_Analytics::OUTCOME_ANSWERED, $row['outcome'] );
+        $this->assertSame( Dukandaar_Analytics::OUTCOME_ANSWERED, $row['outcome'] );
         $this->assertSame( [ 'search_products', 'add_to_cart' ], $row['tools'] );
         $this->assertTrue( $row['product_surfaced'] );
         $this->assertTrue( $row['added_to_cart'], 'add_to_cart in the trace flags the funnel.' );
@@ -2170,7 +2170,7 @@ class ApiHandlerTest extends TestCase {
 
         $this->record_turn_analytics( $input, $result );
 
-        $this->assertSame( Fahad_AI_Analytics::OUTCOME_ESCALATED, $this->analytics_row()['outcome'] );
+        $this->assertSame( Dukandaar_Analytics::OUTCOME_ESCALATED, $this->analytics_row()['outcome'] );
     }
 
     public function test_loop_records_no_tool_match_when_nothing_was_used(): void {
@@ -2187,17 +2187,17 @@ class ApiHandlerTest extends TestCase {
 
         $this->record_turn_analytics( $input, $result );
 
-        $this->assertSame( Fahad_AI_Analytics::OUTCOME_NO_TOOL_MATCH, $this->analytics_row()['outcome'] );
+        $this->assertSame( Dukandaar_Analytics::OUTCOME_NO_TOOL_MATCH, $this->analytics_row()['outcome'] );
     }
 
     public function test_loop_records_nothing_when_analytics_is_disabled(): void {
-        $this->options = [ Fahad_AI_Analytics::OPTION_ENABLED => 0 ];
+        $this->options = [ Dukandaar_Analytics::OPTION_ENABLED => 0 ];
         $this->analytics_option_seam();
 
         $input  = [ [ 'role' => 'user', 'content' => 'hi' ] ];
         $this->record_turn_analytics( $input, [ 'message' => 'hi', 'products' => [], 'messages' => $input ] );
 
-        $this->assertSame( [], $this->options[ Fahad_AI_Analytics::OPTION ] ?? [], 'Opt-out must persist nothing.' );
+        $this->assertSame( [], $this->options[ Dukandaar_Analytics::OPTION ] ?? [], 'Opt-out must persist nothing.' );
     }
 
     public function test_loop_honors_an_explicit_outcome_hint(): void {
@@ -2207,9 +2207,9 @@ class ApiHandlerTest extends TestCase {
         $this->analytics_option_seam();
 
         $input  = [ [ 'role' => 'user', 'content' => 'hi' ] ];
-        $this->record_turn_analytics( $input, [ 'message' => '', 'products' => [], 'messages' => $input ], Fahad_AI_Analytics::OUTCOME_ERROR );
+        $this->record_turn_analytics( $input, [ 'message' => '', 'products' => [], 'messages' => $input ], Dukandaar_Analytics::OUTCOME_ERROR );
 
-        $this->assertSame( Fahad_AI_Analytics::OUTCOME_ERROR, $this->analytics_row()['outcome'] );
+        $this->assertSame( Dukandaar_Analytics::OUTCOME_ERROR, $this->analytics_row()['outcome'] );
     }
 
     public function test_loop_uses_streaming_overrides_for_tools_and_cart(): void {
@@ -2233,14 +2233,14 @@ class ApiHandlerTest extends TestCase {
 
     // ── multi-provider dispatch (OpenAI-compatible presets) ──────────────────────
     // The OpenAI path is generalised: run_openai_agent / call_openai are parameterised
-    // by a provider id resolved from Fahad_AI_Providers. Moonshot is now just one preset
+    // by a provider id resolved from Dukandaar_Providers. Moonshot is now just one preset
     // of this path; OpenAI, Gemini, Groq, … ride the SAME code, differing only in the
     // base URL / key / model the catalog resolves. These pin:
     //   - an 'openai'-type preset resolves the right base_url/key/model and hits the
     //     OpenAI /chat/completions endpoint with a Bearer header (asserted via the
     //     captured wp_remote_post URL/headers/body, the harness pattern);
     //   - the native 'anthropic' path is unchanged (api.anthropic.com + x-api-key);
-    //   - BACKWARD COMPAT: fahad_ai_provider=moonshot still hits api.moonshot.ai;
+    //   - BACKWARD COMPAT: dukandaar_provider=moonshot still hits api.moonshot.ai;
     //   - failover generalises across the whole catalog (configured first, then any
     //     OTHER keyed provider, each at most once);
     //   - the custom base URL is validated.
@@ -2278,7 +2278,7 @@ class ApiHandlerTest extends TestCase {
 
     /** Invoke the generalised private call_openai( messages, provider_id ). */
     private function call_openai( array $messages, string $provider_id ): array {
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'call_openai' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'call_openai' );
         return (array) $method->invoke( $this->handler(), $messages, $provider_id );
     }
 
@@ -2286,9 +2286,9 @@ class ApiHandlerTest extends TestCase {
         // The 'openai' preset → https://api.openai.com/v1/chat/completions, a Bearer
         // auth header carrying the openai key, and the configured openai model.
         $this->set_option_alias( [
-            'fahad_ai_provider'       => 'openai',
-            'fahad_ai_openai_api_key' => 'sk-openai-XYZ',
-            'fahad_ai_openai_model'   => 'gpt-4o',
+            'dukandaar_provider'       => 'openai',
+            'dukandaar_openai_api_key' => 'sk-openai-XYZ',
+            'dukandaar_openai_model'   => 'gpt-4o',
         ] );
 
         $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi from openai' ) );
@@ -2306,8 +2306,8 @@ class ApiHandlerTest extends TestCase {
     public function test_call_openai_uses_preset_default_model_when_unset(): void {
         // No model option set for openai → the catalog default (gpt-4o-mini) is sent.
         $this->set_option_alias( [
-            'fahad_ai_provider'       => 'openai',
-            'fahad_ai_openai_api_key' => 'sk-openai',
+            'dukandaar_provider'       => 'openai',
+            'dukandaar_openai_api_key' => 'sk-openai',
         ] );
 
         $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi' ) );
@@ -2320,9 +2320,9 @@ class ApiHandlerTest extends TestCase {
     public function test_call_openai_targets_gemini_base_url(): void {
         // A different OpenAI-compatible preset rides the SAME path with its own base URL.
         $this->set_option_alias( [
-            'fahad_ai_provider'       => 'gemini',
-            'fahad_ai_gemini_api_key' => 'sk-gemini',
-            'fahad_ai_gemini_model'   => 'gemini-2.0-flash',
+            'dukandaar_provider'       => 'gemini',
+            'dukandaar_gemini_api_key' => 'sk-gemini',
+            'dukandaar_gemini_model'   => 'gemini-2.0-flash',
         ] );
 
         $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi' ) );
@@ -2339,10 +2339,10 @@ class ApiHandlerTest extends TestCase {
         // BACKWARD COMPAT: the moonshot preset resolves to the region base URL and its
         // existing key/model, the exact request the pre-multi-provider code sent.
         $this->set_option_alias( [
-            'fahad_ai_provider'         => 'moonshot',
-            'fahad_ai_moonshot_api_key' => 'sk-moon',
-            'fahad_ai_moonshot_model'   => 'kimi-k2.6',
-            'fahad_ai_moonshot_region'  => 'global',
+            'dukandaar_provider'         => 'moonshot',
+            'dukandaar_moonshot_api_key' => 'sk-moon',
+            'dukandaar_moonshot_model'   => 'kimi-k2.6',
+            'dukandaar_moonshot_region'  => 'global',
         ] );
 
         $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi' ) );
@@ -2357,8 +2357,8 @@ class ApiHandlerTest extends TestCase {
     public function test_call_openai_moonshot_china_region_targets_cn_endpoint(): void {
         // BACKWARD COMPAT: the region selection survives the generalisation.
         $this->set_option_alias( [
-            'fahad_ai_moonshot_api_key' => 'sk-moon',
-            'fahad_ai_moonshot_region'  => 'china',
+            'dukandaar_moonshot_api_key' => 'sk-moon',
+            'dukandaar_moonshot_region'  => 'china',
         ] );
 
         $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi' ) );
@@ -2370,10 +2370,10 @@ class ApiHandlerTest extends TestCase {
     public function test_call_openai_custom_uses_merchant_base_url(): void {
         // The custom preset sends to the merchant-configured base URL.
         $this->set_option_alias( [
-            'fahad_ai_provider'        => 'custom',
-            'fahad_ai_custom_api_key'  => 'sk-custom',
-            'fahad_ai_custom_model'    => 'my-model',
-            'fahad_ai_custom_base_url' => 'https://llm.mystore.example/v1',
+            'dukandaar_provider'        => 'custom',
+            'dukandaar_custom_api_key'  => 'sk-custom',
+            'dukandaar_custom_model'    => 'my-model',
+            'dukandaar_custom_base_url' => 'https://llm.mystore.example/v1',
         ] );
 
         $cap = $this->capture_openai_post( $this->moonshot_answer( 'hi' ) );
@@ -2387,11 +2387,11 @@ class ApiHandlerTest extends TestCase {
     public function test_call_openai_no_key_returns_wp_error(): void {
         // No key for the selected provider → the existing no-key WP_Error contract
         // (so an admin still gets the "configure a key" signal). No request is made.
-        $this->set_option_alias( [ 'fahad_ai_provider' => 'openai' ] );
+        $this->set_option_alias( [ 'dukandaar_provider' => 'openai' ] );
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
         Functions\expect( 'wp_remote_post' )->never();
 
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'call_openai' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'call_openai' );
         $result = $method->invoke( $this->handler(), [ [ 'role' => 'user', 'content' => 'hi' ] ], 'openai' );
 
         $this->assertTrue( is_wp_error( $result ) );
@@ -2400,7 +2400,7 @@ class ApiHandlerTest extends TestCase {
     // ── has_provider_key()/provider_chain() generalised across the catalog ───────
 
     public function test_has_provider_key_works_for_a_new_provider(): void {
-        $this->set_option_alias( [ 'fahad_ai_openai_api_key' => 'sk-openai' ] );
+        $this->set_option_alias( [ 'dukandaar_openai_api_key' => 'sk-openai' ] );
 
         $this->assertTrue( $this->has_provider_key( 'openai' ) );
         $this->assertFalse( $this->has_provider_key( 'gemini' ) );
@@ -2411,10 +2411,10 @@ class ApiHandlerTest extends TestCase {
         // The chain is the configured provider FIRST, then the other keyed providers
         // (in catalog order), each at most once. gemini is excluded (no key).
         $this->set_option_alias( [
-            'fahad_ai_provider'          => 'openai',
-            'fahad_ai_openai_api_key'    => 'sk-openai',
-            'fahad_ai_anthropic_api_key' => 'sk-ant',
-            'fahad_ai_groq_api_key'      => 'sk-groq',
+            'dukandaar_provider'          => 'openai',
+            'dukandaar_openai_api_key'    => 'sk-openai',
+            'dukandaar_anthropic_api_key' => 'sk-ant',
+            'dukandaar_groq_api_key'      => 'sk-groq',
         ] );
 
         $chain = $this->provider_chain();
@@ -2432,9 +2432,9 @@ class ApiHandlerTest extends TestCase {
         // configured = anthropic, both legacy keys set → ['anthropic','moonshot', …]
         // with anthropic first and moonshot present (the historical fallback).
         $this->set_option_alias( [
-            'fahad_ai_provider'          => 'anthropic',
-            'fahad_ai_anthropic_api_key' => 'sk-ant',
-            'fahad_ai_moonshot_api_key'  => 'sk-moon',
+            'dukandaar_provider'          => 'anthropic',
+            'dukandaar_anthropic_api_key' => 'sk-ant',
+            'dukandaar_moonshot_api_key'  => 'sk-moon',
         ] );
 
         $chain = $this->provider_chain();
@@ -2446,7 +2446,7 @@ class ApiHandlerTest extends TestCase {
     public function test_provider_chain_empty_when_no_keys_anywhere(): void {
         // No key for ANY catalog provider → empty chain (handle_message preserves the
         // existing no-key WP_Error in that case).
-        $this->set_option_alias( [ 'fahad_ai_provider' => 'openai' ] );
+        $this->set_option_alias( [ 'dukandaar_provider' => 'openai' ] );
 
         $this->assertSame( [], $this->provider_chain() );
     }
@@ -2457,8 +2457,8 @@ class ApiHandlerTest extends TestCase {
         // configured = openai with a key → the turn is dispatched through the OpenAI
         // path to api.openai.com, and the anthropic endpoint is never touched.
         $this->set_option_alias( [
-            'fahad_ai_provider'       => 'openai',
-            'fahad_ai_openai_api_key' => 'sk-openai',
+            'dukandaar_provider'       => 'openai',
+            'dukandaar_openai_api_key' => 'sk-openai',
         ] );
         Functions\when( 'sanitize_textarea_field' )->returnArg();
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
@@ -2468,7 +2468,7 @@ class ApiHandlerTest extends TestCase {
         Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
         Functions\when( 'update_option' )->justReturn( true );
         Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid' );
-        ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
         Functions\when( 'wp_remote_post' )->alias(
             static function ( $url, $args = [] ) use ( $urls ) {
                 $urls[] = $url;
@@ -2495,9 +2495,9 @@ class ApiHandlerTest extends TestCase {
         // configured = openai (502), fallback to a keyed anthropic. The dispatch tries
         // openai first, falls through on its error, and returns anthropic's result.
         $this->set_option_alias( [
-            'fahad_ai_provider'          => 'openai',
-            'fahad_ai_openai_api_key'    => 'sk-openai',
-            'fahad_ai_anthropic_api_key' => 'sk-ant',
+            'dukandaar_provider'          => 'openai',
+            'dukandaar_openai_api_key'    => 'sk-openai',
+            'dukandaar_anthropic_api_key' => 'sk-ant',
         ] );
         Functions\when( 'sanitize_textarea_field' )->returnArg();
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
@@ -2507,7 +2507,7 @@ class ApiHandlerTest extends TestCase {
         Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
         Functions\when( 'update_option' )->justReturn( true );
         Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid' );
-        ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
         Functions\when( 'wp_remote_post' )->alias(
             static function ( $url, $args = [] ) use ( $counts ) {
                 if ( str_contains( (string) $url, 'anthropic' ) ) {
@@ -2538,7 +2538,7 @@ class ApiHandlerTest extends TestCase {
         // wp_parse_url is WordPress's wrapper around parse_url; alias to the PHP core
         // function for the test. esc_url_raw is stubbed pass-through by each caller.
         Functions\when( 'wp_parse_url' )->alias( static fn( $u, $c = -1 ) => parse_url( $u ) );
-        $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'sanitize_custom_base_url' );
+        $method = new ReflectionMethod( Dukandaar_API_Handler::class, 'sanitize_custom_base_url' );
         return (string) $method->invoke( null, $url );
     }
 
@@ -2565,16 +2565,16 @@ class ApiHandlerTest extends TestCase {
     // ── backward compatibility: the original moonshot dispatch is unchanged ───────
 
     public function test_handle_message_moonshot_backward_compat_hits_moonshot_endpoint(): void {
-        // An install configured BEFORE multi-provider: fahad_ai_provider=moonshot with
+        // An install configured BEFORE multi-provider: dukandaar_provider=moonshot with
         // the legacy key/model/region options. The turn must still dispatch to
         // api.moonshot.ai/v1/chat/completions with a Bearer header and the legacy model,
         // returning the moonshot reply, exactly as the pre-change code did. Anthropic
         // is never called (only the moonshot key is set).
         $this->set_option_alias( [
-            'fahad_ai_provider'         => 'moonshot',
-            'fahad_ai_moonshot_api_key' => 'sk-moon-legacy',
-            'fahad_ai_moonshot_model'   => 'kimi-k2.6',
-            'fahad_ai_moonshot_region'  => 'global',
+            'dukandaar_provider'         => 'moonshot',
+            'dukandaar_moonshot_api_key' => 'sk-moon-legacy',
+            'dukandaar_moonshot_model'   => 'kimi-k2.6',
+            'dukandaar_moonshot_region'  => 'global',
         ] );
         Functions\when( 'sanitize_textarea_field' )->returnArg();
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
@@ -2584,7 +2584,7 @@ class ApiHandlerTest extends TestCase {
         Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
         Functions\when( 'update_option' )->justReturn( true );
         Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid' );
-        ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
         Functions\when( 'wp_remote_post' )->alias(
             static function ( $url, $args = [] ) use ( $captured ) {
                 $captured['url']   = $url;
@@ -2612,8 +2612,8 @@ class ApiHandlerTest extends TestCase {
         // Even with a key for EVERY catalog provider, the chain lists each provider at
         // most once (bounded failover, no loop, no duplicate attempts). Its length
         // never exceeds the catalog size.
-        $map = [ 'fahad_ai_provider' => 'openai' ];
-        foreach ( Fahad_AI_Providers::catalog() as $preset ) {
+        $map = [ 'dukandaar_provider' => 'openai' ];
+        foreach ( Dukandaar_Providers::catalog() as $preset ) {
             $map[ $preset['key_option'] ] = 'sk-key';
         }
         $this->set_option_alias( $map );
@@ -2621,7 +2621,7 @@ class ApiHandlerTest extends TestCase {
         $chain = $this->provider_chain();
 
         $this->assertSame( $chain, array_values( array_unique( $chain ) ), 'No duplicate providers.' );
-        $this->assertLessThanOrEqual( count( Fahad_AI_Providers::ids() ), count( $chain ) );
+        $this->assertLessThanOrEqual( count( Dukandaar_Providers::ids() ), count( $chain ) );
         $this->assertSame( 'openai', $chain[0], 'Configured provider is still first.' );
     }
 }

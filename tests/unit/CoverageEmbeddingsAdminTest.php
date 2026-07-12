@@ -1,6 +1,6 @@
 <?php
 /**
- * Line-coverage tests for Fahad_AI_Embeddings_Admin (companion to EmbeddingsAdminTest).
+ * Line-coverage tests for Dukandaar_Embeddings_Admin (companion to EmbeddingsAdminTest).
  *
  * The sibling EmbeddingsAdminTest covers save()/run_build()/index_status()/enabled().
  * This file drives the remaining branches: register(), the admin-post handle_build()
@@ -16,7 +16,7 @@ use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
 
 /** Thrown by the wp_die / wp_safe_redirect stubs to halt the handler the way WP would. */
-final class Fahad_AI_CoverageHalt extends \RuntimeException {
+final class Dukandaar_CoverageHalt extends \RuntimeException {
 	/** @var array<int,mixed> */
 	public array $args;
 
@@ -97,10 +97,10 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 	/**
 	 * Provide a settings capability for handle_build's guard.
 	 *
-	 * handle_build() calls current_user_can( fahad_ai_settings_capability() ); the
+	 * handle_build() calls current_user_can( dukandaar_settings_capability() ); the
 	 * test controls the guard via the current_user_can stub, so the capability
 	 * string itself is immaterial, it is only the (ignored) argument. We therefore
-	 * only need fahad_ai_settings_capability() to RESOLVE.
+	 * only need dukandaar_settings_capability() to RESOLVE.
 	 *
 	 * Run alone, that function is undefined (admin-settings.php is not loaded), so we
 	 * stub it. Run in the full suite, CoverageAdminSettingsTest's top-level
@@ -116,7 +116,7 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 	 */
 	private function stub_settings_capability( string $cap ): void {
 		try {
-			Functions\when( 'fahad_ai_settings_capability' )->justReturn( $cap );
+			Functions\when( 'dukandaar_settings_capability' )->justReturn( $cap );
 		} catch ( \Patchwork\Exceptions\DefinedTooEarly $e ) {
 			// Real function from admin-settings.php is already loaded; it resolves fine.
 		}
@@ -136,7 +136,7 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 			Functions\when( 'wc_get_products' )->justReturn( [] );
 		}
 
-		$status = Fahad_AI_Embeddings_Admin::index_status();
+		$status = Dukandaar_Embeddings_Admin::index_status();
 
 		$this->assertSame( 0, $status['count'], 'no embedded products -> zero count' );
 		$this->assertFalse( $status['enabled'] );
@@ -148,11 +148,11 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 	// ── register() ───────────────────────────────────────────────────────────────
 
 	public function test_register_hooks_the_admin_post_build_handler(): void {
-		Actions\expectAdded( 'admin_post_' . Fahad_AI_Embeddings_Admin::ACTION_BUILD )
+		Actions\expectAdded( 'admin_post_' . Dukandaar_Embeddings_Admin::ACTION_BUILD )
 			->once()
-			->with( [ Fahad_AI_Embeddings_Admin::class, 'handle_build' ] );
+			->with( [ Dukandaar_Embeddings_Admin::class, 'handle_build' ] );
 
-		Fahad_AI_Embeddings_Admin::register();
+		Dukandaar_Embeddings_Admin::register();
 	}
 
 	// ── handle_build(): capability guard ─────────────────────────────────────────
@@ -162,7 +162,7 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 		Functions\when( 'current_user_can' )->justReturn( false );
 		Functions\when( 'wp_die' )->alias(
 			static function ( $message = '', $title = '', $args = [] ) {
-				throw new Fahad_AI_CoverageHalt( 'wp_die', [ $message, $title, $args ] );
+				throw new Dukandaar_CoverageHalt( 'wp_die', [ $message, $title, $args ] );
 			}
 		);
 		// If the guard fails to stop, these would run, assert they never do.
@@ -170,9 +170,9 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 		Functions\expect( 'wp_safe_redirect' )->never();
 
 		try {
-			Fahad_AI_Embeddings_Admin::handle_build();
+			Dukandaar_Embeddings_Admin::handle_build();
 			$this->fail( 'handle_build must wp_die when the user lacks capability' );
-		} catch ( Fahad_AI_CoverageHalt $e ) {
+		} catch ( Dukandaar_CoverageHalt $e ) {
 			$this->assertSame( 'wp_die', $e->getMessage() );
 			$this->assertStringContainsString( 'permission', (string) $e->args[0] );
 			$this->assertSame( [ 'response' => 403 ], $e->args[2] );
@@ -183,7 +183,7 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 
 	public function test_handle_build_builds_and_redirects_on_success(): void {
 		// Provider available (key present) so run_build() returns a real count.
-		$this->options['fahad_ai_embedding_api_key'] = 'sk-live';
+		$this->options['dukandaar_embedding_api_key'] = 'sk-live';
 		$referer_checked                             = false;
 
 		$this->stub_settings_capability( 'manage_woocommerce' );
@@ -202,24 +202,24 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 			static function ( $url ) use ( &$redirected ) {
 				$redirected = $url;
 				// Mimic WP halting after the redirect so the trailing exit; is unreachable in-test.
-				throw new Fahad_AI_CoverageHalt( 'redirect', [ $url ] );
+				throw new Dukandaar_CoverageHalt( 'redirect', [ $url ] );
 			}
 		);
 
 		try {
-			Fahad_AI_Embeddings_Admin::handle_build();
+			Dukandaar_Embeddings_Admin::handle_build();
 			$this->fail( 'handle_build must redirect (and exit) after a successful build' );
-		} catch ( Fahad_AI_CoverageHalt $e ) {
+		} catch ( Dukandaar_CoverageHalt $e ) {
 			$this->assertSame( 'redirect', $e->getMessage() );
 		}
 
-		$this->assertSame( Fahad_AI_Embeddings_Admin::ACTION_BUILD, $referer_checked, 'nonce action checked' );
+		$this->assertSame( Dukandaar_Embeddings_Admin::ACTION_BUILD, $referer_checked, 'nonce action checked' );
 		$this->assertNotNull( $redirected, 'a redirect must be issued' );
-		$this->assertStringContainsString( 'page=fahad-ai-shopping-assistant-for-woocommerce', (string) $redirected );
-		$this->assertStringContainsString( 'fahad_ai_indexed=4', (string) $redirected, 'indexed count flows into the redirect arg' );
+		$this->assertStringContainsString( 'page=dukandaar-ai-shopping-assistant-for-woocommerce', (string) $redirected );
+		$this->assertStringContainsString( 'dukandaar_indexed=4', (string) $redirected, 'indexed count flows into the redirect arg' );
 		// The build ran: index model + last-build time were recorded.
-		$this->assertSame( 'text-embedding-3-small', $this->options[ Fahad_AI_Postmeta_Vector_Store::OPTION_INDEX_MODEL ] );
-		$this->assertGreaterThan( 0, $this->options[ Fahad_AI_Embeddings_Admin::OPT_LAST_BUILD ] );
+		$this->assertSame( 'text-embedding-3-small', $this->options[ Dukandaar_Postmeta_Vector_Store::OPTION_INDEX_MODEL ] );
+		$this->assertGreaterThan( 0, $this->options[ Dukandaar_Embeddings_Admin::OPT_LAST_BUILD ] );
 	}
 
 	public function test_handle_build_redirects_with_zero_when_no_provider(): void {
@@ -232,18 +232,18 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 		Functions\when( 'wp_safe_redirect' )->alias(
 			static function ( $url ) use ( &$redirected ) {
 				$redirected = $url;
-				throw new Fahad_AI_CoverageHalt( 'redirect', [ $url ] );
+				throw new Dukandaar_CoverageHalt( 'redirect', [ $url ] );
 			}
 		);
 
 		try {
-			Fahad_AI_Embeddings_Admin::handle_build();
-		} catch ( Fahad_AI_CoverageHalt $e ) {
+			Dukandaar_Embeddings_Admin::handle_build();
+		} catch ( Dukandaar_CoverageHalt $e ) {
 			$this->assertSame( 'redirect', $e->getMessage() );
 		}
 
-		$this->assertStringContainsString( 'fahad_ai_indexed=0', (string) $redirected );
-		$this->assertArrayNotHasKey( Fahad_AI_Postmeta_Vector_Store::OPTION_INDEX_MODEL, $this->options, 'no build -> no index model recorded' );
+		$this->assertStringContainsString( 'dukandaar_indexed=0', (string) $redirected );
+		$this->assertArrayNotHasKey( Dukandaar_Postmeta_Vector_Store::OPTION_INDEX_MODEL, $this->options, 'no build -> no index model recorded' );
 	}
 
 	// ── embedded_count() with WooCommerce present ────────────────────────────────
@@ -251,7 +251,7 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 	public function test_embedded_count_counts_products_with_embedding_meta(): void {
 		Functions\when( 'wc_get_products' )->justReturn( [ 101, 102, 103 ] );
 
-		$status = Fahad_AI_Embeddings_Admin::index_status();
+		$status = Dukandaar_Embeddings_Admin::index_status();
 
 		$this->assertSame( 3, $status['count'], 'counts the ids returned by the EXISTS meta query' );
 	}
@@ -262,7 +262,7 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 		Functions\when( 'wc_get_products' )->justReturn( [ 1, 2 ] );
 
 		ob_start();
-		Fahad_AI_Embeddings_Admin::render_settings();
+		Dukandaar_Embeddings_Admin::render_settings();
 		$html = (string) ob_get_clean();
 
 		// Section heading + every named input the form renders.
@@ -289,7 +289,7 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 		// Build/rebuild action with a nonced admin-post URL.
 		$this->assertStringContainsString( 'Build / rebuild index', $html );
 		$this->assertStringContainsString( '_wpnonce=NONCE', $html );
-		$this->assertStringContainsString( 'action=' . Fahad_AI_Embeddings_Admin::ACTION_BUILD, $html );
+		$this->assertStringContainsString( 'action=' . Dukandaar_Embeddings_Admin::ACTION_BUILD, $html );
 	}
 
 	// ── render_settings(): stale model + failures branch ─────────────────────────
@@ -297,21 +297,21 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 	public function test_render_settings_shows_stale_and_failure_notice(): void {
 		// Cohere selected + key present -> provider available with active model
 		// embed-multilingual-v3.0 (the cohere default).
-		$this->options[ Fahad_AI_Embeddings_Admin::OPT_PROVIDER_TYPE ] = 'cohere';
-		$this->options[ Fahad_AI_Embeddings_Admin::OPT_COHERE_KEY ]    = 'co-live';
+		$this->options[ Dukandaar_Embeddings_Admin::OPT_PROVIDER_TYPE ] = 'cohere';
+		$this->options[ Dukandaar_Embeddings_Admin::OPT_COHERE_KEY ]    = 'co-live';
 		// Index built under a different model -> stale.
-		$this->options[ Fahad_AI_Postmeta_Vector_Store::OPTION_INDEX_MODEL ] = 'old-embed-model';
+		$this->options[ Dukandaar_Postmeta_Vector_Store::OPTION_INDEX_MODEL ] = 'old-embed-model';
 		// Recorded failures + a last error -> the red notice branch.
-		$this->options['fahad_ai_index_failures']   = 4;
-		$this->options['fahad_ai_index_last_error'] = 'HTTP 429 rate limited';
+		$this->options['dukandaar_index_failures']   = 4;
+		$this->options['dukandaar_index_last_error'] = 'HTTP 429 rate limited';
 		// Persisted form values flow into the rendered inputs.
-		$this->options[ Fahad_AI_Embeddings_Admin::OPT_DIMS ] = 768;
-		$this->options[ Fahad_AI_Embeddings_Admin::OPT_CAP ]  = 5000;
+		$this->options[ Dukandaar_Embeddings_Admin::OPT_DIMS ] = 768;
+		$this->options[ Dukandaar_Embeddings_Admin::OPT_CAP ]  = 5000;
 
 		Functions\when( 'wc_get_products' )->justReturn( [ 1, 2, 3, 4, 5 ] );
 
 		ob_start();
-		Fahad_AI_Embeddings_Admin::render_settings();
+		Dukandaar_Embeddings_Admin::render_settings();
 		$html = (string) ob_get_clean();
 
 		$this->assertStringContainsString( '5 products indexed', $html );

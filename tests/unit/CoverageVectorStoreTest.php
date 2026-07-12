@@ -67,7 +67,7 @@ class CoverageVectorStoreTest extends TestCase {
 			'precondition: ABSPATH is defined, so the guard does not exit.'
 		);
 		$this->assertTrue(
-			interface_exists( 'Fahad_AI_Vector_Store', false ),
+			interface_exists( 'Dukandaar_Vector_Store', false ),
 			'The guard fell through and the interface was declared (exit was not hit).'
 		);
 	}
@@ -77,9 +77,9 @@ class CoverageVectorStoreTest extends TestCase {
 	 * exact signatures the post-meta / MariaDB / Qdrant backends must implement.
 	 */
 	public function test_interface_declares_the_full_vector_store_contract(): void {
-		$this->assertTrue( interface_exists( 'Fahad_AI_Vector_Store' ) );
+		$this->assertTrue( interface_exists( 'Dukandaar_Vector_Store' ) );
 
-		$ref     = new ReflectionClass( 'Fahad_AI_Vector_Store' );
+		$ref     = new ReflectionClass( 'Dukandaar_Vector_Store' );
 		$methods = array_map(
 			static fn( ReflectionMethod $m ) => $m->getName(),
 			$ref->getMethods()
@@ -119,7 +119,7 @@ class CoverageVectorStoreTest extends TestCase {
 	 * by the engine, and `instanceof` reports the implementation as the interface type.
 	 */
 	public function test_contract_is_implementable_and_type_checks(): void {
-		$store = new class() implements Fahad_AI_Vector_Store {
+		$store = new class() implements Dukandaar_Vector_Store {
 			/** @var array<int, array{vector: array<int,float>, model: string, hash: string}> */
 			private array $rows = [];
 
@@ -152,7 +152,7 @@ class CoverageVectorStoreTest extends TestCase {
 			}
 		};
 
-		$this->assertInstanceOf( Fahad_AI_Vector_Store::class, $store );
+		$this->assertInstanceOf( Dukandaar_Vector_Store::class, $store );
 
 		$store->upsert( 5, [ 0.1, 0.2 ], 'text-embedding-3-small', 'hash-5' );
 		$store->upsert( 9, [ 0.3, 0.4 ], 'text-embedding-3-small', 'hash-9' );

@@ -2,8 +2,8 @@
 /**
  * Unit tests for the embedding provider abstraction (RAG Phase 1, S1.1, #104).
  *
- * Fahad_AI_Embedding_Provider (interface) + Fahad_AI_OpenAI_Embedding_Provider
- * (text-embedding-3-small @ 512 dims) + Fahad_AI_Embeddings (factory + filter).
+ * Dukandaar_Embedding_Provider (interface) + Dukandaar_OpenAI_Embedding_Provider
+ * (text-embedding-3-small @ 512 dims) + Dukandaar_Embeddings (factory + filter).
  * Off / keyword-only until a key is configured; failures are typed and tagged
  * retryable so the indexer can back off and the retriever can degrade, they
  * never reach the shopper.
@@ -30,8 +30,8 @@ class EmbeddingsTest extends TestCase {
 		parent::tearDown();
 	}
 
-	private function provider( string $key = 'sk-test', string $model = 'text-embedding-3-small', int $dims = 512 ): Fahad_AI_OpenAI_Embedding_Provider {
-		return new Fahad_AI_OpenAI_Embedding_Provider( $key, $model, $dims );
+	private function provider( string $key = 'sk-test', string $model = 'text-embedding-3-small', int $dims = 512 ): Dukandaar_OpenAI_Embedding_Provider {
+		return new Dukandaar_OpenAI_Embedding_Provider( $key, $model, $dims );
 	}
 
 	public function test_embed_builds_openai_request_with_model_dims_and_input(): void {
@@ -77,10 +77,10 @@ class EmbeddingsTest extends TestCase {
 	}
 
 	public function test_embed_throws_non_retryable_without_key(): void {
-		$this->expectException( Fahad_AI_Embedding_Exception::class );
+		$this->expectException( Dukandaar_Embedding_Exception::class );
 		try {
 			$this->provider( '' )->embed( [ 'x' ] );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertFalse( $e->is_retryable(), 'a missing key is a config error, not retryable' );
 			throw $e;
 		}
@@ -94,7 +94,7 @@ class EmbeddingsTest extends TestCase {
 		try {
 			$this->provider()->embed( [ 'x' ] );
 			$this->fail( 'expected exception' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertTrue( $e->is_retryable() );
 		}
 	}
@@ -107,7 +107,7 @@ class EmbeddingsTest extends TestCase {
 		try {
 			$this->provider()->embed( [ 'x' ] );
 			$this->fail( 'expected exception' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertTrue( $e->is_retryable() );
 		}
 	}
@@ -120,7 +120,7 @@ class EmbeddingsTest extends TestCase {
 		try {
 			$this->provider()->embed( [ 'x' ] );
 			$this->fail( 'expected exception' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertFalse( $e->is_retryable(), '4xx (except 429) is a client error, not retryable' );
 		}
 	}
@@ -131,7 +131,7 @@ class EmbeddingsTest extends TestCase {
 		try {
 			$this->provider()->embed( [ 'x' ] );
 			$this->fail( 'expected exception' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertTrue( $e->is_retryable() );
 		}
 	}
@@ -146,15 +146,15 @@ class EmbeddingsTest extends TestCase {
 	public function test_factory_returns_openai_provider_when_keyed(): void {
 		Functions\when( 'get_option' )->alias(
 			static fn( $k, $d = '' ) => [
-				'fahad_ai_openai_api_key'   => 'sk-live',
-				'fahad_ai_embedding_model'  => 'text-embedding-3-small',
-				'fahad_ai_embedding_dims'   => 512,
+				'dukandaar_openai_api_key'   => 'sk-live',
+				'dukandaar_embedding_model'  => 'text-embedding-3-small',
+				'dukandaar_embedding_dims'   => 512,
 			][ $k ] ?? $d
 		);
 		Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
 
-		$p = Fahad_AI_Embeddings::provider();
-		$this->assertInstanceOf( Fahad_AI_OpenAI_Embedding_Provider::class, $p );
+		$p = Dukandaar_Embeddings::provider();
+		$this->assertInstanceOf( Dukandaar_OpenAI_Embedding_Provider::class, $p );
 		$this->assertTrue( $p->is_available() );
 	}
 
@@ -162,16 +162,16 @@ class EmbeddingsTest extends TestCase {
 		Functions\when( 'get_option' )->alias( static fn( $k, $d = '' ) => $d );
 		Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
 
-		$this->assertNull( Fahad_AI_Embeddings::provider() );
+		$this->assertNull( Dukandaar_Embeddings::provider() );
 	}
 
 	public function test_factory_respects_filter_override(): void {
 		Functions\when( 'get_option' )->alias( static fn( $k, $d = '' ) => $d );
-		$custom = $this->createMock( Fahad_AI_Embedding_Provider::class );
+		$custom = $this->createMock( Dukandaar_Embedding_Provider::class );
 		Functions\when( 'apply_filters' )->alias(
-			static fn( $hook, $value = null ) => 'fahad_ai_embedding_provider' === $hook ? $custom : $value
+			static fn( $hook, $value = null ) => 'dukandaar_embedding_provider' === $hook ? $custom : $value
 		);
 
-		$this->assertSame( $custom, Fahad_AI_Embeddings::provider() );
+		$this->assertSame( $custom, Dukandaar_Embeddings::provider() );
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Feedback (issue #50: reply feedback / thumbs +
+ * Unit tests for Dukandaar_Feedback (issue #50: reply feedback / thumbs +
  * production guardrail telemetry, the STORE behind the 👍/👎 controls).
  *
  * Red → Green → Refactor. Conventions mirror StockAlertsTest / MemoryToolsTest: WP
@@ -75,20 +75,20 @@ class FeedbackTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Feedback::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Feedback::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh store singleton (reset between cases via reflection). */
-	private function store(): Fahad_AI_Feedback {
-		( new ReflectionProperty( Fahad_AI_Feedback::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Feedback::instance();
+	private function store(): Dukandaar_Feedback {
+		( new ReflectionProperty( Dukandaar_Feedback::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Feedback::instance();
 	}
 
 	/** All stored feedback rows (the raw option value). */
 	private function rows(): array {
-		return $this->options[ Fahad_AI_Feedback::OPTION ] ?? [];
+		return $this->options[ Dukandaar_Feedback::OPTION ] ?? [];
 	}
 
 	/** The first stored row (via a local, so reset() never gets a function return). */
@@ -174,7 +174,7 @@ class FeedbackTest extends TestCase {
 
 		$row = $this->first_row();
 		$this->assertLessThanOrEqual(
-			Fahad_AI_Feedback::MAX_REASON_LENGTH,
+			Dukandaar_Feedback::MAX_REASON_LENGTH,
 			strlen( $row['reason'] ),
 			'A free-text reason must be capped at MAX_REASON_LENGTH characters.'
 		);
@@ -187,8 +187,8 @@ class FeedbackTest extends TestCase {
 		$store->record( 'up', '', str_repeat( 'c', 1000 ), str_repeat( 'm', 1000 ) );
 
 		$row = $this->first_row();
-		$this->assertLessThanOrEqual( Fahad_AI_Feedback::MAX_REF_LENGTH, strlen( $row['conversation_ref'] ) );
-		$this->assertLessThanOrEqual( Fahad_AI_Feedback::MAX_REF_LENGTH, strlen( $row['message_ref'] ) );
+		$this->assertLessThanOrEqual( Dukandaar_Feedback::MAX_REF_LENGTH, strlen( $row['conversation_ref'] ) );
+		$this->assertLessThanOrEqual( Dukandaar_Feedback::MAX_REF_LENGTH, strlen( $row['message_ref'] ) );
 	}
 
 	// ── aggregates(): counts up/down ─────────────────────────────────────────────
@@ -299,12 +299,12 @@ class FeedbackTest extends TestCase {
 		$store = $this->store();
 
 		// Record one more than the cap; the store must never exceed MAX_ENTRIES.
-		$over = Fahad_AI_Feedback::MAX_ENTRIES + 25;
+		$over = Dukandaar_Feedback::MAX_ENTRIES + 25;
 		for ( $i = 0; $i < $over; $i++ ) {
 			$store->record( 'up', '', 'c' . $i, 'm' . $i );
 		}
 
-		$this->assertLessThanOrEqual( Fahad_AI_Feedback::MAX_ENTRIES, count( $this->rows() ) );
+		$this->assertLessThanOrEqual( Dukandaar_Feedback::MAX_ENTRIES, count( $this->rows() ) );
 	}
 
 	public function test_retention_cap_drops_oldest_first(): void {
@@ -312,7 +312,7 @@ class FeedbackTest extends TestCase {
 
 		// The very first ref recorded should be evicted once we overflow the cap; a
 		// recent one should survive (FIFO retention).
-		$total = Fahad_AI_Feedback::MAX_ENTRIES + 5;
+		$total = Dukandaar_Feedback::MAX_ENTRIES + 5;
 		for ( $i = 0; $i < $total; $i++ ) {
 			$store->record( 'up', '', 'conv-' . $i, 'msg-' . $i );
 		}
@@ -326,7 +326,7 @@ class FeedbackTest extends TestCase {
 
 	public function test_a_corrupted_option_is_treated_as_empty(): void {
 		// A non-array option value must not fatal, the store reads it as empty.
-		$this->options[ Fahad_AI_Feedback::OPTION ] = 'corrupted-not-an-array';
+		$this->options[ Dukandaar_Feedback::OPTION ] = 'corrupted-not-an-array';
 
 		$res = $this->store()->record( 'up', '', 'c1', 'm1' );
 

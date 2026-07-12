@@ -31,8 +31,8 @@ class CoverageQdrantVectorStoreTest extends TestCase {
 		parent::tearDown();
 	}
 
-	private function store(): Fahad_AI_Qdrant_Vector_Store {
-		return new Fahad_AI_Qdrant_Vector_Store( 'https://q.example.com/', 'qk', 'products', 'text-embedding-3-small' );
+	private function store(): Dukandaar_Qdrant_Vector_Store {
+		return new Dukandaar_Qdrant_Vector_Store( 'https://q.example.com/', 'qk', 'products', 'text-embedding-3-small' );
 	}
 
 	// ── delete() ─────────────────────────────────────────────────────────────────
@@ -109,8 +109,8 @@ class CoverageQdrantVectorStoreTest extends TestCase {
 
 		try {
 			$this->store()->delete( 1 );
-			$this->fail( 'expected Fahad_AI_Embedding_Exception for a 5xx response' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+			$this->fail( 'expected Dukandaar_Embedding_Exception for a 5xx response' );
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertStringContainsString( 'HTTP 503', $e->getMessage() );
 			$this->assertTrue( $e->is_retryable(), '5xx must be retryable' );
 		}
@@ -122,8 +122,8 @@ class CoverageQdrantVectorStoreTest extends TestCase {
 
 		try {
 			$this->store()->delete( 1 );
-			$this->fail( 'expected Fahad_AI_Embedding_Exception for 429' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+			$this->fail( 'expected Dukandaar_Embedding_Exception for 429' );
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertStringContainsString( 'HTTP 429', $e->getMessage() );
 			$this->assertTrue( $e->is_retryable(), '429 must be retryable' );
 		}
@@ -135,8 +135,8 @@ class CoverageQdrantVectorStoreTest extends TestCase {
 
 		try {
 			$this->store()->delete( 1 );
-			$this->fail( 'expected Fahad_AI_Embedding_Exception for a 4xx response' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+			$this->fail( 'expected Dukandaar_Embedding_Exception for a 4xx response' );
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertStringContainsString( 'HTTP 404', $e->getMessage() );
 			$this->assertFalse( $e->is_retryable(), '4xx (not 429) must be terminal' );
 		}
@@ -149,7 +149,7 @@ class CoverageQdrantVectorStoreTest extends TestCase {
 		// add_filter must NOT be invoked when no URL is configured.
 		Functions\expect( 'add_filter' )->never();
 
-		Fahad_AI_Qdrant_Vector_Store::register();
+		Dukandaar_Qdrant_Vector_Store::register();
 
 		$this->assertTrue( true ); // reaching here proves the early return ran without registering.
 	}
@@ -158,9 +158,9 @@ class CoverageQdrantVectorStoreTest extends TestCase {
 		Functions\when( 'get_option' )->alias(
 			static function ( $name, $default = false ) {
 				return match ( $name ) {
-					'fahad_ai_qdrant_url'        => 'https://q.example.com',
-					'fahad_ai_qdrant_key'        => 'secret-key',
-					'fahad_ai_qdrant_collection' => 'my_products',
+					'dukandaar_qdrant_url'        => 'https://q.example.com',
+					'dukandaar_qdrant_key'        => 'secret-key',
+					'dukandaar_qdrant_collection' => 'my_products',
 					default                      => $default,
 				};
 			}
@@ -174,19 +174,19 @@ class CoverageQdrantVectorStoreTest extends TestCase {
 			}
 		);
 
-		Fahad_AI_Qdrant_Vector_Store::register();
+		Dukandaar_Qdrant_Vector_Store::register();
 
-		$this->assertSame( 'fahad_ai_vector_store', $captured['hook'] );
+		$this->assertSame( 'dukandaar_vector_store', $captured['hook'] );
 		$this->assertSame( 10, $captured['priority'] );
 		$this->assertSame( 2, $captured['args'] );
 		$this->assertIsCallable( $captured['cb'] );
 
 		// Invoke the registered callback: a configured URL yields an available store,
 		// so the callback returns the Qdrant store rather than the fallback.
-		$fallback = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$fallback = Mockery::mock( Dukandaar_Vector_Store::class );
 		$result   = ( $captured['cb'] )( $fallback, 'text-embedding-3-small' );
 
-		$this->assertInstanceOf( Fahad_AI_Qdrant_Vector_Store::class, $result );
+		$this->assertInstanceOf( Dukandaar_Qdrant_Vector_Store::class, $result );
 		$this->assertNotSame( $fallback, $result );
 		$this->assertTrue( $result->is_available() );
 	}
@@ -197,9 +197,9 @@ class CoverageQdrantVectorStoreTest extends TestCase {
 		Functions\when( 'get_option' )->alias(
 			static function ( $name, $default = false ) {
 				return match ( $name ) {
-					'fahad_ai_qdrant_url'        => 'https://q.example.com',
-					'fahad_ai_qdrant_key'        => 'k',
-					'fahad_ai_qdrant_collection' => '',
+					'dukandaar_qdrant_url'        => 'https://q.example.com',
+					'dukandaar_qdrant_key'        => 'k',
+					'dukandaar_qdrant_collection' => '',
 					default                      => $default,
 				};
 			}
@@ -213,10 +213,10 @@ class CoverageQdrantVectorStoreTest extends TestCase {
 			}
 		);
 
-		Fahad_AI_Qdrant_Vector_Store::register();
+		Dukandaar_Qdrant_Vector_Store::register();
 
 		$this->assertIsCallable( $cb );
-		$fallback = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$fallback = Mockery::mock( Dukandaar_Vector_Store::class );
 		$result   = $cb( $fallback, 'm' );
 
 		$this->assertSame( $fallback, $result, 'an unavailable store falls back' );

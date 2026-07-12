@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Stock_Alerts (issue #51: the subscription STORE +
+ * Unit tests for Dukandaar_Stock_Alerts (issue #51: the subscription STORE +
  * notifier behind the back-in-stock / price-drop alerts).
  *
  * Red → Green → Refactor. Conventions mirror MemoryToolsTest / OrderToolsTest: WP
@@ -107,20 +107,20 @@ class StockAlertsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh store singleton (reset between cases via reflection). */
-	private function store(): Fahad_AI_Stock_Alerts {
-		( new ReflectionProperty( Fahad_AI_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Stock_Alerts::instance();
+	private function store(): Dukandaar_Stock_Alerts {
+		( new ReflectionProperty( Dukandaar_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Stock_Alerts::instance();
 	}
 
 	/** All stored subscription rows (the raw option value). */
 	private function rows(): array {
-		return $this->options[ Fahad_AI_Stock_Alerts::OPTION ] ?? [];
+		return $this->options[ Dukandaar_Stock_Alerts::OPTION ] ?? [];
 	}
 
 	// ── subscribe(): double opt-in, validation, dedupe ──────────────────────────
@@ -176,7 +176,7 @@ class StockAlertsTest extends TestCase {
 
 		$default = $store->subscribe( 1, 'a@b.com' );
 		$this->assertTrue( $default['ok'] ?? false );
-		$row = reset( $this->options[ Fahad_AI_Stock_Alerts::OPTION ] );
+		$row = reset( $this->options[ Dukandaar_Stock_Alerts::OPTION ] );
 		$this->assertSame( 'back_in_stock', $row['type'] );
 
 		$bad = $store->subscribe( 1, 'c@d.com', 0, 'something_else' );
@@ -294,7 +294,7 @@ class StockAlertsTest extends TestCase {
 		$this->assertCount( 1, $this->mail );
 		$body = $this->mail[0][2];
 		// The unsubscribe URL carries the signed unsubscribe token (one-click honor).
-		$this->assertStringContainsString( 'fahad_ai_stock_alert=unsubscribe', $body );
+		$this->assertStringContainsString( 'dukandaar_stock_alert=unsubscribe', $body );
 		$this->assertStringContainsString( $store->token( 'unsubscribe', $id ), $body );
 	}
 

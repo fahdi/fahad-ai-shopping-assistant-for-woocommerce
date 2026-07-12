@@ -4,9 +4,9 @@
  * (issue #18, the wallet differentiator).
  *
  * The wallet tools (get_wallet_balance, top_up, pay_with_credit) are auth-gated
- * personal-data tools: they self-register via Fahad_AI_Tool_Registry::register_pack()
+ * personal-data tools: they self-register via Dukandaar_Tool_Registry::register_pack()
  * and declare `'personal' => true`, so the registry's central login gate
- * (Fahad_AI_Tool_Registry::dispatch → Fahad_AI_Auth::guard_logged_in) blocks a guest
+ * (Dukandaar_Tool_Registry::dispatch → Dukandaar_Auth::guard_logged_in) blocks a guest
  * BEFORE the callback runs and returns the standard login-required error. The model,
  * seeing it has no authenticated wallet data, and, crucially, no wallet PROVIDER
  * result of any kind, must escalate the guest to log in and invent NO balance,

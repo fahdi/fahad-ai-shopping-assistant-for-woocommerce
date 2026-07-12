@@ -19,14 +19,14 @@ defined( 'ABSPATH' ) || exit;
  * surfaced (status => approve), so a pending or spam review never reaches a
  * customer through the assistant.
  *
- * This is a DROP-IN pack following the Fahad_AI_Catalog_Tools pattern: a
+ * This is a DROP-IN pack following the Dukandaar_Catalog_Tools pattern: a
  * self-contained class in its own file that self-registers a provider at file
- * scope via Fahad_AI_Tool_Registry::register_pack(). The plugin bootstrap (and the
+ * scope via Dukandaar_Tool_Registry::register_pack(). The plugin bootstrap (and the
  * test bootstrap) glob-require includes/tools/*.php, so adding this file is the
  * ONLY wiring needed, no edits to the bootstrap, the test bootstrap, or the eval
  * harness.
  */
-final class Fahad_AI_Reviews_Tools {
+final class Dukandaar_Reviews_Tools {
 
 	/** Default number of recent review snippets returned. */
 	private const DEFAULT_LIMIT = 3;
@@ -86,7 +86,7 @@ final class Fahad_AI_Reviews_Tools {
 		$product    = wc_get_product( $product_id );
 
 		if ( ! $product || ! $product->is_visible() ) {
-			return [ 'error' => __( 'Product not found.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ];
+			return [ 'error' => __( 'Product not found.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) ];
 		}
 
 		$limit = min( max( 1, (int) ( $input['limit'] ?? self::DEFAULT_LIMIT ) ), self::MAX_LIMIT );
@@ -148,5 +148,5 @@ final class Fahad_AI_Reviews_Tools {
 // file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test pcov window opens, so it is unmeasurable; its target (the callable register provider) is asserted by CoverageReviewsToolsTest.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Reviews_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Reviews_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

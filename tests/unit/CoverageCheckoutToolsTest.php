@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental line-coverage tests for Fahad_AI_Checkout_Tools.
+ * Supplemental line-coverage tests for Dukandaar_Checkout_Tools.
  *
  * The sibling CheckoutToolsTest drives the pure shaping / decision logic through a
  * stub subclass that OVERRIDES the five WooCommerce seams, so the REAL seam bodies
@@ -35,9 +35,9 @@ class CoverageCheckoutToolsTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
-		$this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+		$this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
-		Fahad_AI_Checkout_Tools_SelectFails_Stub::reset_stub();
+		Dukandaar_Checkout_Tools_SelectFails_Stub::reset_stub();
 
 		Functions\stubs( [
 			'sanitize_text_field' => fn( $s ) => is_string( $s ) ? trim( $s ) : $s,
@@ -56,7 +56,7 @@ class CoverageCheckoutToolsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
@@ -65,7 +65,7 @@ class CoverageCheckoutToolsTest extends TestCase {
 
 	/** Invoke a private/protected static method on the REAL pack class. */
 	private function invoke( string $method, ...$args ) {
-		return ( new ReflectionMethod( Fahad_AI_Checkout_Tools::class, $method ) )->invokeArgs( null, $args );
+		return ( new ReflectionMethod( Dukandaar_Checkout_Tools::class, $method ) )->invokeArgs( null, $args );
 	}
 
 	/**
@@ -73,13 +73,13 @@ class CoverageCheckoutToolsTest extends TestCase {
 	 * provider class (defaults to the seam-failing stub used for the select path).
 	 */
 	private function dispatch( string $providerClass, string $tool, array $input = [] ): array {
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-		Fahad_AI_Tool_Registry::reset_packs();
-		Fahad_AI_Tool_Registry::register_pack( [ $providerClass, 'register' ] );
+		Dukandaar_Tool_Registry::reset_packs();
+		Dukandaar_Tool_Registry::register_pack( [ $providerClass, 'register' ] );
 
-		return Fahad_AI_Tool_Registry::instance()->dispatch( $tool, $input );
+		return Dukandaar_Tool_Registry::instance()->dispatch( $tool, $input );
 	}
 
 	/**
@@ -97,8 +97,8 @@ class CoverageCheckoutToolsTest extends TestCase {
 	}
 
 	/** A concrete fake session so the seams' method_exists(save_data/get/set) guards pass. */
-	private function fakeSession( array $initialChosen = [] ): Fahad_AI_Checkout_Coverage_Fake_Session {
-		return new Fahad_AI_Checkout_Coverage_Fake_Session( $initialChosen );
+	private function fakeSession( array $initialChosen = [] ): Dukandaar_Checkout_Coverage_Fake_Session {
+		return new Dukandaar_Checkout_Coverage_Fake_Session( $initialChosen );
 	}
 
 	// ── pure helper branch gaps ──────────────────────────────────────────────────
@@ -155,13 +155,13 @@ class CoverageCheckoutToolsTest extends TestCase {
 	public function test_set_shipping_method_surfaces_select_failure(): void {
 		// A method that IS offered, but the (real) select seam returns false, the tool
 		// must report an honest failure, not a faked success.
-		Fahad_AI_Checkout_Tools_SelectFails_Stub::$shipping = [
+		Dukandaar_Checkout_Tools_SelectFails_Stub::$shipping = [
 			'needed'        => true,
 			'chosen_method' => null,
 			'methods'       => [ [ 'id' => 'flat_rate:1', 'label' => 'Flat rate', 'cost' => '5.00' ] ],
 		];
 
-		$result = $this->dispatch( 'Fahad_AI_Checkout_Tools_SelectFails_Stub', 'set_shipping_method', [ 'method_id' => 'flat_rate:1' ] );
+		$result = $this->dispatch( 'Dukandaar_Checkout_Tools_SelectFails_Stub', 'set_shipping_method', [ 'method_id' => 'flat_rate:1' ] );
 
 		$this->assertFalse( $result['success'] );
 		$this->assertArrayHasKey( 'error', $result );
@@ -224,7 +224,7 @@ class CoverageCheckoutToolsTest extends TestCase {
 
 		// Concrete fake cart declaring get_applied_coupons / get_discount_total so the
 		// production method_exists guards run their real value branches.
-		$cart = new Fahad_AI_Checkout_Coverage_Fake_Cart( [
+		$cart = new Dukandaar_Checkout_Coverage_Fake_Cart( [
 			'empty'          => false,
 			'cart'           => [
 				'key1' => [ 'data' => $product, 'quantity' => 3, 'line_total' => '120.00' ],
@@ -267,7 +267,7 @@ class CoverageCheckoutToolsTest extends TestCase {
 	}
 
 	public function test_resolve_shipping_not_needed_for_virtual_cart(): void {
-		$cart = new Fahad_AI_Checkout_Coverage_Fake_Cart( [ 'needs_shipping' => false ] );
+		$cart = new Dukandaar_Checkout_Coverage_Fake_Cart( [ 'needs_shipping' => false ] );
 		Functions\when( 'WC' )->justReturn( $this->fakeWc( $cart ) );
 
 		$snap = $this->invoke( 'resolve_shipping' );
@@ -280,7 +280,7 @@ class CoverageCheckoutToolsTest extends TestCase {
 	public function test_resolve_shipping_when_shipping_engine_unavailable(): void {
 		// needs_shipping true, but WC()->shipping() is falsy → needed with no methods,
 		// never an invented one.
-		$cart = new Fahad_AI_Checkout_Coverage_Fake_Cart( [ 'needs_shipping' => true ] );
+		$cart = new Dukandaar_Checkout_Coverage_Fake_Cart( [ 'needs_shipping' => true ] );
 		Functions\when( 'WC' )->justReturn( $this->fakeWc( $cart, null, null ) );
 
 		$snap = $this->invoke( 'resolve_shipping' );
@@ -293,11 +293,11 @@ class CoverageCheckoutToolsTest extends TestCase {
 	public function test_resolve_shipping_lists_real_rates_and_chosen_method(): void {
 		// Concrete fake cart: needs_shipping true + calculate_shipping present, so the
 		// production method_exists guard runs the recalculation line (not just the check).
-		$cart = new Fahad_AI_Checkout_Coverage_Fake_Cart( [ 'needs_shipping' => true ] );
+		$cart = new Dukandaar_Checkout_Coverage_Fake_Cart( [ 'needs_shipping' => true ] );
 
 		// A rate object exposing get_label()/get_cost(), and a scalar rate to exercise
 		// the is_object guards (label/cost fall back to '').
-		$rate = new Fahad_AI_Checkout_Coverage_Fake_Rate( 'Flat rate', '5.00' );
+		$rate = new Dukandaar_Checkout_Coverage_Fake_Rate( 'Flat rate', '5.00' );
 
 		$session = $this->fakeSession( [ 'flat_rate:1' ] );
 
@@ -327,7 +327,7 @@ class CoverageCheckoutToolsTest extends TestCase {
 
 	public function test_resolve_shipping_without_session_has_null_chosen(): void {
 		// No session object → chosen stays null; still lists methods.
-		$cart = new Fahad_AI_Checkout_Coverage_Fake_Cart( [ 'needs_shipping' => true ] );
+		$cart = new Dukandaar_Checkout_Coverage_Fake_Cart( [ 'needs_shipping' => true ] );
 
 		$shipping = Mockery::mock();
 		$shipping->shouldReceive( 'get_packages' )->andReturn( [] );
@@ -355,7 +355,7 @@ class CoverageCheckoutToolsTest extends TestCase {
 
 		// Concrete fake cart declaring calculate_shipping/calculate_totals so the
 		// production method_exists guards run the recalculation lines.
-		$cart = new Fahad_AI_Checkout_Coverage_Fake_Cart();
+		$cart = new Dukandaar_Checkout_Coverage_Fake_Cart();
 
 		Functions\when( 'WC' )->justReturn( $this->fakeWc( $cart, $session, '__none__' ) );
 
@@ -491,7 +491,7 @@ class CoverageCheckoutToolsTest extends TestCase {
  * set_shipping_method select-failed branch. All other seams return canned data via
  * the static fields, mirroring the sibling stub.
  */
-class Fahad_AI_Checkout_Tools_SelectFails_Stub extends Fahad_AI_Checkout_Tools {
+class Dukandaar_Checkout_Tools_SelectFails_Stub extends Dukandaar_Checkout_Tools {
 
 	public static array $cart = [];
 	public static ?array $shipping = null;
@@ -529,7 +529,7 @@ class Fahad_AI_Checkout_Tools_SelectFails_Stub extends Fahad_AI_Checkout_Tools {
  * not declare them) makes those guards' true branches execute, so the recalculation
  * and discount/coupon lines are covered with meaningful, asserted behaviour.
  */
-class Fahad_AI_Checkout_Coverage_Fake_Cart extends WC_Cart {
+class Dukandaar_Checkout_Coverage_Fake_Cart extends WC_Cart {
 
 	private array $cfg;
 	public int $calcShippingCount = 0;
@@ -554,7 +554,7 @@ class Fahad_AI_Checkout_Coverage_Fake_Cart extends WC_Cart {
  * A concrete fake WC session exposing get/set/save_data so persist_session()'s
  * method_exists(save_data) guard passes and the chosen-method storage round-trips.
  */
-class Fahad_AI_Checkout_Coverage_Fake_Session {
+class Dukandaar_Checkout_Coverage_Fake_Session {
 
 	private array $store;
 	public int $saveCount = 0;
@@ -577,7 +577,7 @@ class Fahad_AI_Checkout_Coverage_Fake_Session {
 }
 
 /** A concrete shipping-rate object exposing get_label()/get_cost() for resolve_shipping. */
-class Fahad_AI_Checkout_Coverage_Fake_Rate {
+class Dukandaar_Checkout_Coverage_Fake_Rate {
 
 	private string $label;
 	private string $cost;

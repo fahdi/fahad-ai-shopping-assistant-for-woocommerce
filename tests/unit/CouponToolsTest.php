@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Coupon_Tools (issue #14: coupons & deals).
+ * Unit tests for Dukandaar_Coupon_Tools (issue #14: coupons & deals).
  *
  * Red → Green → Refactor. Conventions mirror CatalogToolsTest / ToolsTest:
  * WP/WC functions mocked via Brain\Monkey; WC objects via Mockery; the registry
@@ -9,9 +9,9 @@
  *
  * The two coupon tools (list_active_coupons, apply_coupon) are NOT built-ins , 
  * they ship as a drop-in feature pack that self-registers a provider via
- * Fahad_AI_Tool_Registry::register_pack() at file load. Every test registers the
+ * Dukandaar_Tool_Registry::register_pack() at file load. Every test registers the
  * coupon pack's REAL provider through register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration
+ * Dukandaar_Tool_Registry::instance()->dispatch(), so the production registration
  * + merge + dispatch path is what is under test.
  *
  * Coupon objects are sourced through get_posts() (the production enumeration of
@@ -41,7 +41,7 @@ class CouponToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         Functions\stubs( [
             'absint'              => fn( $n ) => abs( (int) $n ),
@@ -60,7 +60,7 @@ class CouponToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
@@ -72,14 +72,14 @@ class CouponToolsTest extends TestCase {
      * REAL provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Coupon_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Coupon_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     /**
@@ -153,7 +153,7 @@ class CouponToolsTest extends TestCase {
         // They operate on the shared session cart, so they must NOT be login-gated.
         // (Private members are reflection-accessible by default since PHP 8.1, so
         // no setAccessible(), which is a deprecated no-op on 8.5.)
-        $map = ( new ReflectionMethod( Fahad_AI_Tool_Registry::class, 'get_tools' ) )->invoke( $this->registry() );
+        $map = ( new ReflectionMethod( Dukandaar_Tool_Registry::class, 'get_tools' ) )->invoke( $this->registry() );
 
         $this->assertArrayHasKey( 'list_active_coupons', $map );
         $this->assertArrayHasKey( 'apply_coupon', $map );

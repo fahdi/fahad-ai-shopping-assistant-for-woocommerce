@@ -44,24 +44,24 @@ defined( 'ABSPATH' ) || exit;
  * from the store-wide coupon list and the shopper's OWN wallet balance; only a
  * formatted, non-identifying string ever reaches the widget config.
  *
- * Stateless singleton (mirrors Fahad_AI_Feedback / Fahad_AI_Auth): no per-instance
+ * Stateless singleton (mirrors Dukandaar_Feedback / Dukandaar_Auth): no per-instance
  * state, reset between tests via reflection on self::$instance.
  */
-final class Fahad_AI_Proactive {
+final class Dukandaar_Proactive {
 
 	/** Merchant kill-switch (default OFF, proactive nudges are opt-in). */
-	public const OPTION_ENABLED = 'fahad_ai_proactive_enabled';
+	public const OPTION_ENABLED = 'dukandaar_proactive_enabled';
 
 	/** Per-visitor frequency cap (default 1 = once per session). */
-	public const OPTION_FREQUENCY = 'fahad_ai_proactive_frequency';
+	public const OPTION_FREQUENCY = 'dukandaar_proactive_frequency';
 
 	/** Default frequency cap when the option is unset. */
 	public const DEFAULT_FREQUENCY = 1;
 
 	/** Stable storage key the widget uses to remember shows + dismissal per visitor. */
-	public const STORAGE_KEY = 'fahad_ai_proactive_v1';
+	public const STORAGE_KEY = 'dukandaar_proactive_v1';
 
-	private static ?Fahad_AI_Proactive $instance = null;
+	private static ?Dukandaar_Proactive $instance = null;
 
 	public static function instance(): self {
 		if ( null === self::$instance ) {
@@ -213,7 +213,7 @@ final class Fahad_AI_Proactive {
 		if ( '' !== $description ) {
 			return sprintf(
 				/* translators: 1: coupon code, e.g. SAVE10; 2: plain discount description, e.g. "10% off". A calm, factual nudge, no urgency. */
-				__( 'You can use code %1$s (%2$s) on this order. Want help applying it?', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				__( 'You can use code %1$s (%2$s) on this order. Want help applying it?', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				$code,
 				$description
 			);
@@ -221,7 +221,7 @@ final class Fahad_AI_Proactive {
 
 		return sprintf(
 			/* translators: %s: coupon code, e.g. SAVE10. A calm, factual nudge, no urgency. */
-			__( 'You can use code %s on this order. Want help applying it?', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			__( 'You can use code %s on this order. Want help applying it?', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			$code
 		);
 	}
@@ -240,7 +240,7 @@ final class Fahad_AI_Proactive {
 
 		return sprintf(
 			/* translators: %s: the shopper's formatted store-credit balance, e.g. ₨500. A calm, factual nudge, no urgency. */
-			__( 'You have %s in store credit. Want to use it on this order?', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			__( 'You have %s in store credit. Want to use it on this order?', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			$formatted
 		);
 	}
@@ -259,7 +259,7 @@ final class Fahad_AI_Proactive {
 	 *
 	 * When eligible, the config carries the grounded message + type, the cap, and a
 	 * stable storage key the widget uses to remember per-visitor shows + dismissal. The
-	 * widget enforces the same cap/dismissal client-side via that key. A `fahad_ai_proactive_config`
+	 * widget enforces the same cap/dismissal client-side via that key. A `dukandaar_proactive_config`
 	 * filter lets a site adjust the final config (e.g. force-disable) without code edits.
 	 *
 	 * @param array{type:string,message:string}|null $signal The grounded value signal.
@@ -289,7 +289,7 @@ final class Fahad_AI_Proactive {
 		 *
 		 * @param array $config The resolved config (or the same shape).
 		 */
-		$config = apply_filters( 'fahad_ai_proactive_config', $config );
+		$config = apply_filters( 'dukandaar_proactive_config', $config );
 
 		return is_array( $config ) ? $config : [];
 	}

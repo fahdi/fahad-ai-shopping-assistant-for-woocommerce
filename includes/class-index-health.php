@@ -9,11 +9,11 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Index_Health {
+final class Dukandaar_Index_Health {
 
-	private const OPT_FAILURES     = 'fahad_ai_index_failures';
-	private const OPT_LAST_ERROR   = 'fahad_ai_index_last_error';
-	private const OPT_LAST_ERROR_AT = 'fahad_ai_index_last_error_at';
+	private const OPT_FAILURES     = 'dukandaar_index_failures';
+	private const OPT_LAST_ERROR   = 'dukandaar_index_last_error';
+	private const OPT_LAST_ERROR_AT = 'dukandaar_index_last_error_at';
 
 	public static function record_failure( string $message ): void {
 		update_option( self::OPT_FAILURES, self::failures() + 1 );

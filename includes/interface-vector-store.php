@@ -3,7 +3,7 @@
  * Vector store contract (RAG Phase 1, S1.2, #105).
  *
  * One swappable boundary for storing product embeddings and running similarity
- * search. The default is post-meta-backed (Fahad_AI_Postmeta_Vector_Store);
+ * search. The default is post-meta-backed (Dukandaar_Postmeta_Vector_Store);
  * Phase 3 adds MariaDB-native and external (Qdrant) implementations behind the
  * same interface so retrieval logic never changes when the backend does
  * (RAG-DESIGN.md §7.1, §7.4).
@@ -14,7 +14,7 @@
 defined( 'ABSPATH' ) || exit;
 // @codeCoverageIgnoreEnd
 
-interface Fahad_AI_Vector_Store {
+interface Dukandaar_Vector_Store {
 
 	/**
 	 * Store (or replace) a product's embedding plus the model + content hash it

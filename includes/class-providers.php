@@ -28,23 +28,23 @@ defined( 'ABSPATH' ) || exit;
  *   - model_option  Option name holding the merchant's chosen model.
  *
  * BACKWARD COMPATIBILITY (mandatory): the `anthropic` and `moonshot` presets keep
- * their pre-existing option names (fahad_ai_anthropic_api_key / _model,
- * fahad_ai_moonshot_api_key / _model / _region) so an install configured before the
+ * their pre-existing option names (dukandaar_anthropic_api_key / _model,
+ * dukandaar_moonshot_api_key / _model / _region) so an install configured before the
  * multi-provider work keeps working with no migration. New providers follow the
- * fahad_ai_{id}_api_key / fahad_ai_{id}_model convention (which the two legacy ids
+ * dukandaar_{id}_api_key / dukandaar_{id}_model convention (which the two legacy ids
  * happen to already match).
  *
- * EXTENSIBILITY: the catalog runs through apply_filters( 'fahad_ai_providers', … )
+ * EXTENSIBILITY: the catalog runs through apply_filters( 'dukandaar_providers', … )
  * so an add-on can register an entirely new provider at the DATA level, no
  * provider-class plumbing. Malformed entries (non-array, or missing required keys)
  * are dropped so a broken add-on can never poison dispatch.
  */
-final class Fahad_AI_Providers {
+final class Dukandaar_Providers {
 
 	/**
 	 * Filter hook name for registering/altering providers.
 	 */
-	public const FILTER = 'fahad_ai_providers';
+	public const FILTER = 'dukandaar_providers';
 
 	/**
 	 * The keys every catalog entry must declare to be considered valid. A filtered
@@ -55,7 +55,7 @@ final class Fahad_AI_Providers {
 	private const REQUIRED_KEYS = [ 'label', 'type', 'default_model', 'models', 'key_option', 'model_option' ];
 
 	/**
-	 * The built-in provider presets, before the fahad_ai_providers filter runs.
+	 * The built-in provider presets, before the dukandaar_providers filter runs.
 	 *
 	 * Built once and memoised within a request (the filter result included). Tests
 	 * reset Brain\Monkey between cases, so the static cache is keyed on whether the
@@ -70,153 +70,153 @@ final class Fahad_AI_Providers {
 			// Native Anthropic (Claude). The ONLY 'anthropic'-type provider. Keeps the
 			// pre-existing option names for backward compatibility.
 			'anthropic' => [
-				'label'         => __( 'Anthropic (Claude)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'Anthropic (Claude)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'anthropic',
 				'default_model' => 'claude-haiku-4-5-20251001',
 				'models'        => [ 'claude-haiku-4-5-20251001', 'claude-sonnet-4-6', 'claude-opus-4-6' ],
-				'key_option'    => 'fahad_ai_anthropic_api_key',
-				'model_option'  => 'fahad_ai_anthropic_model',
+				'key_option'    => 'dukandaar_anthropic_api_key',
+				'model_option'  => 'dukandaar_anthropic_model',
 			],
 
 			// Moonshot AI (Kimi). OpenAI-compatible. Base URL is region-selected at
 			// runtime in resolve() (global vs. china) and carries the /v1 segment; keeps
 			// its existing options.
 			'moonshot' => [
-				'label'         => __( 'Moonshot AI (Kimi)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'Moonshot AI (Kimi)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'https://api.moonshot.ai/v1',
 				'default_model' => 'kimi-k2.6',
 				'models'        => [ 'kimi-k2.6', 'kimi-k2.5', 'kimi-k2-thinking-turbo', 'kimi-k2-thinking', 'moonshot-v1-auto', 'moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k' ],
-				'key_option'    => 'fahad_ai_moonshot_api_key',
-				'model_option'  => 'fahad_ai_moonshot_model',
+				'key_option'    => 'dukandaar_moonshot_api_key',
+				'model_option'  => 'dukandaar_moonshot_model',
 			],
 
 			// OpenAI.
 			'openai' => [
-				'label'         => __( 'OpenAI', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'OpenAI', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'https://api.openai.com/v1',
 				'default_model' => 'gpt-4o-mini',
 				'models'        => [ 'gpt-4o-mini', 'gpt-4o', 'o4-mini' ],
-				'key_option'    => 'fahad_ai_openai_api_key',
-				'model_option'  => 'fahad_ai_openai_model',
+				'key_option'    => 'dukandaar_openai_api_key',
+				'model_option'  => 'dukandaar_openai_model',
 			],
 
 			// Google Gemini (OpenAI-compatible endpoint).
 			'gemini' => [
-				'label'         => __( 'Google Gemini', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'Google Gemini', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'https://generativelanguage.googleapis.com/v1beta/openai',
 				'default_model' => 'gemini-2.0-flash',
 				'models'        => [ 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash' ],
-				'key_option'    => 'fahad_ai_gemini_api_key',
-				'model_option'  => 'fahad_ai_gemini_model',
+				'key_option'    => 'dukandaar_gemini_api_key',
+				'model_option'  => 'dukandaar_gemini_model',
 			],
 
 			// Groq (fast inference).
 			'groq' => [
-				'label'         => __( 'Groq', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'Groq', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'https://api.groq.com/openai/v1',
 				'default_model' => 'llama-3.3-70b-versatile',
 				'models'        => [ 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768' ],
-				'key_option'    => 'fahad_ai_groq_api_key',
-				'model_option'  => 'fahad_ai_groq_model',
+				'key_option'    => 'dukandaar_groq_api_key',
+				'model_option'  => 'dukandaar_groq_model',
 			],
 
 			// Mistral.
 			'mistral' => [
-				'label'         => __( 'Mistral AI', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'Mistral AI', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'https://api.mistral.ai/v1',
 				'default_model' => 'mistral-small-latest',
 				'models'        => [ 'mistral-small-latest', 'mistral-large-latest', 'open-mistral-nemo' ],
-				'key_option'    => 'fahad_ai_mistral_api_key',
-				'model_option'  => 'fahad_ai_mistral_model',
+				'key_option'    => 'dukandaar_mistral_api_key',
+				'model_option'  => 'dukandaar_mistral_model',
 			],
 
 			// DeepSeek.
 			'deepseek' => [
-				'label'         => __( 'DeepSeek', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'DeepSeek', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'https://api.deepseek.com/v1',
 				'default_model' => 'deepseek-chat',
 				'models'        => [ 'deepseek-chat', 'deepseek-reasoner' ],
-				'key_option'    => 'fahad_ai_deepseek_api_key',
-				'model_option'  => 'fahad_ai_deepseek_model',
+				'key_option'    => 'dukandaar_deepseek_api_key',
+				'model_option'  => 'dukandaar_deepseek_model',
 			],
 
 			// xAI (Grok).
 			'xai' => [
-				'label'         => __( 'xAI (Grok)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'xAI (Grok)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'https://api.x.ai/v1',
 				'default_model' => 'grok-2-latest',
 				'models'        => [ 'grok-2-latest', 'grok-beta' ],
-				'key_option'    => 'fahad_ai_xai_api_key',
-				'model_option'  => 'fahad_ai_xai_model',
+				'key_option'    => 'dukandaar_xai_api_key',
+				'model_option'  => 'dukandaar_xai_model',
 			],
 
 			// Together AI.
 			'together' => [
-				'label'         => __( 'Together AI', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'Together AI', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'https://api.together.xyz/v1',
 				'default_model' => 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
 				'models'        => [ 'meta-llama/Llama-3.3-70B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1' ],
-				'key_option'    => 'fahad_ai_together_api_key',
-				'model_option'  => 'fahad_ai_together_model',
+				'key_option'    => 'dukandaar_together_api_key',
+				'model_option'  => 'dukandaar_together_model',
 			],
 
 			// OpenRouter (multi-model gateway).
 			'openrouter' => [
-				'label'         => __( 'OpenRouter', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'OpenRouter', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'https://openrouter.ai/api/v1',
 				'default_model' => 'openai/gpt-4o-mini',
 				'models'        => [ 'openai/gpt-4o-mini', 'anthropic/claude-3.5-sonnet', 'google/gemini-2.0-flash-exp' ],
-				'key_option'    => 'fahad_ai_openrouter_api_key',
-				'model_option'  => 'fahad_ai_openrouter_model',
+				'key_option'    => 'dukandaar_openrouter_api_key',
+				'model_option'  => 'dukandaar_openrouter_model',
 			],
 
 			// Perplexity.
 			'perplexity' => [
-				'label'         => __( 'Perplexity', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'Perplexity', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'https://api.perplexity.ai',
 				'default_model' => 'sonar',
 				'models'        => [ 'sonar', 'sonar-pro' ],
-				'key_option'    => 'fahad_ai_perplexity_api_key',
-				'model_option'  => 'fahad_ai_perplexity_model',
+				'key_option'    => 'dukandaar_perplexity_api_key',
+				'model_option'  => 'dukandaar_perplexity_model',
 			],
 
 			// Ollama (local, self-hosted). No key required, but the option still exists.
 			'ollama' => [
-				'label'         => __( 'Ollama (local)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'Ollama (local)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
 				'base_url'      => 'http://localhost:11434/v1',
 				'default_model' => 'llama3.2',
 				'models'        => [ 'llama3.2', 'llama3.1', 'qwen2.5', 'mistral' ],
-				'key_option'    => 'fahad_ai_ollama_api_key',
-				'model_option'  => 'fahad_ai_ollama_model',
+				'key_option'    => 'dukandaar_ollama_api_key',
+				'model_option'  => 'dukandaar_ollama_model',
 			],
 
 			// Custom, any OpenAI-compatible endpoint, base URL set by the merchant.
 			'custom' => [
-				'label'         => __( 'Custom (OpenAI-compatible)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'label'         => __( 'Custom (OpenAI-compatible)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
-				'base_url'      => '', // resolved from fahad_ai_custom_base_url at runtime.
+				'base_url'      => '', // resolved from dukandaar_custom_base_url at runtime.
 				'default_model' => '',
 				'models'        => [],
-				'key_option'    => 'fahad_ai_custom_api_key',
-				'model_option'  => 'fahad_ai_custom_model',
+				'key_option'    => 'dukandaar_custom_api_key',
+				'model_option'  => 'dukandaar_custom_model',
 			],
 		];
 	}
 
 	/**
 	 * The full provider catalog: built-in presets plus anything an add-on registers
-	 * via the fahad_ai_providers filter, with malformed entries dropped.
+	 * via the dukandaar_providers filter, with malformed entries dropped.
 	 *
 	 * @return array<string, array<string, mixed>> Keyed by provider id.
 	 */
@@ -231,7 +231,7 @@ final class Fahad_AI_Providers {
 		 *
 		 * @param array<string, array<string, mixed>> $catalog The provider catalog.
 		 */
-		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- self::FILTER is the prefixed constant 'fahad_ai_providers'.
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- self::FILTER is the prefixed constant 'dukandaar_providers'.
 		$catalog = apply_filters( self::FILTER, self::presets() );
 
 		if ( ! is_array( $catalog ) ) {
@@ -313,9 +313,9 @@ final class Fahad_AI_Providers {
 	 *
 	 * Two providers compute their base URL dynamically rather than from a static
 	 * catalog value:
-	 *   - moonshot: region-selected (global vs. china) from fahad_ai_moonshot_region,
+	 *   - moonshot: region-selected (global vs. china) from dukandaar_moonshot_region,
 	 *     preserving the existing two-platform behaviour (separate keys/catalogues).
-	 *   - custom:   the merchant-set fahad_ai_custom_base_url.
+	 *   - custom:   the merchant-set dukandaar_custom_base_url.
 	 *
 	 * Returns null for an unknown provider id (the caller treats that as "no provider").
 	 *
@@ -338,7 +338,7 @@ final class Fahad_AI_Providers {
 			// Region-selected host + the /v1 segment the OpenAI path expects.
 			$base_url = self::moonshot_base_url() . '/v1';
 		} elseif ( 'custom' === $id ) {
-			$base_url = (string) get_option( 'fahad_ai_custom_base_url', '' );
+			$base_url = (string) get_option( 'dukandaar_custom_base_url', '' );
 		}
 
 		return [
@@ -393,11 +393,11 @@ final class Fahad_AI_Providers {
 	 * Moonshot runs two independent platforms with separate keys and model
 	 * catalogues: the global endpoint (api.moonshot.ai) and the China endpoint
 	 * (api.moonshot.cn). A key issued on one is rejected by the other. This mirrors
-	 * Fahad_AI_API_Handler::moonshot_base_url() (kept there for its own unit tests);
+	 * Dukandaar_API_Handler::moonshot_base_url() (kept there for its own unit tests);
 	 * the logic is intentionally trivial and identical in both places.
 	 */
 	private static function moonshot_base_url(): string {
-		$region = get_option( 'fahad_ai_moonshot_region', 'global' );
+		$region = get_option( 'dukandaar_moonshot_region', 'global' );
 		return 'china' === $region
 			? 'https://api.moonshot.cn'
 			: 'https://api.moonshot.ai';

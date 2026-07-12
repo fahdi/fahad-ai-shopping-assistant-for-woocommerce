@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Proactive (issue #65: proactive, consented, value-gated
+ * Unit tests for Dukandaar_Proactive (issue #65: proactive, consented, value-gated
  * assist, the SERVER-SIDE decision helper behind the widget's proactive nudge).
  *
  * Red → Green → Refactor. Conventions mirror FeedbackTest / StockAlertsTest: WP
@@ -62,15 +62,15 @@ class ProactiveTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Proactive::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Proactive::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh singleton (reset between cases via reflection). */
-	private function proactive(): Fahad_AI_Proactive {
-		( new ReflectionProperty( Fahad_AI_Proactive::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Proactive::instance();
+	private function proactive(): Dukandaar_Proactive {
+		( new ReflectionProperty( Dukandaar_Proactive::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Proactive::instance();
 	}
 
 	/**
@@ -147,7 +147,7 @@ class ProactiveTest extends TestCase {
 	}
 
 	public function test_enabled_reflects_the_option_when_on(): void {
-		$this->options['fahad_ai_proactive_enabled'] = 1;
+		$this->options['dukandaar_proactive_enabled'] = 1;
 		$this->assertTrue( $this->proactive()->enabled() );
 	}
 
@@ -158,12 +158,12 @@ class ProactiveTest extends TestCase {
 	}
 
 	public function test_frequency_cap_reads_a_configured_value(): void {
-		$this->options['fahad_ai_proactive_frequency'] = 2;
+		$this->options['dukandaar_proactive_frequency'] = 2;
 		$this->assertSame( 2, $this->proactive()->frequency_cap() );
 	}
 
 	public function test_frequency_cap_is_floored_at_zero_for_garbage(): void {
-		$this->options['fahad_ai_proactive_frequency'] = -5;
+		$this->options['dukandaar_proactive_frequency'] = -5;
 		$this->assertSame( 0, $this->proactive()->frequency_cap() );
 	}
 
@@ -282,13 +282,13 @@ class ProactiveTest extends TestCase {
 	}
 
 	public function test_config_is_empty_when_there_is_no_value_signal(): void {
-		$this->options['fahad_ai_proactive_enabled'] = 1;
+		$this->options['dukandaar_proactive_enabled'] = 1;
 		$this->assertSame( [], $this->proactive()->config( null ) );
 	}
 
 	public function test_config_carries_the_grounded_message_cap_and_type_when_eligible(): void {
-		$this->options['fahad_ai_proactive_enabled']   = 1;
-		$this->options['fahad_ai_proactive_frequency'] = 2;
+		$this->options['dukandaar_proactive_enabled']   = 1;
+		$this->options['dukandaar_proactive_frequency'] = 2;
 
 		$config = $this->proactive()->config( $this->signal_coupon() );
 
@@ -304,8 +304,8 @@ class ProactiveTest extends TestCase {
 	public function test_config_is_empty_when_enabled_but_cap_is_zero(): void {
 		// Enabled + real value, but the merchant set the cap to 0 → effectively off; do
 		// not hand the widget a nudge it must immediately suppress.
-		$this->options['fahad_ai_proactive_enabled']   = 1;
-		$this->options['fahad_ai_proactive_frequency'] = 0;
+		$this->options['dukandaar_proactive_enabled']   = 1;
+		$this->options['dukandaar_proactive_frequency'] = 0;
 
 		$this->assertSame( [], $this->proactive()->config( $this->signal_coupon() ) );
 	}

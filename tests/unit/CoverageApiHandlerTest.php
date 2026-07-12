@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplementary line-coverage tests for Fahad_AI_API_Handler.
+ * Supplementary line-coverage tests for Dukandaar_API_Handler.
  *
  * These exercise the paths the primary ApiHandlerTest does not yet reach: the
  * agent-loop tool branches (Anthropic tool_use / OpenAI tool_calls and their
@@ -34,10 +34,10 @@ class CoverageApiHandlerTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
-		$this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
-		Fahad_AI_Tool_Registry::reset_packs();
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
+		$this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
+		Dukandaar_Tool_Registry::reset_packs();
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
 
 		Functions\stubs( [
 			'sanitize_text_field'             => fn( $s ) => $s,
@@ -49,17 +49,17 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	// ── shared helpers ──────────────────────────────────────────────────────────
 
-	private function handler(): Fahad_AI_API_Handler {
-		$ref = new ReflectionProperty( Fahad_AI_API_Handler::class, 'instance' );
+	private function handler(): Dukandaar_API_Handler {
+		$ref = new ReflectionProperty( Dukandaar_API_Handler::class, 'instance' );
 		$ref->setValue( null, null );
-		return Fahad_AI_API_Handler::instance();
+		return Dukandaar_API_Handler::instance();
 	}
 
 	private function set_option_alias( array $map ): void {
@@ -69,7 +69,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	private function invoke( string $method, array $args = [] ) {
-		$m = new ReflectionMethod( Fahad_AI_API_Handler::class, $method );
+		$m = new ReflectionMethod( Dukandaar_API_Handler::class, $method );
 		return $m->invokeArgs( $this->handler(), $args );
 	}
 
@@ -93,7 +93,7 @@ class CoverageApiHandlerTest extends TestCase {
 	/** Wire the encode/filter/analytics-off seams the agent loops rely on. */
 	private function loop_seams( array $option_map = [] ): void {
 		$map = array_merge(
-			[ Fahad_AI_Analytics::OPTION_ENABLED => 0 ], // analytics off → record short-circuits.
+			[ Dukandaar_Analytics::OPTION_ENABLED => 0 ], // analytics off → record short-circuits.
 			$option_map
 		);
 		$this->set_option_alias( $map );
@@ -105,7 +105,7 @@ class CoverageApiHandlerTest extends TestCase {
 		// mocked it via Brain\Monkey it becomes "known" and the guard runs it, stub it
 		// as a harmless no-op so these tests are order-independent (sibling does the same).
 		Functions\when( 'wc_load_cart' )->justReturn( null );
-		( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
 	}
 
 	/**
@@ -118,7 +118,7 @@ class CoverageApiHandlerTest extends TestCase {
 	 * @param array  $result The canned tool result.
 	 */
 	private function register_stub_tool( string $name, array $result ): void {
-		Fahad_AI_Tool_Registry::register_pack(
+		Dukandaar_Tool_Registry::register_pack(
 			static function ( array $tools ) use ( $name, $result ) {
 				$tools[] = [
 					'name'        => $name,
@@ -129,8 +129,8 @@ class CoverageApiHandlerTest extends TestCase {
 				return $tools;
 			}
 		);
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
 	}
 
 	/** An Anthropic assistant turn that requests a single tool call. */
@@ -228,7 +228,7 @@ class CoverageApiHandlerTest extends TestCase {
 	public function test_run_text_turn_no_key_returns_degraded_message(): void {
 		// Valid messages but no provider key → empty chain → degraded line (line 119),
 		// never a leaked "configure a key" error on a customer channel.
-		$this->loop_seams( [ 'fahad_ai_provider' => 'anthropic' ] );
+		$this->loop_seams( [ 'dukandaar_provider' => 'anthropic' ] );
 
 		$reply = $this->handler()->run_text_turn( [ [ 'role' => 'user', 'content' => 'hi' ] ] );
 
@@ -238,9 +238,9 @@ class CoverageApiHandlerTest extends TestCase {
 	public function test_run_text_turn_returns_reply_text_on_success(): void {
 		// A keyed provider that answers → run_text_turn returns ONLY the message text.
 		$this->loop_seams( [
-			'fahad_ai_provider'          => 'anthropic',
-			'fahad_ai_anthropic_api_key' => 'sk-ant',
-			'fahad_ai_anthropic_model'   => 'claude-haiku-4-5-20251001',
+			'dukandaar_provider'          => 'anthropic',
+			'dukandaar_anthropic_api_key' => 'sk-ant',
+			'dukandaar_anthropic_model'   => 'claude-haiku-4-5-20251001',
 		] );
 		$this->script_transport( [ $this->anthropic_end( 'Here is your answer.' ) ] );
 
@@ -253,8 +253,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// The keyed provider returns a transport WP_Error every attempt → run_text_turn
 		// degrades gracefully (lines 135-138) rather than surfacing the error.
 		$this->loop_seams( [
-			'fahad_ai_provider'          => 'anthropic',
-			'fahad_ai_anthropic_api_key' => 'sk-ant',
+			'dukandaar_provider'          => 'anthropic',
+			'dukandaar_anthropic_api_key' => 'sk-ant',
 		] );
 		Functions\when( 'wp_remote_post' )->justReturn( new WP_Error( 'http', 'timeout' ) );
 
@@ -294,8 +294,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// array (no WC mocks needed). Second turn: a final end_turn answer. This drives
 		// the whole tool_use block (385-406) and the end_turn return.
 		$this->loop_seams( [
-			'fahad_ai_anthropic_api_key' => 'sk-ant',
-			'fahad_ai_anthropic_model'   => 'claude-haiku-4-5-20251001',
+			'dukandaar_anthropic_api_key' => 'sk-ant',
+			'dukandaar_anthropic_model'   => 'claude-haiku-4-5-20251001',
 		] );
 		$this->script_transport( [
 			$this->anthropic_tool_turn( 'search_widgets', [ 'q' => 'x' ] ),
@@ -314,7 +314,7 @@ class CoverageApiHandlerTest extends TestCase {
 	public function test_anthropic_agent_falls_back_after_iteration_cap(): void {
 		// Every turn is a tool_use (the model never produces a final answer) → after the
 		// iteration budget the loop returns the friendly fallback (lines 415-420).
-		$this->loop_seams( [ 'fahad_ai_anthropic_api_key' => 'sk-ant' ] );
+		$this->loop_seams( [ 'dukandaar_anthropic_api_key' => 'sk-ant' ] );
 		// Always hand back a tool turn so the loop exhausts its budget.
 		Functions\when( 'wp_remote_post' )->alias(
 			static fn( $url, $args = [] ) => [ '__eval' => true, 'code' => 200, 'body' => json_encode(
@@ -334,7 +334,7 @@ class CoverageApiHandlerTest extends TestCase {
 	public function test_anthropic_agent_skips_non_tool_use_blocks_in_a_tool_turn(): void {
 		// A tool_use turn whose content ALSO carries a text block: the loop skips the
 		// non-tool_use block (the `continue`, line 389) and executes only the tool_use.
-		$this->loop_seams( [ 'fahad_ai_anthropic_api_key' => 'sk-ant' ] );
+		$this->loop_seams( [ 'dukandaar_anthropic_api_key' => 'sk-ant' ] );
 		$this->script_transport( [
 			[ 'stop_reason' => 'tool_use', 'content' => [
 				[ 'type' => 'text', 'text' => 'Let me look that up.' ],
@@ -354,7 +354,7 @@ class CoverageApiHandlerTest extends TestCase {
 	public function test_anthropic_agent_breaks_on_unknown_stop_reason(): void {
 		// A stop_reason that is neither end_turn nor tool_use → the loop breaks (line
 		// 409) and returns the graceful fallback (no products gathered).
-		$this->loop_seams( [ 'fahad_ai_anthropic_api_key' => 'sk-ant' ] );
+		$this->loop_seams( [ 'dukandaar_anthropic_api_key' => 'sk-ant' ] );
 		$this->script_transport( [ [ 'stop_reason' => 'max_tokens', 'content' => [] ] ] );
 
 		$result = $this->invoke( 'run_anthropic_agent', [ [ [ 'role' => 'user', 'content' => 'hi' ] ] ] );
@@ -366,7 +366,7 @@ class CoverageApiHandlerTest extends TestCase {
 	public function test_anthropic_agent_returns_wp_error_on_transport_failure(): void {
 		// call_anthropic returns a WP_Error (transport failure) → the loop returns it
 		// directly (the is_wp_error early return).
-		$this->loop_seams( [ 'fahad_ai_anthropic_api_key' => 'sk-ant' ] );
+		$this->loop_seams( [ 'dukandaar_anthropic_api_key' => 'sk-ant' ] );
 		Functions\when( 'wp_remote_post' )->justReturn( new WP_Error( 'http', 'boom' ) );
 
 		$result = $this->invoke( 'run_anthropic_agent', [ [ [ 'role' => 'user', 'content' => 'hi' ] ] ] );
@@ -379,7 +379,7 @@ class CoverageApiHandlerTest extends TestCase {
 	// =========================================================================
 
 	public function test_call_anthropic_returns_transport_wp_error(): void {
-		$this->loop_seams( [ 'fahad_ai_anthropic_api_key' => 'sk-ant' ] );
+		$this->loop_seams( [ 'dukandaar_anthropic_api_key' => 'sk-ant' ] );
 		Functions\when( 'wp_remote_post' )->justReturn( new WP_Error( 'http_request_failed', 'down' ) );
 
 		$result = $this->invoke( 'call_anthropic', [ [ [ 'role' => 'user', 'content' => 'hi' ] ], 0 ] );
@@ -390,8 +390,8 @@ class CoverageApiHandlerTest extends TestCase {
 
 	public function test_call_openai_returns_transport_wp_error(): void {
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		Functions\when( 'wp_remote_post' )->justReturn( new WP_Error( 'http_request_failed', 'down' ) );
 
@@ -407,9 +407,9 @@ class CoverageApiHandlerTest extends TestCase {
 
 	public function test_openai_agent_executes_tool_then_returns_final_answer(): void {
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
-			'fahad_ai_moonshot_model'   => 'kimi-k2.6',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
+			'dukandaar_moonshot_model'   => 'kimi-k2.6',
 		] );
 		$this->script_transport( [
 			$this->openai_tool_turn( 'search_widgets', '{"q":"x"}' ),
@@ -426,8 +426,8 @@ class CoverageApiHandlerTest extends TestCase {
 
 	public function test_openai_agent_falls_back_after_iteration_cap(): void {
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		Functions\when( 'wp_remote_post' )->alias(
 			static fn( $url, $args = [] ) => [ '__eval' => true, 'code' => 200, 'body' => json_encode(
@@ -450,8 +450,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// A finish_reason that is neither stop nor tool_calls → the loop breaks (line
 		// 558) and returns the graceful fallback.
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		$this->script_transport( [ [ 'choices' => [ [
 			'finish_reason' => 'length',
@@ -466,8 +466,8 @@ class CoverageApiHandlerTest extends TestCase {
 
 	public function test_openai_agent_returns_wp_error_on_transport_failure(): void {
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		Functions\when( 'wp_remote_post' )->justReturn( new WP_Error( 'http', 'boom' ) );
 
@@ -564,14 +564,14 @@ class CoverageApiHandlerTest extends TestCase {
 
 	public function test_merchant_config_block_includes_tone_off_limits_and_promo(): void {
 		$this->set_option_alias( [
-			'fahad_ai_tone'           => 'luxury',
-			'fahad_ai_off_limits'     => 'politics, medical advice',
-			'fahad_ai_promo_emphasis' => 'highlight the winter sale',
+			'dukandaar_tone'           => 'luxury',
+			'dukandaar_off_limits'     => 'politics, medical advice',
+			'dukandaar_promo_emphasis' => 'highlight the winter sale',
 		] );
 
 		$block = (string) $this->invoke( 'merchant_config_block' );
 
-		$this->assertStringContainsString( Fahad_AI_API_Handler::TONES['luxury'], $block );
+		$this->assertStringContainsString( Dukandaar_API_Handler::TONES['luxury'], $block );
 		$this->assertStringContainsString( 'politics, medical advice', $block );
 		$this->assertStringContainsString( 'highlight the winter sale', $block );
 		$this->assertStringContainsString( 'Store preferences', $block );
@@ -582,18 +582,18 @@ class CoverageApiHandlerTest extends TestCase {
 	// =========================================================================
 
 	public function test_language_directive_pins_a_specific_set(): void {
-		$this->set_option_alias( [ 'fahad_ai_languages' => 'English, French' ] );
+		$this->set_option_alias( [ 'dukandaar_languages' => 'English, French' ] );
 
 		$directive = (string) $this->invoke( 'language_directive' );
 
 		$this->assertStringContainsString( 'English, French', $directive );
-		$this->assertStringNotContainsString( Fahad_AI_API_Handler::SUPPORTED_LANGUAGES, $directive );
+		$this->assertStringNotContainsString( Dukandaar_API_Handler::SUPPORTED_LANGUAGES, $directive );
 	}
 
 	public function test_language_directive_uses_supported_set_for_auto(): void {
 		// 'auto' (default) is a config token → falls back to the supported set.
 		$directive = (string) $this->invoke( 'language_directive' );
-		$this->assertStringContainsString( Fahad_AI_API_Handler::SUPPORTED_LANGUAGES, $directive );
+		$this->assertStringContainsString( Dukandaar_API_Handler::SUPPORTED_LANGUAGES, $directive );
 	}
 
 	// =========================================================================
@@ -690,7 +690,7 @@ class CoverageApiHandlerTest extends TestCase {
 	public function test_apply_token_budget_no_user_turn_protects_final_message(): void {
 		// Over budget, and NOT a single genuine (string-content) user turn, only
 		// assistant/tool messages. tail_start falls back to the last message (line 1441).
-		$this->set_option_alias( [ 'fahad_ai_token_budget' => 30 ] );
+		$this->set_option_alias( [ 'dukandaar_token_budget' => 30 ] );
 		Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
 		Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
 
@@ -714,8 +714,8 @@ class CoverageApiHandlerTest extends TestCase {
 	public function test_fast_model_route_returns_fast_model_for_simple_turn(): void {
 		// Routing enabled + a fast model set + no tools in play → the fast model.
 		$this->set_option_alias( [
-			'fahad_ai_fast_model_routing' => true,
-			'fahad_ai_fast_model'         => 'claude-haiku-fast',
+			'dukandaar_fast_model_routing' => true,
+			'dukandaar_fast_model'         => 'claude-haiku-fast',
 		] );
 
 		$model = (string) $this->invoke( 'fast_model_route', [ 'claude-default', [ 'has_tools' => false ] ] );
@@ -726,7 +726,7 @@ class CoverageApiHandlerTest extends TestCase {
 	public function test_fast_model_route_keeps_default_when_fast_model_empty(): void {
 		// Routing enabled but no fast model configured → the configured default stands
 		// (line 1527 returns $default).
-		$this->set_option_alias( [ 'fahad_ai_fast_model_routing' => true ] );
+		$this->set_option_alias( [ 'dukandaar_fast_model_routing' => true ] );
 
 		$model = (string) $this->invoke( 'fast_model_route', [ 'claude-default', [ 'has_tools' => false ] ] );
 
@@ -804,13 +804,13 @@ class CoverageApiHandlerTest extends TestCase {
 	// =========================================================================
 
 	public function test_stream_provider_returns_configured_openai_provider(): void {
-		$this->set_option_alias( [ 'fahad_ai_provider' => 'openai' ] );
+		$this->set_option_alias( [ 'dukandaar_provider' => 'openai' ] );
 		$this->assertSame( 'openai', (string) $this->invoke( 'stream_provider' ) );
 	}
 
 	public function test_stream_provider_falls_back_to_moonshot_for_anthropic(): void {
 		// The native anthropic provider is not openai-type → defensive moonshot default.
-		$this->set_option_alias( [ 'fahad_ai_provider' => 'anthropic' ] );
+		$this->set_option_alias( [ 'dukandaar_provider' => 'anthropic' ] );
 		$this->assertSame( 'moonshot', (string) $this->invoke( 'stream_provider' ) );
 	}
 
@@ -840,7 +840,7 @@ class CoverageApiHandlerTest extends TestCase {
 			Functions\when( 'wp_json_encode' )->alias( static fn( $d ) => json_encode( $d ) );
 			$req = Mockery::mock( 'WP_REST_Request' );
 			$req->shouldReceive( 'get_param' )->with( 'messages' )->andReturn( null );
-			( Fahad_AI_API_Handler::instance() )->handle_stream( $req );
+			( Dukandaar_API_Handler::instance() )->handle_stream( $req );
 		} );
 
 		$this->assertStringContainsString( '"type":"error"', $out );
@@ -853,7 +853,7 @@ class CoverageApiHandlerTest extends TestCase {
 			Functions\when( 'sanitize_textarea_field' )->returnArg();
 			$req = Mockery::mock( 'WP_REST_Request' );
 			$req->shouldReceive( 'get_param' )->with( 'messages' )->andReturn( [ [ 'role' => 'system', 'content' => 'x' ] ] );
-			( Fahad_AI_API_Handler::instance() )->handle_stream( $req );
+			( Dukandaar_API_Handler::instance() )->handle_stream( $req );
 		} );
 
 		$this->assertStringContainsString( '"type":"error"', $out );
@@ -872,8 +872,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// attribution impossible without breaking the PHPUnit result protocol.)
 		$out = $this->run_in_child( function () {
 			$this->loop_seams( [
-				'fahad_ai_provider'         => 'moonshot',
-				'fahad_ai_moonshot_api_key' => 'sk-moon',
+				'dukandaar_provider'         => 'moonshot',
+				'dukandaar_moonshot_api_key' => 'sk-moon',
 			] );
 			Functions\when( 'wc_load_cart' )->justReturn( null );
 			$session = Mockery::mock();
@@ -899,8 +899,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// A single stop turn → a `chunk` (the assistant text) and a `done` frame, with
 		// the final-turn analytics terminal point (analytics off → no persistence).
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		$this->script_transport( [ $this->openai_stop( 'Here are some options.' ) ] );
 
@@ -916,8 +916,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// an error result, so no `products` frame), turn 2 is the final stop. Exercises
 		// the tool-execution block (1990-2022) and the final terminal point.
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		$this->script_transport( [
 			$this->openai_tool_turn( 'search_widgets', '{"q":"x"}' ),
@@ -936,8 +936,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// A streamed tool call whose (stubbed) result is a product list → the loop emits
 		// a `products` SSE event and marks sent_products (lines 2004-2005).
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		$this->register_stub_tool( 'find_widgets', [
 			'found'    => 1,
@@ -959,8 +959,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// A streamed tool call returning a comparison shape → a `comparison` SSE event
 		// (line 2014) and NO product cards (comparison-shaped results emit none).
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		$this->register_stub_tool( 'compare_widgets', [
 			'found'      => 2,
@@ -986,8 +986,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// 1994). The stub returns a non-product cart result, so no products event fires,
 		// but the `tool` event names add_to_cart and the turn completes.
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		$this->register_stub_tool( 'add_to_cart', [
 			'success'  => true,
@@ -1008,8 +1008,8 @@ class CoverageApiHandlerTest extends TestCase {
 	public function test_run_stream_agent_degrades_on_stream_error(): void {
 		// A transport error every turn → the graceful degraded chunk + done (1954-1962).
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		Functions\when( 'wp_remote_post' )->justReturn( new WP_Error( 'http', 'boom' ) );
 
@@ -1025,8 +1025,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// Every turn returns a tool call (never a stop) → after the iteration cap, the
 		// graceful-exhaustion chunk + done (1029-2036).
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		Functions\when( 'wp_remote_post' )->alias(
 			static fn( $url, $args = [] ) => [ '__eval' => true, 'code' => 200, 'body' => json_encode(
@@ -1052,8 +1052,8 @@ class CoverageApiHandlerTest extends TestCase {
 
 	public function test_stream_one_turn_returns_error_on_wp_error(): void {
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		Functions\when( 'wp_remote_post' )->justReturn( new WP_Error( 'http', 'upstream down' ) );
 
@@ -1070,8 +1070,8 @@ class CoverageApiHandlerTest extends TestCase {
 		// A turn with only tool_calls and empty content → no `chunk` frame is emitted
 		// (the '' !== $text guard), but the tool calls are returned.
 		$this->loop_seams( [
-			'fahad_ai_provider'         => 'moonshot',
-			'fahad_ai_moonshot_api_key' => 'sk-moon',
+			'dukandaar_provider'         => 'moonshot',
+			'dukandaar_moonshot_api_key' => 'sk-moon',
 		] );
 		$this->script_transport( [ [ 'choices' => [ [
 			'finish_reason' => 'tool_calls',

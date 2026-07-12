@@ -15,8 +15,8 @@
  * the negative self-tests in GoldenConversationTest.) The scripted answer therefore
  * references no specific code at all, so it stays grounded.
  *
- * list_active_coupons comes from the coupon feature pack (Fahad_AI_Coupon_Tools),
- * which self-registers via Fahad_AI_Tool_Registry::register_pack() when the test
+ * list_active_coupons comes from the coupon feature pack (Dukandaar_Coupon_Tools),
+ * which self-registers via Dukandaar_Tool_Registry::register_pack() when the test
  * bootstrap glob-loads includes/tools/*.php, exactly as the plugin bootstrap does
  * in production, so the real coupon tool executes in the loop with no per-fixture
  * wiring. It degrades to an empty list when the WP coupon query is unavailable, so

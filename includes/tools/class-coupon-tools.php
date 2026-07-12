@@ -4,9 +4,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Coupons & deals tools (issue #14).
  *
- * A drop-in feature pack (same pattern as Fahad_AI_Catalog_Tools): a self-contained
+ * A drop-in feature pack (same pattern as Dukandaar_Catalog_Tools): a self-contained
  * class in its own file under includes/tools/ that self-registers a provider at the
- * bottom via Fahad_AI_Tool_Registry::register_pack(). The bootstrap (and the test
+ * bottom via Dukandaar_Tool_Registry::register_pack(). The bootstrap (and the test
  * bootstrap) glob-require everything here, so adding this pack is a SINGLE new file
  *, no edits to the bootstrap, the test bootstrap, or the eval harness.
  *
@@ -37,7 +37,7 @@ defined( 'ABSPATH' ) || exit;
  * login-gated. (The per-user usage-limit check below is a best-effort refinement
  * for a logged-in shopper, not an authorization boundary.)
  */
-final class Fahad_AI_Coupon_Tools {
+final class Dukandaar_Coupon_Tools {
 
 	/**
 	 * Append the coupon tools to the registry's tool list.
@@ -114,7 +114,7 @@ final class Fahad_AI_Coupon_Tools {
 			return [
 				'found'   => 0,
 				'coupons' => [],
-				'message' => __( 'There are no active discount codes available right now.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message' => __( 'There are no active discount codes available right now.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -141,7 +141,7 @@ final class Fahad_AI_Coupon_Tools {
 		if ( '' === $code ) {
 			return [
 				'success' => false,
-				'error'   => __( 'A coupon code is required.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error'   => __( 'A coupon code is required.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -149,7 +149,7 @@ final class Fahad_AI_Coupon_Tools {
 		if ( ! $cart ) {
 			return [
 				'success' => false,
-				'error'   => __( 'The cart is not available right now.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error'   => __( 'The cart is not available right now.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -161,7 +161,7 @@ final class Fahad_AI_Coupon_Tools {
 				'success' => false,
 				'error'   => sprintf(
 					/* translators: %s: the coupon code the customer tried to apply */
-					__( 'The code "%s" could not be applied. It may be invalid, expired, or not applicable to your cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'The code "%s" could not be applied. It may be invalid, expired, or not applicable to your cart.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$code
 				),
 			];
@@ -171,7 +171,7 @@ final class Fahad_AI_Coupon_Tools {
 			'success'    => true,
 			'message'    => sprintf(
 				/* translators: %s: the coupon code that was applied */
-				__( 'Applied coupon %s to your cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				__( 'Applied coupon %s to your cart.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				$code
 			),
 			'cart_total' => wp_strip_all_tags( (string) $cart->get_cart_total() ),
@@ -309,7 +309,7 @@ final class Fahad_AI_Coupon_Tools {
 		if ( '' !== (string) $min && (float) $min > 0 ) {
 			$summary['minimum_spend'] = sprintf(
 				/* translators: %s: formatted minimum spend amount, e.g. $50 */
-				__( 'Minimum spend %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				__( 'Minimum spend %s', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				self::money( $min )
 			);
 		}
@@ -339,18 +339,18 @@ final class Fahad_AI_Coupon_Tools {
 			$value = self::trim_decimal( (string) wc_format_decimal( $amount ) );
 			$base  = $product_scoped
 				/* translators: %s: percentage amount, e.g. 15 */
-				? sprintf( __( '%s%% off select products', 'fahad-ai-shopping-assistant-for-woocommerce' ), $value )
+				? sprintf( __( '%s%% off select products', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), $value )
 				/* translators: %s: percentage amount, e.g. 15 */
-				: sprintf( __( '%s%% off', 'fahad-ai-shopping-assistant-for-woocommerce' ), $value );
+				: sprintf( __( '%s%% off', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), $value );
 			return $base;
 		}
 
 		$money = self::money( $amount );
 		return $product_scoped
 			/* translators: %s: formatted discount amount, e.g. $10 */
-			? sprintf( __( '%s off select products', 'fahad-ai-shopping-assistant-for-woocommerce' ), $money )
+			? sprintf( __( '%s off select products', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), $money )
 			/* translators: %s: formatted discount amount, e.g. $10 */
-			: sprintf( __( '%s off', 'fahad-ai-shopping-assistant-for-woocommerce' ), $money );
+			: sprintf( __( '%s off', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), $money );
 	}
 
 	// -------------------------------------------------------------------------
@@ -456,5 +456,5 @@ final class Fahad_AI_Coupon_Tools {
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at require time (test bootstrap
 // glob-requires this file), before PHPUnit opens its per-test pcov window.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Coupon_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Coupon_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

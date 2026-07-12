@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
  * routing it into the existing non-streaming agent loop, and hands the reply text to a
  * pluggable SEND seam. It deliberately does NOT make the live Meta HTTP call: GOING LIVE
  * NEEDS A META WHATSAPP BUSINESS ACCOUNT + TOKENS, supplied by a provider that implements
- * the `fahad_ai_whatsapp_send` filter (see send()). With no provider hooked, the seam is
+ * the `dukandaar_whatsapp_send` filter (see send()). With no provider hooked, the seam is
  * a no-op, so nothing is ever sent until a merchant wires one up.
  *
  * ─── SECURITY (all enforced here, in unit-testable PHP) ──────────────────────────────
@@ -29,7 +29,7 @@ defined( 'ABSPATH' ) || exit;
  *   3. Opt-in: the channel is OFF by default. A signed inbound on a disabled channel is
  *      acknowledged (200, so Meta does not retry) but NOT processed.
  *   4. Identity: a WhatsApp sender is treated as a GUEST. We NEVER auto-trust a phone
- *      number as a logged-in WC customer, so the central login gate (Fahad_AI_Auth) keeps
+ *      number as a logged-in WC customer, so the central login gate (Dukandaar_Auth) keeps
  *      personal-data tools blocked for an unverified identity. Building a verified
  *      phone→customer mapping is explicitly OUT OF SCOPE for #62.
  *   5. Secrets (verify token, app secret) live in options, are never localized to the
@@ -40,25 +40,25 @@ defined( 'ABSPATH' ) || exit;
  * Each inbound text drives a billable agent turn, so a per-channel rate/cost ceiling is a
  * real concern. The existing turn-level cost controls (token budget, model routing,
  * bounded provider failover) apply automatically because routing reuses
- * Fahad_AI_API_Handler. A WhatsApp-specific inbound throttle (e.g. per-sender window) is
+ * Dukandaar_API_Handler. A WhatsApp-specific inbound throttle (e.g. per-sender window) is
  * a follow-up; the SEND seam is also the natural place for a provider to enforce Meta's
  * own messaging limits. Noted, not fully built, for #62.
  *
- * Stateless singleton (mirrors Fahad_AI_Voice / Fahad_AI_Proactive): no per-instance
+ * Stateless singleton (mirrors Dukandaar_Voice / Dukandaar_Proactive): no per-instance
  * state, reset between tests via reflection on self::$instance.
  */
-final class Fahad_AI_WhatsApp {
+final class Dukandaar_WhatsApp {
 
 	/** Merchant kill-switch (default OFF, the channel is opt-in). */
-	public const OPTION_ENABLED = 'fahad_ai_whatsapp_enabled';
+	public const OPTION_ENABLED = 'dukandaar_whatsapp_enabled';
 
 	/** The verify token used in Meta's GET webhook subscription handshake. */
-	public const OPTION_VERIFY_TOKEN = 'fahad_ai_whatsapp_verify_token';
+	public const OPTION_VERIFY_TOKEN = 'dukandaar_whatsapp_verify_token';
 
 	/** The Meta App Secret, the HMAC key for the X-Hub-Signature-256 header. */
-	public const OPTION_APP_SECRET = 'fahad_ai_whatsapp_app_secret';
+	public const OPTION_APP_SECRET = 'dukandaar_whatsapp_app_secret';
 
-	private static ?Fahad_AI_WhatsApp $instance = null;
+	private static ?Dukandaar_WhatsApp $instance = null;
 
 	public static function instance(): self {
 		if ( null === self::$instance ) {
@@ -97,7 +97,7 @@ final class Fahad_AI_WhatsApp {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Register the WhatsApp webhook routes on the fahad-ai/v1 namespace.
+	 * Register the WhatsApp webhook routes on the dukandaar/v1 namespace.
 	 *
 	 * Two methods on ONE endpoint, matching Meta's webhook contract:
 	 *   GET  /whatsapp, the subscription verify handshake (hub.* query params).
@@ -114,7 +114,7 @@ final class Fahad_AI_WhatsApp {
 	 * underscore keys (hub_mode, hub_verify_token, hub_challenge), which the handlers read.
 	 */
 	public function register_routes(): void {
-		register_rest_route( 'fahad-ai/v1', '/whatsapp', [
+		register_rest_route( 'dukandaar/v1', '/whatsapp', [
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'handle_verify' ],
@@ -163,8 +163,8 @@ final class Fahad_AI_WhatsApp {
 		// constant-time token match. hash_equals avoids leaking the token via timing.
 		if ( 'subscribe' !== $mode || '' === $configured || ! hash_equals( $configured, $token ) ) {
 			return new WP_Error(
-				'fahad_ai_whatsapp_verify_failed',
-				__( 'WhatsApp webhook verification failed.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'dukandaar_whatsapp_verify_failed',
+				__( 'WhatsApp webhook verification failed.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				[ 'status' => 403 ]
 			);
 		}
@@ -205,8 +205,8 @@ final class Fahad_AI_WhatsApp {
 		// 1. Signature FIRST, before parsing or any agent work (constant-time, fail closed).
 		if ( ! $this->verify_signature( $raw, is_string( $signature ) ? $signature : null ) ) {
 			return new WP_Error(
-				'fahad_ai_whatsapp_bad_signature',
-				__( 'Invalid webhook signature.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'dukandaar_whatsapp_bad_signature',
+				__( 'Invalid webhook signature.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				[ 'status' => 403 ]
 			);
 		}
@@ -227,8 +227,8 @@ final class Fahad_AI_WhatsApp {
 
 		// 4. Route into the SAME agent core as a GUEST, then hand the reply to the seam.
 		// NOTE: we do NOT call wp_set_current_user, the sender is unverified, so personal
-		// tools stay blocked by Fahad_AI_Auth (identity hardening, #62).
-		$reply = Fahad_AI_API_Handler::instance()->run_text_turn( [
+		// tools stay blocked by Dukandaar_Auth (identity hardening, #62).
+		$reply = Dukandaar_API_Handler::instance()->run_text_turn( [
 			[ 'role' => 'user', 'content' => $message['text'] ],
 		] );
 
@@ -338,7 +338,7 @@ final class Fahad_AI_WhatsApp {
 	 * are configured" guarantee. A provider (a companion plugin, or a future paid add-on
 	 * that holds the merchant's WhatsApp phone-number id + access token) registers:
 	 *
-	 *   add_filter( 'fahad_ai_whatsapp_send', function ( $result, $to, $text, $ctx ) {
+	 *   add_filter( 'dukandaar_whatsapp_send', function ( $result, $to, $text, $ctx ) {
 	 *       // POST to https://graph.facebook.com/<ver>/<phone_number_id>/messages
 	 *       //   Authorization: Bearer <access token>
 	 *       //   body: { messaging_product: 'whatsapp', to: $to,
@@ -367,7 +367,7 @@ final class Fahad_AI_WhatsApp {
 		 * @param string $text   Reply text.
 		 * @param array  $context { channel: 'whatsapp' }, room for future routing hints.
 		 */
-		return apply_filters( 'fahad_ai_whatsapp_send', null, $to, $text, [ 'channel' => 'whatsapp' ] );
+		return apply_filters( 'dukandaar_whatsapp_send', null, $to, $text, [ 'channel' => 'whatsapp' ] );
 	}
 
 	/**

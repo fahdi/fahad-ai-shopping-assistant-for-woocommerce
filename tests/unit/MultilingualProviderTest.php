@@ -39,7 +39,7 @@ class MultilingualProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( json_encode( [ 'data' => [ [ 'index' => 0, 'embedding' => [ 1.0 ] ] ] ] ) );
 
 		// Point at a Moonshot-style OpenAI-compatible endpoint.
-		$p = new Fahad_AI_OpenAI_Embedding_Provider( 'sk-moon', 'text-embedding-3-small', 512, 0, 'https://api.moonshot.ai/v1' );
+		$p = new Dukandaar_OpenAI_Embedding_Provider( 'sk-moon', 'text-embedding-3-small', 512, 0, 'https://api.moonshot.ai/v1' );
 		$p->embed( [ 'hi' ] );
 
 		$this->assertSame( 'https://api.moonshot.ai/v1/embeddings', $captured );
@@ -51,7 +51,7 @@ class MultilingualProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_response_code' )->justReturn( 200 );
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( json_encode( [ 'data' => [ [ 'index' => 0, 'embedding' => [ 1.0 ] ] ] ] ) );
 
-		( new Fahad_AI_OpenAI_Embedding_Provider( 'sk', 'text-embedding-3-small', 512, 0 ) )->embed( [ 'hi' ] );
+		( new Dukandaar_OpenAI_Embedding_Provider( 'sk', 'text-embedding-3-small', 512, 0 ) )->embed( [ 'hi' ] );
 		$this->assertSame( 'https://api.openai.com/v1/embeddings', $captured );
 	}
 
@@ -68,7 +68,7 @@ class MultilingualProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_response_code' )->justReturn( 200 );
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( json_encode( [ 'embeddings' => [ 'float' => [ [ 0.1, 0.2 ], [ 0.3, 0.4 ] ] ] ] ) );
 
-		$out = ( new Fahad_AI_Cohere_Embedding_Provider( 'co-key', 'embed-multilingual-v3.0' ) )->embed( [ 'a', 'b' ] );
+		$out = ( new Dukandaar_Cohere_Embedding_Provider( 'co-key', 'embed-multilingual-v3.0' ) )->embed( [ 'a', 'b' ] );
 
 		$this->assertStringContainsString( 'cohere.com', $captured['url'] );
 		$this->assertSame( 'embed-multilingual-v3.0', $captured['body']['model'] );
@@ -83,18 +83,18 @@ class MultilingualProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( '{}' );
 
 		try {
-			( new Fahad_AI_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'x' ] );
+			( new Dukandaar_Cohere_Embedding_Provider( 'co-key' ) )->embed( [ 'x' ] );
 			$this->fail( 'expected exception' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertTrue( $e->is_retryable() );
 		}
 	}
 
 	public function test_cohere_is_available_and_reports_model(): void {
-		$p = new Fahad_AI_Cohere_Embedding_Provider( 'co-key', 'embed-multilingual-v3.0' );
+		$p = new Dukandaar_Cohere_Embedding_Provider( 'co-key', 'embed-multilingual-v3.0' );
 		$this->assertTrue( $p->is_available() );
 		$this->assertSame( 'embed-multilingual-v3.0', $p->model() );
-		$this->assertFalse( ( new Fahad_AI_Cohere_Embedding_Provider( '' ) )->is_available() );
+		$this->assertFalse( ( new Dukandaar_Cohere_Embedding_Provider( '' ) )->is_available() );
 	}
 
 	// ── Factory selection ───────────────────────────────────────────────────────
@@ -105,23 +105,23 @@ class MultilingualProviderTest extends TestCase {
 	}
 
 	public function test_factory_selects_cohere_when_configured(): void {
-		$this->with_options( [ 'fahad_ai_embedding_provider_type' => 'cohere', 'fahad_ai_cohere_api_key' => 'co-key' ] );
-		$this->assertInstanceOf( Fahad_AI_Cohere_Embedding_Provider::class, Fahad_AI_Embeddings::provider() );
+		$this->with_options( [ 'dukandaar_embedding_provider_type' => 'cohere', 'dukandaar_cohere_api_key' => 'co-key' ] );
+		$this->assertInstanceOf( Dukandaar_Cohere_Embedding_Provider::class, Dukandaar_Embeddings::provider() );
 	}
 
 	public function test_factory_defaults_to_openai_compatible(): void {
-		$this->with_options( [ 'fahad_ai_embedding_api_key' => 'sk-x' ] );
-		$this->assertInstanceOf( Fahad_AI_OpenAI_Embedding_Provider::class, Fahad_AI_Embeddings::provider() );
+		$this->with_options( [ 'dukandaar_embedding_api_key' => 'sk-x' ] );
+		$this->assertInstanceOf( Dukandaar_OpenAI_Embedding_Provider::class, Dukandaar_Embeddings::provider() );
 	}
 
 	public function test_factory_falls_back_to_the_chat_openai_key(): void {
 		// Backward compat: no dedicated embeddings key, but the existing OpenAI chat key is set.
-		$this->with_options( [ 'fahad_ai_openai_api_key' => 'sk-legacy' ] );
-		$this->assertInstanceOf( Fahad_AI_OpenAI_Embedding_Provider::class, Fahad_AI_Embeddings::provider() );
+		$this->with_options( [ 'dukandaar_openai_api_key' => 'sk-legacy' ] );
+		$this->assertInstanceOf( Dukandaar_OpenAI_Embedding_Provider::class, Dukandaar_Embeddings::provider() );
 	}
 
 	public function test_factory_null_without_any_key(): void {
 		$this->with_options( [] );
-		$this->assertNull( Fahad_AI_Embeddings::provider() );
+		$this->assertNull( Dukandaar_Embeddings::provider() );
 	}
 }

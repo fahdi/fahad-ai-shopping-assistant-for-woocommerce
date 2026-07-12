@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental line-coverage tests for Fahad_AI_Returns_Tools (issue #53).
+ * Supplemental line-coverage tests for Dukandaar_Returns_Tools (issue #53).
  *
  * The primary behavioural suite lives in ReturnsToolsTest. This file closes the few
  * remaining UNCOVERED branches that the behavioural suite does not exercise, while still
@@ -37,7 +37,7 @@ class CoverageReturnsToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         Functions\stubs( [
             'absint'                  => fn( $n ) => abs( (int) $n ),
@@ -54,20 +54,20 @@ class CoverageReturnsToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
 
     /** Fresh registry whose built tool list includes the returns tools (mirrors ReturnsToolsTest). */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Returns_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Returns_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     /** A unix timestamp `$days` days before the pinned NOW. */
@@ -112,11 +112,11 @@ class CoverageReturnsToolsTest extends TestCase {
 
         $store = (object) [ 'rma' => [] ];
         $o->shouldReceive( 'get_meta' )->andReturnUsing(
-            fn( $key = '', $single = true ) => '_fahad_ai_rma_requests' === $key ? $store->rma : ''
+            fn( $key = '', $single = true ) => '_dukandaar_rma_requests' === $key ? $store->rma : ''
         );
         $o->shouldReceive( 'update_meta_data' )->andReturnUsing(
             function ( $key, $value ) use ( $store ) {
-                if ( '_fahad_ai_rma_requests' === $key ) {
+                if ( '_dukandaar_rma_requests' === $key ) {
                     $store->rma = $value;
                 }
             }
@@ -127,11 +127,11 @@ class CoverageReturnsToolsTest extends TestCase {
         return $o;
     }
 
-    /** Invoke a private static method on Fahad_AI_Returns_Tools directly. */
+    /** Invoke a private static method on Dukandaar_Returns_Tools directly. */
     private function callPrivate( string $method, array $args ) {
         // No setAccessible() needed: private methods are already invokable via reflection on
         // PHP 8.1+, and setAccessible() is a deprecated no-op there.
-        $m = new ReflectionMethod( Fahad_AI_Returns_Tools::class, $method );
+        $m = new ReflectionMethod( Dukandaar_Returns_Tools::class, $method );
         return $m->invokeArgs( null, $args );
     }
 
@@ -213,7 +213,7 @@ class CoverageReturnsToolsTest extends TestCase {
      */
     public function test_request_return_with_non_array_items_records_nothing(): void {
         $order = $this->mockOrder( [ 'id' => 100, 'customer_id' => 5, 'status' => 'completed', 'created_days_ago' => 4 ] );
-        $order->shouldReceive( 'update_meta_data' )->with( '_fahad_ai_rma_requests', Mockery::any() )->never();
+        $order->shouldReceive( 'update_meta_data' )->with( '_dukandaar_rma_requests', Mockery::any() )->never();
         Functions\when( 'wc_get_order' )->justReturn( $order );
 
         $result = $this->registry()->dispatch( 'request_return', [

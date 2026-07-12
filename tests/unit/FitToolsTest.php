@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Fit_Tools (issue #54: size/fit advisor, grounded).
+ * Unit tests for Dukandaar_Fit_Tools (issue #54: size/fit advisor, grounded).
  *
  * Red → Green → Refactor cycle. Conventions mirror ReviewsToolsTest /
  * ComparisonToolsTest: WP/WC functions mocked via Brain\Monkey; WC objects via
@@ -9,11 +9,11 @@
  * setUp and restored in tearDown.
  *
  * get_fit_advice is NOT a built-in, it ships as a drop-in feature pack that
- * self-registers a provider via Fahad_AI_Tool_Registry::register_pack() at file
+ * self-registers a provider via Dukandaar_Tool_Registry::register_pack() at file
  * load. To exercise that registration genuinely (rather than inlining tool entries
  * by hand) every test registers the fit pack's REAL provider through
  * register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration
+ * Dukandaar_Tool_Registry::instance()->dispatch(), so the production registration
  * + merge + dispatch path is what is under test.
  *
  * GROUNDING is the whole point of this tool. The tests assert the two things the
@@ -45,7 +45,7 @@ class FitToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         Functions\stubs( [
             'absint'              => fn( $n ) => abs( (int) $n ),
@@ -65,7 +65,7 @@ class FitToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
@@ -77,14 +77,14 @@ class FitToolsTest extends TestCase {
      * registers the fit pack's REAL provider via register_pack(), exactly what the
      * pack's file-scope self-registration does in production.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Fit_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Fit_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     /**
@@ -138,7 +138,7 @@ class FitToolsTest extends TestCase {
         // Size-chart meta (empty unless the fixture sets it). The tool reads it via
         // get_meta() and surfaces it verbatim, it never invents a chart.
         $size_chart = $opts['size_chart'] ?? '';
-        $p->shouldReceive( 'get_meta' )->andReturnUsing( static fn( $key = '' ) => '_fahad_ai_size_chart' === $key ? $size_chart : '' );
+        $p->shouldReceive( 'get_meta' )->andReturnUsing( static fn( $key = '' ) => '_dukandaar_size_chart' === $key ? $size_chart : '' );
 
         return $p;
     }

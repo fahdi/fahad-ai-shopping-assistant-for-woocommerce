@@ -4,9 +4,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Recommendations & cross-sell tools (issue #16).
  *
- * A drop-in feature pack (same pattern as Fahad_AI_Catalog_Tools / Fahad_AI_Coupon_Tools):
+ * A drop-in feature pack (same pattern as Dukandaar_Catalog_Tools / Dukandaar_Coupon_Tools):
  * a self-contained class in its own file under includes/tools/ that self-registers
- * a provider at the bottom via Fahad_AI_Tool_Registry::register_pack(). The bootstrap
+ * a provider at the bottom via Dukandaar_Tool_Registry::register_pack(). The bootstrap
  * (and the test bootstrap) glob-require everything here, so adding this pack is a
  * SINGLE new file, no edits to the bootstrap, the test bootstrap, or the eval harness.
  *
@@ -41,14 +41,14 @@ defined( 'ABSPATH' ) || exit;
  *     simply never present cross-sells as required).
  *
  * Out-of-stock and non-visible products are skipped (a shopper cannot act on them),
- * and every product is rendered through the shared Fahad_AI_Tools::format_product_summary()
+ * and every product is rendered through the shared Dukandaar_Tools::format_product_summary()
  * so recommendation/cross-sell cards match search and best-seller cards exactly and the
  * convention-based card emission in the API handler surfaces them automatically.
  *
  * These tools are NOT personal-data tools: they read the shared catalog and the shared
  * session cart, so they carry no `personal` flag and are not login-gated.
  */
-final class Fahad_AI_Recommendation_Tools {
+final class Dukandaar_Recommendation_Tools {
 
 	/**
 	 * Append the recommendation tools to the registry's tool list.
@@ -126,7 +126,7 @@ final class Fahad_AI_Recommendation_Tools {
 				foreach ( $source->get_upsell_ids() as $id ) {
 					$id = (int) $id;
 					if ( $id > 0 && $id !== $product_id && ! isset( $candidates[ $id ] ) ) {
-						$candidates[ $id ] = __( 'Recommended upgrade', 'fahad-ai-shopping-assistant-for-woocommerce' );
+						$candidates[ $id ] = __( 'Recommended upgrade', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 					}
 				}
 
@@ -135,7 +135,7 @@ final class Fahad_AI_Recommendation_Tools {
 				foreach ( (array) $related as $id ) {
 					$id = (int) $id;
 					if ( $id > 0 && $id !== $product_id && ! isset( $candidates[ $id ] ) ) {
-						$candidates[ $id ] = __( 'Frequently bought together', 'fahad-ai-shopping-assistant-for-woocommerce' );
+						$candidates[ $id ] = __( 'Frequently bought together', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 					}
 				}
 			}
@@ -178,7 +178,7 @@ final class Fahad_AI_Recommendation_Tools {
 				'found'    => 0,
 				'products' => [],
 				'optional' => true,
-				'message'  => __( 'There are no items in the cart to suggest add-ons for.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message'  => __( 'There are no items in the cart to suggest add-ons for.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -190,7 +190,7 @@ final class Fahad_AI_Recommendation_Tools {
 				'found'    => 0,
 				'products' => [],
 				'optional' => true,
-				'message'  => __( 'There are no add-on suggestions for the current cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message'  => __( 'There are no add-on suggestions for the current cart.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -209,7 +209,7 @@ final class Fahad_AI_Recommendation_Tools {
 	/**
 	 * Load products by id, keep only buyable ones (visible + in stock), honour the
 	 * budget cap, optionally attach a per-id `reason`, and stop at $limit. Returns the
-	 * canonical card summaries (reused from Fahad_AI_Tools) so cards stay consistent.
+	 * canonical card summaries (reused from Dukandaar_Tools) so cards stay consistent.
 	 *
 	 * @param int[]                $ids       Candidate product IDs, in priority order.
 	 * @param array<int,string>    $reasons   Optional id => reason map.
@@ -218,7 +218,7 @@ final class Fahad_AI_Recommendation_Tools {
 	 * @return array<int,array> Card-shaped product summaries (each may carry `reason`).
 	 */
 	private static function collect( array $ids, array $reasons, int $limit, ?float $max_price ): array {
-		$formatter = Fahad_AI_Tools::instance();
+		$formatter = Dukandaar_Tools::instance();
 		$products  = [];
 
 		foreach ( $ids as $id ) {
@@ -261,7 +261,7 @@ final class Fahad_AI_Recommendation_Tools {
 		];
 
 		$found     = wc_get_products( $args );
-		$formatter = Fahad_AI_Tools::instance();
+		$formatter = Dukandaar_Tools::instance();
 		$products  = [];
 
 		foreach ( (array) $found as $product ) {
@@ -276,7 +276,7 @@ final class Fahad_AI_Recommendation_Tools {
 			}
 
 			$summary           = $formatter->format_product_summary( $product );
-			$summary['reason'] = __( 'Matches what you are looking for', 'fahad-ai-shopping-assistant-for-woocommerce' );
+			$summary['reason'] = __( 'Matches what you are looking for', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 			$products[]        = $summary;
 		}
 
@@ -320,7 +320,7 @@ final class Fahad_AI_Recommendation_Tools {
 		return [
 			'found'    => 0,
 			'products' => [],
-			'message'  => __( 'No suitable recommendations were found.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'message'  => __( 'No suitable recommendations were found.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 		];
 	}
 }
@@ -330,5 +330,5 @@ final class Fahad_AI_Recommendation_Tools {
 // file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before pcov's per-test window opens; its effect is asserted in CoverageRecommendationToolsTest via the registry() helper's register_pack() + live dispatch.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Recommendation_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Recommendation_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

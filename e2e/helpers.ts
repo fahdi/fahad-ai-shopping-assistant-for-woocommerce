@@ -32,19 +32,19 @@ export const STREAM_TEXT_ONLY = sse([
 ]);
 
 // Register the mocked REST routes. Must run before page.goto so the first send is
-// intercepted. Only the fahad-ai/v1/* paths are intercepted; the harness assets
+// intercepted. Only the dukandaar/v1/* paths are intercepted; the harness assets
 // (/assets/...) fall through to the static server.
 export async function mockApi(page: Page, opts: { stream?: string } = {}): Promise<void> {
 	const stream = opts.stream ?? STREAM_TEXT_AND_PRODUCTS;
-	await page.route('**/fahad-ai/v1/stream', (route) =>
+	await page.route('**/dukandaar/v1/stream', (route) =>
 		route.fulfill({ status: 200, contentType: 'text/event-stream', body: stream }));
-	await page.route('**/fahad-ai/v1/cart', (route) =>
+	await page.route('**/dukandaar/v1/cart', (route) =>
 		route.fulfill({ status: 200, contentType: 'application/json',
 			body: JSON.stringify({ success: true, message: 'Added to your cart.',
 				cart_url: 'http://shop.test/cart', checkout_url: 'http://shop.test/checkout' }) }));
-	await page.route('**/fahad-ai/v1/feedback', (route) =>
+	await page.route('**/dukandaar/v1/feedback', (route) =>
 		route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
-	await page.route('**/fahad-ai/v1/message', (route) =>
+	await page.route('**/dukandaar/v1/message', (route) =>
 		route.fulfill({ status: 200, contentType: 'application/json',
 			body: JSON.stringify({ message: 'Here are a few options.', products: PRODUCTS }) }));
 }

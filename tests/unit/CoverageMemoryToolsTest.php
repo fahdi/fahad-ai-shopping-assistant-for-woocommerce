@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage-completion tests for Fahad_AI_Memory_Tools.
+ * Coverage-completion tests for Dukandaar_Memory_Tools.
  *
  * The behavioural suite (MemoryToolsTest) exercises the four model tools and the
  * context-injection filter. The GDPR privacy callbacks, the email-resolution
@@ -34,14 +34,14 @@ class CoverageMemoryToolsTest extends TestCase {
 
 	use MockeryPHPUnitIntegration;
 
-	/** Consent flag user-meta key (mirrors Fahad_AI_Memory_Tools::OPTIN_META). */
-	private const OPTIN_META = 'fahad_ai_memory_optin';
+	/** Consent flag user-meta key (mirrors Dukandaar_Memory_Tools::OPTIN_META). */
+	private const OPTIN_META = 'dukandaar_memory_optin';
 
-	/** Preferences map user-meta key (mirrors Fahad_AI_Memory_Tools::PREFS_META). */
-	private const PREFS_META = 'fahad_ai_preferences';
+	/** Preferences map user-meta key (mirrors Dukandaar_Memory_Tools::PREFS_META). */
+	private const PREFS_META = 'dukandaar_preferences';
 
 	/** Stable privacy group / exporter / eraser key (mirrors PRIVACY_KEY). */
-	private const PRIVACY_KEY = 'fahad-ai-memory';
+	private const PRIVACY_KEY = 'dukandaar-memory';
 
 	/**
 	 * In-memory stand-in for WordPress user meta, keyed by "{$user_id}:{$key}".
@@ -117,40 +117,40 @@ class CoverageMemoryToolsTest extends TestCase {
 	private function callPrivate( string $method, array $args ) {
 		// ReflectionMethod can invoke a private method directly in PHP 8.1+; no
 		// setAccessible() is needed (and it is deprecated since 8.5).
-		$m = new ReflectionMethod( Fahad_AI_Memory_Tools::class, $method );
+		$m = new ReflectionMethod( Dukandaar_Memory_Tools::class, $method );
 		return $m->invokeArgs( null, $args );
 	}
 
 	// ── register_exporter / register_eraser ──────────────────────────────────────
 
 	public function test_register_exporter_adds_a_keyed_exporter_with_a_callback(): void {
-		$exporters = Fahad_AI_Memory_Tools::register_exporter( [] );
+		$exporters = Dukandaar_Memory_Tools::register_exporter( [] );
 
 		$this->assertArrayHasKey( self::PRIVACY_KEY, $exporters );
 		$this->assertArrayHasKey( 'exporter_friendly_name', $exporters[ self::PRIVACY_KEY ] );
 		$this->assertIsCallable( $exporters[ self::PRIVACY_KEY ]['callback'] );
 		// The callback resolves to gdpr_export on the class under test.
 		$this->assertSame(
-			[ 'Fahad_AI_Memory_Tools', 'gdpr_export' ],
+			[ 'Dukandaar_Memory_Tools', 'gdpr_export' ],
 			$exporters[ self::PRIVACY_KEY ]['callback']
 		);
 	}
 
 	public function test_register_eraser_adds_a_keyed_eraser_with_a_callback(): void {
-		$erasers = Fahad_AI_Memory_Tools::register_eraser( [] );
+		$erasers = Dukandaar_Memory_Tools::register_eraser( [] );
 
 		$this->assertArrayHasKey( self::PRIVACY_KEY, $erasers );
 		$this->assertArrayHasKey( 'eraser_friendly_name', $erasers[ self::PRIVACY_KEY ] );
 		$this->assertIsCallable( $erasers[ self::PRIVACY_KEY ]['callback'] );
 		$this->assertSame(
-			[ 'Fahad_AI_Memory_Tools', 'gdpr_erase' ],
+			[ 'Dukandaar_Memory_Tools', 'gdpr_erase' ],
 			$erasers[ self::PRIVACY_KEY ]['callback']
 		);
 	}
 
 	public function test_register_filters_preserve_existing_entries(): void {
-		$exporters = Fahad_AI_Memory_Tools::register_exporter( [ 'other' => [ 'x' => 1 ] ] );
-		$erasers   = Fahad_AI_Memory_Tools::register_eraser( [ 'other' => [ 'y' => 2 ] ] );
+		$exporters = Dukandaar_Memory_Tools::register_exporter( [ 'other' => [ 'x' => 1 ] ] );
+		$erasers   = Dukandaar_Memory_Tools::register_eraser( [ 'other' => [ 'y' => 2 ] ] );
 
 		// Existing third-party registrations are kept, ours is appended.
 		$this->assertArrayHasKey( 'other', $exporters );
@@ -168,7 +168,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		$this->meta['7:' . self::OPTIN_META] = '1';
 		$this->meta['7:' . self::PREFS_META] = [ 'favorite_color' => 'blue', 'size' => 'large' ];
 
-		$result = Fahad_AI_Memory_Tools::gdpr_export( 'jane@example.com' );
+		$result = Dukandaar_Memory_Tools::gdpr_export( 'jane@example.com' );
 
 		$this->assertTrue( $result['done'] );
 		$this->assertCount( 1, $result['data'] );
@@ -191,7 +191,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		// Flag present but falsey ('0') → a recorded opt-out, still exportable.
 		$this->meta['7:' . self::OPTIN_META] = '0';
 
-		$result = Fahad_AI_Memory_Tools::gdpr_export( 'jane@example.com' );
+		$result = Dukandaar_Memory_Tools::gdpr_export( 'jane@example.com' );
 
 		$this->assertTrue( $result['done'] );
 		$pairs = [];
@@ -205,7 +205,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		// User resolves but has neither a consent flag nor stored prefs → nothing to export.
 		$this->seedUser( 'jane@example.com', 7 );
 
-		$result = Fahad_AI_Memory_Tools::gdpr_export( 'jane@example.com' );
+		$result = Dukandaar_Memory_Tools::gdpr_export( 'jane@example.com' );
 
 		$this->assertSame( [], $result['data'] );
 		$this->assertTrue( $result['done'] );
@@ -213,7 +213,7 @@ class CoverageMemoryToolsTest extends TestCase {
 
 	public function test_gdpr_export_for_an_unknown_email_returns_empty_done(): void {
 		// No user seeded → user_id_for_email resolves to 0 → empty export.
-		$result = Fahad_AI_Memory_Tools::gdpr_export( 'nobody@example.com' );
+		$result = Dukandaar_Memory_Tools::gdpr_export( 'nobody@example.com' );
 
 		$this->assertSame( [], $result['data'] );
 		$this->assertTrue( $result['done'] );
@@ -226,7 +226,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		// A different user's data must never surface.
 		$this->meta['8:' . self::PREFS_META] = [ 'theirs' => 'bob-secret' ];
 
-		$result = Fahad_AI_Memory_Tools::gdpr_export( 'jane@example.com' );
+		$result = Dukandaar_Memory_Tools::gdpr_export( 'jane@example.com' );
 
 		$pairs = [];
 		foreach ( $result['data'][0]['data'] as $row ) {
@@ -241,7 +241,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		// Whitespace email sanitizes to '' → user_id_for_email returns 0 WITHOUT a lookup.
 		Functions\expect( 'get_user_by' )->never();
 
-		$result = Fahad_AI_Memory_Tools::gdpr_export( '   ' );
+		$result = Dukandaar_Memory_Tools::gdpr_export( '   ' );
 
 		$this->assertSame( [], $result['data'] );
 		$this->assertTrue( $result['done'] );
@@ -254,7 +254,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		$this->meta['7:' . self::OPTIN_META] = '1';
 		$this->meta['7:' . self::PREFS_META] = [ 'favorite_color' => 'blue' ];
 
-		$result = Fahad_AI_Memory_Tools::gdpr_erase( 'jane@example.com' );
+		$result = Dukandaar_Memory_Tools::gdpr_erase( 'jane@example.com' );
 
 		$this->assertTrue( $result['items_removed'] );
 		$this->assertFalse( $result['items_retained'] );
@@ -270,7 +270,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		// User resolves but never used the feature → purge runs but nothing was there.
 		$this->seedUser( 'jane@example.com', 7 );
 
-		$result = Fahad_AI_Memory_Tools::gdpr_erase( 'jane@example.com' );
+		$result = Dukandaar_Memory_Tools::gdpr_erase( 'jane@example.com' );
 
 		$this->assertFalse( $result['items_removed'] );
 		$this->assertFalse( $result['items_retained'] );
@@ -282,7 +282,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		$this->seedUser( 'jane@example.com', 7 );
 		$this->meta['7:' . self::OPTIN_META] = '0';
 
-		$result = Fahad_AI_Memory_Tools::gdpr_erase( 'jane@example.com' );
+		$result = Dukandaar_Memory_Tools::gdpr_erase( 'jane@example.com' );
 
 		$this->assertTrue( $result['items_removed'] );
 		$this->assertArrayNotHasKey( '7:' . self::OPTIN_META, $this->meta );
@@ -292,7 +292,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		// No user seeded; an unrelated user's data must survive untouched.
 		$this->meta['8:' . self::PREFS_META] = [ 'theirs' => 'bob-secret' ];
 
-		$result = Fahad_AI_Memory_Tools::gdpr_erase( 'nobody@example.com' );
+		$result = Dukandaar_Memory_Tools::gdpr_erase( 'nobody@example.com' );
 
 		$this->assertFalse( $result['items_removed'] );
 		$this->assertTrue( $result['done'] );
@@ -305,7 +305,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		Functions\expect( 'get_user_by' )->never();
 		Functions\expect( 'delete_user_meta' )->never();
 
-		$result = Fahad_AI_Memory_Tools::gdpr_erase( '   ' );
+		$result = Dukandaar_Memory_Tools::gdpr_erase( '   ' );
 
 		$this->assertFalse( $result['items_removed'] );
 		$this->assertTrue( $result['done'] );
@@ -319,7 +319,7 @@ class CoverageMemoryToolsTest extends TestCase {
 		$this->meta['8:' . self::OPTIN_META] = '1';
 		$this->meta['8:' . self::PREFS_META] = [ 'theirs' => 'secret' ];
 
-		Fahad_AI_Memory_Tools::gdpr_erase( 'jane@example.com' );
+		Dukandaar_Memory_Tools::gdpr_erase( 'jane@example.com' );
 
 		$this->assertArrayNotHasKey( '7:' . self::OPTIN_META, $this->meta );
 		$this->assertArrayNotHasKey( '7:' . self::PREFS_META, $this->meta );

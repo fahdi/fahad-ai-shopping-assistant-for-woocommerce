@@ -1,4 +1,4 @@
-# Fahad AI Shopping Assistant, Product Roadmap
+# Dukandaar AI Shopping Assistant, Product Roadmap
 
 > Working document. The thesis: **an assistant earns conversion by being a trustworthy advisor, not by nudging harder.** Everything below is judged against that.
 
@@ -110,7 +110,7 @@ These are not glamorous but they decide whether the AI features are *shippable*.
 - **Trust guardrails (mostly prompt + policy + tests).** No fabricated scarcity, respect stated budget, disclose upsells, prefer "I don't know + escalate" over guessing.
 - **Privacy & auth boundary.** Any personal-data tool (orders, wallet, memory) needs capability/ownership checks beyond the nonce. Keep PII out of model context and logs where possible.
 - **Accessibility.** WCAG 2.2 AA pass on the widget (focus management, ARIA, contrast, keyboard, reduced-motion). Cards added new interactive elements, audit them.
-- **Extensibility hook.** A `fahad_ai_register_tools` filter so add-ons register tools (name, schema, callback). This turns wallet/shipping/loyalty integrations into clean add-ons instead of core coupling, and is the right architecture for everything above.
+- **Extensibility hook.** A `dukandaar_register_tools` filter so add-ons register tools (name, schema, callback). This turns wallet/shipping/loyalty integrations into clean add-ons instead of core coupling, and is the right architecture for everything above.
 - **Streaming parity / cheaper actions.** Consider a streaming path for Anthropic, and a direct `add_to_cart` action (skip the full agent round-trip the card button currently triggers) to cut latency and tokens.
 - **WP.org hygiene.** Disclose every external service; justify any direct cURL; keep new tools using local WC data where possible to avoid review friction.
 

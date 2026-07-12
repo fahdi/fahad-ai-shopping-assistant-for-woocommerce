@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
  * Privacy / authorization BOUNDARY for personal-data tools.
  *
  * The public chat endpoints are intentionally open to guests (see
- * Fahad_AI_Chatbot::authorize_request), the nonce + rate limit there are
+ * Dukandaar_Chatbot::authorize_request), the nonce + rate limit there are
  * CSRF / abuse protection, NOT an authorization boundary. This class is the
  * reusable mechanism that tools exposing PERSONAL data (order status #17,
  * wallet #18, cross-session memory #20) use to decide WHO may see WHAT.
@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
  * Two layers, by design (defence in depth):
  *
  *   1. Login gate (central). A tool definition may declare `'personal' => true`.
- *      Fahad_AI_Tool_Registry::dispatch() then calls guard_logged_in() BEFORE the
+ *      Dukandaar_Tool_Registry::dispatch() then calls guard_logged_in() BEFORE the
  *      callback, so a guest is blocked centrally and a personal tool cannot forget
  *      to check login.
  *
@@ -28,7 +28,7 @@ defined( 'ABSPATH' ) || exit;
  * plugin. That also keeps it trivial to unit-test by stubbing is_user_logged_in()
  * / get_current_user_id().
  */
-final class Fahad_AI_Auth {
+final class Dukandaar_Auth {
 
 	/**
 	 * Whether the current request is from a logged-in user.
@@ -63,7 +63,7 @@ final class Fahad_AI_Auth {
 		return [
 			'error'          => __(
 				'Please log in to access your account information.',
-				'fahad-ai-shopping-assistant-for-woocommerce'
+				'dukandaar-ai-shopping-assistant-for-woocommerce'
 			),
 			'requires_login' => true,
 		];
@@ -80,7 +80,7 @@ final class Fahad_AI_Auth {
 	 *
 	 * Callers use this for the second authorization layer, e.g.:
 	 *
-	 *     if ( ! Fahad_AI_Auth::user_owns( $order->get_customer_id() ) ) {
+	 *     if ( ! Dukandaar_Auth::user_owns( $order->get_customer_id() ) ) {
 	 *         return [ 'error' => __( 'Order not found.', '…' ) ];
 	 *     }
 	 *

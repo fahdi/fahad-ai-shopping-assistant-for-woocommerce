@@ -27,10 +27,10 @@ use PHPUnit\Framework\TestCase;
 require_once dirname( __DIR__, 2 ) . '/includes/admin-settings.php';
 
 /** Thrown by the stubbed wp_die so a 403 guard can be asserted without halting. */
-class Fahad_AI_Cov_WpDie extends \RuntimeException {}
+class Dukandaar_Cov_WpDie extends \RuntimeException {}
 
 /** Thrown by the last call before a handler's exit so the body runs but exit does not. */
-class Fahad_AI_Cov_Halt extends \RuntimeException {}
+class Dukandaar_Cov_Halt extends \RuntimeException {}
 
 class CoverageAdminSettingsTest extends TestCase {
 
@@ -51,9 +51,9 @@ class CoverageAdminSettingsTest extends TestCase {
 
 		// Clear first-party packs so the gateable-tools list is the built-in set plus
 		// whatever a test registers, not every shipped pack.
-		$this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
-		Fahad_AI_Tool_Registry::reset_packs();
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+		$this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
+		Dukandaar_Tool_Registry::reset_packs();
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
 		$this->options = [];
 
@@ -112,7 +112,7 @@ class CoverageAdminSettingsTest extends TestCase {
 			}
 		);
 
-		// fahad_ai_settings_page() renders the embeddings-admin section, whose
+		// dukandaar_settings_page() renders the embeddings-admin section, whose
 		// embedded_count() calls wc_get_products() ONLY when that function exists.
 		// In a clean process it is undefined (guarded → 0), but a sibling coverage
 		// test stubs it via Patchwork and the definition lingers after tearDown, so
@@ -139,8 +139,8 @@ class CoverageAdminSettingsTest extends TestCase {
 
 		$_GET  = [];
 		$_POST = [];
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
-		( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+		( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
@@ -154,16 +154,16 @@ class CoverageAdminSettingsTest extends TestCase {
 
 	/**
 	 * Reset the (final) Analytics singleton so it reads the seeded option store, and
-	 * seed its stored rows + enabled flag. Fahad_AI_Analytics is `final`, so it cannot
+	 * seed its stored rows + enabled flag. Dukandaar_Analytics is `final`, so it cannot
 	 * be Mockery-mocked; instead the REAL singleton runs against crafted option data.
 	 *
 	 * @param array<int|string, array> $rows    Stored analytics rows (id => row).
 	 * @param bool                      $enabled The OPTION_ENABLED flag value.
 	 */
 	private function seed_analytics( array $rows, bool $enabled ): void {
-		( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
-		$this->options[ Fahad_AI_Analytics::OPTION ]         = $rows;
-		$this->options[ Fahad_AI_Analytics::OPTION_ENABLED ] = $enabled ? 1 : 0;
+		( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
+		$this->options[ Dukandaar_Analytics::OPTION ]         = $rows;
+		$this->options[ Dukandaar_Analytics::OPTION_ENABLED ] = $enabled ? 1 : 0;
 	}
 
 	/** @var int Monotonic counter for unique row ids. */
@@ -176,7 +176,7 @@ class CoverageAdminSettingsTest extends TestCase {
 				'id'               => 'r' . ( ++$this->row_seq ),
 				'question'         => 'A question',
 				'tools'            => [],
-				'outcome'          => Fahad_AI_Analytics::OUTCOME_ANSWERED,
+				'outcome'          => Dukandaar_Analytics::OUTCOME_ANSWERED,
 				'product_surfaced' => false,
 				'added_to_cart'    => false,
 				'tokens'           => 0,
@@ -192,73 +192,73 @@ class CoverageAdminSettingsTest extends TestCase {
 	private function wp_die_throws(): void {
 		Functions\when( 'wp_die' )->alias(
 			static function ( $msg = '', $title = '', $args = [] ) {
-				throw new Fahad_AI_Cov_WpDie( is_string( $msg ) ? $msg : 'wp_die' );
+				throw new Dukandaar_Cov_WpDie( is_string( $msg ) ? $msg : 'wp_die' );
 			}
 		);
 	}
 
-	// ── fahad_ai_settings_capability ─────────────────────────────────────────────
+	// ── dukandaar_settings_capability ─────────────────────────────────────────────
 
 	public function test_capability_prefers_manage_woocommerce_when_granted(): void {
 		Functions\when( 'current_user_can' )->alias( static fn( $cap ) => 'manage_woocommerce' === $cap );
-		$this->assertSame( 'manage_woocommerce', fahad_ai_settings_capability() );
+		$this->assertSame( 'manage_woocommerce', dukandaar_settings_capability() );
 	}
 
 	public function test_capability_falls_back_to_manage_options(): void {
 		Functions\when( 'current_user_can' )->alias( static fn( $cap ) => 'manage_woocommerce' !== $cap );
-		$this->assertSame( 'manage_options', fahad_ai_settings_capability() );
+		$this->assertSame( 'manage_options', dukandaar_settings_capability() );
 	}
 
-	// ── fahad_ai_sanitize_tone ───────────────────────────────────────────────────
+	// ── dukandaar_sanitize_tone ───────────────────────────────────────────────────
 
 	public function test_sanitize_tone_accepts_a_known_key(): void {
-		$this->assertSame( 'professional', fahad_ai_sanitize_tone( 'professional' ) );
+		$this->assertSame( 'professional', dukandaar_sanitize_tone( 'professional' ) );
 	}
 
 	public function test_sanitize_tone_rejects_unknown_and_nonscalar(): void {
-		$this->assertSame( '', fahad_ai_sanitize_tone( 'bogus' ) );
-		$this->assertSame( '', fahad_ai_sanitize_tone( [ 'x' ] ) );
+		$this->assertSame( '', dukandaar_sanitize_tone( 'bogus' ) );
+		$this->assertSame( '', dukandaar_sanitize_tone( [ 'x' ] ) );
 	}
 
-	// ── fahad_ai_sanitize_provider ───────────────────────────────────────────────
+	// ── dukandaar_sanitize_provider ───────────────────────────────────────────────
 
 	public function test_sanitize_provider_accepts_a_catalog_id(): void {
-		$this->assertSame( 'anthropic', fahad_ai_sanitize_provider( 'anthropic' ) );
+		$this->assertSame( 'anthropic', dukandaar_sanitize_provider( 'anthropic' ) );
 	}
 
 	public function test_sanitize_provider_falls_back_to_anthropic(): void {
-		$this->assertSame( 'anthropic', fahad_ai_sanitize_provider( 'totally-unknown' ) );
-		$this->assertSame( 'anthropic', fahad_ai_sanitize_provider( [ 'arr' ] ) );
+		$this->assertSame( 'anthropic', dukandaar_sanitize_provider( 'totally-unknown' ) );
+		$this->assertSame( 'anthropic', dukandaar_sanitize_provider( [ 'arr' ] ) );
 	}
 
-	// ── fahad_ai_sanitize_languages ──────────────────────────────────────────────
+	// ── dukandaar_sanitize_languages ──────────────────────────────────────────────
 
 	public function test_sanitize_languages_keeps_a_value(): void {
-		$this->assertSame( 'English, Urdu', fahad_ai_sanitize_languages( 'English, Urdu' ) );
+		$this->assertSame( 'English, Urdu', dukandaar_sanitize_languages( 'English, Urdu' ) );
 	}
 
 	public function test_sanitize_languages_empty_becomes_auto(): void {
-		$this->assertSame( 'auto', fahad_ai_sanitize_languages( '' ) );
-		$this->assertSame( 'auto', fahad_ai_sanitize_languages( [ 'x' ] ) );
+		$this->assertSame( 'auto', dukandaar_sanitize_languages( '' ) );
+		$this->assertSame( 'auto', dukandaar_sanitize_languages( [ 'x' ] ) );
 	}
 
-	// ── fahad_ai_sanitize_tool_list ──────────────────────────────────────────────
+	// ── dukandaar_sanitize_tool_list ──────────────────────────────────────────────
 
 	public function test_sanitize_tool_list_non_array_is_empty(): void {
-		$this->assertSame( [], fahad_ai_sanitize_tool_list( 'nope' ) );
+		$this->assertSame( [], dukandaar_sanitize_tool_list( 'nope' ) );
 	}
 
 	public function test_sanitize_tool_list_slugs_and_dedupes(): void {
-		$clean = fahad_ai_sanitize_tool_list( [ 'Track Order', 'track-order', '', 123, '!!!' ] );
+		$clean = dukandaar_sanitize_tool_list( [ 'Track Order', 'track-order', '', 123, '!!!' ] );
 		// 'Track Order' -> 'trackorder' (the stub strips spaces), 'track-order' kept,
 		// the empty string + non-string skipped, '!!!' slugs to '' and is dropped.
 		$this->assertSame( [ 'trackorder', 'track-order' ], $clean );
 	}
 
-	// ── fahad_ai_analytics_range_from_request ────────────────────────────────────
+	// ── dukandaar_analytics_range_from_request ────────────────────────────────────
 
 	public function test_range_from_request_blank_when_no_params(): void {
-		$range = fahad_ai_analytics_range_from_request();
+		$range = dukandaar_analytics_range_from_request();
 		$this->assertNull( $range['from'] );
 		$this->assertNull( $range['to'] );
 		$this->assertSame( '', $range['from_str'] );
@@ -268,7 +268,7 @@ class CoverageAdminSettingsTest extends TestCase {
 	public function test_range_from_request_parses_valid_dates(): void {
 		$_GET['from'] = '2026-01-01';
 		$_GET['to']   = '2026-01-31';
-		$range        = fahad_ai_analytics_range_from_request();
+		$range        = dukandaar_analytics_range_from_request();
 		$this->assertIsInt( $range['from'] );
 		$this->assertIsInt( $range['to'] );
 		$this->assertSame( '2026-01-01', $range['from_str'] );
@@ -279,7 +279,7 @@ class CoverageAdminSettingsTest extends TestCase {
 	public function test_range_from_request_drops_invalid_strings(): void {
 		$_GET['from'] = 'garbage';
 		$_GET['to']   = '2026/02/02';
-		$range        = fahad_ai_analytics_range_from_request();
+		$range        = dukandaar_analytics_range_from_request();
 		$this->assertNull( $range['from'] );
 		$this->assertNull( $range['to'] );
 		// from_str/to_str fall back to '' because the parsed value is null.
@@ -287,39 +287,39 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertSame( '', $range['to_str'] );
 	}
 
-	// ── fahad_ai_analytics_parse_date ────────────────────────────────────────────
+	// ── dukandaar_analytics_parse_date ────────────────────────────────────────────
 
 	public function test_parse_date_null_for_blank_and_malformed(): void {
-		$this->assertNull( fahad_ai_analytics_parse_date( '', false ) );
-		$this->assertNull( fahad_ai_analytics_parse_date( 'xx', true ) );
+		$this->assertNull( dukandaar_analytics_parse_date( '', false ) );
+		$this->assertNull( dukandaar_analytics_parse_date( 'xx', true ) );
 	}
 
 	public function test_parse_date_end_of_day_is_inclusive(): void {
-		$s = fahad_ai_analytics_parse_date( '2026-03-04', false );
-		$e = fahad_ai_analytics_parse_date( '2026-03-04', true );
+		$s = dukandaar_analytics_parse_date( '2026-03-04', false );
+		$e = dukandaar_analytics_parse_date( '2026-03-04', true );
 		$this->assertSame( 86399, $e - $s );
 	}
 
-	// ── fahad_ai_analytics_outcome_label ─────────────────────────────────────────
+	// ── dukandaar_analytics_outcome_label ─────────────────────────────────────────
 
 	public function test_outcome_label_known_and_unknown(): void {
-		$this->assertSame( 'Answered', fahad_ai_analytics_outcome_label( Fahad_AI_Analytics::OUTCOME_ANSWERED ) );
-		$this->assertSame( 'Error', fahad_ai_analytics_outcome_label( Fahad_AI_Analytics::OUTCOME_ERROR ) );
-		$this->assertSame( 'whatever', fahad_ai_analytics_outcome_label( 'whatever' ) );
+		$this->assertSame( 'Answered', dukandaar_analytics_outcome_label( Dukandaar_Analytics::OUTCOME_ANSWERED ) );
+		$this->assertSame( 'Error', dukandaar_analytics_outcome_label( Dukandaar_Analytics::OUTCOME_ERROR ) );
+		$this->assertSame( 'whatever', dukandaar_analytics_outcome_label( 'whatever' ) );
 	}
 
-	// ── fahad_ai_analytics_format_time ───────────────────────────────────────────
+	// ── dukandaar_analytics_format_time ───────────────────────────────────────────
 
 	public function test_format_time_blank_for_nonpositive(): void {
-		$this->assertSame( '', fahad_ai_analytics_format_time( 0 ) );
-		$this->assertSame( '', fahad_ai_analytics_format_time( -5 ) );
+		$this->assertSame( '', dukandaar_analytics_format_time( 0 ) );
+		$this->assertSame( '', dukandaar_analytics_format_time( -5 ) );
 	}
 
 	public function test_format_time_uses_wp_date_when_available(): void {
 		$this->options['date_format'] = 'Y-m-d';
 		$this->options['time_format'] = 'H:i';
 		Functions\when( 'wp_date' )->alias( static fn( $fmt, $ts ) => 'WPDATE:' . $ts );
-		$this->assertSame( 'WPDATE:1700000000', fahad_ai_analytics_format_time( 1700000000 ) );
+		$this->assertSame( 'WPDATE:1700000000', dukandaar_analytics_format_time( 1700000000 ) );
 	}
 
 	/**
@@ -339,34 +339,34 @@ class CoverageAdminSettingsTest extends TestCase {
 			'precondition: wp_date must be undefined so the gmdate fallback fires.'
 		);
 		// 1700000000 → 2023-11-14 22:13 UTC; gmdate uses the fixed Y-m-d H:i format.
-		$this->assertSame( gmdate( 'Y-m-d H:i', 1700000000 ), fahad_ai_analytics_format_time( 1700000000 ) );
+		$this->assertSame( gmdate( 'Y-m-d H:i', 1700000000 ), dukandaar_analytics_format_time( 1700000000 ) );
 	}
 
-	// ── fahad_ai_attribute_orders ────────────────────────────────────────────────
+	// ── dukandaar_attribute_orders ────────────────────────────────────────────────
 
 	public function test_attribute_orders_defaults_to_zero(): void {
 		// apply_filters passes the value (0) through unchanged in this harness.
-		$this->assertSame( 0, fahad_ai_attribute_orders( [ 'a', 'b' ] ) );
+		$this->assertSame( 0, dukandaar_attribute_orders( [ 'a', 'b' ] ) );
 	}
 
 	public function test_attribute_orders_is_filterable(): void {
 		Functions\when( 'apply_filters' )->alias(
-			static fn( $tag, $value, $refs = [] ) => 'fahad_ai_attributed_orders' === $tag ? count( $refs ) : $value
+			static fn( $tag, $value, $refs = [] ) => 'dukandaar_attributed_orders' === $tag ? count( $refs ) : $value
 		);
-		$this->assertSame( 3, fahad_ai_attribute_orders( [ 'a', 'b', 'c' ] ) );
+		$this->assertSame( 3, dukandaar_attribute_orders( [ 'a', 'b', 'c' ] ) );
 	}
 
-	// ── fahad_ai_analytics_page (guard) ──────────────────────────────────────────
+	// ── dukandaar_analytics_page (guard) ──────────────────────────────────────────
 
 	public function test_analytics_page_returns_for_no_capability(): void {
 		$this->grant_cap( false );
 		ob_start();
-		fahad_ai_analytics_page();
+		dukandaar_analytics_page();
 		$out = ob_get_clean();
 		$this->assertSame( '', $out, 'No markup is rendered without capability.' );
 	}
 
-	// ── fahad_ai_analytics_page (full render, empty data) ────────────────────────
+	// ── dukandaar_analytics_page (full render, empty data) ────────────────────────
 
 	public function test_analytics_page_renders_empty_state(): void {
 		$this->grant_cap( true );
@@ -374,7 +374,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->seed_analytics( [], false );
 
 		ob_start();
-		fahad_ai_analytics_page();
+		dukandaar_analytics_page();
 		$out = ob_get_clean();
 
 		$this->assertStringContainsString( 'AI Assistant Analytics', $out );
@@ -385,7 +385,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertStringContainsString( 'Conversations', $out );
 	}
 
-	// ── fahad_ai_analytics_page (full render, populated, with range + notices) ───
+	// ── dukandaar_analytics_page (full render, populated, with range + notices) ───
 
 	public function test_analytics_page_renders_populated_with_range_and_notices(): void {
 		$this->grant_cap( true );
@@ -394,7 +394,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		// one-shot purge notice is present. Dates span 2026-01 so the seeded rows fall in.
 		$_GET['from']             = '2026-01-01';
 		$_GET['to']               = '2026-12-31';
-		$_GET['fahad_ai_purged']  = '1';
+		$_GET['dukandaar_purged']  = '1';
 
 		$ts = strtotime( '2026-06-15 12:00:00' );
 		$this->seed_analytics(
@@ -404,9 +404,9 @@ class CoverageAdminSettingsTest extends TestCase {
 				'a' => $this->row( [ 'question' => 'Where is my order?', 'conversation_ref' => 'conv-A', 'product_surfaced' => true, 'added_to_cart' => true, 'created' => $ts, 'cost' => 0.5, 'tokens' => 1000 ] ),
 				'b' => $this->row( [ 'question' => 'Where is my order?', 'conversation_ref' => 'conv-A', 'created' => $ts, 'cost' => 0.25, 'tokens' => 500 ] ),
 				// An abstained turn → appears in the "couldn't answer" list.
-				'c' => $this->row( [ 'question' => 'Do you ship to Mars?', 'outcome' => Fahad_AI_Analytics::OUTCOME_ABSTAINED, 'conversation_ref' => 'conv-B', 'created' => $ts ] ),
+				'c' => $this->row( [ 'question' => 'Do you ship to Mars?', 'outcome' => Dukandaar_Analytics::OUTCOME_ABSTAINED, 'conversation_ref' => 'conv-B', 'created' => $ts ] ),
 				// An escalated turn with NO question text → the "(no question text)" branch.
-				'd' => $this->row( [ 'question' => '', 'outcome' => Fahad_AI_Analytics::OUTCOME_ESCALATED, 'conversation_ref' => 'conv-C', 'created' => $ts ] ),
+				'd' => $this->row( [ 'question' => '', 'outcome' => Dukandaar_Analytics::OUTCOME_ESCALATED, 'conversation_ref' => 'conv-C', 'created' => $ts ] ),
 			],
 			true // enabled → no "logging off" warning
 		);
@@ -414,7 +414,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		Functions\when( 'wp_date' )->alias( static fn( $fmt, $t ) => 'TS:' . $t );
 
 		ob_start();
-		fahad_ai_analytics_page();
+		dukandaar_analytics_page();
 		$out = ob_get_clean();
 
 		$this->assertStringContainsString( 'Analytics data deleted.', $out );        // purge notice
@@ -428,22 +428,22 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertStringContainsString( 'Reset', $out );                          // active-range reset link
 	}
 
-	// ── fahad_ai_analytics_page (save the opt-out toggle) ────────────────────────
+	// ── dukandaar_analytics_page (save the opt-out toggle) ────────────────────────
 
 	public function test_analytics_page_saves_opt_out_toggle(): void {
 		$this->grant_cap( true );
 		Functions\when( 'check_admin_referer' )->justReturn( true );
 		$this->seed_analytics( [], true );
 
-		$_POST['fahad_ai_analytics_save'] = '1';
+		$_POST['dukandaar_analytics_save'] = '1';
 		// analytics_enabled absent → stored as 0.
 
 		ob_start();
-		fahad_ai_analytics_page();
+		dukandaar_analytics_page();
 		$out = ob_get_clean();
 
 		$this->assertStringContainsString( 'Analytics settings saved.', $out );
-		$this->assertSame( 0, $this->options[ Fahad_AI_Analytics::OPTION_ENABLED ] );
+		$this->assertSame( 0, $this->options[ Dukandaar_Analytics::OPTION_ENABLED ] );
 	}
 
 	public function test_analytics_page_save_toggle_on(): void {
@@ -451,14 +451,14 @@ class CoverageAdminSettingsTest extends TestCase {
 		Functions\when( 'check_admin_referer' )->justReturn( true );
 		$this->seed_analytics( [], false );
 
-		$_POST['fahad_ai_analytics_save'] = '1';
+		$_POST['dukandaar_analytics_save'] = '1';
 		$_POST['analytics_enabled']       = '1'; // present → stored as 1
 
 		ob_start();
-		fahad_ai_analytics_page();
+		dukandaar_analytics_page();
 		ob_get_clean();
 
-		$this->assertSame( 1, $this->options[ Fahad_AI_Analytics::OPTION_ENABLED ] );
+		$this->assertSame( 1, $this->options[ Dukandaar_Analytics::OPTION_ENABLED ] );
 	}
 
 	// ── export handler ───────────────────────────────────────────────────────────
@@ -467,8 +467,8 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->grant_cap( false );
 		$this->wp_die_throws();
 
-		$this->expectException( Fahad_AI_Cov_WpDie::class );
-		fahad_ai_analytics_export_handler();
+		$this->expectException( Dukandaar_Cov_WpDie::class );
+		dukandaar_analytics_export_handler();
 	}
 
 	public function test_export_handler_streams_json_then_exits(): void {
@@ -491,17 +491,17 @@ class CoverageAdminSettingsTest extends TestCase {
 		// header() calls, and the echo's array argument) but never reaches exit.
 		Functions\when( 'wp_json_encode' )->alias(
 			static function ( $payload ) {
-				throw new Fahad_AI_Cov_Halt( json_encode( $payload ) );
+				throw new Dukandaar_Cov_Halt( json_encode( $payload ) );
 			}
 		);
 
 		$captured = null;
 		try {
 			ob_start();
-			fahad_ai_analytics_export_handler();
+			dukandaar_analytics_export_handler();
 			ob_end_clean();
 			$this->fail( 'Expected the pre-exit halt.' );
-		} catch ( Fahad_AI_Cov_Halt $e ) {
+		} catch ( Dukandaar_Cov_Halt $e ) {
 			ob_end_clean();
 			$captured = json_decode( $e->getMessage(), true );
 		}
@@ -518,8 +518,8 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->grant_cap( false );
 		$this->wp_die_throws();
 
-		$this->expectException( Fahad_AI_Cov_WpDie::class );
-		fahad_ai_analytics_delete_handler();
+		$this->expectException( Dukandaar_Cov_WpDie::class );
+		dukandaar_analytics_delete_handler();
 	}
 
 	public function test_delete_handler_purges_then_redirects(): void {
@@ -535,41 +535,41 @@ class CoverageAdminSettingsTest extends TestCase {
 		Functions\when( 'wp_safe_redirect' )->alias(
 			static function ( $url ) use ( &$redirected_to ) {
 				$redirected_to = $url;
-				throw new Fahad_AI_Cov_Halt();
+				throw new Dukandaar_Cov_Halt();
 			}
 		);
 
 		try {
-			fahad_ai_analytics_delete_handler();
+			dukandaar_analytics_delete_handler();
 			$this->fail( 'Expected the redirect halt.' );
-		} catch ( Fahad_AI_Cov_Halt $e ) {
+		} catch ( Dukandaar_Cov_Halt $e ) {
 			// expected
 		}
 
-		$this->assertArrayNotHasKey( Fahad_AI_Analytics::OPTION, $this->options, 'The store is purged before redirecting.' );
+		$this->assertArrayNotHasKey( Dukandaar_Analytics::OPTION, $this->options, 'The store is purged before redirecting.' );
 		$this->assertNotNull( $redirected_to, 'It redirects back to the dashboard.' );
 	}
 
-	// ── fahad_ai_settings_page (guard) ───────────────────────────────────────────
+	// ── dukandaar_settings_page (guard) ───────────────────────────────────────────
 
 	public function test_settings_page_returns_for_no_capability(): void {
 		$this->grant_cap( false );
 		ob_start();
-		fahad_ai_settings_page();
+		dukandaar_settings_page();
 		$out = ob_get_clean();
 		$this->assertSame( '', $out );
 	}
 
-	// ── fahad_ai_settings_page (full render, defaults) ───────────────────────────
+	// ── dukandaar_settings_page (full render, defaults) ───────────────────────────
 
 	public function test_settings_page_renders_form(): void {
 		$this->grant_cap( true );
 
 		ob_start();
-		fahad_ai_settings_page();
+		dukandaar_settings_page();
 		$out = ob_get_clean();
 
-		$this->assertStringContainsString( 'Fahad AI Shopping Assistant Settings', $out );
+		$this->assertStringContainsString( 'Dukandaar AI Shopping Assistant Settings', $out );
 		$this->assertStringContainsString( 'AI Provider', $out );
 		$this->assertStringContainsString( 'Anthropic API Key', $out );
 		$this->assertStringContainsString( 'Moonshot Region', $out );
@@ -577,20 +577,20 @@ class CoverageAdminSettingsTest extends TestCase {
 		// The provider <select> is built from the catalog; anthropic is always present.
 		$this->assertStringContainsString( 'name="provider"', $out );
 		// Save button rendered by the submit_button stub.
-		$this->assertStringContainsString( 'fahad_ai_save', $out );
+		$this->assertStringContainsString( 'dukandaar_save', $out );
 	}
 
-	// ── fahad_ai_settings_page (index-queued notice + gateable tools list) ───────
+	// ── dukandaar_settings_page (index-queued notice + gateable tools list) ───────
 
 	public function test_settings_page_shows_index_notice_and_gateable_tools(): void {
 		$this->grant_cap( true );
 
-		$_GET['fahad_ai_indexed'] = '7'; // >= 0 → the "build queued" notice
+		$_GET['dukandaar_indexed'] = '7'; // >= 0 → the "build queued" notice
 
 		// Register a non-built-in tool so the gateable list is non-empty (exercises the
 		// else branch + the checkbox foreach). The provider receives the running tool
 		// map and returns it with its own entry appended (the registry contract).
-		Fahad_AI_Tool_Registry::register_pack(
+		Dukandaar_Tool_Registry::register_pack(
 			static function ( array $tools ) {
 				$tools[] = [
 					'name'        => 'track_order',
@@ -601,10 +601,10 @@ class CoverageAdminSettingsTest extends TestCase {
 				return $tools;
 			}
 		);
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
 		ob_start();
-		fahad_ai_settings_page();
+		dukandaar_settings_page();
 		$out = ob_get_clean();
 
 		$this->assertStringContainsString( 'Search index build queued for 7 products', $out );
@@ -612,14 +612,14 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertStringContainsString( 'Track an order', $out );
 	}
 
-	// ── fahad_ai_settings_page (full save round-trip) ────────────────────────────
+	// ── dukandaar_settings_page (full save round-trip) ────────────────────────────
 
 	public function test_settings_page_saves_all_options(): void {
 		$this->grant_cap( true );
 		Functions\when( 'check_admin_referer' )->justReturn( true );
 
 		$_POST = [
-			'fahad_ai_save'         => '1',
+			'dukandaar_save'         => '1',
 			'provider'              => 'anthropic',
 			'anthropic_api_key'     => 'sk-test',
 			'anthropic_model'       => 'claude-sonnet-4-6',
@@ -647,32 +647,32 @@ class CoverageAdminSettingsTest extends TestCase {
 		];
 
 		ob_start();
-		fahad_ai_settings_page();
+		dukandaar_settings_page();
 		$out = ob_get_clean();
 
 		$this->assertStringContainsString( 'Settings saved.', $out );
 
 		// Spot-check a representative slice of the persisted options across each block.
-		$this->assertSame( 'anthropic', $this->options['fahad_ai_provider'] );
-		$this->assertSame( 'sk-test', $this->options['fahad_ai_anthropic_api_key'] );
-		$this->assertSame( 'claude-sonnet-4-6', $this->options['fahad_ai_anthropic_model'] );
-		$this->assertSame( 'china', $this->options['fahad_ai_moonshot_region'] );
-		$this->assertSame( 'Helper', $this->options['fahad_ai_bot_name'] );
-		$this->assertSame( 'Be nice', $this->options['fahad_ai_system_prompt'] );
-		$this->assertSame( 'professional', $this->options['fahad_ai_tone'] );
-		$this->assertSame( 'English, Urdu', $this->options['fahad_ai_languages'] );
-		$this->assertSame( 8000, $this->options['fahad_ai_token_budget'] );
-		$this->assertSame( 1, $this->options['fahad_ai_fast_model_routing'] );
-		$this->assertSame( 1, $this->options['fahad_ai_proactive_enabled'] );
-		$this->assertSame( 2, $this->options['fahad_ai_proactive_frequency'] );
-		$this->assertSame( 1, $this->options['fahad_ai_voice_enabled'] );
-		$this->assertSame( 1, $this->options['fahad_ai_whatsapp_enabled'] );
-		$this->assertSame( 'verify123', $this->options['fahad_ai_whatsapp_verify_token'] );
+		$this->assertSame( 'anthropic', $this->options['dukandaar_provider'] );
+		$this->assertSame( 'sk-test', $this->options['dukandaar_anthropic_api_key'] );
+		$this->assertSame( 'claude-sonnet-4-6', $this->options['dukandaar_anthropic_model'] );
+		$this->assertSame( 'china', $this->options['dukandaar_moonshot_region'] );
+		$this->assertSame( 'Helper', $this->options['dukandaar_bot_name'] );
+		$this->assertSame( 'Be nice', $this->options['dukandaar_system_prompt'] );
+		$this->assertSame( 'professional', $this->options['dukandaar_tone'] );
+		$this->assertSame( 'English, Urdu', $this->options['dukandaar_languages'] );
+		$this->assertSame( 8000, $this->options['dukandaar_token_budget'] );
+		$this->assertSame( 1, $this->options['dukandaar_fast_model_routing'] );
+		$this->assertSame( 1, $this->options['dukandaar_proactive_enabled'] );
+		$this->assertSame( 2, $this->options['dukandaar_proactive_frequency'] );
+		$this->assertSame( 1, $this->options['dukandaar_voice_enabled'] );
+		$this->assertSame( 1, $this->options['dukandaar_whatsapp_enabled'] );
+		$this->assertSame( 'verify123', $this->options['dukandaar_whatsapp_verify_token'] );
 		// disabled_tools is run through the slug sanitizer.
-		$this->assertSame( [ 'track_order' ], $this->options['fahad_ai_disabled_tools'] );
+		$this->assertSame( [ 'track_order' ], $this->options['dukandaar_disabled_tools'] );
 	}
 
-	// ── fahad_ai_settings_page (save with falsey toggles → model defaults) ───────
+	// ── dukandaar_settings_page (save with falsey toggles → model defaults) ───────
 
 	public function test_settings_page_save_with_empty_toggles_and_default_model(): void {
 		$this->grant_cap( true );
@@ -681,40 +681,40 @@ class CoverageAdminSettingsTest extends TestCase {
 		// Minimal POST: the boolean toggles are absent (→ 0) and the per-provider model
 		// fields are blank (→ the preset default model is stored).
 		$_POST = [
-			'fahad_ai_save' => '1',
+			'dukandaar_save' => '1',
 			'provider'      => 'moonshot',
 		];
 
 		ob_start();
-		fahad_ai_settings_page();
+		dukandaar_settings_page();
 		$out = ob_get_clean();
 
 		$this->assertStringContainsString( 'Settings saved.', $out );
 		// Absent provider select still defaults the moonshot region to 'global'.
-		$this->assertSame( 'global', $this->options['fahad_ai_moonshot_region'] );
+		$this->assertSame( 'global', $this->options['dukandaar_moonshot_region'] );
 		// Blank model → the anthropic preset default is persisted.
-		$this->assertArrayHasKey( 'fahad_ai_anthropic_model', $this->options );
-		$this->assertNotSame( '', $this->options['fahad_ai_anthropic_model'] );
+		$this->assertArrayHasKey( 'dukandaar_anthropic_model', $this->options );
+		$this->assertNotSame( '', $this->options['dukandaar_anthropic_model'] );
 		// All boolean toggles default off.
-		$this->assertSame( 0, $this->options['fahad_ai_fast_model_routing'] );
-		$this->assertSame( 0, $this->options['fahad_ai_proactive_enabled'] );
-		$this->assertSame( 0, $this->options['fahad_ai_voice_enabled'] );
-		$this->assertSame( 0, $this->options['fahad_ai_voice_tts'] );
-		$this->assertSame( 0, $this->options['fahad_ai_whatsapp_enabled'] );
+		$this->assertSame( 0, $this->options['dukandaar_fast_model_routing'] );
+		$this->assertSame( 0, $this->options['dukandaar_proactive_enabled'] );
+		$this->assertSame( 0, $this->options['dukandaar_voice_enabled'] );
+		$this->assertSame( 0, $this->options['dukandaar_voice_tts'] );
+		$this->assertSame( 0, $this->options['dukandaar_whatsapp_enabled'] );
 	}
 
-	// ── fahad_ai_settings_page (custom + ollama provider field rendering) ────────
+	// ── dukandaar_settings_page (custom + ollama provider field rendering) ────────
 
 	public function test_settings_page_renders_custom_and_ollama_provider_fields(): void {
 		$this->grant_cap( true );
 
 		// Select the custom provider so its base-URL field (the $is_custom branch) and
 		// the generic key/model rows render in the visible (non display:none) state.
-		$this->options['fahad_ai_provider']        = 'custom';
-		$this->options['fahad_ai_custom_base_url']  = 'https://api.custom.test/v1';
+		$this->options['dukandaar_provider']        = 'custom';
+		$this->options['dukandaar_custom_base_url']  = 'https://api.custom.test/v1';
 
 		ob_start();
-		fahad_ai_settings_page();
+		dukandaar_settings_page();
 		$out = ob_get_clean();
 
 		// Custom provider's base-URL field.

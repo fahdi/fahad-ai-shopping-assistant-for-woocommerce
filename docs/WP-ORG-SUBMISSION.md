@@ -1,14 +1,14 @@
 # WordPress.org submission, prep & runbook (issue #67)
 
 > **Status: BLOCKED on an owner action.** The directory slug
-> `fahad-ai-shopping-assistant-for-woocommerce` is still in WordPress.org review, and
+> `dukandaar-ai-shopping-assistant-for-woocommerce` is still in WordPress.org review, and
 > committing to the plugin SVN requires the owner's wordpress.org account + the approved
 > slug. This document is the ready-to-run package + reviewer reply so the submission is a
 > mechanical step the moment the slug clears. Nothing here can be executed from this repo/CI.
 
 ## What's already compliant (verified)
-- **Text domain == slug:** `fahad-ai-shopping-assistant-for-woocommerce` (header + every `__()`).
-- **Prefixes:** `FAHAD_AI_` / `fahad_ai_` (≥4 chars, distinct), passes the unique-prefix rule.
+- **Text domain == slug:** `dukandaar-ai-shopping-assistant-for-woocommerce` (header + every `__()`).
+- **Prefixes:** `DUKANDAAR_` / `dukandaar_` (≥4 chars, distinct), passes the unique-prefix rule.
 - **`readme.txt`:** valid header (Contributors, Tags, Requires at least, Tested up to 7.0, Requires PHP, Stable tag matches the release), Description / Installation / FAQ / Changelog / Upgrade Notice sections, and the **External services** disclosure (Anthropic + Moonshot endpoints + privacy links).
 - **Direct cURL** (the Moonshot SSE handle in `class-api-handler.php`) is wrapped in `phpcs:disable/enable` with the justification comment the reviewer asked for.
 - **No inline `<script>`** (admin JS is enqueued); `Requires Plugins: woocommerce` header present.
@@ -16,11 +16,11 @@
 
 ## Prerequisite (owner)
 1. The slug must be **approved** by the Plugin Directory (the pending step).
-2. Owner has SVN access to `https://plugins.svn.wordpress.org/fahad-ai-shopping-assistant-for-woocommerce/`.
+2. Owner has SVN access to `https://plugins.svn.wordpress.org/dukandaar-ai-shopping-assistant-for-woocommerce/`.
 
 ## SVN runbook (once the slug is approved)
 ```bash
-SLUG=fahad-ai-shopping-assistant-for-woocommerce
+SLUG=dukandaar-ai-shopping-assistant-for-woocommerce
 VER=<latest release, e.g. 2.7.0>
 
 # 1. Build the clean zip (see plugin.md) and unzip it to a staging dir, OR use the
@@ -46,7 +46,7 @@ svn commit -m "Release $VER"
 
 ## Reviewer reply template (brief, no AI fluff; reviewers flag that)
 > Thanks for the review. Addressed:
-> - Slug/prefix: final slug `fahad-ai-shopping-assistant-for-woocommerce`; all code uses the `fahad_ai_`/`FAHAD_AI_` prefix and the text domain matches the slug.
+> - Slug/prefix: final slug `dukandaar-ai-shopping-assistant-for-woocommerce`; all code uses the `dukandaar_`/`DUKANDAAR_` prefix and the text domain matches the slug.
 > - cURL: the only direct cURL is the Moonshot SSE streaming handle; it's documented inline (phpcs justification) because `wp_remote_post()` buffers the full body and the `http_api_curl` override proved unreliable for SSE.
 > - Auth: the public `/message` and `/stream` endpoints pair the `wp_rest` nonce with per-client rate limiting (billable AI + cart mutation).
 > - External services: Anthropic + Moonshot are disclosed in readme.txt with privacy-policy links; only conversation + relevant product data are sent.

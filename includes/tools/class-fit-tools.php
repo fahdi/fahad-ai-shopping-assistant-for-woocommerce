@@ -26,22 +26,22 @@ defined( 'ABSPATH' ) || exit;
  * so (size_available=false, recommended_variation=null) rather than recommending
  * something the shopper cannot buy.
  *
- * This is a DROP-IN pack following the Fahad_AI_Catalog_Tools / Fahad_AI_Reviews_Tools
+ * This is a DROP-IN pack following the Dukandaar_Catalog_Tools / Dukandaar_Reviews_Tools
  * pattern: a self-contained class in its own file that self-registers a provider at
- * file scope via Fahad_AI_Tool_Registry::register_pack(). The plugin bootstrap (and
+ * file scope via Dukandaar_Tool_Registry::register_pack(). The plugin bootstrap (and
  * the test bootstrap) glob-require includes/tools/*.php, so adding this file is the
  * ONLY wiring needed, no edits to the bootstrap, the test bootstrap, or the eval
  * harness. It reads only shared catalog/review data, so it is NOT a personal-data
  * tool and is not login-gated.
  */
-final class Fahad_AI_Fit_Tools {
+final class Dukandaar_Fit_Tools {
 
 	/**
 	 * Product meta key the size chart is read from. Merchants (or a companion
 	 * size-chart plugin via this key) store a plain-text/HTML chart here; the tool
 	 * surfaces it verbatim and never invents one.
 	 */
-	private const SIZE_CHART_META = '_fahad_ai_size_chart';
+	private const SIZE_CHART_META = '_dukandaar_size_chart';
 
 	/**
 	 * Minimum number of fit-mentioning APPROVED reviews required before a review-based
@@ -114,7 +114,7 @@ final class Fahad_AI_Fit_Tools {
 		$product    = wc_get_product( $product_id );
 
 		if ( ! $product instanceof WC_Product || ! $product->is_visible() ) {
-			return [ 'error' => __( 'Product not found.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ];
+			return [ 'error' => __( 'Product not found.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) ];
 		}
 
 		$size_options = self::size_options( $product );
@@ -137,7 +137,7 @@ final class Fahad_AI_Fit_Tools {
 			// Only attach a rationale when there is a real one, never a fabricated one.
 			$result['fit_basis'] = $basis;
 		} else {
-			$result['message'] = __( 'Fit information is not available for this product yet, so I can\'t say whether it runs small or large.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+			$result['message'] = __( 'Fit information is not available for this product yet, so I can\'t say whether it runs small or large.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 		}
 
 		// Recommend + map a size only when the shopper volunteered one.
@@ -231,7 +231,7 @@ final class Fahad_AI_Fit_Tools {
 	private static function derive_fit_hint( WC_Product $product ): array {
 		$explicit = self::fit_from_attribute( $product );
 		if ( null !== $explicit ) {
-			return [ $explicit, __( 'stated by the store on the product.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ];
+			return [ $explicit, __( 'stated by the store on the product.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) ];
 		}
 
 		return self::fit_from_reviews( $product->get_id() );
@@ -311,7 +311,7 @@ final class Fahad_AI_Fit_Tools {
 
 		$basis = sprintf(
 			/* translators: 1: number of reviews supporting the fit hint, 2: total reviews that mentioned fit */
-			__( 'based on %1$d of %2$d customer reviews that mention fit.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			__( 'based on %1$d of %2$d customer reviews that mention fit.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			$top,
 			$total
 		);
@@ -483,5 +483,5 @@ final class Fahad_AI_Fit_Tools {
 // file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before pcov's per-test window opens; its effect is asserted in FitToolsTest::test_fit_tool_is_registered_via_register_pack.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Fit_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Fit_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

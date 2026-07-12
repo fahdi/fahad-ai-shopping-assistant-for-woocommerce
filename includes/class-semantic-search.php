@@ -11,15 +11,15 @@ defined( 'ABSPATH' ) || exit;
  * which is a separate dependency and key and is NOT bundled. Until a provider
  * registers a retriever on the filter below, this seam returns nothing and product
  * search degrades to the existing WooCommerce keyword search (+ relaxation) in
- * Fahad_AI_Tools::search_products, i.e. ZERO behaviour change out of the box.
+ * Dukandaar_Tools::search_products, i.e. ZERO behaviour change out of the box.
  *
- * This mirrors the wallet-decoupling pattern (`fahad_ai_wallet_provider`): the
+ * This mirrors the wallet-decoupling pattern (`dukandaar_wallet_provider`): the
  * capability stays dormant and is activated cleanly by an add-on, so "AI + vector
  * search" is a swappable bundle rather than hard core coupling.
  *
  * THE CONTRACT. A provider registers a retriever on:
  *
- *     apply_filters( 'fahad_ai_semantic_retriever', null, string $query, array $filters )
+ *     apply_filters( 'dukandaar_semantic_retriever', null, string $query, array $filters )
  *
  * Two registration shapes are accepted (use whichever fits the provider):
  *
@@ -27,14 +27,14 @@ defined( 'ABSPATH' ) || exit;
  *      the provider can embed `$query`, run its vector lookup (pre-filtered by
  *      `$filters`), and return the top-k product IDs, best first:
  *
- *          add_filter( 'fahad_ai_semantic_retriever', function ( $ids, $query, $filters ) {
+ *          add_filter( 'dukandaar_semantic_retriever', function ( $ids, $query, $filters ) {
  *              return My_Embeddings_Backend::rank( $query, $filters ); // int[] best-first
  *          }, 10, 3 );
  *
  *   2. Return a callable retriever `fn( string $query, array $filters ): int[]`
  *      (handy when the provider wants to register once, not re-resolve per call):
  *
- *          add_filter( 'fahad_ai_semantic_retriever', fn() => [ $backend, 'rank' ] );
+ *          add_filter( 'dukandaar_semantic_retriever', fn() => [ $backend, 'rank' ] );
  *
  * `$filters` carries the structured constraints the tool already parsed , 
  * `category` (string), `min_price`/`max_price` (float), `limit` (int), so a
@@ -43,7 +43,7 @@ defined( 'ABSPATH' ) || exit;
  * price/stock.
  *
  * LIVE TRUTH IS NEVER CACHED. The returned IDs are resolved here through
- * wc_get_product() at call time and shaped by Fahad_AI_Tools::format_product_summary(),
+ * wc_get_product() at call time and shaped by Dukandaar_Tools::format_product_summary(),
  * which reads price / sale / stock / rating straight from the live WC_Product. So
  * even though retrieval used a (potentially stale) vector index, the price and
  * stock the model and the cards see are always current, never embedded or cached
@@ -52,11 +52,11 @@ defined( 'ABSPATH' ) || exit;
  *
  * GRACEFUL DEGRADATION. No retriever, a retriever that returns nothing, a
  * malformed return, or a throwing retriever all yield an empty result here, and
- * Fahad_AI_Tools::search_products then runs its existing keyword path. The shopper
+ * Dukandaar_Tools::search_products then runs its existing keyword path. The shopper
  * never sees a semantic-search error (design doc §6.2). This is the hybrid safety
  * net: the keyword leg always backstops the vector leg.
  */
-final class Fahad_AI_Semantic_Search {
+final class Dukandaar_Semantic_Search {
 
 	/**
 	 * Resolve a query through the registered semantic retriever, if any.
@@ -79,7 +79,7 @@ final class Fahad_AI_Semantic_Search {
 		}
 
 		$limit   = isset( $filters['limit'] ) ? max( 1, (int) $filters['limit'] ) : 0;
-		$tools   = Fahad_AI_Tools::instance();
+		$tools   = Dukandaar_Tools::instance();
 		$summaries = [];
 
 		foreach ( $ids as $id ) {
@@ -131,7 +131,7 @@ final class Fahad_AI_Semantic_Search {
 		 * @param string $query     The sanitized free-text query.
 		 * @param array  $filters   Structured constraints (category/price/limit).
 		 */
-		$retriever = apply_filters( 'fahad_ai_semantic_retriever', null, $query, $filters );
+		$retriever = apply_filters( 'dukandaar_semantic_retriever', null, $query, $filters );
 
 		if ( null === $retriever || false === $retriever ) {
 			return [];

@@ -1,6 +1,6 @@
-![Fahad AI: the honest WooCommerce shopping assistant](.github/banner.gif)
+![Dukandaar: the honest WooCommerce shopping assistant](.github/banner.gif)
 
-# Fahad AI Shopping Assistant for WooCommerce
+# Dukandaar AI Shopping Assistant for WooCommerce
 
 The honest WooCommerce shopping assistant. Customers can search products, get recommendations, and manage their cart through a natural chat interface, without leaving the page. Every answer is grounded in your real store data, no invented prices, stock, or reviews.
 
@@ -8,11 +8,11 @@ Works with **13+ AI providers** (Anthropic Claude, OpenAI, Google Gemini, Moonsh
 
 ## See it in action
 
-[![A shopper asks about a product; the assistant answers from your real catalogue with an in-stock price card, then declines to invent a discount when there is no sale](.github/demo.gif)](https://woo.isupercoder.com/?fahad_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F)
+[![A shopper asks about a product; the assistant answers from your real catalogue with an in-stock price card, then declines to invent a discount when there is no sale](.github/demo.gif)](https://woo.isupercoder.com/?dukandaar_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F)
 
 A shopper asks about a product, and the assistant answers from your real catalogue with an in-stock price card. When asked for a discount that does not exist, it refuses to invent one. Grounded, honest, and auditable.
 
-**[Try it live on a real store &rarr;](https://woo.isupercoder.com/?fahad_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F)**
+**[Try it live on a real store &rarr;](https://woo.isupercoder.com/?dukandaar_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F)**
 
 ---
 
@@ -52,10 +52,10 @@ A shopper asks about a product, and the assistant answers from your real catalog
 
 ## Installation
 
-1. Download `fahad-ai-shopping-assistant-for-woocommerce-1.0.7.zip` from [Releases](https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce/releases)
+1. Download `dukandaar-ai-shopping-assistant-for-woocommerce-1.0.7.zip` from [Releases](https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce/releases)
 2. In WordPress admin go to **Plugins → Add New → Upload Plugin**
 3. Upload the zip and activate
-4. Go to **Settings → Fahad AI Assistant**
+4. Go to **Settings → Dukandaar Assistant**
 5. Select your provider, enter your API key, save
 6. The chat widget appears on all frontend pages automatically
 
@@ -80,8 +80,8 @@ A shopper asks about a product, and the assistant answers from your real catalog
 
 The plugin registers two REST endpoints:
 
-- `POST /wp-json/fahad-ai/v1/message`, standard request/response (Anthropic)
-- `POST /wp-json/fahad-ai/v1/stream`, Server-Sent Events streaming (Moonshot)
+- `POST /wp-json/dukandaar/v1/message`, standard request/response (Anthropic)
+- `POST /wp-json/dukandaar/v1/stream`, Server-Sent Events streaming (Moonshot)
 
 Each request runs an **agentic loop**: the AI can call WooCommerce tools multiple times before returning a final response. Tool results feed back into the next API call automatically.
 

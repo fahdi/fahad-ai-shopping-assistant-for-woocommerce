@@ -10,7 +10,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-class Fahad_AI_Embedding_Exception extends RuntimeException {
+class Dukandaar_Embedding_Exception extends RuntimeException {
 
 	private bool $retryable;
 

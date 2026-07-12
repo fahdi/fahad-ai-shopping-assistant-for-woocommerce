@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental coverage for Fahad_AI_Embeddings::provider(), the Cohere branch.
+ * Supplemental coverage for Dukandaar_Embeddings::provider(), the Cohere branch.
  *
  * EmbeddingsTest only exercises the OpenAI-compatible path; the Cohere branch
  * (provider type === 'cohere') and, specifically, its keyless `: null` fallback
@@ -34,15 +34,15 @@ class CoverageEmbeddingsTest extends TestCase {
 	 */
 	public function test_enabled_reflects_option_flag(): void {
 		Functions\when( 'get_option' )->alias(
-			static fn( $k, $d = 0 ) => 'fahad_ai_embeddings_enabled' === $k ? 1 : $d
+			static fn( $k, $d = 0 ) => 'dukandaar_embeddings_enabled' === $k ? 1 : $d
 		);
-		$this->assertTrue( Fahad_AI_Embeddings::enabled() );
+		$this->assertTrue( Dukandaar_Embeddings::enabled() );
 	}
 
 	public function test_enabled_defaults_off(): void {
 		// Default (option absent) -> the provided default 0 is returned -> false.
 		Functions\when( 'get_option' )->alias( static fn( $k, $d = 0 ) => $d );
-		$this->assertFalse( Fahad_AI_Embeddings::enabled() );
+		$this->assertFalse( Dukandaar_Embeddings::enabled() );
 	}
 
 	/**
@@ -53,12 +53,12 @@ class CoverageEmbeddingsTest extends TestCase {
 	public function test_factory_returns_null_when_cohere_selected_without_key(): void {
 		Functions\when( 'get_option' )->alias(
 			static fn( $k, $d = '' ) => [
-				'fahad_ai_embedding_provider_type' => 'cohere',
-				'fahad_ai_cohere_api_key'          => '', // empty -> null branch
+				'dukandaar_embedding_provider_type' => 'cohere',
+				'dukandaar_cohere_api_key'          => '', // empty -> null branch
 			][ $k ] ?? $d
 		);
 
-		$this->assertNull( Fahad_AI_Embeddings::provider() );
+		$this->assertNull( Dukandaar_Embeddings::provider() );
 	}
 
 	/**
@@ -69,15 +69,15 @@ class CoverageEmbeddingsTest extends TestCase {
 	public function test_factory_returns_cohere_provider_when_keyed(): void {
 		Functions\when( 'get_option' )->alias(
 			static fn( $k, $d = '' ) => [
-				'fahad_ai_embedding_provider_type' => 'cohere',
-				'fahad_ai_cohere_api_key'          => 'co-live-key',
-				'fahad_ai_embedding_model'         => 'embed-multilingual-v3.0',
+				'dukandaar_embedding_provider_type' => 'cohere',
+				'dukandaar_cohere_api_key'          => 'co-live-key',
+				'dukandaar_embedding_model'         => 'embed-multilingual-v3.0',
 			][ $k ] ?? $d
 		);
 
-		$p = Fahad_AI_Embeddings::provider();
+		$p = Dukandaar_Embeddings::provider();
 
-		$this->assertInstanceOf( Fahad_AI_Cohere_Embedding_Provider::class, $p );
+		$this->assertInstanceOf( Dukandaar_Cohere_Embedding_Provider::class, $p );
 		$this->assertTrue( $p->is_available() );
 		$this->assertSame( 'embed-multilingual-v3.0', $p->model() );
 	}
@@ -89,15 +89,15 @@ class CoverageEmbeddingsTest extends TestCase {
 	public function test_factory_passes_configured_cohere_model(): void {
 		Functions\when( 'get_option' )->alias(
 			static fn( $k, $d = '' ) => [
-				'fahad_ai_embedding_provider_type' => 'cohere',
-				'fahad_ai_cohere_api_key'          => 'co-live-key',
-				'fahad_ai_embedding_model'         => 'embed-english-v3.0',
+				'dukandaar_embedding_provider_type' => 'cohere',
+				'dukandaar_cohere_api_key'          => 'co-live-key',
+				'dukandaar_embedding_model'         => 'embed-english-v3.0',
 			][ $k ] ?? $d
 		);
 
-		$p = Fahad_AI_Embeddings::provider();
+		$p = Dukandaar_Embeddings::provider();
 
-		$this->assertInstanceOf( Fahad_AI_Cohere_Embedding_Provider::class, $p );
+		$this->assertInstanceOf( Dukandaar_Cohere_Embedding_Provider::class, $p );
 		$this->assertSame( 'embed-english-v3.0', $p->model() );
 	}
 }

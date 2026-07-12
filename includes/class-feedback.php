@@ -43,12 +43,12 @@ defined( 'ABSPATH' ) || exit;
  * Storage: a single autoload=no option holding an id => row map. This keeps the
  * feature self-contained and trivially testable (no custom table, no migration) at
  * the scale a bounded, rolling feedback window realistically reaches, the same
- * approach as Fahad_AI_Stock_Alerts.
+ * approach as Dukandaar_Stock_Alerts.
  */
-final class Fahad_AI_Feedback {
+final class Dukandaar_Feedback {
 
 	/** Option name holding the id => feedback-row map (autoload off). */
-	public const OPTION = 'fahad_ai_feedback';
+	public const OPTION = 'dukandaar_feedback';
 
 	/** Valid ratings. */
 	public const RATING_UP   = 'up';
@@ -63,7 +63,7 @@ final class Fahad_AI_Feedback {
 	/** Max characters kept of an opaque conversation/message ref. */
 	public const MAX_REF_LENGTH = 128;
 
-	private static ?Fahad_AI_Feedback $instance = null;
+	private static ?Dukandaar_Feedback $instance = null;
 
 	public static function instance(): self {
 		if ( null === self::$instance ) {
@@ -96,7 +96,7 @@ final class Fahad_AI_Feedback {
 		if ( '' === $rating ) {
 			return [
 				'ok'    => false,
-				'error' => __( 'Please choose a rating.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error' => __( 'Please choose a rating.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 

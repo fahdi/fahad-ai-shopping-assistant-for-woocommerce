@@ -4,17 +4,17 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Product comparison tool (issue #13).
  *
- * A drop-in feature pack (same pattern as Fahad_AI_Catalog_Tools /
- * Fahad_AI_Recommendation_Tools): a self-contained class in its own file under
+ * A drop-in feature pack (same pattern as Dukandaar_Catalog_Tools /
+ * Dukandaar_Recommendation_Tools): a self-contained class in its own file under
  * includes/tools/ that self-registers a provider at the bottom via
- * Fahad_AI_Tool_Registry::register_pack(). The bootstrap (and the test bootstrap)
+ * Dukandaar_Tool_Registry::register_pack(). The bootstrap (and the test bootstrap)
  * glob-require everything here, so adding this pack is a SINGLE new file, no edits
  * to the bootstrap, the test bootstrap, or the eval harness.
  *
  * Tool provided:
  *   - compare_products, "what's the difference between A and B?". Given 2–4 product
  *     ids, returns each product's NORMALIZED base summary (reusing the shared
- *     Fahad_AI_Tools::format_product_summary so the fields match every other product
+ *     Dukandaar_Tools::format_product_summary so the fields match every other product
  *     surface) PLUS an ALIGNED attribute table: one row per attribute, each row
  *     carrying every compared product's value for that attribute (blank where a
  *     product lacks it), so the widget can render a side-by-side comparison.
@@ -31,10 +31,10 @@ defined( 'ABSPATH' ) || exit;
  *
  * The comparison result is a DIFFERENT shape from the product-card path (aligned
  * columns, not a flat card list). It is surfaced to the widget as a separate
- * `comparison` payload by Fahad_AI_API_Handler::tool_result_comparison(), mirroring
+ * `comparison` payload by Dukandaar_API_Handler::tool_result_comparison(), mirroring
  * how product cards are surfaced, the agent loop is untouched.
  */
-final class Fahad_AI_Comparison_Tools {
+final class Dukandaar_Comparison_Tools {
 
 	/**
 	 * Maximum number of products compared at once. A side-by-side table with more
@@ -92,11 +92,11 @@ final class Fahad_AI_Comparison_Tools {
 
 		if ( empty( $ids ) ) {
 			return [
-				'error' => __( 'Tell me which products to compare and I will line them up for you.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error' => __( 'Tell me which products to compare and I will line them up for you.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
-		$formatter = Fahad_AI_Tools::instance();
+		$formatter = Dukandaar_Tools::instance();
 		$products  = [];
 		$attr_sets = []; // product_id => [ attribute label => value ]
 
@@ -116,7 +116,7 @@ final class Fahad_AI_Comparison_Tools {
 
 		if ( count( $products ) < 2 ) {
 			return [
-				'error' => __( 'I need at least two available products to compare. Please pick two or three.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error' => __( 'I need at least two available products to compare. Please pick two or three.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -235,5 +235,5 @@ final class Fahad_AI_Comparison_Tools {
 // file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require_once time, before PHPUnit's per-test pcov window opens; it can never be re-executed in-process.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Comparison_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Comparison_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

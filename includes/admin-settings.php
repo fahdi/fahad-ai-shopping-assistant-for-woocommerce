@@ -8,7 +8,7 @@ defined( 'ABSPATH' ) || exit;
  * extension; falls back to `manage_options` on the rare site where the WooCommerce
  * capability is not granted. Used by both the page guard and the admin menu.
  */
-function fahad_ai_settings_capability(): string {
+function dukandaar_settings_capability(): string {
 	return current_user_can( 'manage_woocommerce' ) ? 'manage_woocommerce' : 'manage_options';
 }
 
@@ -16,21 +16,21 @@ function fahad_ai_settings_capability(): string {
  * Sanitize the merchant tone/persona setting to the fixed allowlist (issue #56).
  *
  * The tone maps to a vetted instruction line in the system prompt, so only the known
- * keys (Fahad_AI_API_Handler::TONES) are accepted; anything else, including any
+ * keys (Dukandaar_API_Handler::TONES) are accepted; anything else, including any
  * attempt to type a free-form instruction, collapses to '' (no tone line).
  *
  * @param mixed $raw Raw POST value.
  * @return string A valid tone key, or ''.
  */
-function fahad_ai_sanitize_tone( $raw ): string {
+function dukandaar_sanitize_tone( $raw ): string {
 	$key = sanitize_key( is_scalar( $raw ) ? (string) $raw : '' );
-	return isset( Fahad_AI_API_Handler::TONES[ $key ] ) ? $key : '';
+	return isset( Dukandaar_API_Handler::TONES[ $key ] ) ? $key : '';
 }
 
 /**
  * Sanitize the selected AI provider to a known catalog id (issue: multi-provider).
  *
- * The provider <select> is built from Fahad_AI_Providers::catalog(), so only an id
+ * The provider <select> is built from Dukandaar_Providers::catalog(), so only an id
  * the catalog actually declares is accepted; anything else, including a tampered
  * value, collapses to the safe default 'anthropic'. This keeps routing keyed on a
  * real preset (handle_message looks the id up in the catalog).
@@ -38,9 +38,9 @@ function fahad_ai_sanitize_tone( $raw ): string {
  * @param mixed $raw Raw POST value.
  * @return string A valid provider id, or 'anthropic'.
  */
-function fahad_ai_sanitize_provider( $raw ): string {
+function dukandaar_sanitize_provider( $raw ): string {
 	$id = sanitize_text_field( is_scalar( $raw ) ? (string) $raw : '' );
-	return in_array( $id, Fahad_AI_Providers::ids(), true ) ? $id : 'anthropic';
+	return in_array( $id, Dukandaar_Providers::ids(), true ) ? $id : 'anthropic';
 }
 
 /**
@@ -56,7 +56,7 @@ function fahad_ai_sanitize_provider( $raw ): string {
  * @param mixed $raw Raw POST value.
  * @return string A sanitized language list, or 'auto'.
  */
-function fahad_ai_sanitize_languages( $raw ): string {
+function dukandaar_sanitize_languages( $raw ): string {
 	$value = sanitize_text_field( is_scalar( $raw ) ? (string) $raw : '' );
 	return '' === $value ? 'auto' : $value;
 }
@@ -72,7 +72,7 @@ function fahad_ai_sanitize_languages( $raw ): string {
  * @param mixed $raw Raw POST value.
  * @return array<int, string> Clean, de-duplicated tool names.
  */
-function fahad_ai_sanitize_tool_list( $raw ): array {
+function dukandaar_sanitize_tool_list( $raw ): array {
 	if ( ! is_array( $raw ) ) {
 		return [];
 	}
@@ -103,12 +103,12 @@ function fahad_ai_sanitize_tool_list( $raw ): array {
  *
  * @return array{ from: ?int, to: ?int, from_str: string, to_str: string }
  */
-function fahad_ai_analytics_range_from_request(): array {
+function dukandaar_analytics_range_from_request(): array {
 	$from_str = isset( $_GET['from'] ) ? sanitize_text_field( wp_unslash( $_GET['from'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only date-range filter, no state change.
 	$to_str   = isset( $_GET['to'] ) ? sanitize_text_field( wp_unslash( $_GET['to'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only date-range filter, no state change.
 
-	$from = fahad_ai_analytics_parse_date( $from_str, false );
-	$to   = fahad_ai_analytics_parse_date( $to_str, true );
+	$from = dukandaar_analytics_parse_date( $from_str, false );
+	$to   = dukandaar_analytics_parse_date( $to_str, true );
 
 	return [
 		'from'     => $from,
@@ -124,7 +124,7 @@ function fahad_ai_analytics_range_from_request(): array {
  * bound). Uses the site timezone via strtotime so the merchant's chosen dates line up
  * with how WordPress shows times.
  */
-function fahad_ai_analytics_parse_date( string $date, bool $end_of_day ): ?int {
+function dukandaar_analytics_parse_date( string $date, bool $end_of_day ): ?int {
 	$date = trim( $date );
 	if ( '' === $date || ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ) {
 		return null;
@@ -138,7 +138,7 @@ function fahad_ai_analytics_parse_date( string $date, bool $end_of_day ): ?int {
 /**
  * Owner analytics & "unanswered questions" dashboard (issue #49).
  *
- * Renders the privacy-safe aggregates from Fahad_AI_Analytics for a selectable date
+ * Renders the privacy-safe aggregates from Dukandaar_Analytics for a selectable date
  * range: top questions, the "questions we couldn't answer" list, the chat →
  * add-to-cart → order funnel, and cost per conversation. Also hosts the retention
  * controls, an opt-out toggle, an Export (download) and a Delete-all, each a
@@ -146,94 +146,94 @@ function fahad_ai_analytics_parse_date( string $date, bool $end_of_day ): ?int {
  * the settings page (manage_woocommerce, falling back to manage_options), re-checked
  * here as defence in depth.
  */
-function fahad_ai_analytics_page(): void {
-	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+function dukandaar_analytics_page(): void {
+	if ( ! current_user_can( dukandaar_settings_capability() ) ) {
 		return;
 	}
 
-	$analytics = Fahad_AI_Analytics::instance();
+	$analytics = Dukandaar_Analytics::instance();
 
 	// Toggle the opt-out from this page (its own nonce). The aggregates below still
 	// render whatever history exists even when logging is paused.
-	if ( isset( $_POST['fahad_ai_analytics_save'] ) && check_admin_referer( 'fahad_ai_analytics_settings' ) ) {
-		update_option( Fahad_AI_Analytics::OPTION_ENABLED, empty( $_POST['analytics_enabled'] ) ? 0 : 1 );
-		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Analytics settings saved.', 'fahad-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
+	if ( isset( $_POST['dukandaar_analytics_save'] ) && check_admin_referer( 'dukandaar_analytics_settings' ) ) {
+		update_option( Dukandaar_Analytics::OPTION_ENABLED, empty( $_POST['analytics_enabled'] ) ? 0 : 1 );
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Analytics settings saved.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
 	}
 
 	// One-shot admin notices after an export/delete round-trip via admin-post.php.
-	if ( isset( $_GET['fahad_ai_purged'] ) ) {
-		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Analytics data deleted.', 'fahad-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
+	if ( isset( $_GET['dukandaar_purged'] ) ) {
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Analytics data deleted.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
 	}
 
 	$enabled = $analytics->enabled();
-	$range   = fahad_ai_analytics_range_from_request();
+	$range   = dukandaar_analytics_range_from_request();
 	$window  = [ 'from' => $range['from'], 'to' => $range['to'] ];
 
 	$top         = $analytics->top_questions( 20, $window );
 	$unanswered  = $analytics->unanswered( 50, $window );
-	$funnel      = $analytics->funnel( $window, 'fahad_ai_attribute_orders' );
+	$funnel      = $analytics->funnel( $window, 'dukandaar_attribute_orders' );
 	$cost        = $analytics->cost_summary( $window );
 	$export_url  = admin_url( 'admin-post.php' );
-	$page_slug   = 'fahad-ai-analytics';
+	$page_slug   = 'dukandaar-analytics';
 	$currency    = function_exists( 'get_woocommerce_currency_symbol' ) ? get_woocommerce_currency_symbol() : '';
 	?>
 	<div class="wrap">
-		<h1><?php esc_html_e( 'AI Assistant Analytics', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h1>
+		<h1><?php esc_html_e( 'AI Assistant Analytics', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h1>
 
 		<?php if ( ! $enabled ) : ?>
 			<div class="notice notice-warning inline"><p>
-				<?php esc_html_e( 'Analytics logging is currently turned off. New conversations are not being recorded; the figures below reflect previously stored data only.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Analytics logging is currently turned off. New conversations are not being recorded; the figures below reflect previously stored data only.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 			</p></div>
 		<?php endif; ?>
 
 		<p class="description" style="max-width:55em;">
-			<?php esc_html_e( 'A privacy-safe view of how the assistant is performing. Questions are stored with emails masked and trimmed, never with names, IP addresses or customer identifiers, and this data is never sent back to the AI model. Data is kept on a rolling retention window and can be exported or deleted below.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+			<?php esc_html_e( 'A privacy-safe view of how the assistant is performing. Questions are stored with emails masked and trimmed, never with names, IP addresses or customer identifiers, and this data is never sent back to the AI model. Data is kept on a rolling retention window and can be exported or deleted below.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 		</p>
 
 		<!-- Date-range filter (read-only → GET, no nonce). -->
 		<form method="get" style="margin:16px 0;">
 			<input type="hidden" name="page" value="<?php echo esc_attr( $page_slug ); ?>">
-			<label for="fahad-ai-from"><?php esc_html_e( 'From', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label>
-			<input type="date" id="fahad-ai-from" name="from" value="<?php echo esc_attr( $range['from_str'] ); ?>">
-			<label for="fahad-ai-to" style="margin-left:8px;"><?php esc_html_e( 'To', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label>
-			<input type="date" id="fahad-ai-to" name="to" value="<?php echo esc_attr( $range['to_str'] ); ?>">
-			<?php submit_button( esc_html__( 'Apply', 'fahad-ai-shopping-assistant-for-woocommerce' ), 'secondary', '', false ); ?>
+			<label for="dukandaar-from"><?php esc_html_e( 'From', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label>
+			<input type="date" id="dukandaar-from" name="from" value="<?php echo esc_attr( $range['from_str'] ); ?>">
+			<label for="dukandaar-to" style="margin-left:8px;"><?php esc_html_e( 'To', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label>
+			<input type="date" id="dukandaar-to" name="to" value="<?php echo esc_attr( $range['to_str'] ); ?>">
+			<?php submit_button( esc_html__( 'Apply', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), 'secondary', '', false ); ?>
 			<?php if ( '' !== $range['from_str'] || '' !== $range['to_str'] ) : ?>
-				<a class="button-link" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $page_slug ) ); ?>"><?php esc_html_e( 'Reset', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></a>
+				<a class="button-link" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $page_slug ) ); ?>"><?php esc_html_e( 'Reset', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></a>
 			<?php endif; ?>
 		</form>
 
 		<!-- Funnel + cost summary cards. -->
-		<h2><?php esc_html_e( 'Conversion funnel', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<h2><?php esc_html_e( 'Conversion funnel', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 		<table class="widefat striped" style="max-width:46em;">
 			<tbody>
-				<tr><td><?php esc_html_e( 'Conversations', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['conversations'] ); ?></strong></td></tr>
-				<tr><td><?php esc_html_e( 'Saw a product', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['product_surfaced'] ); ?></strong></td></tr>
-				<tr><td><?php esc_html_e( 'Added to cart', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['added_to_cart'] ); ?></strong></td></tr>
-				<tr><td><?php esc_html_e( 'Chat-attributed orders', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo null === $funnel['orders'] ? esc_html__( 'n/a', 'fahad-ai-shopping-assistant-for-woocommerce' ) : esc_html( (string) $funnel['orders'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Conversations', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['conversations'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Saw a product', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['product_surfaced'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Added to cart', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['added_to_cart'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Chat-attributed orders', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo null === $funnel['orders'] ? esc_html__( 'n/a', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) : esc_html( (string) $funnel['orders'] ); ?></strong></td></tr>
 			</tbody>
 		</table>
 
-		<h2><?php esc_html_e( 'Cost', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<h2><?php esc_html_e( 'Cost', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 		<table class="widefat striped" style="max-width:46em;">
 			<tbody>
-				<tr><td><?php esc_html_e( 'Total cost', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( $currency . number_format( (float) $cost['total_cost'], 4 ) ); ?></strong></td></tr>
-				<tr><td><?php esc_html_e( 'Cost per conversation', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( $currency . number_format( (float) $cost['cost_per_conversation'], 4 ) ); ?></strong></td></tr>
-				<tr><td><?php esc_html_e( 'Total tokens', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $cost['total_tokens'] ); ?></strong></td></tr>
-				<tr><td><?php esc_html_e( 'Turns', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $cost['turns'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Total cost', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( $currency . number_format( (float) $cost['total_cost'], 4 ) ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Cost per conversation', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( $currency . number_format( (float) $cost['cost_per_conversation'], 4 ) ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Total tokens', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $cost['total_tokens'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Turns', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $cost['turns'] ); ?></strong></td></tr>
 			</tbody>
 		</table>
-		<p class="description"><?php esc_html_e( 'Cost and token figures appear when your provider returns usage data; otherwise they read as zero.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Cost and token figures appear when your provider returns usage data; otherwise they read as zero.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></p>
 
 		<!-- Top questions. -->
-		<h2><?php esc_html_e( 'Top questions', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<h2><?php esc_html_e( 'Top questions', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 		<?php if ( empty( $top ) ) : ?>
-			<p class="description"><?php esc_html_e( 'No questions recorded for this range yet.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+			<p class="description"><?php esc_html_e( 'No questions recorded for this range yet.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></p>
 		<?php else : ?>
 			<table class="widefat striped" style="max-width:55em;">
 				<thead><tr>
-					<th><?php esc_html_e( 'Question', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
-					<th style="width:6em;"><?php esc_html_e( 'Count', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th><?php esc_html_e( 'Question', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th style="width:6em;"><?php esc_html_e( 'Count', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
 				</tr></thead>
 				<tbody>
 					<?php foreach ( $top as $item ) : ?>
@@ -247,23 +247,23 @@ function fahad_ai_analytics_page(): void {
 		<?php endif; ?>
 
 		<!-- The "couldn't answer" list. -->
-		<h2><?php esc_html_e( 'Questions we couldn\'t answer', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
-		<p class="description" style="max-width:55em;"><?php esc_html_e( 'Turns where the assistant abstained, escalated to support, or had no matching action. These are your content and coverage opportunities.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+		<h2><?php esc_html_e( 'Questions we couldn\'t answer', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<p class="description" style="max-width:55em;"><?php esc_html_e( 'Turns where the assistant abstained, escalated to support, or had no matching action. These are your content and coverage opportunities.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></p>
 		<?php if ( empty( $unanswered ) ) : ?>
-			<p class="description"><?php esc_html_e( 'Nothing here for this range, the assistant answered everything it was asked.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Nothing here for this range, the assistant answered everything it was asked.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></p>
 		<?php else : ?>
 			<table class="widefat striped" style="max-width:55em;">
 				<thead><tr>
-					<th><?php esc_html_e( 'Question', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
-					<th style="width:10em;"><?php esc_html_e( 'Outcome', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
-					<th style="width:14em;"><?php esc_html_e( 'When', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th><?php esc_html_e( 'Question', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th style="width:10em;"><?php esc_html_e( 'Outcome', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th style="width:14em;"><?php esc_html_e( 'When', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
 				</tr></thead>
 				<tbody>
 					<?php foreach ( $unanswered as $item ) : ?>
 						<tr>
-							<td><?php echo esc_html( '' !== $item['question'] ? $item['question'] : __( '(no question text)', 'fahad-ai-shopping-assistant-for-woocommerce' ) ); ?></td>
-							<td><?php echo esc_html( fahad_ai_analytics_outcome_label( $item['outcome'] ) ); ?></td>
-							<td><?php echo esc_html( fahad_ai_analytics_format_time( $item['created'] ) ); ?></td>
+							<td><?php echo esc_html( '' !== $item['question'] ? $item['question'] : __( '(no question text)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) ); ?></td>
+							<td><?php echo esc_html( dukandaar_analytics_outcome_label( $item['outcome'] ) ); ?></td>
+							<td><?php echo esc_html( dukandaar_analytics_format_time( $item['created'] ) ); ?></td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>
@@ -271,33 +271,33 @@ function fahad_ai_analytics_page(): void {
 		<?php endif; ?>
 
 		<!-- Retention controls: opt-out, export, delete. -->
-		<h2><?php esc_html_e( 'Data &amp; retention', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<h2><?php esc_html_e( 'Data &amp; retention', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 
 		<form method="post" style="margin-bottom:18px;">
-			<?php wp_nonce_field( 'fahad_ai_analytics_settings' ); ?>
+			<?php wp_nonce_field( 'dukandaar_analytics_settings' ); ?>
 			<label>
 				<input type="checkbox" name="analytics_enabled" value="1" <?php checked( $enabled ); ?>>
-				<?php esc_html_e( 'Record conversation analytics (privacy-safe; no PII stored). Untick to stop logging.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Record conversation analytics (privacy-safe; no PII stored). Untick to stop logging.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 			</label>
-			<?php submit_button( esc_html__( 'Save', 'fahad-ai-shopping-assistant-for-woocommerce' ), 'primary', 'fahad_ai_analytics_save', false ); ?>
+			<?php submit_button( esc_html__( 'Save', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), 'primary', 'dukandaar_analytics_save', false ); ?>
 		</form>
 
 		<p>
 			<!-- Export (download a JSON of the privacy-safe rows). -->
 			<form method="post" action="<?php echo esc_url( $export_url ); ?>" style="display:inline-block;margin-right:10px;">
-				<?php wp_nonce_field( 'fahad_ai_analytics_export' ); ?>
-				<input type="hidden" name="action" value="fahad_ai_analytics_export">
+				<?php wp_nonce_field( 'dukandaar_analytics_export' ); ?>
+				<input type="hidden" name="action" value="dukandaar_analytics_export">
 				<input type="hidden" name="from" value="<?php echo esc_attr( $range['from_str'] ); ?>">
 				<input type="hidden" name="to" value="<?php echo esc_attr( $range['to_str'] ); ?>">
-				<?php submit_button( esc_html__( 'Export (JSON)', 'fahad-ai-shopping-assistant-for-woocommerce' ), 'secondary', '', false ); ?>
+				<?php submit_button( esc_html__( 'Export (JSON)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), 'secondary', '', false ); ?>
 			</form>
 
 			<!-- Delete all stored rows (retention control). -->
 			<form method="post" action="<?php echo esc_url( $export_url ); ?>" style="display:inline-block;"
-				onsubmit="return confirm('<?php echo esc_js( __( 'Delete all stored analytics data? This cannot be undone.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ); ?>');">
-				<?php wp_nonce_field( 'fahad_ai_analytics_delete' ); ?>
-				<input type="hidden" name="action" value="fahad_ai_analytics_delete">
-				<?php submit_button( esc_html__( 'Delete all data', 'fahad-ai-shopping-assistant-for-woocommerce' ), 'delete', '', false ); ?>
+				onsubmit="return confirm('<?php echo esc_js( __( 'Delete all stored analytics data? This cannot be undone.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) ); ?>');">
+				<?php wp_nonce_field( 'dukandaar_analytics_delete' ); ?>
+				<input type="hidden" name="action" value="dukandaar_analytics_delete">
+				<?php submit_button( esc_html__( 'Delete all data', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), 'delete', '', false ); ?>
 			</form>
 		</p>
 	</div>
@@ -305,19 +305,19 @@ function fahad_ai_analytics_page(): void {
 }
 
 /** Human-readable label for an outcome key (dashboard display only). */
-function fahad_ai_analytics_outcome_label( string $outcome ): string {
+function dukandaar_analytics_outcome_label( string $outcome ): string {
 	$labels = [
-		Fahad_AI_Analytics::OUTCOME_ANSWERED      => __( 'Answered', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-		Fahad_AI_Analytics::OUTCOME_ESCALATED     => __( 'Escalated', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-		Fahad_AI_Analytics::OUTCOME_ABSTAINED     => __( 'Abstained', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-		Fahad_AI_Analytics::OUTCOME_NO_TOOL_MATCH => __( 'No matching action', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-		Fahad_AI_Analytics::OUTCOME_ERROR         => __( 'Error', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		Dukandaar_Analytics::OUTCOME_ANSWERED      => __( 'Answered', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
+		Dukandaar_Analytics::OUTCOME_ESCALATED     => __( 'Escalated', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
+		Dukandaar_Analytics::OUTCOME_ABSTAINED     => __( 'Abstained', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
+		Dukandaar_Analytics::OUTCOME_NO_TOOL_MATCH => __( 'No matching action', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
+		Dukandaar_Analytics::OUTCOME_ERROR         => __( 'Error', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 	];
 	return $labels[ $outcome ] ?? $outcome;
 }
 
 /** Format a stored unix timestamp using the site's date/time format. */
-function fahad_ai_analytics_format_time( int $ts ): string {
+function dukandaar_analytics_format_time( int $ts ): string {
 	if ( $ts <= 0 ) {
 		return '';
 	}
@@ -341,14 +341,14 @@ function fahad_ai_analytics_format_time( int $ts ): string {
  * @param string[] $cart_conversation_refs Opaque refs that added to cart.
  * @return int Attributable orders.
  */
-function fahad_ai_attribute_orders( array $cart_conversation_refs ): int {
+function dukandaar_attribute_orders( array $cart_conversation_refs ): int {
 	/**
 	 * Filter the chat-attributed order count for the analytics funnel (issue #49).
 	 *
 	 * @param int      $orders Default 0 (no built-in order↔conversation link yet).
 	 * @param string[] $cart_conversation_refs Opaque refs that reached add-to-cart.
 	 */
-	return (int) apply_filters( 'fahad_ai_attributed_orders', 0, $cart_conversation_refs );
+	return (int) apply_filters( 'dukandaar_attributed_orders', 0, $cart_conversation_refs );
 }
 
 /**
@@ -358,25 +358,25 @@ function fahad_ai_attribute_orders( array $cart_conversation_refs ): int {
  * masked/bounded by the store) with a download header and exits. Honours the same
  * date-range as the dashboard so an export matches what the merchant is viewing.
  */
-function fahad_ai_analytics_export_handler(): void {
-	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
-		wp_die( esc_html__( 'You do not have permission to export this data.', 'fahad-ai-shopping-assistant-for-woocommerce' ), '', [ 'response' => 403 ] );
+function dukandaar_analytics_export_handler(): void {
+	if ( ! current_user_can( dukandaar_settings_capability() ) ) {
+		wp_die( esc_html__( 'You do not have permission to export this data.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), '', [ 'response' => 403 ] );
 	}
-	check_admin_referer( 'fahad_ai_analytics_export' );
+	check_admin_referer( 'dukandaar_analytics_export' );
 
 	$from = isset( $_POST['from'] ) ? sanitize_text_field( wp_unslash( $_POST['from'] ) ) : '';
 	$to   = isset( $_POST['to'] ) ? sanitize_text_field( wp_unslash( $_POST['to'] ) ) : '';
 
 	$window = [
-		'from' => fahad_ai_analytics_parse_date( $from, false ),
-		'to'   => fahad_ai_analytics_parse_date( $to, true ),
+		'from' => dukandaar_analytics_parse_date( $from, false ),
+		'to'   => dukandaar_analytics_parse_date( $to, true ),
 	];
 
-	$rows = Fahad_AI_Analytics::instance()->export( $window );
+	$rows = Dukandaar_Analytics::instance()->export( $window );
 
 	nocache_headers();
 	header( 'Content-Type: application/json; charset=utf-8' );
-	header( 'Content-Disposition: attachment; filename="fahad-ai-analytics-' . gmdate( 'Ymd-His' ) . '.json"' );
+	header( 'Content-Disposition: attachment; filename="dukandaar-analytics-' . gmdate( 'Ymd-His' ) . '.json"' );
 
 	echo wp_json_encode( [
 		'generated' => gmdate( 'c' ),
@@ -395,53 +395,53 @@ function fahad_ai_analytics_export_handler(): void {
  * Capability + nonce gated. Purges the store and redirects back to the dashboard with
  * a success flag.
  */
-function fahad_ai_analytics_delete_handler(): void {
-	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
-		wp_die( esc_html__( 'You do not have permission to delete this data.', 'fahad-ai-shopping-assistant-for-woocommerce' ), '', [ 'response' => 403 ] );
+function dukandaar_analytics_delete_handler(): void {
+	if ( ! current_user_can( dukandaar_settings_capability() ) ) {
+		wp_die( esc_html__( 'You do not have permission to delete this data.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), '', [ 'response' => 403 ] );
 	}
-	check_admin_referer( 'fahad_ai_analytics_delete' );
+	check_admin_referer( 'dukandaar_analytics_delete' );
 
-	Fahad_AI_Analytics::instance()->purge();
+	Dukandaar_Analytics::instance()->purge();
 
-	wp_safe_redirect( add_query_arg( 'fahad_ai_purged', '1', admin_url( 'admin.php?page=fahad-ai-analytics' ) ) );
+	wp_safe_redirect( add_query_arg( 'dukandaar_purged', '1', admin_url( 'admin.php?page=dukandaar-analytics' ) ) );
 	// @codeCoverageIgnoreStart
 	// Reason: terminating exit after a redirect header; cannot be measured in-process (an exit kills the PHPUnit run, so tests halt one call earlier).
 	exit;
 	// @codeCoverageIgnoreEnd
 }
 
-function fahad_ai_settings_page(): void {
-	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+function dukandaar_settings_page(): void {
+	if ( ! current_user_can( dukandaar_settings_capability() ) ) {
 		return;
 	}
 
 	// One-shot notice after the "Build index" action (#108) round-trips via admin-post.php.
 	// Read-only display flag after a nonce-verified redirect; value is cast to int.
-	$fahad_ai_indexed = isset( $_GET['fahad_ai_indexed'] ) ? (int) $_GET['fahad_ai_indexed'] : -1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-	if ( $fahad_ai_indexed >= 0 ) {
+	$dukandaar_indexed = isset( $_GET['dukandaar_indexed'] ) ? (int) $_GET['dukandaar_indexed'] : -1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( $dukandaar_indexed >= 0 ) {
 		printf(
 			'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
 			esc_html(
 				sprintf(
 					/* translators: %d: number of products queued for embedding */
-					__( 'Search index build queued for %d products. It runs in the background.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
-					$fahad_ai_indexed
+					__( 'Search index build queued for %d products. It runs in the background.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
+					$dukandaar_indexed
 				)
 			)
 		);
 	}
 
-	if ( isset( $_POST['fahad_ai_save'] ) && check_admin_referer( 'fahad_ai_settings' ) ) {
+	if ( isset( $_POST['dukandaar_save'] ) && check_admin_referer( 'dukandaar_settings' ) ) {
 		// Selected provider: only a known catalog id is accepted (an unknown value
 		// falls back to anthropic), so a tampered select can't set a bogus provider.
-		update_option( 'fahad_ai_provider', fahad_ai_sanitize_provider( sanitize_text_field( wp_unslash( $_POST['provider'] ?? 'anthropic' ) ) ) );
+		update_option( 'dukandaar_provider', dukandaar_sanitize_provider( sanitize_text_field( wp_unslash( $_POST['provider'] ?? 'anthropic' ) ) ) );
 
 		// Per-provider API key + model, driven by the catalog (issue: multi-provider).
 		// Each provider's form fields are {id}_api_key / {id}_model and persist to its
 		// declared option names. anthropic/moonshot keep their existing option names
 		// (backward compat) because those ids already follow the convention. The model
 		// defaults to the preset default when the field is blank.
-		foreach ( Fahad_AI_Providers::catalog() as $provider_id => $preset ) {
+		foreach ( Dukandaar_Providers::catalog() as $provider_id => $preset ) {
 			update_option(
 				$preset['key_option'],
 				sanitize_text_field( wp_unslash( $_POST[ $provider_id . '_api_key' ] ?? '' ) )
@@ -452,94 +452,94 @@ function fahad_ai_settings_page(): void {
 		}
 
 		// Moonshot region (global vs. china, separate platforms/keys/catalogues).
-		update_option( 'fahad_ai_moonshot_region', 'china' === sanitize_text_field( wp_unslash( $_POST['moonshot_region'] ?? 'global' ) ) ? 'china' : 'global' );
+		update_option( 'dukandaar_moonshot_region', 'china' === sanitize_text_field( wp_unslash( $_POST['moonshot_region'] ?? 'global' ) ) ? 'china' : 'global' );
 
 		// Custom provider base URL, validated to https (or a localhost http) and
-		// otherwise dropped to '' (Fahad_AI_Providers::sanitize_base_url). Never trusted
+		// otherwise dropped to '' (Dukandaar_Providers::sanitize_base_url). Never trusted
 		// as a raw string: it becomes part of the outbound request target.
-		update_option( 'fahad_ai_custom_base_url', Fahad_AI_Providers::sanitize_base_url( sanitize_text_field( wp_unslash( $_POST['custom_base_url'] ?? '' ) ) ) );
-		update_option( 'fahad_ai_bot_name',          sanitize_text_field( wp_unslash( $_POST['bot_name']          ?? 'Store Assistant' ) ) );
-		update_option( 'fahad_ai_greeting',          sanitize_textarea_field( wp_unslash( $_POST['greeting']      ?? 'Hi! How can I help you today?' ) ) );
-		update_option( 'fahad_ai_system_prompt',     sanitize_textarea_field( wp_unslash( $_POST['system_prompt'] ?? '' ) ) );
-		update_option( 'fahad_ai_accent_color',      sanitize_hex_color( wp_unslash( $_POST['accent_color']       ?? '#2563eb' ) ) );
+		update_option( 'dukandaar_custom_base_url', Dukandaar_Providers::sanitize_base_url( sanitize_text_field( wp_unslash( $_POST['custom_base_url'] ?? '' ) ) ) );
+		update_option( 'dukandaar_bot_name',          sanitize_text_field( wp_unslash( $_POST['bot_name']          ?? 'Store Assistant' ) ) );
+		update_option( 'dukandaar_greeting',          sanitize_textarea_field( wp_unslash( $_POST['greeting']      ?? 'Hi! How can I help you today?' ) ) );
+		update_option( 'dukandaar_system_prompt',     sanitize_textarea_field( wp_unslash( $_POST['system_prompt'] ?? '' ) ) );
+		update_option( 'dukandaar_accent_color',      sanitize_hex_color( wp_unslash( $_POST['accent_color']       ?? '#2563eb' ) ) );
 
 		// Merchant scope / tone / business-rules config (issue #56).
-		update_option( 'fahad_ai_tone',           fahad_ai_sanitize_tone( sanitize_text_field( wp_unslash( $_POST['tone'] ?? '' ) ) ) );
-		update_option( 'fahad_ai_off_limits',     sanitize_textarea_field( wp_unslash( $_POST['off_limits']      ?? '' ) ) );
-		update_option( 'fahad_ai_promo_emphasis', sanitize_textarea_field( wp_unslash( $_POST['promo_emphasis']  ?? '' ) ) );
-		update_option( 'fahad_ai_disabled_tools', fahad_ai_sanitize_tool_list( array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['disabled_tools'] ?? [] ) ) ) );
+		update_option( 'dukandaar_tone',           dukandaar_sanitize_tone( sanitize_text_field( wp_unslash( $_POST['tone'] ?? '' ) ) ) );
+		update_option( 'dukandaar_off_limits',     sanitize_textarea_field( wp_unslash( $_POST['off_limits']      ?? '' ) ) );
+		update_option( 'dukandaar_promo_emphasis', sanitize_textarea_field( wp_unslash( $_POST['promo_emphasis']  ?? '' ) ) );
+		update_option( 'dukandaar_disabled_tools', dukandaar_sanitize_tool_list( array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['disabled_tools'] ?? [] ) ) ) );
 
 		// Multilingual: default/allowed languages (issue #61). Default 'auto' = detect and
 		// match the shopper's language across the supported set (English / Urdu / Roman
 		// Urdu); a specific list (e.g. "English, Urdu") pins the preferred set.
-		update_option( 'fahad_ai_languages', fahad_ai_sanitize_languages( sanitize_text_field( wp_unslash( $_POST['languages'] ?? 'auto' ) ) ) );
+		update_option( 'dukandaar_languages', dukandaar_sanitize_languages( sanitize_text_field( wp_unslash( $_POST['languages'] ?? 'auto' ) ) ) );
 
 		// Cost / model knobs (issue #23, surfaced for #56).
-		update_option( 'fahad_ai_token_budget',        absint( $_POST['token_budget'] ?? 0 ) );
-		update_option( 'fahad_ai_fast_model_routing',  empty( $_POST['fast_model_routing'] ) ? 0 : 1 );
-		update_option( 'fahad_ai_fast_model',          sanitize_text_field( wp_unslash( $_POST['fast_model'] ?? '' ) ) );
+		update_option( 'dukandaar_token_budget',        absint( $_POST['token_budget'] ?? 0 ) );
+		update_option( 'dukandaar_fast_model_routing',  empty( $_POST['fast_model_routing'] ) ? 0 : 1 );
+		update_option( 'dukandaar_fast_model',          sanitize_text_field( wp_unslash( $_POST['fast_model'] ?? '' ) ) );
 
 		// Proactive, value-gated nudge (issue #65). Default OFF (opt-in); the frequency
 		// cap is floored at 0 (0 = effectively off, never nudge).
-		update_option( 'fahad_ai_proactive_enabled',   empty( $_POST['proactive_enabled'] ) ? 0 : 1 );
-		update_option( 'fahad_ai_proactive_frequency', absint( $_POST['proactive_frequency'] ?? Fahad_AI_Proactive::DEFAULT_FREQUENCY ) );
+		update_option( 'dukandaar_proactive_enabled',   empty( $_POST['proactive_enabled'] ) ? 0 : 1 );
+		update_option( 'dukandaar_proactive_frequency', absint( $_POST['proactive_frequency'] ?? Dukandaar_Proactive::DEFAULT_FREQUENCY ) );
 
 		// Voice input/output (issue #64). Both default OFF (opt-in): the master switch
 		// gates whether the widget builds the mic/speaker controls at all, and the TTS
 		// sub-toggle controls whether replies are spoken aloud.
-		update_option( 'fahad_ai_voice_enabled', empty( $_POST['voice_enabled'] ) ? 0 : 1 );
-		update_option( 'fahad_ai_voice_tts',     empty( $_POST['voice_tts'] ) ? 0 : 1 );
+		update_option( 'dukandaar_voice_enabled', empty( $_POST['voice_enabled'] ) ? 0 : 1 );
+		update_option( 'dukandaar_voice_tts',     empty( $_POST['voice_tts'] ) ? 0 : 1 );
 
 		// WhatsApp omnichannel channel (issue #62). Default OFF (opt-in). The verify token
 		// and app secret are SECRETS used only server-side (the webhook handshake + the
 		// inbound HMAC), sanitized as plain text, never localized to the client or fed to
 		// the model. Going live also needs a provider for the outbound send seam + Meta
 		// access tokens (held by that provider), which are intentionally out of core.
-		update_option( 'fahad_ai_whatsapp_enabled',      empty( $_POST['whatsapp_enabled'] ) ? 0 : 1 );
-		update_option( 'fahad_ai_whatsapp_verify_token', sanitize_text_field( wp_unslash( $_POST['whatsapp_verify_token'] ?? '' ) ) );
-		update_option( 'fahad_ai_whatsapp_app_secret',   sanitize_text_field( wp_unslash( $_POST['whatsapp_app_secret'] ?? '' ) ) );
+		update_option( 'dukandaar_whatsapp_enabled',      empty( $_POST['whatsapp_enabled'] ) ? 0 : 1 );
+		update_option( 'dukandaar_whatsapp_verify_token', sanitize_text_field( wp_unslash( $_POST['whatsapp_verify_token'] ?? '' ) ) );
+		update_option( 'dukandaar_whatsapp_app_secret',   sanitize_text_field( wp_unslash( $_POST['whatsapp_app_secret'] ?? '' ) ) );
 
 		// Semantic search settings (#108). Sanitization lives in the admin class.
-		Fahad_AI_Embeddings_Admin::save( wp_unslash( $_POST ) );
+		Dukandaar_Embeddings_Admin::save( wp_unslash( $_POST ) );
 
-		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'fahad-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) . '</p></div>';
 	}
 
-	$provider_catalog = Fahad_AI_Providers::catalog(); // multi-provider: drives the select + fields
-	$provider        = get_option( 'fahad_ai_provider',          'anthropic' );
-	$anthropic_key   = get_option( 'fahad_ai_anthropic_api_key', '' );
-	$anthropic_model = get_option( 'fahad_ai_anthropic_model',   'claude-haiku-4-5-20251001' );
-	$moonshot_key    = get_option( 'fahad_ai_moonshot_api_key',  '' );
-	$moonshot_model  = get_option( 'fahad_ai_moonshot_model',    'kimi-k2.6' );
-	$moonshot_region = get_option( 'fahad_ai_moonshot_region',   'global' );
-	$bot_name        = get_option( 'fahad_ai_bot_name',          'Store Assistant' );
-	$greeting        = get_option( 'fahad_ai_greeting',          'Hi! How can I help you today?' );
-	$system_prompt   = get_option( 'fahad_ai_system_prompt',     '' );
-	$accent_color    = get_option( 'fahad_ai_accent_color',      '#2563eb' );
+	$provider_catalog = Dukandaar_Providers::catalog(); // multi-provider: drives the select + fields
+	$provider        = get_option( 'dukandaar_provider',          'anthropic' );
+	$anthropic_key   = get_option( 'dukandaar_anthropic_api_key', '' );
+	$anthropic_model = get_option( 'dukandaar_anthropic_model',   'claude-haiku-4-5-20251001' );
+	$moonshot_key    = get_option( 'dukandaar_moonshot_api_key',  '' );
+	$moonshot_model  = get_option( 'dukandaar_moonshot_model',    'kimi-k2.6' );
+	$moonshot_region = get_option( 'dukandaar_moonshot_region',   'global' );
+	$bot_name        = get_option( 'dukandaar_bot_name',          'Store Assistant' );
+	$greeting        = get_option( 'dukandaar_greeting',          'Hi! How can I help you today?' );
+	$system_prompt   = get_option( 'dukandaar_system_prompt',     '' );
+	$accent_color    = get_option( 'dukandaar_accent_color',      '#2563eb' );
 
 	// Merchant config (#56) + cost knobs (#23).
-	$tone               = get_option( 'fahad_ai_tone',                 '' );
-	$off_limits         = get_option( 'fahad_ai_off_limits',           '' );
-	$promo_emphasis     = get_option( 'fahad_ai_promo_emphasis',       '' );
-	$languages          = get_option( 'fahad_ai_languages',            'auto' ); // multilingual (#61)
-	$disabled_tools     = (array) get_option( 'fahad_ai_disabled_tools', [] );
-	$token_budget       = (int) get_option( 'fahad_ai_token_budget',   0 );
-	$fast_model_routing = (bool) get_option( 'fahad_ai_fast_model_routing', false );
-	$fast_model         = get_option( 'fahad_ai_fast_model',           '' );
+	$tone               = get_option( 'dukandaar_tone',                 '' );
+	$off_limits         = get_option( 'dukandaar_off_limits',           '' );
+	$promo_emphasis     = get_option( 'dukandaar_promo_emphasis',       '' );
+	$languages          = get_option( 'dukandaar_languages',            'auto' ); // multilingual (#61)
+	$disabled_tools     = (array) get_option( 'dukandaar_disabled_tools', [] );
+	$token_budget       = (int) get_option( 'dukandaar_token_budget',   0 );
+	$fast_model_routing = (bool) get_option( 'dukandaar_fast_model_routing', false );
+	$fast_model         = get_option( 'dukandaar_fast_model',           '' );
 
 	// Proactive nudge (#65).
-	$proactive_enabled   = (bool) get_option( 'fahad_ai_proactive_enabled', 0 );
-	$proactive_frequency = max( 0, (int) get_option( 'fahad_ai_proactive_frequency', Fahad_AI_Proactive::DEFAULT_FREQUENCY ) );
+	$proactive_enabled   = (bool) get_option( 'dukandaar_proactive_enabled', 0 );
+	$proactive_frequency = max( 0, (int) get_option( 'dukandaar_proactive_frequency', Dukandaar_Proactive::DEFAULT_FREQUENCY ) );
 
 		// Voice input/output (#64). Both default OFF (opt-in).
-		$voice_enabled = (bool) get_option( 'fahad_ai_voice_enabled', 0 );
-		$voice_tts     = (bool) get_option( 'fahad_ai_voice_tts', 0 );
+		$voice_enabled = (bool) get_option( 'dukandaar_voice_enabled', 0 );
+		$voice_tts     = (bool) get_option( 'dukandaar_voice_tts', 0 );
 
 	// WhatsApp omnichannel channel (#62). Default OFF (opt-in). The verify token + app
 	// secret are server-side secrets (webhook handshake + inbound HMAC).
-	$whatsapp_enabled      = (bool) get_option( 'fahad_ai_whatsapp_enabled', 0 );
-	$whatsapp_verify_token = (string) get_option( 'fahad_ai_whatsapp_verify_token', '' );
-	$whatsapp_app_secret   = (string) get_option( 'fahad_ai_whatsapp_app_secret', '' );
+	$whatsapp_enabled      = (bool) get_option( 'dukandaar_whatsapp_enabled', 0 );
+	$whatsapp_verify_token = (string) get_option( 'dukandaar_whatsapp_verify_token', '' );
+	$whatsapp_app_secret   = (string) get_option( 'dukandaar_whatsapp_app_secret', '' );
 
 	// The five built-in WooCommerce tools are a protected floor and are never shown as
 	// disable-able. Everything else advertised to the model (packs + add-ons) can be
@@ -547,7 +547,7 @@ function fahad_ai_settings_page(): void {
 	// automatically with no edits here.
 	$builtin_tools  = [ 'search_products', 'get_product_details', 'add_to_cart', 'view_cart', 'remove_from_cart' ];
 	$gateable_tools = [];
-	foreach ( Fahad_AI_Tool_Registry::instance()->specs() as $spec ) {
+	foreach ( Dukandaar_Tool_Registry::instance()->specs() as $spec ) {
 		if ( ! in_array( $spec['name'], $builtin_tools, true ) ) {
 			$gateable_tools[ $spec['name'] ] = $spec['description'];
 		}
@@ -555,16 +555,16 @@ function fahad_ai_settings_page(): void {
 	ksort( $gateable_tools );
 	?>
 	<div class="wrap">
-		<h1><?php esc_html_e( 'Fahad AI Shopping Assistant Settings', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h1>
+		<h1><?php esc_html_e( 'Dukandaar AI Shopping Assistant Settings', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h1>
 
 		<form method="post">
-			<?php wp_nonce_field( 'fahad_ai_settings' ); ?>
+			<?php wp_nonce_field( 'dukandaar_settings' ); ?>
 
-			<h2 class="title"><?php esc_html_e( 'Provider', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+			<h2 class="title"><?php esc_html_e( 'Provider', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 			<table class="form-table" role="presentation">
 
 				<tr>
-					<th scope="row"><label for="provider"><?php esc_html_e( 'AI Provider', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="provider"><?php esc_html_e( 'AI Provider', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<select id="provider" name="provider">
 							<?php foreach ( $provider_catalog as $provider_id => $preset ) : ?>
@@ -572,15 +572,15 @@ function fahad_ai_settings_page(): void {
 							<?php endforeach; ?>
 						</select>
 						<p class="description">
-							<?php esc_html_e( 'Anthropic (Claude) uses its native API; every other provider uses the OpenAI-compatible API. Configure the key and model for your chosen provider below.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Anthropic (Claude) uses its native API; every other provider uses the OpenAI-compatible API. Configure the key and model for your chosen provider below.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>
 
 				<!-- Anthropic fields -->
-				<tbody id="fahad-ai-anthropic" style="<?php echo 'anthropic' !== $provider ? 'display:none' : ''; ?>">
+				<tbody id="dukandaar-anthropic" style="<?php echo 'anthropic' !== $provider ? 'display:none' : ''; ?>">
 					<tr>
-						<th scope="row"><label for="anthropic_api_key"><?php esc_html_e( 'Anthropic API Key', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+						<th scope="row"><label for="anthropic_api_key"><?php esc_html_e( 'Anthropic API Key', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 						<td>
 							<input type="password" id="anthropic_api_key" name="anthropic_api_key"
 								value="<?php echo esc_attr( $anthropic_key ); ?>" class="regular-text" autocomplete="new-password">
@@ -588,7 +588,7 @@ function fahad_ai_settings_page(): void {
 								<?php
 								printf(
 									/* translators: %s: URL to Anthropic console */
-									esc_html__( 'Get your key from %s.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+									esc_html__( 'Get your key from %s.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 									'<a href="https://platform.claude.com" target="_blank" rel="noopener">platform.claude.com</a>'
 								);
 								?>
@@ -596,17 +596,17 @@ function fahad_ai_settings_page(): void {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="anthropic_model"><?php esc_html_e( 'Claude Model', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+						<th scope="row"><label for="anthropic_model"><?php esc_html_e( 'Claude Model', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 						<td>
 							<select id="anthropic_model" name="anthropic_model">
 								<option value="claude-haiku-4-5-20251001" <?php selected( $anthropic_model, 'claude-haiku-4-5-20251001' ); ?>>
-									<?php esc_html_e( 'Claude Haiku, Fast & affordable (recommended)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Claude Haiku, Fast & affordable (recommended)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 								</option>
 								<option value="claude-sonnet-4-6" <?php selected( $anthropic_model, 'claude-sonnet-4-6' ); ?>>
-									<?php esc_html_e( 'Claude Sonnet, Balanced performance', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Claude Sonnet, Balanced performance', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 								</option>
 								<option value="claude-opus-4-6" <?php selected( $anthropic_model, 'claude-opus-4-6' ); ?>>
-									<?php esc_html_e( 'Claude Opus, Most capable', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Claude Opus, Most capable', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 								</option>
 							</select>
 						</td>
@@ -614,21 +614,21 @@ function fahad_ai_settings_page(): void {
 				</tbody>
 
 				<!-- Moonshot / Kimi fields -->
-				<tbody id="fahad-ai-moonshot" style="<?php echo 'moonshot' !== $provider ? 'display:none' : ''; ?>">
+				<tbody id="dukandaar-moonshot" style="<?php echo 'moonshot' !== $provider ? 'display:none' : ''; ?>">
 					<tr>
-						<th scope="row"><label for="moonshot_region"><?php esc_html_e( 'Moonshot Region', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+						<th scope="row"><label for="moonshot_region"><?php esc_html_e( 'Moonshot Region', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 						<td>
 							<select id="moonshot_region" name="moonshot_region">
-								<option value="global" <?php selected( $moonshot_region, 'global' ); ?>><?php esc_html_e( 'Global, api.moonshot.ai (rest of world)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-								<option value="china"  <?php selected( $moonshot_region, 'china' );  ?>><?php esc_html_e( 'China, api.moonshot.cn', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+								<option value="global" <?php selected( $moonshot_region, 'global' ); ?>><?php esc_html_e( 'Global, api.moonshot.ai (rest of world)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
+								<option value="china"  <?php selected( $moonshot_region, 'china' );  ?>><?php esc_html_e( 'China, api.moonshot.cn', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
 							</select>
 							<p class="description">
-								<?php esc_html_e( 'Choose the platform your API key was issued on. Keys and available models are not shared between the global and China platforms.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+								<?php esc_html_e( 'Choose the platform your API key was issued on. Keys and available models are not shared between the global and China platforms.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 							</p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="moonshot_api_key"><?php esc_html_e( 'Moonshot API Key', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+						<th scope="row"><label for="moonshot_api_key"><?php esc_html_e( 'Moonshot API Key', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 						<td>
 							<input type="password" id="moonshot_api_key" name="moonshot_api_key"
 								value="<?php echo esc_attr( $moonshot_key ); ?>" class="regular-text" autocomplete="new-password">
@@ -636,7 +636,7 @@ function fahad_ai_settings_page(): void {
 								<?php
 								printf(
 									/* translators: 1: URL to global Moonshot platform, 2: URL to China Moonshot platform */
-									esc_html__( 'Get your key from %1$s (global) or %2$s (China).', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+									esc_html__( 'Get your key from %1$s (global) or %2$s (China).', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 									'<a href="https://platform.kimi.ai" target="_blank" rel="noopener">platform.kimi.ai</a>',
 									'<a href="https://platform.moonshot.cn" target="_blank" rel="noopener">platform.moonshot.cn</a>'
 								);
@@ -645,24 +645,24 @@ function fahad_ai_settings_page(): void {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="moonshot_model"><?php esc_html_e( 'Kimi Model', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+						<th scope="row"><label for="moonshot_model"><?php esc_html_e( 'Kimi Model', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 						<td>
 							<select id="moonshot_model" name="moonshot_model">
-								<optgroup label="<?php esc_attr_e( 'Kimi K2', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>">
-									<option value="kimi-k2.6"              <?php selected( $moonshot_model, 'kimi-k2.6' );              ?>><?php esc_html_e( 'kimi-k2.6, Latest, general (recommended)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-									<option value="kimi-k2.5"              <?php selected( $moonshot_model, 'kimi-k2.5' );              ?>><?php esc_html_e( 'kimi-k2.5, General', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-									<option value="kimi-k2-thinking-turbo" <?php selected( $moonshot_model, 'kimi-k2-thinking-turbo' ); ?>><?php esc_html_e( 'kimi-k2-thinking-turbo, Reasoning (availability varies by region)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-									<option value="kimi-k2-thinking"       <?php selected( $moonshot_model, 'kimi-k2-thinking' );       ?>><?php esc_html_e( 'kimi-k2-thinking, Reasoning (availability varies by region)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+								<optgroup label="<?php esc_attr_e( 'Kimi K2', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>">
+									<option value="kimi-k2.6"              <?php selected( $moonshot_model, 'kimi-k2.6' );              ?>><?php esc_html_e( 'kimi-k2.6, Latest, general (recommended)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="kimi-k2.5"              <?php selected( $moonshot_model, 'kimi-k2.5' );              ?>><?php esc_html_e( 'kimi-k2.5, General', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="kimi-k2-thinking-turbo" <?php selected( $moonshot_model, 'kimi-k2-thinking-turbo' ); ?>><?php esc_html_e( 'kimi-k2-thinking-turbo, Reasoning (availability varies by region)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="kimi-k2-thinking"       <?php selected( $moonshot_model, 'kimi-k2-thinking' );       ?>><?php esc_html_e( 'kimi-k2-thinking, Reasoning (availability varies by region)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
 								</optgroup>
-								<optgroup label="<?php esc_attr_e( 'Moonshot V1', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>">
-									<option value="moonshot-v1-auto"  <?php selected( $moonshot_model, 'moonshot-v1-auto' );  ?>><?php esc_html_e( 'moonshot-v1-auto, Auto context', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+								<optgroup label="<?php esc_attr_e( 'Moonshot V1', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>">
+									<option value="moonshot-v1-auto"  <?php selected( $moonshot_model, 'moonshot-v1-auto' );  ?>><?php esc_html_e( 'moonshot-v1-auto, Auto context', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
 									<option value="moonshot-v1-8k"    <?php selected( $moonshot_model, 'moonshot-v1-8k' );    ?>>moonshot-v1-8k</option>
 									<option value="moonshot-v1-32k"   <?php selected( $moonshot_model, 'moonshot-v1-32k' );   ?>>moonshot-v1-32k</option>
 									<option value="moonshot-v1-128k"  <?php selected( $moonshot_model, 'moonshot-v1-128k' );  ?>>moonshot-v1-128k</option>
 								</optgroup>
 							</select>
 							<p class="description">
-								<?php esc_html_e( 'Available models depend on your region and key. If you get a "model not found" error, pick another model.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+								<?php esc_html_e( 'Available models depend on your region and key. If you get a "model not found" error, pick another model.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 							</p>
 						</td>
 					</tr>
@@ -684,15 +684,15 @@ function fahad_ai_settings_page(): void {
 					$is_custom    = ( 'custom' === $provider_id );
 					$is_local     = ( 'ollama' === $provider_id );
 					?>
-					<tbody id="fahad-ai-<?php echo esc_attr( $provider_id ); ?>" style="<?php echo $provider_id !== $provider ? 'display:none' : ''; ?>">
+					<tbody id="dukandaar-<?php echo esc_attr( $provider_id ); ?>" style="<?php echo $provider_id !== $provider ? 'display:none' : ''; ?>">
 						<?php if ( $is_custom ) : ?>
 							<tr>
-								<th scope="row"><label for="custom_base_url"><?php esc_html_e( 'Base URL', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+								<th scope="row"><label for="custom_base_url"><?php esc_html_e( 'Base URL', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 								<td>
 									<input type="url" id="custom_base_url" name="custom_base_url"
-										value="<?php echo esc_attr( (string) get_option( 'fahad_ai_custom_base_url', '' ) ); ?>" class="regular-text" placeholder="https://api.example.com/v1">
+										value="<?php echo esc_attr( (string) get_option( 'dukandaar_custom_base_url', '' ) ); ?>" class="regular-text" placeholder="https://api.example.com/v1">
 									<p class="description">
-										<?php esc_html_e( 'The OpenAI-compatible base URL (the prefix before /chat/completions). Must be HTTPS (a localhost address may use http). Invalid values are discarded on save.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+										<?php esc_html_e( 'The OpenAI-compatible base URL (the prefix before /chat/completions). Must be HTTPS (a localhost address may use http). Invalid values are discarded on save.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 									</p>
 								</td>
 							</tr>
@@ -702,7 +702,7 @@ function fahad_ai_settings_page(): void {
 								<label for="<?php echo esc_attr( $pid_key ); ?>">
 									<?php
 									/* translators: %s: provider label, e.g. "OpenAI" */
-									printf( esc_html__( '%s API Key', 'fahad-ai-shopping-assistant-for-woocommerce' ), esc_html( $preset['label'] ) );
+									printf( esc_html__( '%s API Key', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), esc_html( $preset['label'] ) );
 									?>
 								</label>
 							</th>
@@ -710,19 +710,19 @@ function fahad_ai_settings_page(): void {
 								<input type="password" id="<?php echo esc_attr( $pid_key ); ?>" name="<?php echo esc_attr( $pid_key ); ?>"
 									value="<?php echo esc_attr( $saved_key ); ?>" class="regular-text" autocomplete="new-password">
 								<?php if ( $is_local ) : ?>
-									<p class="description"><?php esc_html_e( 'A local Ollama server usually needs no key, leave blank unless your setup requires one.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+									<p class="description"><?php esc_html_e( 'A local Ollama server usually needs no key, leave blank unless your setup requires one.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></p>
 								<?php endif; ?>
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="<?php echo esc_attr( $pid_model ); ?>"><?php esc_html_e( 'Model', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label>
+								<label for="<?php echo esc_attr( $pid_model ); ?>"><?php esc_html_e( 'Model', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label>
 							</th>
 							<td>
 								<?php if ( ! empty( $preset['models'] ) ) : ?>
 									<input type="text" id="<?php echo esc_attr( $pid_model ); ?>" name="<?php echo esc_attr( $pid_model ); ?>"
-										value="<?php echo esc_attr( $saved_model ); ?>" class="regular-text" list="fahad-ai-<?php echo esc_attr( $provider_id ); ?>-models">
-									<datalist id="fahad-ai-<?php echo esc_attr( $provider_id ); ?>-models">
+										value="<?php echo esc_attr( $saved_model ); ?>" class="regular-text" list="dukandaar-<?php echo esc_attr( $provider_id ); ?>-models">
+									<datalist id="dukandaar-<?php echo esc_attr( $provider_id ); ?>-models">
 										<?php foreach ( $preset['models'] as $model_option ) : ?>
 											<option value="<?php echo esc_attr( $model_option ); ?>"></option>
 										<?php endforeach; ?>
@@ -734,7 +734,7 @@ function fahad_ai_settings_page(): void {
 								<p class="description">
 									<?php
 									/* translators: %s: the provider's default model id */
-									printf( esc_html__( 'Defaults to %s when left blank.', 'fahad-ai-shopping-assistant-for-woocommerce' ), '<code>' . esc_html( (string) $preset['default_model'] ) . '</code>' );
+									printf( esc_html__( 'Defaults to %s when left blank.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), '<code>' . esc_html( (string) $preset['default_model'] ) . '</code>' );
 									?>
 								</p>
 							</td>
@@ -744,23 +744,23 @@ function fahad_ai_settings_page(): void {
 
 			</table>
 
-			<h2 class="title"><?php esc_html_e( 'Widget', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+			<h2 class="title"><?php esc_html_e( 'Widget', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><label for="bot_name"><?php esc_html_e( 'Bot Name', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="bot_name"><?php esc_html_e( 'Bot Name', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<input type="text" id="bot_name" name="bot_name"
 							value="<?php echo esc_attr( $bot_name ); ?>" class="regular-text">
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="greeting"><?php esc_html_e( 'Greeting Message', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="greeting"><?php esc_html_e( 'Greeting Message', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<textarea id="greeting" name="greeting" class="large-text" rows="2"><?php echo esc_textarea( $greeting ); ?></textarea>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="accent_color"><?php esc_html_e( 'Accent Color', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="accent_color"><?php esc_html_e( 'Accent Color', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<input type="color" id="accent_color" name="accent_color"
 							value="<?php echo esc_attr( $accent_color ); ?>">
@@ -769,78 +769,78 @@ function fahad_ai_settings_page(): void {
 			</table>
 
 			<h2 class="title">
-				<?php esc_html_e( 'System Prompt', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
-				<span style="font-weight:400;font-size:13px;"><?php esc_html_e( '(optional)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></span>
+				<?php esc_html_e( 'System Prompt', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
+				<span style="font-weight:400;font-size:13px;"><?php esc_html_e( '(optional)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></span>
 			</h2>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><label for="system_prompt"><?php esc_html_e( 'Custom Prompt', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="system_prompt"><?php esc_html_e( 'Custom Prompt', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<textarea id="system_prompt" name="system_prompt" class="large-text" rows="7"><?php echo esc_textarea( $system_prompt ); ?></textarea>
 						<p class="description">
-							<?php esc_html_e( 'Leave blank to use the default prompt. Add store policies, shipping info, FAQs, or tone guidelines here.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Leave blank to use the default prompt. Add store policies, shipping info, FAQs, or tone guidelines here.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>
 			</table>
 
-			<h2 class="title"><?php esc_html_e( 'Assistant Behaviour', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+			<h2 class="title"><?php esc_html_e( 'Assistant Behaviour', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 			<p class="description" style="max-width:50em;">
-				<?php esc_html_e( 'Tune the assistant\'s tone and scope. These preferences guide the assistant, but the built-in trust safeguards (no fake urgency, respect the customer\'s budget, honest about extras, no invented facts, always allow human support) always apply and cannot be turned off.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Tune the assistant\'s tone and scope. These preferences guide the assistant, but the built-in trust safeguards (no fake urgency, respect the customer\'s budget, honest about extras, no invented facts, always allow human support) always apply and cannot be turned off.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 			</p>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><label for="tone"><?php esc_html_e( 'Tone / Persona', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="tone"><?php esc_html_e( 'Tone / Persona', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<select id="tone" name="tone">
-							<option value="" <?php selected( $tone, '' ); ?>><?php esc_html_e( 'Default (friendly, no specific persona)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-							<option value="friendly"     <?php selected( $tone, 'friendly' );     ?>><?php esc_html_e( 'Friendly &amp; approachable', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-							<option value="professional" <?php selected( $tone, 'professional' ); ?>><?php esc_html_e( 'Professional &amp; precise', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-							<option value="concise"      <?php selected( $tone, 'concise' );      ?>><?php esc_html_e( 'Concise &amp; to the point', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-							<option value="playful"      <?php selected( $tone, 'playful' );      ?>><?php esc_html_e( 'Playful &amp; upbeat', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-							<option value="luxury"       <?php selected( $tone, 'luxury' );       ?>><?php esc_html_e( 'Premium / concierge', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+							<option value="" <?php selected( $tone, '' ); ?>><?php esc_html_e( 'Default (friendly, no specific persona)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
+							<option value="friendly"     <?php selected( $tone, 'friendly' );     ?>><?php esc_html_e( 'Friendly &amp; approachable', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
+							<option value="professional" <?php selected( $tone, 'professional' ); ?>><?php esc_html_e( 'Professional &amp; precise', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
+							<option value="concise"      <?php selected( $tone, 'concise' );      ?>><?php esc_html_e( 'Concise &amp; to the point', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
+							<option value="playful"      <?php selected( $tone, 'playful' );      ?>><?php esc_html_e( 'Playful &amp; upbeat', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
+							<option value="luxury"       <?php selected( $tone, 'luxury' );       ?>><?php esc_html_e( 'Premium / concierge', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></option>
 						</select>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="off_limits"><?php esc_html_e( 'Off-limits Topics', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="off_limits"><?php esc_html_e( 'Off-limits Topics', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<textarea id="off_limits" name="off_limits" class="large-text" rows="2"><?php echo esc_textarea( $off_limits ); ?></textarea>
 						<p class="description">
-							<?php esc_html_e( 'Topics the assistant should politely decline and steer back to shopping (e.g. medical advice, competitor pricing, politics). Comma-separated or free text.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Topics the assistant should politely decline and steer back to shopping (e.g. medical advice, competitor pricing, politics). Comma-separated or free text.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="promo_emphasis"><?php esc_html_e( 'Promotion Emphasis', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="promo_emphasis"><?php esc_html_e( 'Promotion Emphasis', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<textarea id="promo_emphasis" name="promo_emphasis" class="large-text" rows="3"><?php echo esc_textarea( $promo_emphasis ); ?></textarea>
 						<p class="description">
-							<?php esc_html_e( 'Optional per-category emphasis, e.g. "Footwear: highlight the winter clearance." The assistant will only mention these when genuinely relevant and never as pressure.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Optional per-category emphasis, e.g. "Footwear: highlight the winter clearance." The assistant will only mention these when genuinely relevant and never as pressure.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="languages"><?php esc_html_e( 'Languages', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="languages"><?php esc_html_e( 'Languages', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<input type="text" id="languages" name="languages"
 							value="<?php echo esc_attr( $languages ); ?>" class="regular-text"
 							placeholder="auto">
 						<p class="description">
-							<?php esc_html_e( 'Languages the assistant should reply in. Use "auto" to detect each shopper\'s language and match it (English, Urdu, or Roman Urdu). Or list a preferred set, e.g. "English, Urdu". Product facts and prices stay grounded in the store data and are never translated; reply quality depends on the AI model you use.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Languages the assistant should reply in. Use "auto" to detect each shopper\'s language and match it (English, Urdu, or Roman Urdu). Or list a preferred set, e.g. "English, Urdu". Product facts and prices stay grounded in the store data and are never translated; reply quality depends on the AI model you use.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Available Actions', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Available Actions', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
 					<td>
 						<?php if ( empty( $gateable_tools ) ) : ?>
-							<p class="description"><?php esc_html_e( 'No optional actions are installed. The core product search and cart actions are always available.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+							<p class="description"><?php esc_html_e( 'No optional actions are installed. The core product search and cart actions are always available.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></p>
 						<?php else : ?>
 							<fieldset>
-								<legend class="screen-reader-text"><?php esc_html_e( 'Disable assistant actions', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></legend>
+								<legend class="screen-reader-text"><?php esc_html_e( 'Disable assistant actions', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></legend>
 								<p class="description" style="margin-bottom:8px;">
-									<?php esc_html_e( 'Untick an action to stop the assistant from using it. The core product search and cart actions cannot be disabled.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Untick an action to stop the assistant from using it. The core product search and cart actions cannot be disabled.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 								</p>
 								<?php foreach ( $gateable_tools as $tool_name => $tool_desc ) : ?>
 									<label style="display:block;margin-bottom:6px;">
@@ -851,7 +851,7 @@ function fahad_ai_settings_page(): void {
 									</label>
 								<?php endforeach; ?>
 								<p class="description" style="margin-top:8px;">
-									<?php esc_html_e( 'Note: ticked actions are DISABLED.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Note: ticked actions are DISABLED.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 								</p>
 							</fieldset>
 						<?php endif; ?>
@@ -859,131 +859,131 @@ function fahad_ai_settings_page(): void {
 				</tr>
 			</table>
 
-			<h2 class="title"><?php esc_html_e( 'Cost &amp; Performance', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+			<h2 class="title"><?php esc_html_e( 'Cost &amp; Performance', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><label for="token_budget"><?php esc_html_e( 'Conversation Token Budget', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="token_budget"><?php esc_html_e( 'Conversation Token Budget', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<input type="number" id="token_budget" name="token_budget" min="0" step="500"
 							value="<?php echo esc_attr( (string) $token_budget ); ?>" class="small-text">
 						<p class="description">
-							<?php esc_html_e( 'Approximate cap on the context sent to the model per turn (older history is trimmed first; the current turn is always kept). 0 = unlimited.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Approximate cap on the context sent to the model per turn (older history is trimmed first; the current turn is always kept). 0 = unlimited.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Fast-model Routing', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Fast-model Routing', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
 					<td>
 						<label>
 							<input type="checkbox" name="fast_model_routing" value="1" <?php checked( $fast_model_routing ); ?>>
-							<?php esc_html_e( 'Route simple turns (e.g. greetings, with no tool use) to a cheaper, faster model.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Route simple turns (e.g. greetings, with no tool use) to a cheaper, faster model.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</label>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="fast_model"><?php esc_html_e( 'Fast Model', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="fast_model"><?php esc_html_e( 'Fast Model', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<input type="text" id="fast_model" name="fast_model"
 							value="<?php echo esc_attr( $fast_model ); ?>" class="regular-text"
 							placeholder="claude-haiku-4-5-20251001">
 						<p class="description">
-							<?php esc_html_e( 'Model id to use for simple turns when fast-model routing is enabled (e.g. claude-haiku-4-5-20251001 or kimi-k2.6). Leave blank to keep the configured model.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Model id to use for simple turns when fast-model routing is enabled (e.g. claude-haiku-4-5-20251001 or kimi-k2.6). Leave blank to keep the configured model.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>
 			</table>
 
-			<h2 class="title"><?php esc_html_e( 'Proactive Assist', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+			<h2 class="title"><?php esc_html_e( 'Proactive Assist', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 			<p class="description" style="max-width:50em;">
-				<?php esc_html_e( 'When enabled, the assistant may show a single, dismissible message offering genuine help, but ONLY when there is real value to surface (a discount code that actually applies, or store credit the shopper has not used). It never invents urgency or scarcity, is capped per visit, and stops the moment a shopper dismisses it. Leave it off if you would rather the assistant only ever speaks when spoken to.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+				<?php esc_html_e( 'When enabled, the assistant may show a single, dismissible message offering genuine help, but ONLY when there is real value to surface (a discount code that actually applies, or store credit the shopper has not used). It never invents urgency or scarcity, is capped per visit, and stops the moment a shopper dismisses it. Leave it off if you would rather the assistant only ever speaks when spoken to.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 			</p>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Proactive Nudges', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Proactive Nudges', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
 					<td>
 						<label>
 							<input type="checkbox" name="proactive_enabled" value="1" <?php checked( $proactive_enabled ); ?>>
-							<?php esc_html_e( 'Let the assistant proactively offer a real, applicable deal or unused store credit (off by default).', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Let the assistant proactively offer a real, applicable deal or unused store credit (off by default).', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</label>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="proactive_frequency"><?php esc_html_e( 'Max Nudges Per Visit', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="proactive_frequency"><?php esc_html_e( 'Max Nudges Per Visit', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
 						<input type="number" id="proactive_frequency" name="proactive_frequency" min="0" max="5" step="1"
 							value="<?php echo esc_attr( (string) $proactive_frequency ); ?>" class="small-text">
 						<p class="description">
-							<?php esc_html_e( 'How many times, at most, a proactive message may appear in a single visit. 1 (once per session) is recommended; 0 turns proactive messages off.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'How many times, at most, a proactive message may appear in a single visit. 1 (once per session) is recommended; 0 turns proactive messages off.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>
 			</table>
 
-			<h2 class="title"><?php esc_html_e( 'Voice', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+			<h2 class="title"><?php esc_html_e( 'Voice', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 			<p class="description" style="max-width:50em;">
-				<?php esc_html_e( 'Let shoppers talk to the assistant. When enabled, a microphone button appears in the chat so a shopper can speak a question (it is transcribed into the message box using their browser\'s built-in speech recognition), and you can optionally have the assistant read its replies aloud. This uses the browser\'s own Web Speech API, so no audio is recorded or sent to any external service, the microphone permission is always requested by the browser, and typing always works. The controls are hidden automatically in browsers that do not support speech.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Let shoppers talk to the assistant. When enabled, a microphone button appears in the chat so a shopper can speak a question (it is transcribed into the message box using their browser\'s built-in speech recognition), and you can optionally have the assistant read its replies aloud. This uses the browser\'s own Web Speech API, so no audio is recorded or sent to any external service, the microphone permission is always requested by the browser, and typing always works. The controls are hidden automatically in browsers that do not support speech.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 			</p>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Voice Input', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Voice Input', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
 					<td>
 						<label>
 							<input type="checkbox" name="voice_enabled" value="1" <?php checked( $voice_enabled ); ?>>
-							<?php esc_html_e( 'Show a microphone button so shoppers can speak their message (off by default).', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Show a microphone button so shoppers can speak their message (off by default).', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</label>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Spoken Replies', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Spoken Replies', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
 					<td>
 						<label>
 							<input type="checkbox" name="voice_tts" value="1" <?php checked( $voice_tts ); ?>>
-							<?php esc_html_e( 'Also let the assistant read its replies aloud, with a speaker button to toggle it (requires Voice Input; off by default).', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Also let the assistant read its replies aloud, with a speaker button to toggle it (requires Voice Input; off by default).', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</label>
 					</td>
 				</tr>
 			</table>
 
-			<h2 class="title"><?php esc_html_e( 'WhatsApp (beta)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+			<h2 class="title"><?php esc_html_e( 'WhatsApp (beta)', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 			<p class="description" style="max-width:50em;">
-				<?php esc_html_e( 'Let shoppers reach the assistant over WhatsApp. This is the webhook + verification scaffolding only: going live needs a WhatsApp Business (Meta Cloud API) account, and an outbound message provider to actually send replies. Configure the webhook below in your Meta app, using this callback URL and verify token. Personal account data stays available only to verified, logged-in customers, a WhatsApp number is treated as a guest.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Let shoppers reach the assistant over WhatsApp. This is the webhook + verification scaffolding only: going live needs a WhatsApp Business (Meta Cloud API) account, and an outbound message provider to actually send replies. Configure the webhook below in your Meta app, using this callback URL and verify token. Personal account data stays available only to verified, logged-in customers, a WhatsApp number is treated as a guest.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 			</p>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Enable WhatsApp', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Enable WhatsApp', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
 					<td>
 						<label>
 							<input type="checkbox" name="whatsapp_enabled" value="1" <?php checked( $whatsapp_enabled ); ?>>
-							<?php esc_html_e( 'Process inbound WhatsApp messages through the assistant (off by default).', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+							<?php esc_html_e( 'Process inbound WhatsApp messages through the assistant (off by default).', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?>
 						</label>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Callback URL', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Callback URL', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></th>
 					<td>
-						<input type="text" class="regular-text code" value="<?php echo esc_attr( rest_url( 'fahad-ai/v1/whatsapp' ) ); ?>" readonly onclick="this.select();">
-						<p class="description"><?php esc_html_e( 'Enter this as the Callback URL when configuring the WhatsApp webhook in your Meta app.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+						<input type="text" class="regular-text code" value="<?php echo esc_attr( rest_url( 'dukandaar/v1/whatsapp' ) ); ?>" readonly onclick="this.select();">
+						<p class="description"><?php esc_html_e( 'Enter this as the Callback URL when configuring the WhatsApp webhook in your Meta app.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="fahad_ai_whatsapp_verify_token"><?php esc_html_e( 'Verify Token', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="dukandaar_whatsapp_verify_token"><?php esc_html_e( 'Verify Token', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
-						<input type="text" id="fahad_ai_whatsapp_verify_token" name="whatsapp_verify_token" value="<?php echo esc_attr( $whatsapp_verify_token ); ?>" class="regular-text" autocomplete="off">
-						<p class="description"><?php esc_html_e( 'A secret string you choose; enter the same value as the Verify Token in the Meta webhook setup.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+						<input type="text" id="dukandaar_whatsapp_verify_token" name="whatsapp_verify_token" value="<?php echo esc_attr( $whatsapp_verify_token ); ?>" class="regular-text" autocomplete="off">
+						<p class="description"><?php esc_html_e( 'A secret string you choose; enter the same value as the Verify Token in the Meta webhook setup.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="fahad_ai_whatsapp_app_secret"><?php esc_html_e( 'App Secret', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<th scope="row"><label for="dukandaar_whatsapp_app_secret"><?php esc_html_e( 'App Secret', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 					<td>
-						<input type="password" id="fahad_ai_whatsapp_app_secret" name="whatsapp_app_secret" value="<?php echo esc_attr( $whatsapp_app_secret ); ?>" class="regular-text" autocomplete="off">
-						<p class="description"><?php esc_html_e( 'Your Meta app secret. Used to verify the signature on each inbound message; never shared with the assistant or shown to shoppers.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+						<input type="password" id="dukandaar_whatsapp_app_secret" name="whatsapp_app_secret" value="<?php echo esc_attr( $whatsapp_app_secret ); ?>" class="regular-text" autocomplete="off">
+						<p class="description"><?php esc_html_e( 'Your Meta app secret. Used to verify the signature on each inbound message; never shared with the assistant or shown to shoppers.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ); ?></p>
 					</td>
 				</tr>
 			</table>
 
-			<?php Fahad_AI_Embeddings_Admin::render_settings(); ?>
+			<?php Dukandaar_Embeddings_Admin::render_settings(); ?>
 
-			<?php submit_button( esc_html__( 'Save Settings', 'fahad-ai-shopping-assistant-for-woocommerce' ), 'primary', 'fahad_ai_save' ); ?>
+			<?php submit_button( esc_html__( 'Save Settings', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), 'primary', 'dukandaar_save' ); ?>
 		</form>
 	</div>
 	<?php

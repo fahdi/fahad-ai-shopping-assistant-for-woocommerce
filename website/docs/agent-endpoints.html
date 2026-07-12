@@ -11,7 +11,7 @@
 <link rel="canonical" href="https://fahadai.isupercoder.com/docs/agent-endpoints.html">
 <meta name="theme-color" content="#0c0d10">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="Fahad AI">
+<meta property="og:site_name" content="Dukandaar">
 <meta property="og:title" content="Store-as-an-agent endpoints">
 <meta property="og:description" content="Read-only agent endpoints and an llms.txt let external AI agents discover and shop your store, with a human checkout handoff.">
 <meta property="og:url" content="https://fahadai.isupercoder.com/docs/agent-endpoints.html">
@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{ "@context":"https://schema.org","@type":"TechArticle","headline":"Store-as-an-agent endpoints","url":"https://fahadai.isupercoder.com/docs/agent-endpoints.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Store-as-an-agent endpoints","url":"https://fahadai.isupercoder.com/docs/agent-endpoints.html","isPartOf":{"@type":"WebSite","name":"Dukandaar","url":"https://fahadai.isupercoder.com/"} }
 </script>
 <style>
   :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
@@ -112,7 +112,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Dukandaar</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
 <main id="main" class="layout">
   <aside class="side">
     <p class="lbl">Get started</p>
@@ -131,13 +131,13 @@
   <article>
     <div class="crumb"><a href="/docs/">Docs</a> / Agent endpoints</div>
     <h1>Agent endpoints</h1>
-    <p class="lede">Your store can be shopped by external AI agents, not just the chat widget on it. A set of read-only endpoints under <code>fahad-ai/v1/agent</code>, plus an llms.txt guide, let agents like ChatGPT, Claude and Perplexity discover your products from grounded store data. When a shopper is ready to buy, the agent hands off to a human checkout. The agent never holds a cart and never pays.</p>
+    <p class="lede">Your store can be shopped by external AI agents, not just the chat widget on it. A set of read-only endpoints under <code>dukandaar/v1/agent</code>, plus an llms.txt guide, let agents like ChatGPT, Claude and Perplexity discover your products from grounded store data. When a shopper is ready to buy, the agent hands off to a human checkout. The agent never holds a cart and never pays.</p>
 
     <h2>Why this exists</h2>
     <p>The same trust rule that governs the on-site assistant applies here: an agent should read real prices, stock and availability rather than guess them. These endpoints expose only published catalogue data, and the search and product lookups reuse the exact same grounded tools as the chat widget, so an external agent sees what a shopper would see. Nothing here mutates the store or charges anyone.</p>
 
     <h2>The endpoints</h2>
-    <p>Five GET endpoints are registered under <code>fahad-ai/v1/agent</code>. All are read-only.</p>
+    <p>Five GET endpoints are registered under <code>dukandaar/v1/agent</code>. All are read-only.</p>
     <ul>
       <li><code>GET /agent/llms</code> returns a plain-text usage guide, llms.txt style, that points agents at the feed and states what is allowed.</li>
       <li><code>GET /agent/catalog</code> returns a structured, cacheable product feed of trusted WooCommerce fields.</li>
@@ -149,7 +149,7 @@
 
     <h2>llms.txt: the usage guide</h2>
     <p>Point an agent at <code>/agent/llms</code> first. It responds with <code>text/plain</code> and tells the agent where the feed and search live, and that prices, stock and availability must be read, not invented.</p>
-    <pre><code>GET /wp-json/fahad-ai/v1/agent/llms
+    <pre><code>GET /wp-json/dukandaar/v1/agent/llms
 Accept: text/plain</code></pre>
     <pre><code># Acme Supply Co AI agent guide
 
@@ -157,14 +157,14 @@ This store welcomes AI shopping agents. Use the read-only endpoints below; all
 data is grounded in the live catalogue. Do not fabricate prices, stock, or
 availability. Read them here.
 
-Catalogue feed: https://example.com/wp-json/fahad-ai/v1/agent/catalog
-Search:         https://example.com/wp-json/fahad-ai/v1/agent/search?q=QUERY
+Catalogue feed: https://example.com/wp-json/dukandaar/v1/agent/catalog
+Search:         https://example.com/wp-json/dukandaar/v1/agent/search?q=QUERY
 Checkout:       a human completes payment; request /agent/checkout-handoff for a
                 link the shopper opens themselves.</code></pre>
 
     <h2>The catalogue feed</h2>
     <p><code>/agent/catalog</code> returns up to 200 published products as a compact list of trusted fields. The response carries a <code>Cache-Control: public, max-age=300</code> header, so agents and proxies can cache it for five minutes.</p>
-    <pre><code>GET /wp-json/fahad-ai/v1/agent/catalog
+    <pre><code>GET /wp-json/dukandaar/v1/agent/catalog
 Accept: application/json</code></pre>
     <pre><code>{
   "count": 2,
@@ -192,7 +192,7 @@ Accept: application/json</code></pre>
 
     <h2>Search and product lookup</h2>
     <p><code>/agent/search</code> takes a <code>q</code> query parameter and reuses the widget's <code>search_products</code> tool, so the agent gets the same grounded product cards a shopper sees in chat.</p>
-    <pre><code>GET /wp-json/fahad-ai/v1/agent/search?q=daypack
+    <pre><code>GET /wp-json/dukandaar/v1/agent/search?q=daypack
 Accept: application/json</code></pre>
     <pre><code>{
   "found": 1,
@@ -214,12 +214,12 @@ Accept: application/json</code></pre>
   ]
 }</code></pre>
     <p><code>/agent/product</code> takes an <code>id</code> parameter and reuses <code>get_product_details</code> for a single product, including variations where they exist.</p>
-    <pre><code>GET /wp-json/fahad-ai/v1/agent/product?id=42
+    <pre><code>GET /wp-json/dukandaar/v1/agent/product?id=42
 Accept: application/json</code></pre>
 
     <h2>The human checkout handoff</h2>
     <p>When the shopper has chosen what they want, the agent calls <code>/agent/checkout-handoff</code> with a comma-separated <code>ids</code> list. The endpoint returns a WooCommerce add-to-cart link per product. A person opens those links in a browser, which populates their own cart in their own session, then they check out and pay themselves.</p>
-    <pre><code>GET /wp-json/fahad-ai/v1/agent/checkout-handoff?ids=42,57
+    <pre><code>GET /wp-json/dukandaar/v1/agent/checkout-handoff?ids=42,57
 Accept: application/json</code></pre>
     <pre><code>{
   "note": "Open these links in a browser to add the items and check out. Payment is completed by the shopper, not the agent.",
@@ -247,7 +247,7 @@ Accept: application/json</code></pre>
     <div class="next"><a href="/docs/">← All docs</a><a href="/docs/rest-api.html">REST API →</a></div>
   </article>
 </main>
-<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
 <script>(function(){function s(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('fa-theme',t);}catch(e){}document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(t==='light'));});}document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var c=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';s(c==='light'?'dark':'light');});var c0=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(c0==='light'));});})();</script>
 </body>
 </html>

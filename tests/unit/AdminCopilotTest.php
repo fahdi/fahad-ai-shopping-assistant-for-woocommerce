@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Admin_Copilot (Epic B, merchant copilot).
+ * Unit tests for Dukandaar_Admin_Copilot (Epic B, merchant copilot).
  *
  * Covers the capability gate, route registration, and every grounded data method /
  * branch, so the admin endpoints can never fabricate store numbers.
@@ -30,13 +30,13 @@ final class AdminCopilotTest extends TestCase {
 
 	protected function tearDown(): void {
 		Monkey\tearDown();
-		( new ReflectionProperty( Fahad_AI_Admin_Copilot::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Admin_Copilot::class, 'instance' ) )->setValue( null, null );
 		parent::tearDown();
 	}
 
-	private function copilot(): Fahad_AI_Admin_Copilot {
-		( new ReflectionProperty( Fahad_AI_Admin_Copilot::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Admin_Copilot::instance();
+	private function copilot(): Dukandaar_Admin_Copilot {
+		( new ReflectionProperty( Dukandaar_Admin_Copilot::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Admin_Copilot::instance();
 	}
 
 	private function order( float $total, float $refunded ) {
@@ -173,7 +173,7 @@ final class AdminCopilotTest extends TestCase {
 		$result = $this->copilot()->rest_product_context( new WP_REST_Request( [ 'product_id' => 0 ] ) );
 
 		$this->assertInstanceOf( WP_Error::class, $result );
-		$this->assertSame( 'fahad_ai_not_found', $result->get_error_code() );
+		$this->assertSame( 'dukandaar_not_found', $result->get_error_code() );
 	}
 
 	public function test_rest_product_context_returns_grounded_context_for_a_real_product(): void {

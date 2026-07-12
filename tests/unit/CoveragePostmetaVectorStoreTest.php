@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage gap test for Fahad_AI_Postmeta_Vector_Store::query() (#105).
+ * Coverage gap test for Dukandaar_Postmeta_Vector_Store::query() (#105).
  *
  * VectorStoreTest already exercises the happy path and most guards. The one
  * uncovered branch is the `continue;` at line 64, the guard that skips a
@@ -53,8 +53,8 @@ class CoveragePostmetaVectorStoreTest extends TestCase {
 		parent::tearDown();
 	}
 
-	private function store(): Fahad_AI_Postmeta_Vector_Store {
-		return new Fahad_AI_Postmeta_Vector_Store( self::MODEL, 3 );
+	private function store(): Dukandaar_Postmeta_Vector_Store {
+		return new Dukandaar_Postmeta_Vector_Store( self::MODEL, 3 );
 	}
 
 	/**
@@ -81,8 +81,8 @@ class CoveragePostmetaVectorStoreTest extends TestCase {
 
 		// Matching model, but the stored vector is an empty string -> line 64.
 		$this->seed( 11, [
-			'_fahad_ai_embedding_model' => self::MODEL,
-			'_fahad_ai_embedding'       => '',
+			'_dukandaar_embedding_model' => self::MODEL,
+			'_dukandaar_embedding'       => '',
 		] );
 
 		$ranked = $store->query( [ 1.0, 0.0, 0.0 ], 5, [ 10, 11 ] );
@@ -102,8 +102,8 @@ class CoveragePostmetaVectorStoreTest extends TestCase {
 
 		// Matching model, but the vector blob is an int, not a packed string.
 		$this->seed( 12, [
-			'_fahad_ai_embedding_model' => self::MODEL,
-			'_fahad_ai_embedding'       => 0,
+			'_dukandaar_embedding_model' => self::MODEL,
+			'_dukandaar_embedding'       => 0,
 		] );
 
 		$ranked = $store->query( [ 1.0, 0.0, 0.0 ], 5, [ 10, 12 ] );
@@ -120,8 +120,8 @@ class CoveragePostmetaVectorStoreTest extends TestCase {
 		$store = $this->store();
 
 		$this->seed( 11, [
-			'_fahad_ai_embedding_model' => self::MODEL,
-			'_fahad_ai_embedding'       => '',
+			'_dukandaar_embedding_model' => self::MODEL,
+			'_dukandaar_embedding'       => '',
 		] );
 
 		$this->assertSame( [], $store->query( [ 1.0, 0.0, 0.0 ], 5, [ 11 ] ) );

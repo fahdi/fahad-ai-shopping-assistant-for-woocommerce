@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
  * Handles the REST endpoint and drives the agentic loop for both
  * Anthropic (Claude) and Moonshot AI (OpenAI-compatible) providers.
  */
-final class Fahad_AI_API_Handler {
+final class Dukandaar_API_Handler {
 
 	private static $instance = null;
 
@@ -26,13 +26,13 @@ final class Fahad_AI_API_Handler {
 		$messages = $request->get_param( 'messages' );
 
 		if ( empty( $messages ) || ! is_array( $messages ) ) {
-			return new WP_Error( 'invalid_messages', __( 'A messages array is required.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 400 ] );
+			return new WP_Error( 'invalid_messages', __( 'A messages array is required.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 400 ] );
 		}
 
 		$sanitized = $this->sanitize_messages( $messages );
 
 		if ( empty( $sanitized ) ) {
-			return new WP_Error( 'empty_messages', __( 'No valid messages provided.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 400 ] );
+			return new WP_Error( 'empty_messages', __( 'No valid messages provided.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 400 ] );
 		}
 
 		if ( function_exists( 'wc_load_cart' ) ) {
@@ -50,7 +50,7 @@ final class Fahad_AI_API_Handler {
 			// still gets that provider's "configure a key" WP_Error (the existing no-key
 			// signal). Routed by type so an openai-configured store reports the openai
 			// key error, not anthropic's.
-			return $this->run_provider_agent( get_option( 'fahad_ai_provider', 'anthropic' ), $sanitized );
+			return $this->run_provider_agent( get_option( 'dukandaar_provider', 'anthropic' ), $sanitized );
 		}
 
 		// Try each provider AT MOST ONCE, in order (bounded, no loop, no backoff
@@ -72,7 +72,7 @@ final class Fahad_AI_API_Handler {
 		// and the owner-analytics store logs the turn as an error outcome (#49) so the
 		// dashboard reflects provider outages, not just answered turns.
 		$degraded = $this->degraded_response( $sanitized );
-		$this->record_turn_analytics( $sanitized, $degraded, Fahad_AI_Analytics::OUTCOME_ERROR );
+		$this->record_turn_analytics( $sanitized, $degraded, Dukandaar_Analytics::OUTCOME_ERROR );
 
 		return rest_ensure_response( $degraded );
 	}
@@ -92,7 +92,7 @@ final class Fahad_AI_API_Handler {
 	 *
 	 * IDENTITY: this does NOT change the current user. A caller delivering a turn on
 	 * behalf of an off-web user (e.g. a phone number) must NOT have authenticated that
-	 * user, so the central login gate (Fahad_AI_Auth) keeps personal-data tools blocked
+	 * user, so the central login gate (Dukandaar_Auth) keeps personal-data tools blocked
 	 * for an unverified identity (issue #62 hardening). Owner analytics is recorded for a
 	 * resolved turn exactly as on the web path (privacy-safe, never fed to the model).
 	 *
@@ -133,7 +133,7 @@ final class Fahad_AI_API_Handler {
 		// Every provider failed: degrade gracefully (never a dead end), and log the turn
 		// as an error outcome for owner analytics (mirrors handle_message).
 		$degraded = $this->degraded_response( $sanitized );
-		$this->record_turn_analytics( $sanitized, $degraded, Fahad_AI_Analytics::OUTCOME_ERROR );
+		$this->record_turn_analytics( $sanitized, $degraded, Dukandaar_Analytics::OUTCOME_ERROR );
 
 		return $degraded['message'];
 	}
@@ -150,12 +150,12 @@ final class Fahad_AI_API_Handler {
 	 * would burn a failover slot for nothing. Generalised over the whole provider
 	 * catalog (issue: multi-provider): the key option is whatever the preset declares
 	 * (so anthropic/moonshot keep their existing option names, and every other preset
-	 * reads fahad_ai_{id}_api_key). An unknown id has no key.
+	 * reads dukandaar_{id}_api_key). An unknown id has no key.
 	 *
 	 * @param string $provider A provider id from the catalog (e.g. 'anthropic', 'openai').
 	 */
 	private function has_provider_key( string $provider ): bool {
-		$preset = Fahad_AI_Providers::get( $provider );
+		$preset = Dukandaar_Providers::get( $provider );
 		if ( null === $preset ) {
 			return false;
 		}
@@ -181,12 +181,12 @@ final class Fahad_AI_API_Handler {
 	 * @return string[] Provider ids to try, in order.
 	 */
 	private function provider_chain(): array {
-		$configured = (string) get_option( 'fahad_ai_provider', 'anthropic' );
+		$configured = (string) get_option( 'dukandaar_provider', 'anthropic' );
 
 		// The configured provider goes first IF it has a key; then every other catalog
 		// provider that has a key, in catalog order. array_unique guards against the
 		// configured id reappearing in the catalog walk.
-		$ordered = array_merge( [ $configured ], Fahad_AI_Providers::ids() );
+		$ordered = array_merge( [ $configured ], Dukandaar_Providers::ids() );
 
 		$chain = [];
 		foreach ( array_values( array_unique( $ordered ) ) as $id ) {
@@ -210,7 +210,7 @@ final class Fahad_AI_API_Handler {
 	 * @return array|WP_Error
 	 */
 	private function run_provider_agent( string $provider, array $messages ): array|WP_Error {
-		return ( 'anthropic' === Fahad_AI_Providers::type( $provider ) )
+		return ( 'anthropic' === Dukandaar_Providers::type( $provider ) )
 			? $this->run_anthropic_agent( $messages )
 			: $this->run_openai_agent( $messages, $provider );
 	}
@@ -230,7 +230,7 @@ final class Fahad_AI_API_Handler {
 	 */
 	private function degraded_response( array $messages = [] ): array {
 		return [
-			'message'    => __( 'Sorry, I could not reach the shopping assistant just now. You can still search the store for what you need, and our support team is happy to help if you would like a hand.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'message'    => __( 'Sorry, I could not reach the shopping assistant just now. You can still search the store for what you need, and our support team is happy to help if you would like a hand.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			'messages'   => $messages,
 			'products'   => [],
 			'comparison' => [],
@@ -269,7 +269,7 @@ final class Fahad_AI_API_Handler {
 		$tool   = $this->cart_action_tool( $action );
 
 		if ( null === $tool ) {
-			return new WP_Error( 'invalid_action', __( 'Unknown cart action.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 400 ] );
+			return new WP_Error( 'invalid_action', __( 'Unknown cart action.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 400 ] );
 		}
 
 		// Load the cart and set the guest session cookie before the response is sent,
@@ -285,7 +285,7 @@ final class Fahad_AI_API_Handler {
 			'cart_item_key' => sanitize_text_field( (string) $request->get_param( 'cart_item_key' ) ),
 		];
 
-		$result = Fahad_AI_Tool_Registry::instance()->dispatch( $tool, $input );
+		$result = Dukandaar_Tool_Registry::instance()->dispatch( $tool, $input );
 
 		// Persist the session immediately so the change survives this REST request , 
 		// don't rely on the shutdown hook firing for a REST context.
@@ -305,7 +305,7 @@ final class Fahad_AI_API_Handler {
 	 *
 	 * The widget POSTs a rating ('up'|'down'), an optional short reason, and opaque
 	 * conversation/message refs. The handler validates the rating, hands the raw
-	 * strings to Fahad_AI_Feedback (which sanitizes, length-caps, stores NO PII,
+	 * strings to Dukandaar_Feedback (which sanitizes, length-caps, stores NO PII,
 	 * auto-flags a 👎, and enforces retention), and echoes back the stored id so the
 	 * client can reflect the chosen state. An invalid rating is a 400 before anything
 	 * is stored. Gated by authorize_request() (nonce + rate limit) like the chat
@@ -314,17 +314,17 @@ final class Fahad_AI_API_Handler {
 	public function handle_feedback( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		$rating = sanitize_key( (string) $request->get_param( 'rating' ) );
 
-		if ( ! in_array( $rating, [ Fahad_AI_Feedback::RATING_UP, Fahad_AI_Feedback::RATING_DOWN ], true ) ) {
+		if ( ! in_array( $rating, [ Dukandaar_Feedback::RATING_UP, Dukandaar_Feedback::RATING_DOWN ], true ) ) {
 			return new WP_Error(
-				'fahad_ai_invalid_rating',
-				__( 'A valid rating is required.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'dukandaar_invalid_rating',
+				__( 'A valid rating is required.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				[ 'status' => 400 ]
 			);
 		}
 
 		// Sanitization + length caps + PII exclusion all live in the store; pass the
 		// raw param values through (the store is the single place that bounds them).
-		$result = Fahad_AI_Feedback::instance()->record(
+		$result = Dukandaar_Feedback::instance()->record(
 			$rating,
 			(string) $request->get_param( 'reason' ),
 			(string) $request->get_param( 'conversation_ref' ),
@@ -346,12 +346,12 @@ final class Fahad_AI_API_Handler {
 	 */
 	private function agent_fallback_message( bool $has_products ): string {
 		return $has_products
-			? __( 'Here are some options based on what I found above. Let me know which one you would like to explore or add to your cart, and I can take it from there.', 'fahad-ai-shopping-assistant-for-woocommerce' )
-			: __( 'Sorry, I had trouble completing that just now. Could you rephrase, or tell me a little more about what you are looking for?', 'fahad-ai-shopping-assistant-for-woocommerce' );
+			? __( 'Here are some options based on what I found above. Let me know which one you would like to explore or add to your cart, and I can take it from there.', 'dukandaar-ai-shopping-assistant-for-woocommerce' )
+			: __( 'Sorry, I had trouble completing that just now. Could you rephrase, or tell me a little more about what you are looking for?', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 	}
 
 	private function run_anthropic_agent( array $messages ): array|WP_Error {
-		$tools      = Fahad_AI_Tools::instance();
+		$tools      = Dukandaar_Tools::instance();
 		$max        = 8;
 		$cards      = [];
 		$comparison = [];
@@ -421,18 +421,18 @@ final class Fahad_AI_API_Handler {
 	}
 
 	private function call_anthropic( array $messages, int $iteration = 0 ): array|WP_Error {
-		$api_key = get_option( 'fahad_ai_anthropic_api_key', '' );
+		$api_key = get_option( 'dukandaar_anthropic_api_key', '' );
 
 		if ( empty( $api_key ) ) {
-			return new WP_Error( 'no_api_key', __( 'Anthropic API key is not configured.', 'fahad-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 500 ] );
+			return new WP_Error( 'no_api_key', __( 'Anthropic API key is not configured.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), [ 'status' => 500 ] );
 		}
 
 		$tools = $this->get_anthropic_tools();
 
 		// Model routing (issue #23): default is the configured model unchanged; a
-		// fahad_ai_model hook may route a simple vs. reasoning turn to a different model.
+		// dukandaar_model hook may route a simple vs. reasoning turn to a different model.
 		$model = $this->resolve_model(
-			get_option( 'fahad_ai_anthropic_model', 'claude-haiku-4-5-20251001' ),
+			get_option( 'dukandaar_anthropic_model', 'claude-haiku-4-5-20251001' ),
 			'anthropic',
 			[ 'has_tools' => ! empty( $tools ), 'iteration' => $iteration ]
 		);
@@ -465,7 +465,7 @@ final class Fahad_AI_API_Handler {
 		if ( 200 !== $code ) {
 			$msg = $body['error']['message'] ?? sprintf(
 				/* translators: %d: HTTP status code from the Anthropic API */
-				__( 'Anthropic API error (HTTP %d).', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				__( 'Anthropic API error (HTTP %d).', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				$code
 			);
 			return new WP_Error( 'api_error', $msg, [ 'status' => 502 ] );
@@ -481,7 +481,7 @@ final class Fahad_AI_API_Handler {
 	// One generalised loop for EVERY OpenAI-compatible provider (Moonshot, OpenAI,
 	// Gemini, Groq, Mistral, DeepSeek, xAI, Together, OpenRouter, Perplexity, Ollama,
 	// and a merchant `custom` endpoint). The only per-provider differences, base URL,
-	// API key, model, are resolved from the catalog (Fahad_AI_Providers::resolve) by
+	// API key, model, are resolved from the catalog (Dukandaar_Providers::resolve) by
 	// the $provider id, so adding a provider is data, not code. Moonshot is just the
 	// first preset of this path; its behaviour is unchanged.
 
@@ -492,7 +492,7 @@ final class Fahad_AI_API_Handler {
 	 *                         that has not yet been taught the provider argument.
 	 */
 	private function run_openai_agent( array $messages, string $provider = 'moonshot' ): array|WP_Error {
-		$tools      = Fahad_AI_Tools::instance();
+		$tools      = Dukandaar_Tools::instance();
 		$max        = 8;
 		$cards      = [];
 		$comparison = [];
@@ -573,7 +573,7 @@ final class Fahad_AI_API_Handler {
 	 * One non-streaming OpenAI-compatible request for the given provider id.
 	 *
 	 * The provider's base URL, API key and model are resolved from the catalog
-	 * (Fahad_AI_Providers::resolve), so the SAME code talks to Moonshot, OpenAI,
+	 * (Dukandaar_Providers::resolve), so the SAME code talks to Moonshot, OpenAI,
 	 * Gemini, … differing only in those three values. Auth is the OpenAI-standard
 	 * `Authorization: Bearer <key>` for every provider. A missing key returns the
 	 * existing no-key WP_Error (admin signal) without making a request.
@@ -583,7 +583,7 @@ final class Fahad_AI_API_Handler {
 	 * @param int    $iteration Agent-loop index (passed to the model-routing seam).
 	 */
 	private function call_openai( array $messages, string $provider = 'moonshot', int $iteration = 0 ): array|WP_Error {
-		$resolved = Fahad_AI_Providers::resolve( $provider );
+		$resolved = Dukandaar_Providers::resolve( $provider );
 		$label    = $resolved['label'] ?? $provider;
 
 		if ( null === $resolved || '' === $resolved['api_key'] ) {
@@ -591,7 +591,7 @@ final class Fahad_AI_API_Handler {
 				'no_api_key',
 				sprintf(
 					/* translators: %s: provider label, e.g. "OpenAI" */
-					__( '%s API key is not configured.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( '%s API key is not configured.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$label
 				),
 				[ 'status' => 500 ]
@@ -600,7 +600,7 @@ final class Fahad_AI_API_Handler {
 
 		$tools = $this->get_openai_tools();
 
-		// Model routing (issue #23): default unchanged; a fahad_ai_model hook may route.
+		// Model routing (issue #23): default unchanged; a dukandaar_model hook may route.
 		$model = $this->resolve_model(
 			$resolved['model'],
 			$provider,
@@ -633,7 +633,7 @@ final class Fahad_AI_API_Handler {
 		if ( 200 !== $code ) {
 			$msg = $body['error']['message'] ?? sprintf(
 				/* translators: 1: provider label, 2: HTTP status code */
-				__( '%1$s API error (HTTP %2$d).', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				__( '%1$s API error (HTTP %2$d).', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				$label,
 				$code
 			);
@@ -650,11 +650,11 @@ final class Fahad_AI_API_Handler {
 	 * endpoint (api.moonshot.cn). A key issued on one is rejected by the other.
 	 *
 	 * Retained for its own unit tests and as the documented region helper; the
-	 * catalog (Fahad_AI_Providers::resolve) computes the same value for the moonshot
+	 * catalog (Dukandaar_Providers::resolve) computes the same value for the moonshot
 	 * preset at dispatch time.
 	 */
 	private function moonshot_base_url(): string {
-		$region = get_option( 'fahad_ai_moonshot_region', 'global' );
+		$region = get_option( 'dukandaar_moonshot_region', 'global' );
 		return 'china' === $region
 			? 'https://api.moonshot.cn'
 			: 'https://api.moonshot.ai';
@@ -684,7 +684,7 @@ final class Fahad_AI_API_Handler {
 	 * self-hosted endpoint (e.g. a local proxy or Ollama-style server) on the same box
 	 * never leaves the machine. A failed check returns '' (no custom endpoint).
 	 *
-	 * Delegates to Fahad_AI_Providers::sanitize_base_url so the admin save path and
+	 * Delegates to Dukandaar_Providers::sanitize_base_url so the admin save path and
 	 * dispatch share ONE validator. Kept as a (private static) seam here for the
 	 * handler's own unit test.
 	 *
@@ -692,7 +692,7 @@ final class Fahad_AI_API_Handler {
 	 * @return string The sanitized https (or localhost-http) URL, or '' if invalid.
 	 */
 	private static function sanitize_custom_base_url( string $raw ): string {
-		return Fahad_AI_Providers::sanitize_base_url( $raw );
+		return Dukandaar_Providers::sanitize_base_url( $raw );
 	}
 
 	// =========================================================================
@@ -706,7 +706,7 @@ final class Fahad_AI_API_Handler {
 	 * (filter-registered) tools are advertised to the model uniformly.
 	 */
 	public function tool_specs(): array {
-		return Fahad_AI_Tool_Registry::instance()->specs();
+		return Dukandaar_Tool_Registry::instance()->specs();
 	}
 
 	private function get_anthropic_tools(): array {
@@ -742,7 +742,7 @@ final class Fahad_AI_API_Handler {
 	 * An ALLOWLIST on purpose: the tone setting maps to a fixed, vetted instruction
 	 * line (see merchant_config_block()), so the free-text persona field cannot be
 	 * abused to smuggle prompt-injection past the guardrails. The admin save path
-	 * (fahad_ai_sanitize_tone) clamps to these keys; anything else collapses to ''.
+	 * (dukandaar_sanitize_tone) clamps to these keys; anything else collapses to ''.
 	 *
 	 * @var array<string, string>
 	 */
@@ -759,7 +759,7 @@ final class Fahad_AI_API_Handler {
 	 *
 	 * Named in the system prompt so the model knows which scripts to expect and reply
 	 * in. This is the SUPPORTED set the multilingual directive references; the merchant
-	 * `fahad_ai_languages` option can pin a narrower set, but answer QUALITY (genuinely
+	 * `dukandaar_languages` option can pin a narrower set, but answer QUALITY (genuinely
 	 * fluent output) comes from the live model at runtime. Roman Urdu (Urdu written in
 	 * the Latin alphabet) is listed explicitly because shoppers frequently type it.
 	 *
@@ -768,7 +768,7 @@ final class Fahad_AI_API_Handler {
 	public const SUPPORTED_LANGUAGES = 'English, Urdu, Roman Urdu';
 
 	private function get_system_prompt(): string {
-		$custom = get_option( 'fahad_ai_system_prompt', '' );
+		$custom = get_option( 'dukandaar_system_prompt', '' );
 		$base   = ( is_string( $custom ) && '' !== $custom )
 			? $custom
 			: $this->default_prompt_body();
@@ -789,7 +789,7 @@ final class Fahad_AI_API_Handler {
 		 *
 		 * Lets feature packs APPEND compact, clearly-labelled context to the prompt
 		 * for the current request WITHOUT editing the agent-loop methods. The
-		 * cross-session-memory pack (Fahad_AI_Memory_Tools) uses this to append a
+		 * cross-session-memory pack (Dukandaar_Memory_Tools) uses this to append a
 		 * bounded preferences block for a logged-in, opted-in customer. Hooks must
 		 * APPEND (never replace) and keep additions small (storage hygiene). Applied
 		 * to BOTH the admin's custom prompt and the default prompt, so injection
@@ -801,12 +801,12 @@ final class Fahad_AI_API_Handler {
 		 *
 		 * @param string $prompt The system prompt (base + merchant slot) before guardrails.
 		 */
-		$filtered = apply_filters( 'fahad_ai_system_prompt', $base );
+		$filtered = apply_filters( 'dukandaar_system_prompt', $base );
 		$filtered = is_string( $filtered ) ? $filtered : $base;
 
 		// ABSOLUTE guardrails, appended LAST (issue #24, hardened for #56). Because they
 		// come after the custom-prompt branch, the merchant config slot AND the
-		// fahad_ai_system_prompt filter, the trust / anti-dark-pattern policy is
+		// dukandaar_system_prompt filter, the trust / anti-dark-pattern policy is
 		// structurally non-overridable: no configuration or hook can remove it. The
 		// deterministic eval checkers (scarcity_violations / budget_violations /
 		// escalation_present / abstains, beside grounding_violations) enforce the
@@ -882,17 +882,17 @@ Writing style, follow exactly:
 	private function merchant_config_block(): string {
 		$lines = [];
 
-		$tone = (string) get_option( 'fahad_ai_tone', '' );
+		$tone = (string) get_option( 'dukandaar_tone', '' );
 		if ( isset( self::TONES[ $tone ] ) ) {
 			$lines[] = '- Persona & tone: keep a ' . self::TONES[ $tone ] . ' tone in every reply.';
 		}
 
-		$off_limits = trim( (string) get_option( 'fahad_ai_off_limits', '' ) );
+		$off_limits = trim( (string) get_option( 'dukandaar_off_limits', '' ) );
 		if ( '' !== $off_limits ) {
 			$lines[] = '- Off-limits topics: do not discuss or give advice on the following; politely redirect to shopping instead: ' . $off_limits;
 		}
 
-		$promo = trim( (string) get_option( 'fahad_ai_promo_emphasis', '' ) );
+		$promo = trim( (string) get_option( 'dukandaar_promo_emphasis', '' ) );
 		if ( '' !== $promo ) {
 			$lines[] = '- Promotion emphasis (only when genuinely relevant, and never as pressure): ' . $promo;
 		}
@@ -915,7 +915,7 @@ Writing style, follow exactly:
 	 * routing + instruction half of the feature; genuinely fluent translation is the
 	 * live model's job at runtime.
 	 *
-	 * The merchant may pin the allowed set via `fahad_ai_languages` (default 'auto' =
+	 * The merchant may pin the allowed set via `dukandaar_languages` (default 'auto' =
 	 * detect-and-match freely among the supported languages). A specific value (e.g.
 	 * "English, Urdu") is folded in as the preferred set; it is advisory free text and,
 	 * like every body-region instruction, sits BEFORE the absolute guardrails so it can
@@ -923,7 +923,7 @@ Writing style, follow exactly:
 	 * is the deployment assumption, so the detect-and-match instruction is unconditional.
 	 */
 	private function language_directive(): string {
-		$configured = trim( (string) get_option( 'fahad_ai_languages', 'auto' ) );
+		$configured = trim( (string) get_option( 'dukandaar_languages', 'auto' ) );
 
 		// 'auto' (the default) is a config token, never an instruction word, detect and
 		// match freely across the supported set. A specific value pins the preferred set.
@@ -947,7 +947,7 @@ Writing style, follow exactly:
 	 * helpers are available, falling back to PHP `number_format` defaults otherwise.
 	 *
 	 * It deliberately does NOT change the LIVE price source: tool results keep formatting
-	 * prices via `wc_price()` (see Fahad_AI_Tools). This helper exists for any amount the
+	 * prices via `wc_price()` (see Dukandaar_Tools). This helper exists for any amount the
 	 * plugin composes itself that should respect the locale, without pulling in WC markup.
 	 *
 	 * @param float    $amount   The amount to format.
@@ -974,7 +974,7 @@ Writing style, follow exactly:
 	 *
 	 * Returned as a standalone block so get_system_prompt() can append it LAST , 
 	 * after the custom-prompt branch, the merchant config slot, and the
-	 * fahad_ai_system_prompt filter, making the policy structurally non-overridable
+	 * dukandaar_system_prompt filter, making the policy structurally non-overridable
 	 * (issue #56). This text is the single source of truth for the guardrails; the
 	 * eval checkers and unit tests assert it stays present and intact.
 	 */
@@ -1097,7 +1097,7 @@ Writing style, follow exactly:
 	 * and its RESULT. Derives a privacy-safe event, a trimmed, email-masked question
 	 * snippet, the tool names called, the coarse outcome, the funnel flags
 	 * (product_surfaced / added_to_cart) and an OPAQUE per-conversation ref, and hands
-	 * it to Fahad_AI_Analytics, which applies the PII masking, bounds, retention and
+	 * it to Dukandaar_Analytics, which applies the PII masking, bounds, retention and
 	 * opt-out. The store NEVER feeds any of this back to the model; this is owner
 	 * telemetry only.
 	 *
@@ -1113,7 +1113,7 @@ Writing style, follow exactly:
 	 *                               the streaming path, which tracks these as it goes.
 	 */
 	private function record_turn_analytics( array $input_messages, array $result, string $outcome_hint = '', array $overrides = [] ): void {
-		$analytics = Fahad_AI_Analytics::instance();
+		$analytics = Dukandaar_Analytics::instance();
 
 		// Opt-out / negligible-overhead gate: do no derivation when disabled.
 		if ( ! $analytics->enabled() ) {
@@ -1159,7 +1159,7 @@ Writing style, follow exactly:
 	/**
 	 * The most recent genuine user question from the input messages, a plain-string
 	 * user turn (NOT a tool_result block, which is role user with array content). The
-	 * raw text is returned; Fahad_AI_Analytics masks emails + caps length on store, so
+	 * raw text is returned; Dukandaar_Analytics masks emails + caps length on store, so
 	 * masking lives in exactly one place.
 	 */
 	private function analytics_last_user_question( array $messages ): string {
@@ -1240,19 +1240,19 @@ Writing style, follow exactly:
 	 */
 	private function analytics_outcome( array $tools, bool $product_surfaced, array $messages ): string {
 		if ( $this->transcript_requires_login( $messages ) ) {
-			return Fahad_AI_Analytics::OUTCOME_ESCALATED;
+			return Dukandaar_Analytics::OUTCOME_ESCALATED;
 		}
 
 		if ( empty( $tools ) && ! $product_surfaced ) {
-			return Fahad_AI_Analytics::OUTCOME_NO_TOOL_MATCH;
+			return Dukandaar_Analytics::OUTCOME_NO_TOOL_MATCH;
 		}
 
-		return Fahad_AI_Analytics::OUTCOME_ANSWERED;
+		return Dukandaar_Analytics::OUTCOME_ANSWERED;
 	}
 
 	/**
 	 * Whether any tool_result in the transcript reported `requires_login`, the central
-	 * login-gate's grounded escalation signal (Fahad_AI_Auth::guard_logged_in). Tool
+	 * login-gate's grounded escalation signal (Dukandaar_Auth::guard_logged_in). Tool
 	 * results are JSON-encoded into the transcript (role user array content on
 	 * Anthropic, role tool on Moonshot), so a substring probe for the flag is a cheap,
 	 * provider-agnostic detector.
@@ -1331,7 +1331,7 @@ Writing style, follow exactly:
 	 *     totals, errors, requires_login, shipping rates, …) passes through unchanged.
 	 *
 	 * Filterable so it can be tuned or disabled:
-	 *   apply_filters( 'fahad_ai_trim_tool_result', array $trimmed, string $tool, array $full )
+	 *   apply_filters( 'dukandaar_trim_tool_result', array $trimmed, string $tool, array $full )
 	 *
 	 * @param string $tool   Name of the tool that produced the result.
 	 * @param array  $full   The FULL tool result (must NOT be mutated here).
@@ -1366,7 +1366,7 @@ Writing style, follow exactly:
 		 * @param string $tool    The tool that produced the result.
 		 * @param array  $full    The full, untrimmed result (also used for cards).
 		 */
-		$result = apply_filters( 'fahad_ai_trim_tool_result', $trimmed, $tool, $full );
+		$result = apply_filters( 'dukandaar_trim_tool_result', $trimmed, $tool, $full );
 
 		return is_array( $result ) ? $result : $trimmed;
 	}
@@ -1399,8 +1399,8 @@ Writing style, follow exactly:
 	 * Bound the outgoing message context to a configurable per-conversation token
 	 * budget, dropping the OLDEST non-essential history when over.
 	 *
-	 * Budget resolution: option `fahad_ai_token_budget` (sane default 0 = unlimited),
-	 * then the `fahad_ai_token_budget` filter. 0 / absent / negative ⇒ unlimited, so
+	 * Budget resolution: option `dukandaar_token_budget` (sane default 0 = unlimited),
+	 * then the `dukandaar_token_budget` filter. 0 / absent / negative ⇒ unlimited, so
 	 * behaviour is unchanged unless a site opts in.
 	 *
 	 * Estimation: a deterministic char/÷4 proxy over the JSON-encoded messages
@@ -1422,8 +1422,8 @@ Writing style, follow exactly:
 	 */
 	private function apply_token_budget( array $messages ): array {
 		$budget = (int) apply_filters(
-			'fahad_ai_token_budget',
-			(int) get_option( 'fahad_ai_token_budget', 0 )
+			'dukandaar_token_budget',
+			(int) get_option( 'dukandaar_token_budget', 0 )
 		);
 
 		// 0 / negative ⇒ unlimited.
@@ -1487,7 +1487,7 @@ Writing style, follow exactly:
 	 * returned unchanged. A site can route to a cheaper/faster model for simple turns
 	 * and a more capable one for reasoning by hooking:
 	 *
-	 *   apply_filters( 'fahad_ai_model', string $default_model, string $provider, array $context )
+	 *   apply_filters( 'dukandaar_model', string $default_model, string $provider, array $context )
 	 *
 	 * where $context describes the turn, `has_tools` (bool: whether tools are in
 	 * play) and `iteration` (int: the agent-loop index), so a heuristic can pick by
@@ -1496,10 +1496,10 @@ Writing style, follow exactly:
 	 * payload).
 	 *
 	 * Built-in fast-model routing (issue #56) sits UNDER the filter: when the merchant
-	 * enables `fahad_ai_fast_model_routing` and sets a `fahad_ai_fast_model`, a SIMPLE
+	 * enables `dukandaar_fast_model_routing` and sets a `dukandaar_fast_model`, a SIMPLE
 	 * turn (no tools in play) is routed to that cheaper/faster model before the filter
 	 * runs. This makes the #23 routing seam settable from admin without per-pack edits,
-	 * while the `fahad_ai_model` filter still has the final say (advanced override).
+	 * while the `dukandaar_model` filter still has the final say (advanced override).
 	 *
 	 * @param string $default  The configured model for the provider.
 	 * @param string $provider 'anthropic' | 'moonshot'.
@@ -1509,7 +1509,7 @@ Writing style, follow exactly:
 	private function resolve_model( string $default, string $provider, array $context = [] ): string {
 		$routed = $this->fast_model_route( $default, $context );
 
-		$model = apply_filters( 'fahad_ai_model', $routed, $provider, $context );
+		$model = apply_filters( 'dukandaar_model', $routed, $provider, $context );
 
 		return ( is_string( $model ) && '' !== $model ) ? $model : $routed;
 	}
@@ -1521,7 +1521,7 @@ Writing style, follow exactly:
 	 * is set, and the turn has no tools in play (`has_tools` false), the cheap path for
 	 * greetings/chit-chat. Otherwise returns $default unchanged, so the capable model is
 	 * used whenever the agent is actually reasoning with tools. This is the DEFAULT that
-	 * the fahad_ai_model filter can still override.
+	 * the dukandaar_model filter can still override.
 	 *
 	 * @param string $default The configured model for the provider.
 	 * @param array  $context Turn context: { has_tools: bool, iteration: int }.
@@ -1532,11 +1532,11 @@ Writing style, follow exactly:
 			return $default;
 		}
 
-		if ( ! get_option( 'fahad_ai_fast_model_routing', false ) ) {
+		if ( ! get_option( 'dukandaar_fast_model_routing', false ) ) {
 			return $default;
 		}
 
-		$fast = (string) get_option( 'fahad_ai_fast_model', '' );
+		$fast = (string) get_option( 'dukandaar_fast_model', '' );
 
 		return '' !== $fast ? $fast : $default;
 	}
@@ -1845,12 +1845,12 @@ Writing style, follow exactly:
 	 * flag), so this is a defensive default, not the routing decision itself.
 	 */
 	private function stream_provider(): string {
-		$configured = (string) get_option( 'fahad_ai_provider', 'anthropic' );
-		return Fahad_AI_Providers::is_openai( $configured ) ? $configured : 'moonshot';
+		$configured = (string) get_option( 'dukandaar_provider', 'anthropic' );
+		return Dukandaar_Providers::is_openai( $configured ) ? $configured : 'moonshot';
 	}
 
 	/**
-	 * REST callback for POST /wp-json/fahad-ai/v1/stream
+	 * REST callback for POST /wp-json/dukandaar/v1/stream
 	 * Bypasses WordPress response buffering and pipes SSE directly to the browser.
 	 */
 	public function handle_stream( WP_REST_Request $request ): void {
@@ -1859,14 +1859,14 @@ Writing style, follow exactly:
 		$messages = $request->get_param( 'messages' );
 
 		if ( empty( $messages ) || ! is_array( $messages ) ) {
-			$this->sse_send( 'error', [ 'message' => __( 'A messages array is required.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ] );
+			$this->sse_send( 'error', [ 'message' => __( 'A messages array is required.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) ] );
 			exit;
 		}
 
 		$sanitized = $this->sanitize_messages( $messages );
 
 		if ( empty( $sanitized ) ) {
-			$this->sse_send( 'error', [ 'message' => __( 'No valid messages provided.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ] );
+			$this->sse_send( 'error', [ 'message' => __( 'No valid messages provided.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) ] );
 			exit;
 		}
 
@@ -1933,7 +1933,7 @@ Writing style, follow exactly:
 	 *                         to 'moonshot' for backward compatibility.
 	 */
 	private function run_stream_agent( array $messages, string $provider = 'moonshot' ): void {
-		$tools         = Fahad_AI_Tools::instance();
+		$tools         = Dukandaar_Tools::instance();
 		$max           = 8;
 		$sent_products = false;
 		// Product ids already streamed this turn, so a product surfaced by more than
@@ -1971,7 +1971,7 @@ Writing style, follow exactly:
 				$this->record_turn_analytics(
 					$messages,
 					[ 'products' => $sent_products ? [ 1 ] : [], 'messages' => $api_msgs ],
-					Fahad_AI_Analytics::OUTCOME_ERROR,
+					Dukandaar_Analytics::OUTCOME_ERROR,
 					[ 'tools' => $tools_called, 'added_to_cart' => $added_to_cart ]
 				);
 				$this->sse_send( 'chunk', [ 'content' => $this->degraded_response()['message'] ] );
@@ -2046,7 +2046,7 @@ Writing style, follow exactly:
 		$this->record_turn_analytics(
 			$messages,
 			[ 'products' => $sent_products ? [ 1 ] : [], 'messages' => $api_msgs ],
-			Fahad_AI_Analytics::OUTCOME_NO_TOOL_MATCH,
+			Dukandaar_Analytics::OUTCOME_NO_TOOL_MATCH,
 			[ 'tools' => $tools_called, 'added_to_cart' => $added_to_cart ]
 		);
 		$this->sse_send( 'chunk', [ 'content' => $this->agent_fallback_message( $sent_products ) ] );

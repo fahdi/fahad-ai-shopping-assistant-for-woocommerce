@@ -4,10 +4,10 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Curated bundles, "complete the look" (issue #57).
  *
- * A drop-in feature pack (same pattern as Fahad_AI_Recommendation_Tools /
- * Fahad_AI_Comparison_Tools): a self-contained class in its own file under
+ * A drop-in feature pack (same pattern as Dukandaar_Recommendation_Tools /
+ * Dukandaar_Comparison_Tools): a self-contained class in its own file under
  * includes/tools/ that self-registers a provider at the bottom via
- * Fahad_AI_Tool_Registry::register_pack(). The bootstrap (and the test bootstrap)
+ * Dukandaar_Tool_Registry::register_pack(). The bootstrap (and the test bootstrap)
  * glob-require everything here, so adding this pack is a SINGLE new file, no edits
  * to the bootstrap, the test bootstrap, or the eval harness. Do NOT edit the
  * existing packs.
@@ -54,11 +54,11 @@ defined( 'ABSPATH' ) || exit;
  *     there is no bundle that fits, the tool refuses to propose one over budget
  *     (`fits_budget => false`) rather than push past the stated limit.
  *
- * Each item is rendered through the shared Fahad_AI_Tools::format_product_summary()
+ * Each item is rendered through the shared Dukandaar_Tools::format_product_summary()
  * so bundle item cards match search/recommendation cards exactly, augmented with a
  * numeric `price_raw` / `regular_price_raw` so the combined total is verifiably the
  * sum of the parts. The items are returned under the canonical `products` key so the
- * convention-based card emission in Fahad_AI_API_Handler::tool_result_cards() renders
+ * convention-based card emission in Dukandaar_API_Handler::tool_result_cards() renders
  * them as ordinary product cards automatically (no shared-file edits), a bundle is a
  * priced SET of normal products, not a new card type, and it carries no `attributes`
  * key so it is never mistaken for a comparison table. The bundle-level pricing
@@ -69,7 +69,7 @@ defined( 'ABSPATH' ) || exit;
  * This is NOT a personal-data tool, it reads the shared catalog only, so it
  * carries no `personal` flag and is not login-gated.
  */
-final class Fahad_AI_Bundle_Tools {
+final class Dukandaar_Bundle_Tools {
 
 	/**
 	 * Maximum number of items in a proposed bundle (anchor + complementary). A
@@ -131,7 +131,7 @@ final class Fahad_AI_Bundle_Tools {
 		$product_id = absint( $input['product_id'] ?? 0 );
 		if ( $product_id <= 0 ) {
 			return [
-				'error' => __( 'Tell me which product to build a bundle around and I will put a set together.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error' => __( 'Tell me which product to build a bundle around and I will put a set together.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -139,7 +139,7 @@ final class Fahad_AI_Bundle_Tools {
 		$anchor    = wc_get_product( $product_id );
 
 		if ( ! $anchor instanceof WC_Product || ! $anchor->is_visible() ) {
-			return self::empty_state( __( 'That product is not available, so there is no bundle to suggest.', 'fahad-ai-shopping-assistant-for-woocommerce' ), $max_price );
+			return self::empty_state( __( 'That product is not available, so there is no bundle to suggest.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), $max_price );
 		}
 
 		[ $candidate_ids, $anchor_is_item ] = self::candidate_ids( $anchor );
@@ -147,7 +147,7 @@ final class Fahad_AI_Bundle_Tools {
 		// Resolve candidates to buyable items, in priority order. Out-of-stock /
 		// non-visible items are excluded from the bundle; out-of-stock ones are
 		// reported so the offer is honest about what it contains.
-		$formatter   = Fahad_AI_Tools::instance();
+		$formatter   = Dukandaar_Tools::instance();
 		$products    = [];
 		$unavailable = [];
 
@@ -165,7 +165,7 @@ final class Fahad_AI_Bundle_Tools {
 				// The anchor of a non-grouped bundle is the base item, if it cannot
 				// be bought there is no honest bundle to build at all.
 				if ( $anchor_is_item && $id === $product_id ) {
-					return self::empty_state( __( 'That product is out of stock, so there is no bundle to suggest right now.', 'fahad-ai-shopping-assistant-for-woocommerce' ), $max_price );
+					return self::empty_state( __( 'That product is out of stock, so there is no bundle to suggest right now.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), $max_price );
 				}
 				$unavailable[] = [
 					'id'   => (int) $product->get_id(),
@@ -183,7 +183,7 @@ final class Fahad_AI_Bundle_Tools {
 		// A one-item "bundle" is not a bundle, need at least two real items to make
 		// a "complete the look" set.
 		if ( count( $products ) < 2 ) {
-			return self::empty_state( __( 'There are no complementary items to bundle with this product right now.', 'fahad-ai-shopping-assistant-for-woocommerce' ), $max_price, $unavailable );
+			return self::empty_state( __( 'There are no complementary items to bundle with this product right now.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), $max_price, $unavailable );
 		}
 
 		// Respect a stated budget: trim the lowest-priority complementary items
@@ -199,7 +199,7 @@ final class Fahad_AI_Bundle_Tools {
 			// Still over budget with a single item, or trimming left fewer than two
 			// items: there is no bundle that fits the budget.
 			if ( self::sum( $products, 'price_raw' ) > $max_price || count( $products ) < 2 ) {
-				$state                = self::empty_state( __( 'I could not put together a bundle within that budget.', 'fahad-ai-shopping-assistant-for-woocommerce' ), $max_price, $unavailable );
+				$state                = self::empty_state( __( 'I could not put together a bundle within that budget.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ), $max_price, $unavailable );
 				$state['fits_budget'] = false;
 				return $state;
 			}
@@ -237,11 +237,11 @@ final class Fahad_AI_Bundle_Tools {
 		}
 
 		if ( $trimmed ) {
-			$result['message'] = __( 'I trimmed the bundle to stay within your budget.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+			$result['message'] = __( 'I trimmed the bundle to stay within your budget.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 		}
 
 		if ( ! empty( $unavailable ) ) {
-			$result['message'] = __( 'Some items are out of stock and were left out of the bundle.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+			$result['message'] = __( 'Some items are out of stock and were left out of the bundle.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 		}
 
 		return $result;
@@ -360,5 +360,5 @@ final class Fahad_AI_Bundle_Tools {
 // file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test pcov window opens, so it can never be measured.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Bundle_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Bundle_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

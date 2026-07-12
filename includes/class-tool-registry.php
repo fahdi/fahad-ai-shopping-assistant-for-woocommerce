@@ -6,9 +6,9 @@ defined( 'ABSPATH' ) || exit;
  *
  * Single source of truth for both the tool SPECS handed to the LLM and tool
  * EXECUTION (dispatch). The five built-in WooCommerce tools are seeded in code
- * from Fahad_AI_Tools, then the list is exposed to third-party add-ons through:
+ * from Dukandaar_Tools, then the list is exposed to third-party add-ons through:
  *
- *     apply_filters( 'fahad_ai_register_tools', array $tools )
+ *     apply_filters( 'dukandaar_register_tools', array $tools )
  *
  * Each tool entry is:
  *     [
@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Add-ons (WalletPro, shipping, loyalty, …) register tools without forking core:
  *
- *     add_filter( 'fahad_ai_register_tools', function ( array $tools ) {
+ *     add_filter( 'dukandaar_register_tools', function ( array $tools ) {
  *         $tools[] = [
  *             'name'        => 'wallet_balance',
  *             'description' => 'Get the logged-in customer wallet balance.',
@@ -38,7 +38,7 @@ defined( 'ABSPATH' ) || exit;
  * register_pack(). A pack lives in its own file under includes/tools/ and
  * self-registers a provider at file scope:
  *
- *     Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Catalog_Tools', 'register' ] );
+ *     Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Catalog_Tools', 'register' ] );
  *
  * where the provider is a callable `fn( array $tools ): array` that appends its
  * definitions. The bootstrap (and the test bootstrap) glob-require every file in
@@ -48,7 +48,7 @@ defined( 'ABSPATH' ) || exit;
  * filter. Pack providers are stored STATICALLY so they survive a singleton
  * instance reset (only the built/validated tool LIST is cached per instance).
  */
-final class Fahad_AI_Tool_Registry {
+final class Dukandaar_Tool_Registry {
 
 	private static $instance = null;
 
@@ -90,12 +90,12 @@ final class Fahad_AI_Tool_Registry {
 	 * provider receives the running tool list and returns it with its own tools
 	 * appended:
 	 *
-	 *     Fahad_AI_Tool_Registry::register_pack(
+	 *     Dukandaar_Tool_Registry::register_pack(
 	 *         fn( array $tools ) => array_merge( $tools, $my_entries )
 	 *     );
 	 *
 	 * Providers run in registration order, AFTER the built-ins and BEFORE the
-	 * `fahad_ai_register_tools` filter, so third parties can still override. The
+	 * `dukandaar_register_tools` filter, so third parties can still override. The
 	 * provider list is static and survives a singleton instance reset.
 	 *
 	 * @param callable $provider fn( array $tools ): array
@@ -106,7 +106,7 @@ final class Fahad_AI_Tool_Registry {
 
 	/**
 	 * Tool SPECS for the LLM, name/description/parameters only, never the
-	 * callback. This is what Fahad_AI_API_Handler::tool_specs() returns.
+	 * callback. This is what Dukandaar_API_Handler::tool_specs() returns.
 	 *
 	 * @return array<int, array{name: string, description: string, parameters: array}>
 	 */
@@ -126,14 +126,14 @@ final class Fahad_AI_Tool_Registry {
 	 * Execute a tool by name and return its result array.
 	 *
 	 * Unknown tool → error array (same message/format the legacy
-	 * Fahad_AI_Tools::execute switch produced). A callback that throws is caught
+	 * Dukandaar_Tools::execute switch produced). A callback that throws is caught
 	 * so a third-party tool cannot fatal the agent request (error isolation).
 	 *
 	 * Personal-data tools (those declaring `'personal' => true`) are login-gated
 	 * here, BEFORE their callback runs: a guest gets the standard login-required
 	 * error and the callback is never reached. This is the central half of the
 	 * authorization boundary (defence in depth), per-RECORD ownership still lives
-	 * inside each personal tool's callback (see Fahad_AI_Auth::user_owns), because
+	 * inside each personal tool's callback (see Dukandaar_Auth::user_owns), because
 	 * the registry cannot know who a given order/wallet/memory row belongs to.
 	 *
 	 * @param string $name  Tool name.
@@ -147,7 +147,7 @@ final class Fahad_AI_Tool_Registry {
 			return [
 				'error' => sprintf(
 					/* translators: %s: name of the unknown tool requested by the AI */
-					__( 'Unknown tool: %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'Unknown tool: %s', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$name
 				),
 			];
@@ -157,7 +157,7 @@ final class Fahad_AI_Tool_Registry {
 		// cannot leak by forgetting to check login, the registry blocks guests
 		// before the callback is ever invoked.
 		if ( ! empty( $tools[ $name ]['personal'] ) ) {
-			$gate = Fahad_AI_Auth::guard_logged_in();
+			$gate = Dukandaar_Auth::guard_logged_in();
 			if ( true !== $gate ) {
 				return $gate;
 			}
@@ -170,7 +170,7 @@ final class Fahad_AI_Tool_Registry {
 			return [
 				'error' => sprintf(
 					/* translators: %s: name of the tool that failed */
-					__( 'The tool "%s" could not be completed.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'The tool "%s" could not be completed.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$name
 				),
 			];
@@ -184,7 +184,7 @@ final class Fahad_AI_Tool_Registry {
 	 *   1. the five built-ins (seeded in code),
 	 *   2. every first-party feature pack registered via register_pack(), in
 	 *      registration order,
-	 *   3. the `fahad_ai_register_tools` filter (third-party add-ons).
+	 *   3. the `dukandaar_register_tools` filter (third-party add-ons).
 	 *
 	 * Then validates. The result is cached on the instance (per-instance, so a
 	 * reset rebuilds it), while the pack providers themselves are static.
@@ -196,7 +196,7 @@ final class Fahad_AI_Tool_Registry {
 			return $this->tools;
 		}
 
-		$builtins = Fahad_AI_Tools::instance()->builtin_definitions();
+		$builtins = Dukandaar_Tools::instance()->builtin_definitions();
 		$tools    = $builtins;
 
 		// First-party feature packs (deterministic, not via the WP filter) so they
@@ -217,7 +217,7 @@ final class Fahad_AI_Tool_Registry {
 		 *
 		 * @param array $tools The built-in + first-party-pack tool definitions.
 		 */
-		$filtered = apply_filters( 'fahad_ai_register_tools', $tools );
+		$filtered = apply_filters( 'dukandaar_register_tools', $tools );
 
 		$validated = $this->validate( is_array( $filtered ) ? $filtered : $tools );
 
@@ -240,7 +240,7 @@ final class Fahad_AI_Tool_Registry {
 	/**
 	 * Remove merchant-disabled tools from the validated map (issue #56).
 	 *
-	 * The disabled list is the `fahad_ai_disabled_tools` option (an array of tool
+	 * The disabled list is the `dukandaar_disabled_tools` option (an array of tool
 	 * names, sanitized on save). Built-in tool names are never removed. Absent / empty
 	 * option ⇒ identity, so behaviour is unchanged unless a merchant opts in.
 	 *
@@ -249,7 +249,7 @@ final class Fahad_AI_Tool_Registry {
 	 * @return array<string, array>
 	 */
 	private function apply_tool_gating( array $tools, array $builtin_names ): array {
-		$disabled = get_option( 'fahad_ai_disabled_tools', [] );
+		$disabled = get_option( 'dukandaar_disabled_tools', [] );
 		if ( ! is_array( $disabled ) || empty( $disabled ) ) {
 			return $tools;
 		}

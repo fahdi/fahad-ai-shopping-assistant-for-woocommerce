@@ -2,7 +2,7 @@
 /**
  * Unit tests for the Qdrant external vector store + rerank seam (RAG Phase 3, S3.2, #113).
  *
- * OPT-IN scale tier behind the fahad_ai_vector_store filter. The HTTP shapes are
+ * OPT-IN scale tier behind the dukandaar_vector_store filter. The HTTP shapes are
  * unit-tested here; a live Qdrant instance is needed for an end-to-end check.
  * Also covers the optional cross-encoder rerank seam (off by default).
  */
@@ -29,14 +29,14 @@ class QdrantVectorStoreTest extends TestCase {
 		parent::tearDown();
 	}
 
-	private function store(): Fahad_AI_Qdrant_Vector_Store {
-		return new Fahad_AI_Qdrant_Vector_Store( 'https://q.example.com', 'qk', 'products', 'text-embedding-3-small' );
+	private function store(): Dukandaar_Qdrant_Vector_Store {
+		return new Dukandaar_Qdrant_Vector_Store( 'https://q.example.com', 'qk', 'products', 'text-embedding-3-small' );
 	}
 
 	public function test_implements_interface_and_availability_reflects_url(): void {
-		$this->assertInstanceOf( Fahad_AI_Vector_Store::class, $this->store() );
+		$this->assertInstanceOf( Dukandaar_Vector_Store::class, $this->store() );
 		$this->assertTrue( $this->store()->is_available() );
-		$this->assertFalse( ( new Fahad_AI_Qdrant_Vector_Store( '', 'k', 'c', 'm' ) )->is_available() );
+		$this->assertFalse( ( new Dukandaar_Qdrant_Vector_Store( '', 'k', 'c', 'm' ) )->is_available() );
 	}
 
 	public function test_query_searches_qdrant_and_returns_ranked_ids(): void {
@@ -91,7 +91,7 @@ class QdrantVectorStoreTest extends TestCase {
 	public function test_query_throws_when_qdrant_unreachable(): void {
 		Functions\when( 'wp_remote_post' )->justReturn( new WP_Error( 'http', 'down' ) );
 		Functions\when( 'esc_html' )->alias( static fn( $s ) => $s );
-		$this->expectException( Fahad_AI_Embedding_Exception::class ); // caught upstream -> keyword fallback
+		$this->expectException( Dukandaar_Embedding_Exception::class ); // caught upstream -> keyword fallback
 		$this->store()->query( [ 1.0 ], 5, [ 10 ] );
 	}
 
@@ -103,19 +103,19 @@ class QdrantVectorStoreTest extends TestCase {
 		Functions\when( 'wc_get_products' )->alias( static fn( $args ) => isset( $args['s'] ) ? [ 10 ] : [ 10, 12 ] );
 		// A reranker that reverses the fused order.
 		Functions\when( 'apply_filters' )->alias(
-			static fn( $hook, $value, ...$rest ) => 'fahad_ai_rerank' === $hook ? array_reverse( $value ) : $value
+			static fn( $hook, $value, ...$rest ) => 'dukandaar_rerank' === $hook ? array_reverse( $value ) : $value
 		);
 
-		$provider = Mockery::mock( Fahad_AI_Embedding_Provider::class );
+		$provider = Mockery::mock( Dukandaar_Embedding_Provider::class );
 		$provider->allows( 'embed' )->andReturn( [ [ 1.0, 0.0, 0.0 ] ] );
 		$provider->allows( 'model' )->andReturn( 'm' );
 		$provider->allows( 'dimensions' )->andReturn( 3 );
 		$provider->allows( 'is_available' )->andReturn( true );
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'query' )->andReturn( [ 12, 10 ] );
 
-		$ids = ( new Fahad_AI_Retriever( $provider, $store ) )->search( 'warm', [], 10 );
+		$ids = ( new Dukandaar_Retriever( $provider, $store ) )->search( 'warm', [], 10 );
 		// Without rerank the fused order would start with 10; the reranker reverses it.
-		$this->assertSame( array_reverse( Fahad_AI_Rrf::fuse( [ [ 10 ], [ 12, 10 ] ] ) ), $ids );
+		$this->assertSame( array_reverse( Dukandaar_Rrf::fuse( [ [ 10 ], [ 12, 10 ] ] ) ), $ids );
 	}
 }

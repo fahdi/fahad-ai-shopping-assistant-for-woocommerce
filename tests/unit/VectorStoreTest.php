@@ -49,12 +49,12 @@ class VectorStoreTest extends TestCase {
 		parent::tearDown();
 	}
 
-	private function store( string $model = 'text-embedding-3-small', int $dim = 3 ): Fahad_AI_Postmeta_Vector_Store {
-		return new Fahad_AI_Postmeta_Vector_Store( $model, $dim );
+	private function store( string $model = 'text-embedding-3-small', int $dim = 3 ): Dukandaar_Postmeta_Vector_Store {
+		return new Dukandaar_Postmeta_Vector_Store( $model, $dim );
 	}
 
 	public function test_implements_the_vector_store_interface(): void {
-		$this->assertInstanceOf( Fahad_AI_Vector_Store::class, $this->store() );
+		$this->assertInstanceOf( Dukandaar_Vector_Store::class, $this->store() );
 		$this->assertTrue( $this->store()->is_available() );
 	}
 
@@ -112,12 +112,12 @@ class VectorStoreTest extends TestCase {
 
 	public function test_rebuild_required_when_index_model_differs_from_active(): void {
 		Functions\when( 'get_option' )->alias(
-			fn( $k, $d = '' ) => 'fahad_ai_index_model' === $k ? 'old-model' : $d
+			fn( $k, $d = '' ) => 'dukandaar_index_model' === $k ? 'old-model' : $d
 		);
 		$this->assertTrue( $this->store( 'text-embedding-3-small' )->rebuild_required() );
 
 		Functions\when( 'get_option' )->alias(
-			fn( $k, $d = '' ) => 'fahad_ai_index_model' === $k ? 'text-embedding-3-small' : $d
+			fn( $k, $d = '' ) => 'dukandaar_index_model' === $k ? 'text-embedding-3-small' : $d
 		);
 		$this->assertFalse( $this->store( 'text-embedding-3-small' )->rebuild_required() );
 	}

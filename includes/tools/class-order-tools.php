@@ -5,9 +5,9 @@ defined( 'ABSPATH' ) || exit;
  * Order status & tracking tools (issue #17), self-service "where's my order?"
  * for LOGGED-IN customers only.
  *
- * A drop-in feature pack (same pattern as Fahad_AI_Catalog_Tools / Fahad_AI_Coupon_Tools):
+ * A drop-in feature pack (same pattern as Dukandaar_Catalog_Tools / Dukandaar_Coupon_Tools):
  * a self-contained class in its own file under includes/tools/ that self-registers a
- * provider at the bottom via Fahad_AI_Tool_Registry::register_pack(). The bootstrap
+ * provider at the bottom via Dukandaar_Tool_Registry::register_pack(). The bootstrap
  * (and the test bootstrap) glob-require everything here, so adding this pack is a
  * SINGLE new file, no edits to the bootstrap, the test bootstrap, or the eval harness.
  *
@@ -19,17 +19,17 @@ defined( 'ABSPATH' ) || exit;
  *
  * SECURITY IS THE WHOLE POINT, order data is PII and leaking ANOTHER customer's
  * order is the highest-severity failure. These tools use the issue-#25 authorization
- * boundary (Fahad_AI_Auth) in BOTH of its layers (defence in depth):
+ * boundary (Dukandaar_Auth) in BOTH of its layers (defence in depth):
  *
  *   1. CENTRAL LOGIN GATE. Both tools declare `'personal' => true`, so
- *      Fahad_AI_Tool_Registry::dispatch() runs Fahad_AI_Auth::guard_logged_in()
+ *      Dukandaar_Tool_Registry::dispatch() runs Dukandaar_Auth::guard_logged_in()
  *      BEFORE the callback. A guest is blocked centrally with the standard
  *      login-required error and the callback is never reached, these tools never
  *      re-implement the guest check, so they cannot leak by forgetting it.
  *
  *   2. PER-RECORD OWNERSHIP. The registry cannot know which customer a given order
  *      belongs to, so get_order_status loads the order and then calls
- *      Fahad_AI_Auth::user_owns( $order->get_customer_id() ); a mismatch returns a
+ *      Dukandaar_Auth::user_owns( $order->get_customer_id() ); a mismatch returns a
  *      "not found"-style error (NOT "forbidden"), so we never even confirm that an
  *      order exists for another user. get_my_orders needs no per-record check
  *      because its query is scoped by `customer_id` to the current user, so it can
@@ -38,16 +38,16 @@ defined( 'ABSPATH' ) || exit;
  * PII MINIMIZATION. Results carry only what a status answer needs, order number,
  * status, date, total, and an item summary (name + quantity). Raw email / billing /
  * shipping address are deliberately never included. (If a tool ever needs to echo an
- * email, Fahad_AI_Auth::mask_email() exists for that; nothing here does.)
+ * email, Dukandaar_Auth::mask_email() exists for that; nothing here does.)
  */
-final class Fahad_AI_Order_Tools {
+final class Dukandaar_Order_Tools {
 
 	/**
 	 * Append the order tools to the registry's tool list.
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope).
 	 * Static because the pack holds no per-instance state, its tools call
-	 * WooCommerce order functions and the shared Fahad_AI_Auth boundary directly.
+	 * WooCommerce order functions and the shared Dukandaar_Auth boundary directly.
 	 *
 	 * Both tools carry `'personal' => true` so the registry login-gates them
 	 * centrally (the first authorization layer).
@@ -93,7 +93,7 @@ final class Fahad_AI_Order_Tools {
 	/**
 	 * Recent orders for the CURRENT logged-in customer.
 	 *
-	 * The query is scoped by `customer_id` to Fahad_AI_Auth::current_user_id(), so it
+	 * The query is scoped by `customer_id` to Dukandaar_Auth::current_user_id(), so it
 	 * can only ever return that user's own orders, the data-leakage-proof way to
 	 * "list my orders" (no per-record ownership check is needed because the database
 	 * never hands back anyone else's row). The central login gate has already ensured
@@ -107,7 +107,7 @@ final class Fahad_AI_Order_Tools {
 		$orders = wc_get_orders( [
 			// Scope to the signed-in customer ONLY. This is the boundary that keeps
 			// the result strictly the caller's own orders.
-			'customer_id' => Fahad_AI_Auth::current_user_id(),
+			'customer_id' => Dukandaar_Auth::current_user_id(),
 			'limit'       => $limit,
 			'orderby'     => 'date',
 			'order'       => 'DESC',
@@ -117,7 +117,7 @@ final class Fahad_AI_Order_Tools {
 			return [
 				'found'   => 0,
 				'orders'  => [],
-				'message' => __( 'You have no recent orders.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message' => __( 'You have no recent orders.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -133,7 +133,7 @@ final class Fahad_AI_Order_Tools {
 	 * Status (+ optional tracking note) for ONE order the caller owns.
 	 *
 	 * Loads the order, then enforces the SECOND authorization layer:
-	 * Fahad_AI_Auth::user_owns( $order->get_customer_id() ). On a missing order OR an
+	 * Dukandaar_Auth::user_owns( $order->get_customer_id() ). On a missing order OR an
 	 * order owned by someone else we return the SAME "not found" error, deliberately
 	 * not "forbidden", so the assistant cannot be used to probe whether an order id
 	 * exists for another customer. The central login gate has already ensured the
@@ -145,7 +145,7 @@ final class Fahad_AI_Order_Tools {
 		$order_id = absint( $input['order_id'] ?? 0 );
 
 		$not_found = [
-			'error' => __( 'Order not found.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'error' => __( 'Order not found.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 		];
 
 		if ( $order_id <= 0 ) {
@@ -156,7 +156,7 @@ final class Fahad_AI_Order_Tools {
 
 		// Missing order, or, crucially, an order owned by a DIFFERENT user. Both
 		// collapse to the same "not found" so ownership is never disclosed.
-		if ( ! $order instanceof WC_Order || ! Fahad_AI_Auth::user_owns( $order->get_customer_id() ) ) {
+		if ( ! $order instanceof WC_Order || ! Dukandaar_Auth::user_owns( $order->get_customer_id() ) ) {
 			return $not_found;
 		}
 
@@ -211,5 +211,5 @@ final class Fahad_AI_Order_Tools {
 // in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test pcov window opens.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Order_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Order_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

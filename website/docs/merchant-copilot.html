@@ -11,7 +11,7 @@
 <link rel="canonical" href="https://fahadai.isupercoder.com/docs/merchant-copilot.html">
 <meta name="theme-color" content="#0c0d10">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="Fahad AI">
+<meta property="og:site_name" content="Dukandaar">
 <meta property="og:title" content="Merchant copilot admin endpoints">
 <meta property="og:description" content="Admin-only, capability-gated endpoints that surface real sales, refund, product and review data, and propose sales. Nothing auto-writes.">
 <meta property="og:url" content="https://fahadai.isupercoder.com/docs/merchant-copilot.html">
@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{ "@context":"https://schema.org","@type":"TechArticle","headline":"Merchant copilot admin endpoints","url":"https://fahadai.isupercoder.com/docs/merchant-copilot.html","isPartOf":{"@type":"WebSite","name":"Fahad AI","url":"https://fahadai.isupercoder.com/"} }
+{ "@context":"https://schema.org","@type":"TechArticle","headline":"Merchant copilot admin endpoints","url":"https://fahadai.isupercoder.com/docs/merchant-copilot.html","isPartOf":{"@type":"WebSite","name":"Dukandaar","url":"https://fahadai.isupercoder.com/"} }
 </script>
 <style>
   :root{--ink:#0c0d10;--ink-2:#14161b;--ink-3:#1b1e25;--paper:#f3efe6;--paper-dim:#9a968c;--paper-soft:#c7c3b8;--lime:#d6fb4f;--lime-deep:#aee02a;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.06);--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
@@ -112,7 +112,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Fahad AI</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
+<header><div class="nav"><a class="brand" href="/"><span class="dot"></span>Dukandaar</a><nav class="links"><a href="/docs/">Docs</a><a href="/#features">Features</a><a href="/changelog.html">Changelog</a><a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a></nav><button class="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8 8 0 0 1 9.6 4 7 7 0 1 0 20 14.4z"/></svg></button></div></header>
 <main id="main" class="layout">
   <aside class="side">
     <p class="lbl">Get started</p>
@@ -131,7 +131,7 @@
   <article>
     <div class="crumb"><a href="/docs/">Docs</a> / Merchant copilot</div>
     <h1>Merchant copilot</h1>
-    <p class="lede">The merchant copilot is a small set of admin-only REST endpoints under <code>fahad-ai/v1/admin</code>. Each one returns real WooCommerce data, sales, refunds, product attributes, unanswered reviews, so the copilot can reason over your actual numbers instead of inventing them. The copilot proposes; you apply.</p>
+    <p class="lede">The merchant copilot is a small set of admin-only REST endpoints under <code>dukandaar/v1/admin</code>. Each one returns real WooCommerce data, sales, refunds, product attributes, unanswered reviews, so the copilot can reason over your actual numbers instead of inventing them. The copilot proposes; you apply.</p>
 
     <h2>What it is, and is not</h2>
     <p>These endpoints are separate from the storefront assistant. They are not exposed to shoppers, they do not use the storefront nonce, and they never write to your store. Every route is read-only and returns grounded data straight from WooCommerce. The copilot drafts and suggests; nothing reaches your catalogue, prices or reviews until you act on it yourself.</p>
@@ -139,14 +139,14 @@
 
     <h2>Who can call them</h2>
     <p>Every admin endpoint is gated by the <code>manage_woocommerce</code> capability, the same gate a real store manager has. There is no public or shopper path to this data. The permission check is centralised, so all four routes share one contract: if you cannot manage WooCommerce, you get nothing back.</p>
-    <pre><code>GET /wp-json/fahad-ai/v1/admin/insights
-GET /wp-json/fahad-ai/v1/admin/sale-candidates
-GET /wp-json/fahad-ai/v1/admin/product-context
-GET /wp-json/fahad-ai/v1/admin/review-drafts</code></pre>
+    <pre><code>GET /wp-json/dukandaar/v1/admin/insights
+GET /wp-json/dukandaar/v1/admin/sale-candidates
+GET /wp-json/dukandaar/v1/admin/product-context
+GET /wp-json/dukandaar/v1/admin/review-drafts</code></pre>
 
     <h2>Store insights</h2>
     <p><code>GET /admin/insights</code> returns a grounded sales summary for a recent window: order count, gross revenue, refund total, refunded order count, and the store currency. It counts only real completed and processing orders. Pass <code>days</code> to set the window. It is clamped to a sensible 1 to 90 days, and defaults to 7.</p>
-    <pre><code>GET /wp-json/fahad-ai/v1/admin/insights?days=30
+    <pre><code>GET /wp-json/dukandaar/v1/admin/insights?days=30
 
 {
   "window_days": 30,
@@ -159,7 +159,7 @@ GET /wp-json/fahad-ai/v1/admin/review-drafts</code></pre>
 
     <h2>Sale candidates</h2>
     <p><code>GET /admin/sale-candidates</code> surfaces products worth considering for a discount. The list is filtered to products that are in stock and not already on sale, then ranked so the slowest movers, fewest recent units sold, come first. Each candidate carries a concrete, bounded suggested discount so the copilot proposes an actual deal rather than a vague nudge. Pass <code>limit</code> to cap the count.</p>
-    <pre><code>GET /wp-json/fahad-ai/v1/admin/sale-candidates?days=30&amp;limit=5
+    <pre><code>GET /wp-json/dukandaar/v1/admin/sale-candidates?days=30&amp;limit=5
 
 {
   "candidates": [
@@ -176,7 +176,7 @@ GET /wp-json/fahad-ai/v1/admin/review-drafts</code></pre>
 
     <h2>Product context</h2>
     <p><code>GET /admin/product-context</code> returns a single product's real attributes: name, SKU, price, categories, attribute values and the short description, stripped to plain text. This is the grounding for any generated description, SEO meta or alt text, so the copilot can rewrite the wording without inventing specifications. It returns trusted WooCommerce fields only. Pass the <code>product_id</code>.</p>
-    <pre><code>GET /wp-json/fahad-ai/v1/admin/product-context?product_id=812
+    <pre><code>GET /wp-json/dukandaar/v1/admin/product-context?product_id=812
 
 {
   "id": 812,
@@ -191,7 +191,7 @@ GET /wp-json/fahad-ai/v1/admin/review-drafts</code></pre>
 
     <h2>Review drafts</h2>
     <p><code>GET /admin/review-drafts</code> lists approved product reviews that have no store reply yet, along with the real review text and rating a drafted reply must address. A review counts as answered once it has a child comment, an existing reply, so answered reviews drop off the list. The content is the actual review, never a fabricated one. Pass <code>limit</code> to cap the count.</p>
-    <pre><code>GET /wp-json/fahad-ai/v1/admin/review-drafts?limit=10
+    <pre><code>GET /wp-json/dukandaar/v1/admin/review-drafts?limit=10
 
 {
   "reviews": [
@@ -218,7 +218,7 @@ GET /wp-json/fahad-ai/v1/admin/review-drafts</code></pre>
     <div class="next"><a href="/docs/">← All docs</a><a href="/docs/rest-api.html">REST API →</a></div>
   </article>
 </main>
-<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
+<footer><div>GPL-2.0 for WooCommerce · <a href="https://github.com/fahdi/dukandaar-ai-shopping-assistant-for-woocommerce" rel="noopener noreferrer">GitHub</a> · <a href="/">Home</a></div></footer>
 <script>(function(){function s(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('fa-theme',t);}catch(e){}document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(t==='light'));});}document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var c=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';s(c==='light'?'dark':'light');});var c0=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';document.querySelectorAll('.theme-toggle').forEach(function(b){b.setAttribute('aria-pressed',String(c0==='light'));});})();</script>
 </body>
 </html>

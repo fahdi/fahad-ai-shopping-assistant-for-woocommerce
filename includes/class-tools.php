@@ -4,7 +4,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Executes WooCommerce tool calls on behalf of the AI agent.
  */
-final class Fahad_AI_Tools {
+final class Dukandaar_Tools {
 
 	private static $instance = null;
 
@@ -23,7 +23,7 @@ final class Fahad_AI_Tools {
 	 * Each entry colocates the spec (name/description/parameters fed to the LLM)
 	 * with its callback. The callbacks are closures bound to this instance so the
 	 * implementation methods can stay private. The registry merges these with any
-	 * tools added via the `fahad_ai_register_tools` filter.
+	 * tools added via the `dukandaar_register_tools` filter.
 	 *
 	 * @return array<int, array{name: string, description: string, parameters: array, callback: callable}>
 	 */
@@ -106,7 +106,7 @@ final class Fahad_AI_Tools {
 	 * @return array Result to send back as tool_result content.
 	 */
 	public function execute( string $name, array $input ): array {
-		return Fahad_AI_Tool_Registry::instance()->dispatch( $name, $input );
+		return Dukandaar_Tool_Registry::instance()->dispatch( $name, $input );
 	}
 
 	// -------------------------------------------------------------------------
@@ -145,7 +145,7 @@ final class Fahad_AI_Tools {
 		// consult any registered semantic (embeddings/vector) retriever FIRST, it
 		// understands intent/synonyms ("shoes for flat feet") that the literal
 		// keyword search below misses. The retriever returns ranked product IDs;
-		// Fahad_AI_Semantic_Search resolves them LIVE (so price/stock are never
+		// Dukandaar_Semantic_Search resolves them LIVE (so price/stock are never
 		// cached) into the same card-shaped summaries. With no provider registered
 		// it returns [] and we fall straight through to keyword search unchanged , 
 		// the keyword leg is always the safety net (graceful degradation). A pure
@@ -156,7 +156,7 @@ final class Fahad_AI_Tools {
 		// not sale status, so we always resolve sale queries through the deterministic
 		// keyword/catalog path below and filter on the live WC_Product::is_on_sale().
 		if ( '' !== $query && ! $only_sale ) {
-			$semantic = Fahad_AI_Semantic_Search::retrieve( $query, $this->semantic_filters( $base ) );
+			$semantic = Dukandaar_Semantic_Search::retrieve( $query, $this->semantic_filters( $base ) );
 			if ( ! empty( $semantic ) ) {
 				return [
 					'found'    => count( $semantic ),
@@ -202,8 +202,8 @@ final class Fahad_AI_Tools {
 				'found'    => 0,
 				'products' => [],
 				'message'  => $only_sale
-					? __( 'No products are currently on sale.', 'fahad-ai-shopping-assistant-for-woocommerce' )
-					: __( 'No products found matching your search.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					? __( 'No products are currently on sale.', 'dukandaar-ai-shopping-assistant-for-woocommerce' )
+					: __( 'No products found matching your search.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -329,7 +329,7 @@ final class Fahad_AI_Tools {
 		$product    = wc_get_product( $product_id );
 
 		if ( ! $product || ! $product->is_visible() ) {
-			return [ 'error' => __( 'Product not found.', 'fahad-ai-shopping-assistant-for-woocommerce' ) ];
+			return [ 'error' => __( 'Product not found.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) ];
 		}
 
 		$data = [
@@ -449,7 +449,7 @@ final class Fahad_AI_Tools {
 		if ( ! $product || ! $product->is_visible() ) {
 			return [
 				'success' => false,
-				'error'   => __( 'Product not found.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error'   => __( 'Product not found.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -464,7 +464,7 @@ final class Fahad_AI_Tools {
 			if ( ! $variation || (int) $variation->get_parent_id() !== $product_id ) {
 				return [
 					'success' => false,
-					'error'   => __( 'That product option is not available.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					'error'   => __( 'That product option is not available.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				];
 			}
 
@@ -476,7 +476,7 @@ final class Fahad_AI_Tools {
 				'success' => false,
 				'error'   => sprintf(
 					/* translators: %s: product (or selected variation) name */
-					__( '%s is currently out of stock.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( '%s is currently out of stock.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$item->get_name()
 				),
 			];
@@ -489,7 +489,7 @@ final class Fahad_AI_Tools {
 				'success'       => true,
 				'message'       => sprintf(
 					/* translators: 1: quantity, 2: product (or selected variation) name */
-					__( 'Added %1$dx %2$s to your cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'Added %1$dx %2$s to your cart.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$quantity,
 					$item->get_name()
 				),
@@ -503,7 +503,7 @@ final class Fahad_AI_Tools {
 
 		return [
 			'success' => false,
-			'error'   => __( 'Could not add to cart. The product may require a variation to be selected.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'error'   => __( 'Could not add to cart. The product may require a variation to be selected.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 		];
 	}
 
@@ -513,7 +513,7 @@ final class Fahad_AI_Tools {
 		if ( $cart->is_empty() ) {
 			return [
 				'empty'   => true,
-				'message' => __( 'Your cart is empty.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message' => __( 'Your cart is empty.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -548,7 +548,7 @@ final class Fahad_AI_Tools {
 		if ( empty( $key ) ) {
 			return [
 				'success' => false,
-				'error'   => __( 'Cart item key is required.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error'   => __( 'Cart item key is required.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -557,7 +557,7 @@ final class Fahad_AI_Tools {
 		if ( ! isset( $cart_contents[ $key ] ) ) {
 			return [
 				'success' => false,
-				'error'   => __( 'Item not found in cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error'   => __( 'Item not found in cart.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -568,7 +568,7 @@ final class Fahad_AI_Tools {
 				'success'   => true,
 				'message'   => sprintf(
 					/* translators: %s: product name */
-					__( 'Removed %s from your cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'Removed %s from your cart.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$product_name
 				),
 				'new_total' => wp_strip_all_tags( WC()->cart->get_cart_total() ),
@@ -577,7 +577,7 @@ final class Fahad_AI_Tools {
 
 		return [
 			'success' => false,
-			'error'   => __( 'Could not remove the item.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'error'   => __( 'Could not remove the item.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 		];
 	}
 
@@ -595,7 +595,7 @@ final class Fahad_AI_Tools {
 	 * filter-registered product tools (best-sellers, recommendations, …) MUST
 	 * reuse it instead of re-deriving these fields, so every product card stays
 	 * consistent and the convention-based card emission in
-	 * Fahad_AI_API_Handler::tool_result_cards() keeps working uniformly.
+	 * Dukandaar_API_Handler::tool_result_cards() keeps working uniformly.
 	 */
 	public function format_product_summary( WC_Product $product ): array {
 		return [

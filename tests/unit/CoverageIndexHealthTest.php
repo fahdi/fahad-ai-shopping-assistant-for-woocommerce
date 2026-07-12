@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage top-up for Fahad_AI_Index_Health::last_error_at() (#110).
+ * Coverage top-up for Dukandaar_Index_Health::last_error_at() (#110).
  *
  * The sibling IndexHealthTest exercises failures()/last_error()/record_failure()/
  * clear() but never reads the last-error timestamp. These tests drive
@@ -34,30 +34,30 @@ class CoverageIndexHealthTest extends TestCase {
 	}
 
 	public function test_last_error_at_defaults_to_zero_when_never_recorded(): void {
-		$this->assertSame( 0, Fahad_AI_Index_Health::last_error_at() );
+		$this->assertSame( 0, Dukandaar_Index_Health::last_error_at() );
 	}
 
 	public function test_last_error_at_returns_recorded_timestamp(): void {
 		$before = time();
-		Fahad_AI_Index_Health::record_failure( 'boom' );
+		Dukandaar_Index_Health::record_failure( 'boom' );
 		$after = time();
 
-		$at = Fahad_AI_Index_Health::last_error_at();
+		$at = Dukandaar_Index_Health::last_error_at();
 		$this->assertGreaterThanOrEqual( $before, $at );
 		$this->assertLessThanOrEqual( $after, $at );
 	}
 
 	public function test_last_error_at_casts_stored_value_to_int(): void {
 		// A stored string timestamp must come back as a real int.
-		$this->options['fahad_ai_index_last_error_at'] = '1700000000';
-		$this->assertSame( 1700000000, Fahad_AI_Index_Health::last_error_at() );
+		$this->options['dukandaar_index_last_error_at'] = '1700000000';
+		$this->assertSame( 1700000000, Dukandaar_Index_Health::last_error_at() );
 	}
 
 	public function test_clear_resets_last_error_at_to_default(): void {
-		Fahad_AI_Index_Health::record_failure( 'boom' );
-		$this->assertGreaterThan( 0, Fahad_AI_Index_Health::last_error_at() );
+		Dukandaar_Index_Health::record_failure( 'boom' );
+		$this->assertGreaterThan( 0, Dukandaar_Index_Health::last_error_at() );
 
-		Fahad_AI_Index_Health::clear();
-		$this->assertSame( 0, Fahad_AI_Index_Health::last_error_at() );
+		Dukandaar_Index_Health::clear();
+		$this->assertSame( 0, Dukandaar_Index_Health::last_error_at() );
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental coverage tests for Fahad_AI_Rag_Spike_Retriever.
+ * Supplemental coverage tests for Dukandaar_Rag_Spike_Retriever.
  *
  * Targets the empty-query guard in keyword_rank() (the early `return []`
  * when the query tokenizes to nothing), which the primary suite does not
@@ -22,7 +22,7 @@ class CoverageRagSpikeRetrieverTest extends TestCase {
 			1 => 'wool winter coat warm',
 			2 => 'warm gloves',
 		];
-		$this->assertSame( [], Fahad_AI_Rag_Spike_Retriever::keyword_rank( '', $docs ) );
+		$this->assertSame( [], Dukandaar_Rag_Spike_Retriever::keyword_rank( '', $docs ) );
 	}
 
 	/**
@@ -31,7 +31,7 @@ class CoverageRagSpikeRetrieverTest extends TestCase {
 	 */
 	public function test_keyword_rank_punctuation_only_query_returns_empty(): void {
 		$docs = [ 7 => 'warm winter coat' ];
-		$this->assertSame( [], Fahad_AI_Rag_Spike_Retriever::keyword_rank( '   !!! ,,, --- ', $docs ) );
+		$this->assertSame( [], Dukandaar_Rag_Spike_Retriever::keyword_rank( '   !!! ,,, --- ', $docs ) );
 	}
 
 	/**
@@ -40,6 +40,6 @@ class CoverageRagSpikeRetrieverTest extends TestCase {
 	 */
 	public function test_keyword_rank_whitespace_query_returns_empty_even_with_matching_docs(): void {
 		$docs = [ 1 => 'anything at all', 2 => 'more text here' ];
-		$this->assertSame( [], Fahad_AI_Rag_Spike_Retriever::keyword_rank( "\t\n  ", $docs ) );
+		$this->assertSame( [], Dukandaar_Rag_Spike_Retriever::keyword_rank( "\t\n  ", $docs ) );
 	}
 }

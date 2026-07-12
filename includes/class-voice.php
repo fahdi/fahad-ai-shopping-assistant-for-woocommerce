@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
  * recognition audio to the vendor's own speech service, that is the browser's behaviour
  * under the user's own mic permission, not something this plugin arranges.)
  *
- * The only load-bearing PHP is this gate. Mirroring Fahad_AI_Proactive (#65), the widget
+ * The only load-bearing PHP is this gate. Mirroring Dukandaar_Proactive (#65), the widget
  * is handed a voice config ONLY when the merchant turned voice on, so a store that has
  * not opted in literally cannot render the mic/speaker controls (and never prompts for a
  * mic permission). Keeping the gate here, in unit-testable PHP, is what VoiceTest pins.
@@ -34,18 +34,18 @@ defined( 'ABSPATH' ) || exit;
  * This helper stores nothing and feeds nothing to the model. It only reads two options
  * and the site language, and hands the widget a tiny, non-identifying config.
  *
- * Stateless singleton (mirrors Fahad_AI_Proactive / Fahad_AI_Feedback): no per-instance
+ * Stateless singleton (mirrors Dukandaar_Proactive / Dukandaar_Feedback): no per-instance
  * state, reset between tests via reflection on self::$instance.
  */
-final class Fahad_AI_Voice {
+final class Dukandaar_Voice {
 
 	/** Merchant kill-switch (default OFF, voice is opt-in). */
-	public const OPTION_ENABLED = 'fahad_ai_voice_enabled';
+	public const OPTION_ENABLED = 'dukandaar_voice_enabled';
 
 	/** Voice-output sub-toggle: speak the assistant's replies (default OFF). */
-	public const OPTION_TTS = 'fahad_ai_voice_tts';
+	public const OPTION_TTS = 'dukandaar_voice_tts';
 
-	private static ?Fahad_AI_Voice $instance = null;
+	private static ?Dukandaar_Voice $instance = null;
 
 	public static function instance(): self {
 		if ( null === self::$instance ) {
@@ -92,7 +92,7 @@ final class Fahad_AI_Voice {
 	 *   - lang    : the site language tag (e.g. en-US) so recognition/synthesis match the
 	 *               store's language; '' lets the browser pick its own default.
 	 *
-	 * A `fahad_ai_voice_config` filter lets a site adjust the final config (e.g. force a
+	 * A `dukandaar_voice_config` filter lets a site adjust the final config (e.g. force a
 	 * specific recognition locale, or return [] to force-disable) without code edits, and
 	 * a non-array return is treated as "no voice" rather than corrupting the localized data.
 	 *
@@ -116,7 +116,7 @@ final class Fahad_AI_Voice {
 		 *
 		 * @param array $config The resolved config (or the same shape).
 		 */
-		$config = apply_filters( 'fahad_ai_voice_config', $config );
+		$config = apply_filters( 'dukandaar_voice_config', $config );
 
 		return is_array( $config ) ? $config : [];
 	}

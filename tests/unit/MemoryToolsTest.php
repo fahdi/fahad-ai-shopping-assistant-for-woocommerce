@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Memory_Tools (issue #20: personalization & cross-session
+ * Unit tests for Dukandaar_Memory_Tools (issue #20: personalization & cross-session
  * memory, strictly OPT-IN).
  *
  * Red → Green → Refactor. Conventions mirror OrderToolsTest / WalletToolsTest (the
@@ -10,9 +10,9 @@
  *
  * The memory tools (set_memory_consent, remember_preference, get_preferences,
  * forget_preferences) are NOT built-ins, they ship as a drop-in feature pack that
- * self-registers via Fahad_AI_Tool_Registry::register_pack() at file load and declare
+ * self-registers via Dukandaar_Tool_Registry::register_pack() at file load and declare
  * `'personal' => true`. Every test registers the pack's REAL provider, then dispatches
- * through Fahad_AI_Tool_Registry::instance()->dispatch(), so the production
+ * through Dukandaar_Tool_Registry::instance()->dispatch(), so the production
  * registration + merge + dispatch path (INCLUDING the central login gate for
  * `personal` tools) is what is under test.
  *
@@ -41,7 +41,7 @@ class MemoryToolsTest extends TestCase {
      * Snapshot of the registry's static pack providers, restored in tearDown so a
      * test here neither inherits another suite's packs nor leaks the memory pack we
      * register. (Pack providers are static so they survive a singleton instance
-     * reset, see Fahad_AI_Tool_Registry::register_pack.)
+     * reset, see Dukandaar_Tool_Registry::register_pack.)
      *
      * @var array<int, callable>
      */
@@ -61,7 +61,7 @@ class MemoryToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         $this->meta = [];
 
@@ -96,7 +96,7 @@ class MemoryToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
@@ -108,19 +108,19 @@ class MemoryToolsTest extends TestCase {
      * provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Memory_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Memory_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     /** Convenience: opt the current user (id 5) in directly via the meta map. */
     private function optInUser5(): void {
-        $this->meta['5:fahad_ai_memory_optin'] = '1';
+        $this->meta['5:dukandaar_memory_optin'] = '1';
     }
 
     // ── registration ──────────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ class MemoryToolsTest extends TestCase {
         $this->assertArrayNotHasKey( 'error', $result );
         $this->assertTrue( $result['consent'] );
         // Persisted under the CURRENT user id (5), not anywhere else.
-        $this->assertSame( '1', $this->meta['5:fahad_ai_memory_optin'] ?? null );
+        $this->assertSame( '1', $this->meta['5:dukandaar_memory_optin'] ?? null );
     }
 
     public function test_set_memory_consent_opts_the_current_user_out(): void {
@@ -169,7 +169,7 @@ class MemoryToolsTest extends TestCase {
         $this->assertArrayNotHasKey( 'error', $result );
         $this->assertFalse( $result['consent'] );
         // Opting out flips the stored flag off (falsey), so nothing is injected later.
-        $this->assertEmpty( $this->meta['5:fahad_ai_memory_optin'] ?? '' );
+        $this->assertEmpty( $this->meta['5:dukandaar_memory_optin'] ?? '' );
     }
 
     public function test_set_memory_consent_uses_current_user_not_model_supplied_id(): void {
@@ -177,8 +177,8 @@ class MemoryToolsTest extends TestCase {
         // consent is written only for the authenticated current user (5).
         $this->registry()->dispatch( 'set_memory_consent', [ 'enabled' => true, 'user_id' => 9999 ] );
 
-        $this->assertArrayHasKey( '5:fahad_ai_memory_optin', $this->meta );
-        $this->assertArrayNotHasKey( '9999:fahad_ai_memory_optin', $this->meta );
+        $this->assertArrayHasKey( '5:dukandaar_memory_optin', $this->meta );
+        $this->assertArrayNotHasKey( '9999:dukandaar_memory_optin', $this->meta );
     }
 
     // ── remember_preference, THE consent gate (no consent → no storage) ────────
@@ -194,7 +194,7 @@ class MemoryToolsTest extends TestCase {
     public function test_remember_preference_without_consent_stores_nothing(): void {
         // No opt-in seeded → not consented.
         Functions\expect( 'update_user_meta' )
-            ->with( Mockery::any(), 'fahad_ai_preferences', Mockery::any() )
+            ->with( Mockery::any(), 'dukandaar_preferences', Mockery::any() )
             ->never();
 
         $result = $this->registry()->dispatch( 'remember_preference', [ 'key' => 'favorite_color', 'value' => 'blue' ] );
@@ -205,7 +205,7 @@ class MemoryToolsTest extends TestCase {
         $this->assertArrayHasKey( 'message', $result );
         $this->assertArrayNotHasKey( 'stored', $result );
         // Nothing about the preferences map was persisted.
-        $this->assertArrayNotHasKey( '5:fahad_ai_preferences', $this->meta );
+        $this->assertArrayNotHasKey( '5:dukandaar_preferences', $this->meta );
     }
 
     public function test_remember_preference_with_consent_stores_the_preference(): void {
@@ -217,18 +217,18 @@ class MemoryToolsTest extends TestCase {
         $this->assertArrayNotHasKey( 'needs_consent', $result );
         $this->assertTrue( $result['stored'] );
         // Persisted under the current user's preferences map.
-        $this->assertSame( [ 'favorite_color' => 'blue' ], $this->meta['5:fahad_ai_preferences'] ?? null );
+        $this->assertSame( [ 'favorite_color' => 'blue' ], $this->meta['5:dukandaar_preferences'] ?? null );
     }
 
     public function test_remember_preference_with_consent_merges_into_existing_prefs(): void {
         $this->optInUser5();
-        $this->meta['5:fahad_ai_preferences'] = [ 'size' => 'large' ];
+        $this->meta['5:dukandaar_preferences'] = [ 'size' => 'large' ];
 
         $this->registry()->dispatch( 'remember_preference', [ 'key' => 'favorite_color', 'value' => 'blue' ] );
 
         $this->assertSame(
             [ 'size' => 'large', 'favorite_color' => 'blue' ],
-            $this->meta['5:fahad_ai_preferences']
+            $this->meta['5:dukandaar_preferences']
         );
     }
 
@@ -237,11 +237,11 @@ class MemoryToolsTest extends TestCase {
 
         $missing_value = $this->registry()->dispatch( 'remember_preference', [ 'key' => 'favorite_color' ] );
         $this->assertArrayHasKey( 'error', $missing_value );
-        $this->assertArrayNotHasKey( '5:fahad_ai_preferences', $this->meta );
+        $this->assertArrayNotHasKey( '5:dukandaar_preferences', $this->meta );
 
         $missing_key = $this->registry()->dispatch( 'remember_preference', [ 'value' => 'blue' ] );
         $this->assertArrayHasKey( 'error', $missing_key );
-        $this->assertArrayNotHasKey( '5:fahad_ai_preferences', $this->meta );
+        $this->assertArrayNotHasKey( '5:dukandaar_preferences', $this->meta );
     }
 
     public function test_remember_preference_uses_current_user_not_model_supplied_id(): void {
@@ -253,8 +253,8 @@ class MemoryToolsTest extends TestCase {
             'user_id' => 9999, // must be ignored
         ] );
 
-        $this->assertArrayHasKey( '5:fahad_ai_preferences', $this->meta );
-        $this->assertArrayNotHasKey( '9999:fahad_ai_preferences', $this->meta );
+        $this->assertArrayHasKey( '5:dukandaar_preferences', $this->meta );
+        $this->assertArrayNotHasKey( '9999:dukandaar_preferences', $this->meta );
     }
 
     // ── storage hygiene (bound the map; cap key/value length) ───────────────────
@@ -264,62 +264,62 @@ class MemoryToolsTest extends TestCase {
 
         // Fill the map to the cap with distinct keys.
         $full = [];
-        for ( $i = 0; $i < Fahad_AI_Memory_Tools::MAX_PREFERENCES; $i++ ) {
+        for ( $i = 0; $i < Dukandaar_Memory_Tools::MAX_PREFERENCES; $i++ ) {
             $full[ "k{$i}" ] = "v{$i}";
         }
-        $this->meta['5:fahad_ai_preferences'] = $full;
+        $this->meta['5:dukandaar_preferences'] = $full;
 
         // One more NEW key must be refused (the map is full), never grow unbounded.
         $result = $this->registry()->dispatch( 'remember_preference', [ 'key' => 'overflow', 'value' => 'x' ] );
 
         $this->assertArrayHasKey( 'error', $result );
-        $this->assertArrayNotHasKey( 'overflow', $this->meta['5:fahad_ai_preferences'] );
-        $this->assertCount( Fahad_AI_Memory_Tools::MAX_PREFERENCES, $this->meta['5:fahad_ai_preferences'] );
+        $this->assertArrayNotHasKey( 'overflow', $this->meta['5:dukandaar_preferences'] );
+        $this->assertCount( Dukandaar_Memory_Tools::MAX_PREFERENCES, $this->meta['5:dukandaar_preferences'] );
     }
 
     public function test_remember_preference_updating_existing_key_at_cap_is_allowed(): void {
         $this->optInUser5();
 
         $full = [];
-        for ( $i = 0; $i < Fahad_AI_Memory_Tools::MAX_PREFERENCES; $i++ ) {
+        for ( $i = 0; $i < Dukandaar_Memory_Tools::MAX_PREFERENCES; $i++ ) {
             $full[ "k{$i}" ] = "v{$i}";
         }
-        $this->meta['5:fahad_ai_preferences'] = $full;
+        $this->meta['5:dukandaar_preferences'] = $full;
 
         // Overwriting an EXISTING key does not grow the map, so it is allowed at cap.
         $result = $this->registry()->dispatch( 'remember_preference', [ 'key' => 'k0', 'value' => 'updated' ] );
 
         $this->assertTrue( $result['stored'] ?? false );
-        $this->assertSame( 'updated', $this->meta['5:fahad_ai_preferences']['k0'] );
-        $this->assertCount( Fahad_AI_Memory_Tools::MAX_PREFERENCES, $this->meta['5:fahad_ai_preferences'] );
+        $this->assertSame( 'updated', $this->meta['5:dukandaar_preferences']['k0'] );
+        $this->assertCount( Dukandaar_Memory_Tools::MAX_PREFERENCES, $this->meta['5:dukandaar_preferences'] );
     }
 
     public function test_remember_preference_truncates_overlong_value(): void {
         $this->optInUser5();
 
-        $long = str_repeat( 'a', Fahad_AI_Memory_Tools::MAX_VALUE_LENGTH + 50 );
+        $long = str_repeat( 'a', Dukandaar_Memory_Tools::MAX_VALUE_LENGTH + 50 );
         $this->registry()->dispatch( 'remember_preference', [ 'key' => 'note', 'value' => $long ] );
 
-        $stored = $this->meta['5:fahad_ai_preferences']['note'];
-        $this->assertSame( Fahad_AI_Memory_Tools::MAX_VALUE_LENGTH, strlen( $stored ) );
+        $stored = $this->meta['5:dukandaar_preferences']['note'];
+        $this->assertSame( Dukandaar_Memory_Tools::MAX_VALUE_LENGTH, strlen( $stored ) );
     }
 
     public function test_remember_preference_truncates_overlong_key(): void {
         $this->optInUser5();
 
-        $long_key = str_repeat( 'k', Fahad_AI_Memory_Tools::MAX_KEY_LENGTH + 50 );
+        $long_key = str_repeat( 'k', Dukandaar_Memory_Tools::MAX_KEY_LENGTH + 50 );
         $this->registry()->dispatch( 'remember_preference', [ 'key' => $long_key, 'value' => 'v' ] );
 
-        $keys = array_keys( $this->meta['5:fahad_ai_preferences'] );
+        $keys = array_keys( $this->meta['5:dukandaar_preferences'] );
         $this->assertCount( 1, $keys );
-        $this->assertSame( Fahad_AI_Memory_Tools::MAX_KEY_LENGTH, strlen( $keys[0] ) );
+        $this->assertSame( Dukandaar_Memory_Tools::MAX_KEY_LENGTH, strlen( $keys[0] ) );
     }
 
     // ── get_preferences (view what is remembered + consent state) ───────────────
 
     public function test_get_preferences_returns_stored_prefs_and_consent_state(): void {
         $this->optInUser5();
-        $this->meta['5:fahad_ai_preferences'] = [ 'favorite_color' => 'blue', 'size' => 'large' ];
+        $this->meta['5:dukandaar_preferences'] = [ 'favorite_color' => 'blue', 'size' => 'large' ];
 
         $result = $this->registry()->dispatch( 'get_preferences', [] );
 
@@ -337,8 +337,8 @@ class MemoryToolsTest extends TestCase {
 
     public function test_get_preferences_uses_current_user_not_model_supplied_id(): void {
         $this->optInUser5();
-        $this->meta['5:fahad_ai_preferences']    = [ 'mine' => 'yes' ];
-        $this->meta['9999:fahad_ai_preferences'] = [ 'theirs' => 'secret' ];
+        $this->meta['5:dukandaar_preferences']    = [ 'mine' => 'yes' ];
+        $this->meta['9999:dukandaar_preferences'] = [ 'theirs' => 'secret' ];
 
         $result = $this->registry()->dispatch( 'get_preferences', [ 'user_id' => 9999 ] );
 
@@ -351,50 +351,50 @@ class MemoryToolsTest extends TestCase {
 
     public function test_forget_preferences_clears_the_stored_prefs(): void {
         $this->optInUser5();
-        $this->meta['5:fahad_ai_preferences'] = [ 'favorite_color' => 'blue' ];
+        $this->meta['5:dukandaar_preferences'] = [ 'favorite_color' => 'blue' ];
 
         $result = $this->registry()->dispatch( 'forget_preferences', [] );
 
         $this->assertArrayNotHasKey( 'error', $result );
         $this->assertTrue( $result['cleared'] );
         // The preferences row is gone.
-        $this->assertArrayNotHasKey( '5:fahad_ai_preferences', $this->meta );
+        $this->assertArrayNotHasKey( '5:dukandaar_preferences', $this->meta );
     }
 
     public function test_forget_preferences_can_also_clear_consent(): void {
         $this->optInUser5();
-        $this->meta['5:fahad_ai_preferences'] = [ 'favorite_color' => 'blue' ];
+        $this->meta['5:dukandaar_preferences'] = [ 'favorite_color' => 'blue' ];
 
         $result = $this->registry()->dispatch( 'forget_preferences', [ 'clear_consent' => true ] );
 
         $this->assertTrue( $result['cleared'] );
         // Both the prefs AND the consent flag are gone.
-        $this->assertArrayNotHasKey( '5:fahad_ai_preferences', $this->meta );
-        $this->assertArrayNotHasKey( '5:fahad_ai_memory_optin', $this->meta );
+        $this->assertArrayNotHasKey( '5:dukandaar_preferences', $this->meta );
+        $this->assertArrayNotHasKey( '5:dukandaar_memory_optin', $this->meta );
     }
 
     public function test_forget_preferences_keeps_consent_by_default(): void {
         $this->optInUser5();
-        $this->meta['5:fahad_ai_preferences'] = [ 'favorite_color' => 'blue' ];
+        $this->meta['5:dukandaar_preferences'] = [ 'favorite_color' => 'blue' ];
 
         $this->registry()->dispatch( 'forget_preferences', [] );
 
         // Default erasure clears prefs but LEAVES the opt-in in place (the user is still
         // willing to be remembered; they just cleared what was stored).
-        $this->assertArrayNotHasKey( '5:fahad_ai_preferences', $this->meta );
-        $this->assertSame( '1', $this->meta['5:fahad_ai_memory_optin'] ?? null );
+        $this->assertArrayNotHasKey( '5:dukandaar_preferences', $this->meta );
+        $this->assertSame( '1', $this->meta['5:dukandaar_memory_optin'] ?? null );
     }
 
     public function test_forget_preferences_uses_current_user_not_model_supplied_id(): void {
         $this->optInUser5();
-        $this->meta['5:fahad_ai_preferences']    = [ 'mine' => 'yes' ];
-        $this->meta['9999:fahad_ai_preferences'] = [ 'theirs' => 'secret' ];
+        $this->meta['5:dukandaar_preferences']    = [ 'mine' => 'yes' ];
+        $this->meta['9999:dukandaar_preferences'] = [ 'theirs' => 'secret' ];
 
         $this->registry()->dispatch( 'forget_preferences', [ 'user_id' => 9999 ] );
 
         // Only the current user's (5) prefs were cleared; user 9999's are untouched.
-        $this->assertArrayNotHasKey( '5:fahad_ai_preferences', $this->meta );
-        $this->assertArrayHasKey( '9999:fahad_ai_preferences', $this->meta );
+        $this->assertArrayNotHasKey( '5:dukandaar_preferences', $this->meta );
+        $this->assertArrayHasKey( '9999:dukandaar_preferences', $this->meta );
     }
 
     // ── GUEST-BLOCK (central login gate, user meta never touched) ───────────────
@@ -437,8 +437,8 @@ class MemoryToolsTest extends TestCase {
         ];
     }
 
-    // ── CONTEXT INJECTION via the fahad_ai_system_prompt filter ─────────────────
-    // The pack hooks the `fahad_ai_system_prompt` filter (issue #20) to APPEND a
+    // ── CONTEXT INJECTION via the dukandaar_system_prompt filter ─────────────────
+    // The pack hooks the `dukandaar_system_prompt` filter (issue #20) to APPEND a
     // compact preferences block, but ONLY for a logged-in, opted-in user with stored
     // prefs. For a guest, an opted-out user, or empty prefs it must return the prompt
     // UNCHANGED. We exercise the pack's filter callback directly (the same callable it
@@ -449,12 +449,12 @@ class MemoryToolsTest extends TestCase {
 
     /** Invoke the pack's registered filter callback on a base prompt. */
     private function inject( string $prompt ): string {
-        return Fahad_AI_Memory_Tools::inject_preferences( $prompt );
+        return Dukandaar_Memory_Tools::inject_preferences( $prompt );
     }
 
     public function test_injection_appends_compact_prefs_for_logged_in_opted_in_user(): void {
         $this->optInUser5();
-        $this->meta['5:fahad_ai_preferences'] = [ 'favorite_color' => 'blue', 'size' => 'large' ];
+        $this->meta['5:dukandaar_preferences'] = [ 'favorite_color' => 'blue', 'size' => 'large' ];
 
         $out = $this->inject( self::BASE_PROMPT );
 
@@ -472,15 +472,15 @@ class MemoryToolsTest extends TestCase {
         Functions\when( 'is_user_logged_in' )->justReturn( false );
         Functions\when( 'get_current_user_id' )->justReturn( 0 );
         // Even if some other user has prefs, a guest's prompt is never decorated.
-        $this->meta['5:fahad_ai_memory_optin']  = '1';
-        $this->meta['5:fahad_ai_preferences']   = [ 'favorite_color' => 'blue' ];
+        $this->meta['5:dukandaar_memory_optin']  = '1';
+        $this->meta['5:dukandaar_preferences']   = [ 'favorite_color' => 'blue' ];
 
         $this->assertSame( self::BASE_PROMPT, $this->inject( self::BASE_PROMPT ) );
     }
 
     public function test_injection_appends_nothing_for_an_opted_out_user(): void {
         // Logged in, has prefs, but NOT opted in → nothing injected (opt-in only).
-        $this->meta['5:fahad_ai_preferences'] = [ 'favorite_color' => 'blue' ];
+        $this->meta['5:dukandaar_preferences'] = [ 'favorite_color' => 'blue' ];
 
         $this->assertSame( self::BASE_PROMPT, $this->inject( self::BASE_PROMPT ) );
     }
@@ -497,17 +497,17 @@ class MemoryToolsTest extends TestCase {
         // lines, each value capped, so a bloated map cannot blow up the prompt.
         $this->optInUser5();
         $prefs = [];
-        for ( $i = 0; $i < Fahad_AI_Memory_Tools::MAX_PREFERENCES + 25; $i++ ) {
+        for ( $i = 0; $i < Dukandaar_Memory_Tools::MAX_PREFERENCES + 25; $i++ ) {
             $prefs[ "k{$i}" ] = "v{$i}";
         }
         // (write directly; remember_preference would itself cap, this models a raw map)
-        $this->meta['5:fahad_ai_preferences'] = $prefs;
+        $this->meta['5:dukandaar_preferences'] = $prefs;
 
         $out  = $this->inject( self::BASE_PROMPT );
         $body = substr( $out, strlen( self::BASE_PROMPT ) );
 
         // No more than MAX_PREFERENCES "key: value" pref lines are rendered.
         $pref_lines = preg_match_all( '/^- /m', $body );
-        $this->assertLessThanOrEqual( Fahad_AI_Memory_Tools::MAX_PREFERENCES, $pref_lines );
+        $this->assertLessThanOrEqual( Dukandaar_Memory_Tools::MAX_PREFERENCES, $pref_lines );
     }
 }

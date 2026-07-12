@@ -8,7 +8,7 @@ defined( 'ABSPATH' ) || exit;
  * WHAT THIS IS (and is not). This class is the boundary that lets a VISION-embeddings
  * backend plug into product discovery from an IMAGE, WITHOUT coupling it to core. It is
  * the exact same shape as the semantic (text) retriever seam (issue #60,
- * Fahad_AI_Semantic_Search), a filter returning ranked product IDs that are resolved
+ * Dukandaar_Semantic_Search), a filter returning ranked product IDs that are resolved
  * LIVE, but the input is an uploaded image instead of a free-text query. It does NOT
  * itself embed images or talk to ANY vision API: real "find visually-similar products"
  * needs an external vision-embeddings provider (CLIP-style image embeddings + a vector
@@ -18,13 +18,13 @@ defined( 'ABSPATH' ) || exit;
  * Until a provider registers a retriever on the filter below, this seam returns a graceful
  * "visual search isn't available" result, never an error spew, never a fatal. So the
  * capability stays dormant and is activated cleanly by an add-on, mirroring the
- * wallet-decoupling pattern (`fahad_ai_wallet_provider`) and the semantic seam
- * (`fahad_ai_semantic_retriever`): "AI + vision search" is a swappable bundle, not hard
+ * wallet-decoupling pattern (`dukandaar_wallet_provider`) and the semantic seam
+ * (`dukandaar_semantic_retriever`): "AI + vision search" is a swappable bundle, not hard
  * core coupling.
  *
  * THE CONTRACT. A provider registers a retriever on:
  *
- *     apply_filters( 'fahad_ai_visual_retriever', null, array $image, array $filters )
+ *     apply_filters( 'dukandaar_visual_retriever', null, array $image, array $filters )
  *
  * Two registration shapes are accepted (mirroring the #60 seam, use whichever fits):
  *
@@ -32,14 +32,14 @@ defined( 'ABSPATH' ) || exit;
  *      provider can embed `$image`, run its vector lookup (pre-filtered by `$filters`),
  *      and return the top-k product IDs, best first:
  *
- *          add_filter( 'fahad_ai_visual_retriever', function ( $ids, $image, $filters ) {
+ *          add_filter( 'dukandaar_visual_retriever', function ( $ids, $image, $filters ) {
  *              return My_Vision_Backend::rank( $image, $filters ); // int[] best-first
  *          }, 10, 3 );
  *
  *   2. Return a callable retriever `fn( array $image, array $filters ): int[]` (handy when
  *      the provider wants to register once, not re-resolve per call):
  *
- *          add_filter( 'fahad_ai_visual_retriever', fn() => [ $backend, 'rank' ] );
+ *          add_filter( 'dukandaar_visual_retriever', fn() => [ $backend, 'rank' ] );
  *
  * `$image` is the VALIDATED upload descriptor (`tmp_name`/`url`/`data`, `type`, `size`,
  * `name`), the provider decides how to read the bytes (it never gets unvalidated input).
@@ -50,8 +50,8 @@ defined( 'ABSPATH' ) || exit;
  * UPLOAD VALIDATION (security, before anything else). Every image is validated BEFORE the
  * seam is consulted: a present, non-empty, size-bounded payload with an allowed image MIME
  * type. An oversized image is a 413, an invalid/unsafe MIME a 415, a missing/zero-byte
- * payload a 400. The size ceiling defaults to 5 MB (`fahad_ai_visual_max_bytes`) and the
- * MIME allowlist to jpeg/png/webp/gif (`fahad_ai_visual_allowed_mimes`), a COST CEILING
+ * payload a 400. The size ceiling defaults to 5 MB (`dukandaar_visual_max_bytes`) and the
+ * MIME allowlist to jpeg/png/webp/gif (`dukandaar_visual_allowed_mimes`), a COST CEILING
  * and a content-safety guard. Validation failing short-circuits: no retrieval, no
  * resolution.
  *
@@ -61,7 +61,7 @@ defined( 'ABSPATH' ) || exit;
  * so under its own explicit consent flow; core stores nothing and logs no PII.
  *
  * LIVE TRUTH IS NEVER CACHED. The returned IDs are resolved here through wc_get_product()
- * at call time and shaped by Fahad_AI_Tools::format_product_summary(), which reads price /
+ * at call time and shaped by Dukandaar_Tools::format_product_summary(), which reads price /
  * sale / stock / rating straight from the live WC_Product. So even though retrieval used a
  * (potentially stale) vector index, the price and stock the shopper sees are always
  * current, never embedded or cached. Products that no longer resolve, or are not
@@ -72,7 +72,7 @@ defined( 'ABSPATH' ) || exit;
  * that returns nothing, a malformed return, or a throwing retriever → `available => true`
  * with an honest "no match". The shopper never sees a visual-search error.
  */
-final class Fahad_AI_Visual_Search {
+final class Dukandaar_Visual_Search {
 
 	private static $instance = null;
 
@@ -97,7 +97,7 @@ final class Fahad_AI_Visual_Search {
 	 * @param callable $permission_callback The shared authorize_request gate.
 	 */
 	public function register_routes( callable $permission_callback ): void {
-		register_rest_route( 'fahad-ai/v1', '/visual-search', [
+		register_rest_route( 'dukandaar/v1', '/visual-search', [
 			'methods'             => 'POST',
 			'callback'            => [ $this, 'handle_search' ],
 			'permission_callback' => $permission_callback,
@@ -191,7 +191,7 @@ final class Fahad_AI_Visual_Search {
 				'available' => false,
 				'found'     => 0,
 				'products'  => [],
-				'message'   => __( 'Visual search is not available right now.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message'   => __( 'Visual search is not available right now.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -203,7 +203,7 @@ final class Fahad_AI_Visual_Search {
 				'available' => true,
 				'found'     => 0,
 				'products'  => [],
-				'message'   => __( "We couldn't find a visual match. Try a clearer photo or a different angle.", 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message'   => __( "We couldn't find a visual match. Try a clearer photo or a different angle.", 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -268,8 +268,8 @@ final class Fahad_AI_Visual_Search {
 
 		if ( ! $has_ref ) {
 			return new WP_Error(
-				'fahad_ai_visual_no_image',
-				__( 'No image was provided. Please upload a photo to search.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'dukandaar_visual_no_image',
+				__( 'No image was provided. Please upload a photo to search.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				[ 'status' => 400 ]
 			);
 		}
@@ -279,20 +279,20 @@ final class Fahad_AI_Visual_Search {
 		$size = isset( $image['size'] ) ? (int) $image['size'] : 0;
 		if ( $size <= 0 ) {
 			return new WP_Error(
-				'fahad_ai_visual_empty_image',
-				__( 'The uploaded image was empty. Please try again.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'dukandaar_visual_empty_image',
+				__( 'The uploaded image was empty. Please try again.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				[ 'status' => 400 ]
 			);
 		}
 
 		// Size ceiling (cost guard). Default 5 MB; filterable. Oversized → 413.
-		$max_bytes = (int) apply_filters( 'fahad_ai_visual_max_bytes', 5 * 1024 * 1024 );
+		$max_bytes = (int) apply_filters( 'dukandaar_visual_max_bytes', 5 * 1024 * 1024 );
 		if ( $max_bytes > 0 && $size > $max_bytes ) {
 			return new WP_Error(
-				'fahad_ai_visual_too_large',
+				'dukandaar_visual_too_large',
 				sprintf(
 					/* translators: %s: maximum upload size, e.g. "5 MB". */
-					__( 'That image is too large. Please upload an image under %s.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'That image is too large. Please upload an image under %s.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$this->format_bytes( $max_bytes )
 				),
 				[ 'status' => 413 ]
@@ -301,7 +301,7 @@ final class Fahad_AI_Visual_Search {
 
 		// MIME allowlist (content-safety guard against disguised/unsafe uploads). Default to
 		// the common web image types; filterable. A disallowed/empty type → 415.
-		$allowed = apply_filters( 'fahad_ai_visual_allowed_mimes', [
+		$allowed = apply_filters( 'dukandaar_visual_allowed_mimes', [
 			'image/jpeg',
 			'image/png',
 			'image/webp',
@@ -312,8 +312,8 @@ final class Fahad_AI_Visual_Search {
 
 		if ( '' === $type || ! in_array( $type, $allowed, true ) ) {
 			return new WP_Error(
-				'fahad_ai_visual_bad_type',
-				__( 'That file type is not supported. Please upload a JPEG, PNG, WebP, or GIF image.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'dukandaar_visual_bad_type',
+				__( 'That file type is not supported. Please upload a JPEG, PNG, WebP, or GIF image.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				[ 'status' => 415 ]
 			);
 		}
@@ -346,7 +346,7 @@ final class Fahad_AI_Visual_Search {
 		 * @param array $image     The validated uploaded-image descriptor.
 		 * @param array $filters   Structured constraints (category/price/limit).
 		 */
-		return apply_filters( 'fahad_ai_visual_retriever', null, $image, $filters );
+		return apply_filters( 'dukandaar_visual_retriever', null, $image, $filters );
 	}
 
 	/**
@@ -396,7 +396,7 @@ final class Fahad_AI_Visual_Search {
 	 * Resolve ranked product IDs LIVE into card summaries, dropping anything unbuyable.
 	 *
 	 * Each id is resolved through wc_get_product() at call time and shaped by
-	 * Fahad_AI_Tools::format_product_summary(), which reads price/stock straight from the
+	 * Dukandaar_Tools::format_product_summary(), which reads price/stock straight from the
 	 * live WC_Product, the retriever supplied ONLY the id, never any cached price/stock.
 	 * An id that no longer resolves, or resolves to a non-visible/unpublished product, is
 	 * skipped (the index can lag live truth). The optional `limit` bounds the result count.
@@ -411,7 +411,7 @@ final class Fahad_AI_Visual_Search {
 		}
 
 		$limit     = isset( $filters['limit'] ) ? max( 1, (int) $filters['limit'] ) : 0;
-		$tools     = Fahad_AI_Tools::instance();
+		$tools     = Dukandaar_Tools::instance();
 		$summaries = [];
 
 		foreach ( $ids as $id ) {

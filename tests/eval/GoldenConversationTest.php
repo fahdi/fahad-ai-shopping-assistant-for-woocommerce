@@ -63,13 +63,13 @@ final class GoldenConversationTest extends TestCase {
 		$expect   = $fixture['expect'] ?? [];
 
 		// 1. Environment + scripted transport + WC data.
-		EvalHarness::stub_environment( [ 'fahad_ai_provider' => $provider ] );
+		EvalHarness::stub_environment( [ 'dukandaar_provider' => $provider ] );
 		EvalHarness::stub_woocommerce( $fixture['wc'] ?? [] );
 		EvalHarness::script_transport( $fixture['script'] ?? [] );
 
 		// Feature tool packs need NO per-test wiring here: each pack
 		// (e.g. the catalog pack providing get_top_products) self-registers via
-		// Fahad_AI_Tool_Registry::register_pack() when the test bootstrap
+		// Dukandaar_Tool_Registry::register_pack() when the test bootstrap
 		// glob-loads includes/tools/*.php, and those static providers survive the
 		// per-case singleton reset in reset_singletons(). So every golden
 		// conversation can exercise pack tools exactly as in production, with
@@ -216,13 +216,13 @@ final class GoldenConversationTest extends TestCase {
 	// =========================================================================
 
 	/**
-	 * A third-party tool registered via the `fahad_ai_register_tools` filter is
+	 * A third-party tool registered via the `dukandaar_register_tools` filter is
 	 * advertised to the model AND invoked by the REAL agent loop when the model
 	 * calls it, proving an add-on can extend the agent without forking core.
 	 *
 	 * This is the eval-level analogue of ToolRegistryTest's unit extension test:
 	 * the unit test exercises the registry in isolation; here the custom tool runs
-	 * through Fahad_AI_API_Handler::run_anthropic_agent() against the scripted
+	 * through Dukandaar_API_Handler::run_anthropic_agent() against the scripted
 	 * transport, exactly like a built-in tool.
 	 *
 	 * A declarative fixture file cannot install the apply_filters stub itself, so
@@ -234,7 +234,7 @@ final class GoldenConversationTest extends TestCase {
 		// Register a custom "track_order" tool via the public extension filter.
 		Functions\when( 'apply_filters' )->alias(
 			function ( $hook, $value = null ) use ( &$invoked_with ) {
-				if ( 'fahad_ai_register_tools' === $hook && is_array( $value ) ) {
+				if ( 'dukandaar_register_tools' === $hook && is_array( $value ) ) {
 					$value[] = [
 						'name'        => 'track_order',
 						'description' => 'Look up the delivery status of an order by its ID.',
@@ -255,7 +255,7 @@ final class GoldenConversationTest extends TestCase {
 			}
 		);
 
-		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_environment( [ 'dukandaar_provider' => 'anthropic' ] );
 		EvalHarness::stub_woocommerce( [] );
 		EvalHarness::script_transport( [
 			// Turn 1: the model calls the third-party tool.
@@ -290,14 +290,14 @@ final class GoldenConversationTest extends TestCase {
 	/**
 	 * A personal-data tool (declaring `'personal' => true`) registered via the
 	 * extension filter must block a GUEST through the REAL agent loop: the central
-	 * login gate in Fahad_AI_Tool_Registry::dispatch() returns the login-required
+	 * login gate in Dukandaar_Tool_Registry::dispatch() returns the login-required
 	 * error WITHOUT invoking the tool's callback, that error flows back to the
 	 * model as the tool_result, and the model's scripted answer escalates the user
 	 * to log in (a grounded "abstain"/escalate, no personal data is fabricated).
 	 *
 	 * This is the eval-level analogue of the ToolRegistryTest guest-block unit
 	 * test: there the registry is exercised in isolation; here the gate runs inside
-	 * Fahad_AI_API_Handler::run_anthropic_agent() against the scripted transport,
+	 * Dukandaar_API_Handler::run_anthropic_agent() against the scripted transport,
 	 * exactly as it would for a real guest request. A declarative fixture cannot
 	 * install the apply_filters / is_user_logged_in stubs itself, so, like the
 	 * #22 filter test, this lives as a dedicated test.
@@ -312,7 +312,7 @@ final class GoldenConversationTest extends TestCase {
 		// Register a personal "order_status" tool via the public extension filter.
 		Functions\when( 'apply_filters' )->alias(
 			function ( $hook, $value = null ) use ( &$callback_invoked ) {
-				if ( 'fahad_ai_register_tools' === $hook && is_array( $value ) ) {
+				if ( 'dukandaar_register_tools' === $hook && is_array( $value ) ) {
 					$value[] = [
 						'name'        => 'order_status',
 						'description' => 'Look up the status of the logged-in customer\'s order.',
@@ -335,7 +335,7 @@ final class GoldenConversationTest extends TestCase {
 			}
 		);
 
-		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_environment( [ 'dukandaar_provider' => 'anthropic' ] );
 		EvalHarness::stub_woocommerce( [] );
 		EvalHarness::script_transport( [
 			// Turn 1: the model tries the personal tool.
@@ -387,7 +387,7 @@ final class GoldenConversationTest extends TestCase {
 	public function test_variation_add_surfaces_and_adds_the_chosen_variation(): void {
 		$fixture = require __DIR__ . '/fixtures/variation-add.php';
 
-		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_environment( [ 'dukandaar_provider' => 'anthropic' ] );
 		EvalHarness::stub_woocommerce( $fixture['wc'] );
 		EvalHarness::script_transport( $fixture['script'] );
 
@@ -436,7 +436,7 @@ final class GoldenConversationTest extends TestCase {
 	 * parent), and the scripted answer reports it without inventing availability.
 	 */
 	public function test_out_of_stock_variation_is_rejected_end_to_end(): void {
-		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_environment( [ 'dukandaar_provider' => 'anthropic' ] );
 		EvalHarness::stub_woocommerce( [
 			'product_by_id' => [
 				300 => [
@@ -496,7 +496,7 @@ final class GoldenConversationTest extends TestCase {
 	public function test_comparison_surfaces_aligned_table_end_to_end(): void {
 		$fixture = require __DIR__ . '/fixtures/compare.php';
 
-		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_environment( [ 'dukandaar_provider' => 'anthropic' ] );
 		EvalHarness::stub_woocommerce( $fixture['wc'] );
 		EvalHarness::script_transport( $fixture['script'] );
 
@@ -569,7 +569,7 @@ final class GoldenConversationTest extends TestCase {
 			];
 		}
 
-		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_environment( [ 'dukandaar_provider' => 'anthropic' ] );
 		EvalHarness::stub_woocommerce( [ 'products' => $products ] );
 		EvalHarness::script_transport( [
 			EvalHarness::anthropic_tool_turn( [
@@ -842,7 +842,7 @@ final class GoldenConversationTest extends TestCase {
 	 * returns a friendly fallback message instead, and never a WP_Error.
 	 */
 	public function test_anthropic_loop_exhaustion_returns_friendly_message(): void {
-		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_environment( [ 'dukandaar_provider' => 'anthropic' ] );
 		EvalHarness::stub_woocommerce( [] );
 
 		// 12 tool turns (> max): the model thrashes and never reaches end_turn.
@@ -859,7 +859,7 @@ final class GoldenConversationTest extends TestCase {
 
 	/** Same graceful exhaustion for the Moonshot (OpenAI-shaped) loop. */
 	public function test_moonshot_loop_exhaustion_returns_friendly_message(): void {
-		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'moonshot' ] );
+		EvalHarness::stub_environment( [ 'dukandaar_provider' => 'moonshot' ] );
 		EvalHarness::stub_woocommerce( [] );
 
 		EvalHarness::script_transport( array_fill( 0, 12,
@@ -930,7 +930,7 @@ final class GoldenConversationTest extends TestCase {
 	public function test_multi_turn_tool_calls_do_not_collide_ids(): void {
 		$fixture = require __DIR__ . '/fixtures/multi-turn-tools.php';
 
-		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
+		EvalHarness::stub_environment( [ 'dukandaar_provider' => 'anthropic' ] );
 		EvalHarness::stub_woocommerce( $fixture['wc'] );
 		EvalHarness::script_transport( $fixture['script'] );
 

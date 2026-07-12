@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage-focused unit tests for Fahad_AI_Bundle_Tools
+ * Coverage-focused unit tests for Dukandaar_Bundle_Tools
  * (includes/tools/class-bundle-tools.php, issue #57 curated bundles).
  *
  * Companion to BundleToolsTest: this suite drives every branch of the bundle
@@ -15,11 +15,11 @@
  * reflection (no setAccessible, a deprecated no-op on PHP 8.5); the registry's
  * static pack-provider list snapshotted in setUp and restored in tearDown so this
  * suite neither inherits another suite's packs nor leaks its own. Each test
- * dispatches through the LIVE Fahad_AI_Tool_Registry so the real
+ * dispatches through the LIVE Dukandaar_Tool_Registry so the real
  * register_pack() + merge + dispatch path is exercised.
  *
  * NOTE on the file-scope self-registration line (the final
- * Fahad_AI_Tool_Registry::register_pack( ... ) statement): it runs exactly once,
+ * Dukandaar_Tool_Registry::register_pack( ... ) statement): it runs exactly once,
  * during the test bootstrap's glob-require of includes/tools/*.php, BEFORE pcov
  * begins recording per-test coverage. It is therefore not attributable to any
  * test and is genuinely uncoverable from a unit test (re-requiring the file would
@@ -46,7 +46,7 @@ class CoverageBundleToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         Functions\stubs( [
             'absint'                      => fn( $n ) => abs( (int) $n ),
@@ -62,7 +62,7 @@ class CoverageBundleToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
@@ -72,14 +72,14 @@ class CoverageBundleToolsTest extends TestCase {
      * Tools + registry singletons, then registers ONLY the bundle pack's real
      * provider so the suite is hermetic and order-independent.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Bundle_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Bundle_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     /** Dispatch the bundle tool through the live registry. */

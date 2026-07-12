@@ -35,7 +35,7 @@ class CoverageIndexerTest extends TestCase {
 	}
 
 	private function provider( array $vectors = [ [ 0.1, 0.2, 0.3 ] ], string $model = 'text-embedding-3-small' ) {
-		$p = Mockery::mock( Fahad_AI_Embedding_Provider::class );
+		$p = Mockery::mock( Dukandaar_Embedding_Provider::class );
 		$p->allows( 'model' )->andReturn( $model );
 		$p->allows( 'dimensions' )->andReturn( 512 );
 		$p->allows( 'is_available' )->andReturn( true );
@@ -47,25 +47,25 @@ class CoverageIndexerTest extends TestCase {
 
 	public function test_init_wires_every_product_lifecycle_and_handler_hook(): void {
 		Monkey\Actions\expectAdded( 'woocommerce_update_product' )
-			->once()->with( [ Fahad_AI_Indexer::class, 'enqueue_reembed' ] );
+			->once()->with( [ Dukandaar_Indexer::class, 'enqueue_reembed' ] );
 		Monkey\Actions\expectAdded( 'woocommerce_new_product' )
-			->once()->with( [ Fahad_AI_Indexer::class, 'enqueue_reembed' ] );
+			->once()->with( [ Dukandaar_Indexer::class, 'enqueue_reembed' ] );
 		Monkey\Actions\expectAdded( 'wp_trash_post' )
-			->once()->with( [ Fahad_AI_Indexer::class, 'enqueue_delete' ] );
+			->once()->with( [ Dukandaar_Indexer::class, 'enqueue_delete' ] );
 		Monkey\Actions\expectAdded( 'before_delete_post' )
-			->once()->with( [ Fahad_AI_Indexer::class, 'enqueue_delete' ] );
-		Monkey\Actions\expectAdded( Fahad_AI_Indexer::ACTION_EMBED )
-			->once()->with( [ Fahad_AI_Indexer::class, 'handle_embed_action' ] );
-		Monkey\Actions\expectAdded( Fahad_AI_Indexer::ACTION_DELETE )
-			->once()->with( [ Fahad_AI_Indexer::class, 'handle_delete_action' ] );
+			->once()->with( [ Dukandaar_Indexer::class, 'enqueue_delete' ] );
+		Monkey\Actions\expectAdded( Dukandaar_Indexer::ACTION_EMBED )
+			->once()->with( [ Dukandaar_Indexer::class, 'handle_embed_action' ] );
+		Monkey\Actions\expectAdded( Dukandaar_Indexer::ACTION_DELETE )
+			->once()->with( [ Dukandaar_Indexer::class, 'handle_delete_action' ] );
 
-		Fahad_AI_Indexer::init();
+		Dukandaar_Indexer::init();
 	}
 
 	// ── index_fields(): empty document deletes any stale vector (lines 42-44) ────
 
 	public function test_empty_document_deletes_any_stale_embedding_and_skips(): void {
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->shouldReceive( 'delete' )->once()->with( 10 );
 		$store->shouldNotReceive( 'content_hash' );
 		$store->shouldNotReceive( 'upsert' );
@@ -73,7 +73,7 @@ class CoverageIndexerTest extends TestCase {
 		$provider = $this->provider();
 		$provider->shouldNotReceive( 'embed' ); // nothing to embed → no API call
 
-		$indexer = new Fahad_AI_Indexer( $provider, $store );
+		$indexer = new Dukandaar_Indexer( $provider, $store );
 		// All-blank fields compose to '' → the empty-doc guard fires.
 		$this->assertFalse( $indexer->index_fields( 10, [ 'title' => '   ', 'description' => '' ] ) );
 	}
@@ -81,12 +81,12 @@ class CoverageIndexerTest extends TestCase {
 	// ── index_fields(): provider returns no vector → no upsert, returns false (62)
 
 	public function test_returns_false_when_provider_yields_no_vector(): void {
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'content_hash' )->andReturn( '' );
 		$store->shouldNotReceive( 'upsert' ); // empty vector → never persisted
 
 		$provider = $this->provider( [ [] ] ); // empty[0] → falls through to the false return
-		$indexer  = new Fahad_AI_Indexer( $provider, $store );
+		$indexer  = new Dukandaar_Indexer( $provider, $store );
 		$this->assertFalse( $indexer->index_fields( 10, [ 'title' => 'Hoodie' ] ) );
 	}
 
@@ -110,16 +110,16 @@ class CoverageIndexerTest extends TestCase {
 
 		// The composed text must include the title and the cleaned category name,
 		// proving product_fields()/term_names() fed the document.
-		$expected_doc  = Fahad_AI_Embedding_Document::compose( [
+		$expected_doc  = Dukandaar_Embedding_Document::compose( [
 			'title'             => 'Winter Hoodie',
 			'categories'        => [ 'Outerwear' ],
 			'short_description' => 'Warm fleece',
 			'description'       => 'A cosy winter hoodie',
 			'tags'              => [],
 		] );
-		$expected_hash = Fahad_AI_Embedding_Document::content_hash( $expected_doc );
+		$expected_hash = Dukandaar_Embedding_Document::content_hash( $expected_doc );
 
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'content_hash' )->andReturn( '' );
 		$store->shouldReceive( 'upsert' )->once()->with(
 			55,
@@ -128,7 +128,7 @@ class CoverageIndexerTest extends TestCase {
 			$expected_hash
 		);
 
-		$indexer = new Fahad_AI_Indexer( $this->provider(), $store );
+		$indexer = new Dukandaar_Indexer( $this->provider(), $store );
 		$indexer->reindex_product( 55 );
 	}
 
@@ -145,11 +145,11 @@ class CoverageIndexerTest extends TestCase {
 
 		// With no categories/tags the composed doc is just the title, confirming
 		// term_names() dropped to [] for both taxonomies rather than erroring.
-		$expected_hash = Fahad_AI_Embedding_Document::content_hash(
-			Fahad_AI_Embedding_Document::compose( [ 'title' => 'Plain Tee' ] )
+		$expected_hash = Dukandaar_Embedding_Document::content_hash(
+			Dukandaar_Embedding_Document::compose( [ 'title' => 'Plain Tee' ] )
 		);
 
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'content_hash' )->andReturn( '' );
 		$store->shouldReceive( 'upsert' )->once()->with(
 			7,
@@ -158,7 +158,7 @@ class CoverageIndexerTest extends TestCase {
 			$expected_hash
 		);
 
-		$indexer = new Fahad_AI_Indexer( $this->provider(), $store );
+		$indexer = new Dukandaar_Indexer( $this->provider(), $store );
 		$indexer->reindex_product( 7 );
 	}
 
@@ -178,7 +178,7 @@ class CoverageIndexerTest extends TestCase {
 		$enqueued = 0;
 		Functions\when( 'as_enqueue_async_action' )->alias( static function () use ( &$enqueued ) { ++$enqueued; return 1; } );
 
-		$indexer = new Fahad_AI_Indexer( $this->provider(), Mockery::mock( Fahad_AI_Vector_Store::class ) );
+		$indexer = new Dukandaar_Indexer( $this->provider(), Mockery::mock( Dukandaar_Vector_Store::class ) );
 		$this->assertSame( 0, $indexer->backfill( null ) );
 		$this->assertSame( 0, $enqueued, 'no resolvable products -> no async jobs enqueued' );
 	}
@@ -189,7 +189,7 @@ class CoverageIndexerTest extends TestCase {
 		$count = 0;
 		Functions\when( 'as_enqueue_async_action' )->alias( static function () use ( &$count ) { ++$count; return 1; } );
 
-		$indexer = new Fahad_AI_Indexer( $this->provider(), Mockery::mock( Fahad_AI_Vector_Store::class ) );
+		$indexer = new Dukandaar_Indexer( $this->provider(), Mockery::mock( Dukandaar_Vector_Store::class ) );
 		$this->assertSame( 2, $indexer->backfill( null ), 'one job per published product id' );
 		$this->assertSame( 2, $count );
 	}
@@ -200,23 +200,23 @@ class CoverageIndexerTest extends TestCase {
 		$recorded = null;
 		Functions\when( 'update_option' )->alias(
 			static function ( $name, $value ) use ( &$recorded ) {
-				if ( 'fahad_ai_index_last_error' === $name ) {
+				if ( 'dukandaar_index_last_error' === $name ) {
 					$recorded = $value;
 				}
 				return true;
 			}
 		);
 
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'content_hash' )->andReturn( '' );
 
-		$provider = Mockery::mock( Fahad_AI_Embedding_Provider::class );
+		$provider = Mockery::mock( Dukandaar_Embedding_Provider::class );
 		$provider->allows( 'model' )->andReturn( 'text-embedding-3-small' );
 		$provider->allows( 'dimensions' )->andReturn( 512 );
 		$provider->allows( 'is_available' )->andReturn( true );
-		$provider->allows( 'embed' )->andThrow( new Fahad_AI_Embedding_Exception( 'bad api key', false ) );
+		$provider->allows( 'embed' )->andThrow( new Dukandaar_Embedding_Exception( 'bad api key', false ) );
 
-		$indexer = new Fahad_AI_Indexer( $provider, $store );
+		$indexer = new Dukandaar_Indexer( $provider, $store );
 		// Terminal (non-retryable) → recorded, swallowed, returns false (no rethrow).
 		$this->assertFalse( $indexer->index_fields_safe( 10, [ 'title' => 'Hoodie' ] ) );
 		$this->assertSame( 'bad api key', $recorded, 'the failure message is recorded for the health readout' );
@@ -227,19 +227,19 @@ class CoverageIndexerTest extends TestCase {
 	public function test_index_fields_safe_rethrows_a_retryable_error_for_rescheduling(): void {
 		Functions\when( 'update_option' )->justReturn( true );
 
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'content_hash' )->andReturn( '' );
 
-		$provider = Mockery::mock( Fahad_AI_Embedding_Provider::class );
+		$provider = Mockery::mock( Dukandaar_Embedding_Provider::class );
 		$provider->allows( 'model' )->andReturn( 'text-embedding-3-small' );
 		$provider->allows( 'dimensions' )->andReturn( 512 );
 		$provider->allows( 'is_available' )->andReturn( true );
-		$provider->allows( 'embed' )->andThrow( new Fahad_AI_Embedding_Exception( 'rate limited', true ) );
+		$provider->allows( 'embed' )->andThrow( new Dukandaar_Embedding_Exception( 'rate limited', true ) );
 
-		$indexer = new Fahad_AI_Indexer( $provider, $store );
+		$indexer = new Dukandaar_Indexer( $provider, $store );
 
 		// Retryable → rethrown so Action Scheduler reschedules the job.
-		$this->expectException( Fahad_AI_Embedding_Exception::class );
+		$this->expectException( Dukandaar_Embedding_Exception::class );
 		$this->expectExceptionMessage( 'rate limited' );
 		$indexer->index_fields_safe( 10, [ 'title' => 'Hoodie' ] );
 	}
@@ -248,12 +248,12 @@ class CoverageIndexerTest extends TestCase {
 
 	public function test_handle_embed_action_noop_when_semantic_search_disabled(): void {
 		Functions\when( 'get_option' )->alias(
-			static fn( $k, $d = '' ) => 'fahad_ai_embeddings_enabled' === $k ? 0 : $d
+			static fn( $k, $d = '' ) => 'dukandaar_embeddings_enabled' === $k ? 0 : $d
 		);
 		// No provider/store work should happen, apply_filters must never be reached.
 		Functions\expect( 'apply_filters' )->never();
 
-		Fahad_AI_Indexer::handle_embed_action( 5 ); // returns void; absence of error == pass
+		Dukandaar_Indexer::handle_embed_action( 5 ); // returns void; absence of error == pass
 		$this->assertTrue( true );
 	}
 
@@ -261,22 +261,22 @@ class CoverageIndexerTest extends TestCase {
 
 	public function test_handle_embed_action_noop_when_provider_unavailable(): void {
 		Functions\when( 'get_option' )->alias(
-			static fn( $k, $d = '' ) => 'fahad_ai_embeddings_enabled' === $k ? 1 : $d
+			static fn( $k, $d = '' ) => 'dukandaar_embeddings_enabled' === $k ? 1 : $d
 		);
-		// enabled → true; provider() runs apply_filters('fahad_ai_embedding_provider').
+		// enabled → true; provider() runs apply_filters('dukandaar_embedding_provider').
 		// Return a provider that reports itself unavailable → the guard returns early
 		// before any vector-store resolution.
-		$provider = Mockery::mock( Fahad_AI_Embedding_Provider::class );
+		$provider = Mockery::mock( Dukandaar_Embedding_Provider::class );
 		$provider->allows( 'model' )->andReturn( 'text-embedding-3-small' );
 		$provider->allows( 'dimensions' )->andReturn( 512 );
 		$provider->allows( 'is_available' )->andReturn( false );
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $tag, $value = null ) use ( $provider ) {
-				return 'fahad_ai_embedding_provider' === $tag ? $provider : $value;
+				return 'dukandaar_embedding_provider' === $tag ? $provider : $value;
 			}
 		);
 
-		Fahad_AI_Indexer::handle_embed_action( 5 );
+		Dukandaar_Indexer::handle_embed_action( 5 );
 		// Provider unavailable → it must never be asked to embed.
 		$provider->shouldNotHaveReceived( 'embed' );
 	}
@@ -285,7 +285,7 @@ class CoverageIndexerTest extends TestCase {
 
 	public function test_handle_embed_action_resolves_store_and_reindexes_product(): void {
 		Functions\when( 'get_option' )->alias(
-			static fn( $k, $d = '' ) => 'fahad_ai_embeddings_enabled' === $k ? 1 : $d
+			static fn( $k, $d = '' ) => 'dukandaar_embeddings_enabled' === $k ? 1 : $d
 		);
 
 		$provider = $this->provider();
@@ -299,7 +299,7 @@ class CoverageIndexerTest extends TestCase {
 		Functions\when( 'wc_get_product' )->justReturn( $product );
 		Functions\when( 'get_the_terms' )->justReturn( false );
 
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'content_hash' )->andReturn( '' );
 		$store->shouldReceive( 'upsert' )->once()->with(
 			88,
@@ -312,37 +312,37 @@ class CoverageIndexerTest extends TestCase {
 		// filter lets us inject our mock instead of the auto-detected postmeta store.
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $tag, $value = null ) use ( $provider, $store ) {
-				if ( 'fahad_ai_embedding_provider' === $tag ) {
+				if ( 'dukandaar_embedding_provider' === $tag ) {
 					return $provider;
 				}
-				if ( 'fahad_ai_vector_store' === $tag ) {
+				if ( 'dukandaar_vector_store' === $tag ) {
 					return $store;
 				}
 				return $value;
 			}
 		);
 
-		Fahad_AI_Indexer::handle_embed_action( '88' ); // string id → cast to int internally
+		Dukandaar_Indexer::handle_embed_action( '88' ); // string id → cast to int internally
 	}
 
 	// ── handle_delete_action(): with a provider → resolve(model,dims)->delete ────
 
 	public function test_handle_delete_action_deletes_with_provider_model_and_dims(): void {
-		$provider = Mockery::mock( Fahad_AI_Embedding_Provider::class );
+		$provider = Mockery::mock( Dukandaar_Embedding_Provider::class );
 		$provider->allows( 'model' )->andReturn( 'text-embedding-3-large' );
 		$provider->allows( 'dimensions' )->andReturn( 1024 );
 		$provider->allows( 'is_available' )->andReturn( true );
 
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->shouldReceive( 'delete' )->once()->with( 33 );
 
 		$captured = [];
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $tag, $value = null, $model = null, $dims = null ) use ( $provider, $store, &$captured ) {
-				if ( 'fahad_ai_embedding_provider' === $tag ) {
+				if ( 'dukandaar_embedding_provider' === $tag ) {
 					return $provider;
 				}
-				if ( 'fahad_ai_vector_store' === $tag ) {
+				if ( 'dukandaar_vector_store' === $tag ) {
 					$captured = [ 'model' => $model, 'dims' => $dims ];
 					return $store;
 				}
@@ -350,7 +350,7 @@ class CoverageIndexerTest extends TestCase {
 			}
 		);
 
-		Fahad_AI_Indexer::handle_delete_action( '33' );
+		Dukandaar_Indexer::handle_delete_action( '33' );
 
 		$this->assertSame( 'text-embedding-3-large', $captured['model'] );
 		$this->assertSame( 1024, $captured['dims'] );
@@ -359,16 +359,16 @@ class CoverageIndexerTest extends TestCase {
 	// ── handle_delete_action(): no provider → empty model/0 dims still deletes ───
 
 	public function test_handle_delete_action_deletes_with_empty_model_when_no_provider(): void {
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->shouldReceive( 'delete' )->once()->with( 44 );
 
 		$captured = [];
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $tag, $value = null, $model = null, $dims = null ) use ( $store, &$captured ) {
-				if ( 'fahad_ai_embedding_provider' === $tag ) {
+				if ( 'dukandaar_embedding_provider' === $tag ) {
 					return null; // no provider configured
 				}
-				if ( 'fahad_ai_vector_store' === $tag ) {
+				if ( 'dukandaar_vector_store' === $tag ) {
 					$captured = [ 'model' => $model, 'dims' => $dims ];
 					return $store;
 				}
@@ -376,7 +376,7 @@ class CoverageIndexerTest extends TestCase {
 			}
 		);
 
-		Fahad_AI_Indexer::handle_delete_action( 44 );
+		Dukandaar_Indexer::handle_delete_action( 44 );
 
 		$this->assertSame( '', $captured['model'], 'no provider → empty model id' );
 		$this->assertSame( 0, $captured['dims'], 'no provider → zero dimensions' );

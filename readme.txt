@@ -1,4 +1,4 @@
-=== Fahad AI Shopping Assistant for WooCommerce ===
+=== Dukandaar AI Shopping Assistant for WooCommerce ===
 Contributors: fahdi
 Tags: woocommerce, chatbot, ai, cart, assistant
 Requires at least: 6.0
@@ -13,11 +13,11 @@ AI-powered shopping assistant for WooCommerce. Answers customer questions and ma
 
 == Description ==
 
-<a href="https://woo.isupercoder.com/?fahad_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F"><img src="https://ps.w.org/fahad-ai-shopping-assistant-for-woocommerce/assets/screenshot-1.gif" alt="Fahad AI answers a product question with grounded store data and a product card"></a>
+<a href="https://woo.isupercoder.com/?dukandaar_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F"><img src="https://ps.w.org/dukandaar-ai-shopping-assistant-for-woocommerce/assets/screenshot-1.gif" alt="Dukandaar answers a product question with grounded store data and a product card"></a>
 
-A shopper asks a product question and the assistant answers with your real catalogue data: an in-stock product card with title, price, and stock status, never an invented fact. [Try it live on a real store](https://woo.isupercoder.com/?fahad_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F).
+A shopper asks a product question and the assistant answers with your real catalogue data: an in-stock product card with title, price, and stock status, never an invented fact. [Try it live on a real store](https://woo.isupercoder.com/?dukandaar_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F).
 
-Fahad AI Shopping Assistant adds an intelligent shopping assistant widget to your WooCommerce store. Customers can ask questions about products, get personalised recommendations, and add items to their cart, all through a natural conversational interface.
+Dukandaar AI Shopping Assistant adds an intelligent shopping assistant widget to your WooCommerce store. Customers can ask questions about products, get personalised recommendations, and add items to their cart, all through a natural conversational interface.
 
 **Supported AI providers:**
 
@@ -43,7 +43,7 @@ Fahad AI Shopping Assistant adds an intelligent shopping assistant widget to you
 
 **Built for trust:** the assistant grounds every product fact in your store's data (no invented prices, stock, reviews, or codes), respects stated budgets, never uses fake scarcity or pressure, discloses upsells as optional, and always points customers to human support when needed. Personal data (orders, wallet, saved preferences) is restricted to the logged-in owner.
 
-**For developers:** other plugins can register their own assistant tools via the `fahad_ai_register_tools` filter, no core changes required.
+**For developers:** other plugins can register their own assistant tools via the `dukandaar_register_tools` filter, no core changes required.
 
 **Requirements:**
 
@@ -56,9 +56,9 @@ This plugin sends data only to the AI provider you configure with an API key. Ev
 
 == Installation ==
 
-1. Upload the `fahad-ai-shopping-assistant-for-woocommerce` folder to `/wp-content/plugins/`
+1. Upload the `dukandaar-ai-shopping-assistant-for-woocommerce` folder to `/wp-content/plugins/`
 2. Activate the plugin through the **Plugins** menu in WordPress
-3. Navigate to **Settings → Fahad AI Assistant**
+3. Navigate to **Settings → Dukandaar Assistant**
 4. Choose your AI provider (Anthropic or Moonshot AI)
 5. Enter your API key
 6. Configure the bot name, greeting message, and accent color
@@ -236,7 +236,7 @@ Packaging fix: development files are no longer bundled in the distribution zip.
 WordPress.org review fixes: working legal links, hardened WP-CLI report path, statically-verifiable REST permissions.
 
 * Replaced dead or relocated Terms of Service / Privacy Policy links (DeepSeek, Together AI, Moonshot/Kimi, Mistral, Groq, Google Gemini API) with their current canonical URLs; every link in the readme was verified live.
-* `wp fahad-ai rag-spike --report` now accepts a filename only: the report is always written inside `wp-content/uploads/fahad-ai-shopping-assistant-for-woocommerce/`, and absolute paths or `../` traversal are stripped.
+* `wp dukandaar rag-spike --report` now accepts a filename only: the report is always written inside `wp-content/uploads/dukandaar-ai-shopping-assistant-for-woocommerce/`, and absolute paths or `../` traversal are stripped.
 * Inlined literal `permission_callback` values (`__return_true` for the read-only public agent endpoints, capability checks for admin endpoints) so intent is statically verifiable.
 * Documented the optional external Qdrant vector database in the External services section.
 
@@ -244,12 +244,12 @@ WordPress.org review fixes: working legal links, hardened WP-CLI report path, st
 WordPress.org compliance: external services documentation and plugin-folder write fix.
 
 * Added standalone `== External services ==` readme section listing every AI provider (Anthropic, Moonshot, OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI, Together AI, OpenRouter, Perplexity, Cohere, WhatsApp/Meta) with Terms of Service and Privacy Policy links for each.
-* Fixed `wp fahad-ai rag-spike` WP-CLI command: the report is now written to the WordPress uploads directory (`wp-content/uploads/fahad-ai-shopping-assistant-for-woocommerce/RAG-SPIKE-REPORT.md`) instead of the plugin folder.
+* Fixed `wp dukandaar rag-spike` WP-CLI command: the report is now written to the WordPress uploads directory (`wp-content/uploads/dukandaar-ai-shopping-assistant-for-woocommerce/RAG-SPIKE-REPORT.md`) instead of the plugin folder.
 
 = 2.14.0 =
 Live-demo deep link.
 
-* A store can share a link like `?fahad_demo=your%20question` that opens the assistant, types the question with a typewriter effect, and sends it automatically, for a hands-free live demo. Use `?fahad_demo=1` for a built-in default question.
+* A store can share a link like `?dukandaar_demo=your%20question` that opens the assistant, types the question with a typewriter effect, and sends it automatically, for a hands-free live demo. Use `?dukandaar_demo=1` for a built-in default question.
 
 = 2.13.1 =
 Back-in-stock alerts from chat.
@@ -340,7 +340,7 @@ Multilingual replies, a PHP 8.1 fix, and developer seams for advanced search & c
 
 * Multilingual: the assistant detects the shopper's language (English, Urdu, Roman Urdu) and replies in it, while keeping all product facts grounded; new admin "Languages" setting, and prices/numbers format for the locale.
 * Fix: PHP 8.1 compatibility, a return type used PHP 8.2+ syntax that broke on 8.1; restored the stated minimum.
-* Developer seams (need a provider to activate, ship inert): semantic/vector product search (`fahad_ai_semantic_retriever`, falls back to keyword search), a signed WhatsApp webhook + agent routing behind a send provider, and an image-search upload endpoint behind a vision-retriever seam.
+* Developer seams (need a provider to activate, ship inert): semantic/vector product search (`dukandaar_semantic_retriever`, falls back to keyword search), a signed WhatsApp webhook + agent routing behind a send provider, and an image-search upload endpoint behind a vision-retriever seam.
 
 = 2.6.0 =
 Insight, voice, and helpful nudges.
@@ -416,7 +416,7 @@ Trust & safety:
 * WCAG 2.2 AA accessibility pass on the chat widget and product cards
 
 Under the hood:
-* Tool extensibility hook (`fahad_ai_register_tools`) so add-ons can register assistant tools without forking the core; built-in tools migrated to a drop-in registry
+* Tool extensibility hook (`dukandaar_register_tools`) so add-ons can register assistant tools without forking the core; built-in tools migrated to a drop-in registry
 * Cost & latency controls, tool results trimmed before being fed back to the model, per-conversation token budget, and a model-routing seam
 * An offline eval harness (golden conversations + grounding checks) runs in CI to guard answer quality
 
@@ -438,8 +438,8 @@ Under the hood:
 * Bumped "Tested up to" to WordPress 7.0
 
 = 1.0.4 =
-* Renamed plugin to "Fahad AI Shopping Assistant for WooCommerce" with the `fahad-ai-shopping-assistant-for-woocommerce` slug (final name approved by the WordPress.org Plugin Directory)
-* All option keys, constants, classes, REST namespace, JS handles, and the text domain migrated to the `fahad_ai_` / `fahad-ai-` prefix
+* Renamed plugin to "Dukandaar AI Shopping Assistant for WooCommerce" with the `dukandaar-ai-shopping-assistant-for-woocommerce` slug (final name approved by the WordPress.org Plugin Directory)
+* All option keys, constants, classes, REST namespace, JS handles, and the text domain migrated to the `dukandaar_` / `dukandaar-` prefix
 * Replaced raw cURL in the Moonshot streaming path with `wp_remote_post()` plus the documented `http_api_curl` hook for the SSE write callback
 * Added `Requires Plugins: woocommerce` header for WordPress 6.5+ dependency check
 * Replaced inline `<script>` block in admin settings with a properly enqueued JS file
@@ -535,4 +535,4 @@ Fixes Moonshot streaming returning a blank reply and adds a Global/China region 
 Security and compatibility update: adds rate limiting to the chat endpoints and raises the minimum PHP version to 8.0.
 
 = 1.0.4 =
-Existing v1.0.2 users: option keys have been renamed from `wc_ai_chatbot_*` to `fahad_ai_*`. Settings will need to be re-entered after upgrade.
+Existing v1.0.2 users: option keys have been renamed from `wc_ai_chatbot_*` to `dukandaar_*`. Settings will need to be re-entered after upgrade.

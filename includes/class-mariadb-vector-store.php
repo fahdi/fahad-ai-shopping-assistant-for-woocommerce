@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_MariaDb_Vector_Store implements Fahad_AI_Vector_Store {
+final class Dukandaar_MariaDb_Vector_Store implements Dukandaar_Vector_Store {
 
 	// Dedicated MariaDB vector data-access layer. Table names are class-derived (never
 	// user input) so are interpolated, placeholders cannot name a table; the IN() list
@@ -32,7 +32,7 @@ final class Fahad_AI_MariaDb_Vector_Store implements Fahad_AI_Vector_Store {
 
 	private function table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'fahad_ai_vectors';
+		return $wpdb->prefix . 'dukandaar_vectors';
 	}
 
 	public function is_available(): bool {
@@ -98,7 +98,7 @@ final class Fahad_AI_MariaDb_Vector_Store implements Fahad_AI_Vector_Store {
 	}
 
 	public function rebuild_required(): bool {
-		return (string) get_option( Fahad_AI_Postmeta_Vector_Store::OPTION_INDEX_MODEL, '' ) !== $this->model;
+		return (string) get_option( Dukandaar_Postmeta_Vector_Store::OPTION_INDEX_MODEL, '' ) !== $this->model;
 	}
 
 	/** MariaDB VECTOR text literal, e.g. "[0.1,0.2,0.3]". */

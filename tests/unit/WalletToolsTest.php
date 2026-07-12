@@ -1,24 +1,24 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Wallet_Tools (issue #18: wallet-aware shopping, the
+ * Unit tests for Dukandaar_Wallet_Tools (issue #18: wallet-aware shopping, the
  * differentiator, MONEY-sensitive).
  *
  * Red → Green → Refactor. Conventions mirror OrderToolsTest (the other personal
  * pack): WP/WC functions mocked via Brain\Monkey; the wallet PROVIDER injected as
- * a Mockery mock through the `fahad_ai_wallet_provider` filter; the registry
+ * a Mockery mock through the `dukandaar_wallet_provider` filter; the registry
  * singleton + its static pack list snapshotted/restored so a case here neither
  * inherits another suite's packs nor leaks the wallet pack we register.
  *
  * The three wallet tools (get_wallet_balance, top_up, pay_with_credit) are NOT
  * built-ins, they ship as a drop-in feature pack that self-registers via
- * Fahad_AI_Tool_Registry::register_pack() at file load and declare
+ * Dukandaar_Tool_Registry::register_pack() at file load and declare
  * `'personal' => true`. Every test registers the pack's REAL provider, then
- * dispatches through Fahad_AI_Tool_Registry::instance()->dispatch(), so the
+ * dispatches through Dukandaar_Tool_Registry::instance()->dispatch(), so the
  * production registration + merge + dispatch path (INCLUDING the central login
  * gate for `personal` tools) is what is under test.
  *
  * DECOUPLING. The assistant core has NO dependency on any wallet plugin. The
- * tools resolve a provider at runtime via apply_filters( 'fahad_ai_wallet_provider',
+ * tools resolve a provider at runtime via apply_filters( 'dukandaar_wallet_provider',
  * null ). With no provider registered the tools degrade gracefully (never fatal,
  * never invent a balance). The wallet plugin (WalletPro / Account Funds) is the
  * thing that registers the provider, these tests stand in for it with a mock.
@@ -49,7 +49,7 @@ class WalletToolsTest extends TestCase {
      * Snapshot of the registry's static pack providers, restored in tearDown so a
      * test here neither inherits another suite's packs nor leaks the wallet pack we
      * register. (Pack providers are static so they survive a singleton instance
-     * reset, see Fahad_AI_Tool_Registry::register_pack.)
+     * reset, see Dukandaar_Tool_Registry::register_pack.)
      *
      * @var array<int, callable>
      */
@@ -59,7 +59,7 @@ class WalletToolsTest extends TestCase {
         parent::setUp();
         Monkey\setUp();
 
-        $this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+        $this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
         // Default to a logged-in customer (id 5). Guest cases override this.
         Functions\when( 'is_user_logged_in' )->justReturn( true );
@@ -71,7 +71,7 @@ class WalletToolsTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
         Monkey\tearDown();
         parent::tearDown();
     }
@@ -84,18 +84,18 @@ class WalletToolsTest extends TestCase {
      * self-registration does in production. Registering it explicitly (after
      * clearing the static list) keeps the test hermetic and order-independent.
      */
-    private function registry(): Fahad_AI_Tool_Registry {
-        ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-        ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+    private function registry(): Dukandaar_Tool_Registry {
+        ( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+        ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-        Fahad_AI_Tool_Registry::reset_packs();
-        Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Wallet_Tools', 'register' ] );
+        Dukandaar_Tool_Registry::reset_packs();
+        Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Wallet_Tools', 'register' ] );
 
-        return Fahad_AI_Tool_Registry::instance();
+        return Dukandaar_Tool_Registry::instance();
     }
 
     /**
-     * Register a mock wallet provider on the `fahad_ai_wallet_provider` filter for
+     * Register a mock wallet provider on the `dukandaar_wallet_provider` filter for
      * the duration of the test. The provider is the seam that keeps the assistant
      * core decoupled from the wallet plugin: the wallet plugin would return its own
      * adapter here; we return a Mockery mock so each test controls the money ops.
@@ -103,10 +103,10 @@ class WalletToolsTest extends TestCase {
      * @return \Mockery\MockInterface The provider mock (set expectations on it).
      */
     private function withProvider(): \Mockery\MockInterface {
-        $provider = Mockery::mock( 'Fahad_AI_Wallet_Provider_Stub' );
+        $provider = Mockery::mock( 'Dukandaar_Wallet_Provider_Stub' );
         Functions\when( 'apply_filters' )->alias(
             static function ( $hook, $value = null ) use ( $provider ) {
-                return ( 'fahad_ai_wallet_provider' === $hook ) ? $provider : $value;
+                return ( 'dukandaar_wallet_provider' === $hook ) ? $provider : $value;
             }
         );
         return $provider;
@@ -114,7 +114,7 @@ class WalletToolsTest extends TestCase {
 
     /**
      * No provider registered: the filter returns its passed-through default (null),
-     * exactly as WordPress would with no `fahad_ai_wallet_provider` callback added.
+     * exactly as WordPress would with no `dukandaar_wallet_provider` callback added.
      */
     private function withNoProvider(): void {
         Functions\when( 'apply_filters' )->alias(
@@ -449,7 +449,7 @@ class WalletToolsTest extends TestCase {
      * Mirrors OrderToolsTest's guest-block test.
      *
      * NB: apply_filters fires legitimately for the registry's OWN
-     * `fahad_ai_register_tools` filter while it builds the tool list, so we cannot
+     * `dukandaar_register_tools` filter while it builds the tool list, so we cannot
      * assert apply_filters is never called at all. Instead we record every hook it is
      * applied with and assert the wallet PROVIDER hook was never among them, the seam
      * the callback would use to reach the provider was never touched. A provider mock
@@ -464,7 +464,7 @@ class WalletToolsTest extends TestCase {
 
         // A real provider whose every money op is forbidden, proves the callback never
         // reached the provider even if the seam somehow resolved one.
-        $provider = Mockery::mock( 'Fahad_AI_Wallet_Provider_Stub' );
+        $provider = Mockery::mock( 'Dukandaar_Wallet_Provider_Stub' );
         $provider->shouldReceive( 'get_balance' )->never();
         $provider->shouldReceive( 'get_deposit_bonus' )->never();
         $provider->shouldReceive( 'top_up' )->never();
@@ -476,14 +476,14 @@ class WalletToolsTest extends TestCase {
         Functions\when( 'apply_filters' )->alias(
             static function ( $hook, $value = null ) use ( &$applied_hooks, $provider ) {
                 $applied_hooks[] = $hook;
-                return ( 'fahad_ai_wallet_provider' === $hook ) ? $provider : $value;
+                return ( 'dukandaar_wallet_provider' === $hook ) ? $provider : $value;
             }
         );
 
         $result = $this->registry()->dispatch( $tool, $input );
 
         // The provider seam was NEVER reached, the gate stopped the guest first.
-        $this->assertNotContains( 'fahad_ai_wallet_provider', $applied_hooks );
+        $this->assertNotContains( 'dukandaar_wallet_provider', $applied_hooks );
 
         $this->assertArrayHasKey( 'requires_login', $result );
         $this->assertTrue( $result['requires_login'] );

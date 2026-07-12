@@ -20,7 +20,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Embedding_Document {
+final class Dukandaar_Embedding_Document {
 
 	/** Truncate the long description to bound embedding token cost. */
 	public const LONG_DESC_MAX = 1500;

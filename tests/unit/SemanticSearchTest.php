@@ -5,11 +5,11 @@
  * Red → Green → Refactor cycle. Conventions mirror ToolsTest / CatalogToolsTest:
  * WP/WC functions mocked via Brain\Monkey; WC objects via Mockery; the Tools
  * singleton reset via reflection. NO setAccessible on private methods, every
- * assertion drives the public search_products tool (via Fahad_AI_Tools::execute)
+ * assertion drives the public search_products tool (via Dukandaar_Tools::execute)
  * so the production seam → fall-back path is what is under test.
  *
  * The seam: search_products consults a pluggable retriever registered on the
- * `fahad_ai_semantic_retriever` filter BEFORE the keyword search. A retriever is
+ * `dukandaar_semantic_retriever` filter BEFORE the keyword search. A retriever is
  * given the query (+ filters) and returns ranked product IDs; those IDs are
  * resolved LIVE via wc_get_product() so price/stock are never cached, they are
  * read from the live WC_Product at call time by format_product_summary(). With no
@@ -60,9 +60,9 @@ class SemanticSearchTest extends TestCase {
 		parent::tearDown();
 	}
 
-	private function tools(): Fahad_AI_Tools {
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Tools::instance();
+	private function tools(): Dukandaar_Tools {
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Tools::instance();
 	}
 
 	/**
@@ -73,7 +73,7 @@ class SemanticSearchTest extends TestCase {
 	 * @param callable $retriever fn( $value, string $query, array $filters ): mixed
 	 */
 	private function registerRetriever( callable $retriever ): void {
-		Monkey\Filters\expectApplied( 'fahad_ai_semantic_retriever' )
+		Monkey\Filters\expectApplied( 'dukandaar_semantic_retriever' )
 			->andReturnUsing( $retriever );
 	}
 
@@ -299,7 +299,7 @@ class SemanticSearchTest extends TestCase {
 	public function test_empty_query_with_filters_does_not_invoke_retriever(): void {
 		// A pure category/price browse (no free-text query) has no semantic intent to
 		// embed, the seam is skipped and the keyword/filter path runs as before.
-		Monkey\Filters\expectApplied( 'fahad_ai_semantic_retriever' )->never(); // seam not consulted
+		Monkey\Filters\expectApplied( 'dukandaar_semantic_retriever' )->never(); // seam not consulted
 		$product = $this->mockProduct( 21, 'Filtered Item', '15.00' );
 		Functions\when( 'wc_get_products' )->justReturn( [ $product ] );
 

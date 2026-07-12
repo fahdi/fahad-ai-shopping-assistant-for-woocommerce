@@ -8,16 +8,16 @@ defined( 'ABSPATH' ) || exit;
  * request; it NEVER issues a refund, credit, or any money/status mutation. Refunds stay a
  * human action, edge and ineligible cases escalate to support, never block it.
  *
- * A drop-in feature pack (same pattern as Fahad_AI_Order_Tools / Fahad_AI_Reorder_Tools):
+ * A drop-in feature pack (same pattern as Dukandaar_Order_Tools / Dukandaar_Reorder_Tools):
  * a self-contained class in its own file under includes/tools/ that self-registers a
- * provider at the bottom via Fahad_AI_Tool_Registry::register_pack(). The bootstrap (and
+ * provider at the bottom via Dukandaar_Tool_Registry::register_pack(). The bootstrap (and
  * the test bootstrap) glob-require everything here, so adding this pack is a SINGLE new
  * file, no edits to the bootstrap, the test bootstrap, or the eval harness.
  *
  * Tools provided:
  *   - check_return_eligibility, is an order (or one item on it) returnable, judged
  *                                against a CONFIGURABLE return window (default 30 days;
- *                                filter `fahad_ai_return_window_days`), the order's status
+ *                                filter `dukandaar_return_window_days`), the order's status
  *                                and date, AND ownership. Returns a plain, honest reason
  *                                when ineligible plus the human-support path.
  *   - request_return          , RECORD a return/exchange request (an RMA) as order meta
@@ -26,32 +26,32 @@ defined( 'ABSPATH' ) || exit;
  *                                or changes the order, only records the request.
  *
  * SECURITY + MONEY-SAFETY ARE THE WHOLE POINT (issue #53 hardening). These tools use the
- * issue-#25 authorization boundary (Fahad_AI_Auth) in BOTH of its layers (defence in
+ * issue-#25 authorization boundary (Dukandaar_Auth) in BOTH of its layers (defence in
  * depth):
  *
  *   1. CENTRAL LOGIN GATE. Both tools declare `'personal' => true`, so
- *      Fahad_AI_Tool_Registry::dispatch() runs Fahad_AI_Auth::guard_logged_in() BEFORE the
+ *      Dukandaar_Tool_Registry::dispatch() runs Dukandaar_Auth::guard_logged_in() BEFORE the
  *      callback. A guest is blocked centrally with the standard login-required error and
  *      the callback is never reached, these tools never re-implement the guest check, so
  *      they cannot leak by forgetting it.
  *
  *   2. PER-RECORD OWNERSHIP. The registry cannot know which customer a given order belongs
  *      to, so each tool loads the order and then calls
- *      Fahad_AI_Auth::user_owns( $order->get_customer_id() ); a mismatch returns a "not
+ *      Dukandaar_Auth::user_owns( $order->get_customer_id() ); a mismatch returns a "not
  *      found"-style error (NOT "forbidden"), so we never even confirm an order exists for
  *      another user, and we bail BEFORE reading items or recording anything.
  *
  * POLICY IS DATA-DRIVEN, NOT INVENTED. Eligibility is judged only against real signals:
- * the order's status (`fahad_ai_return_eligible_statuses`, default completed/processing),
- * its date vs. the window (`fahad_ai_return_window_days`, default 30), and the items
+ * the order's status (`dukandaar_return_eligible_statuses`, default completed/processing),
+ * its date vs. the window (`dukandaar_return_window_days`, default 30), and the items
  * actually on the order. The assistant never fabricates a policy.
  */
-final class Fahad_AI_Returns_Tools {
+final class Dukandaar_Returns_Tools {
 
 	/** Order meta key the RMA request list is recorded under. */
-	private const RMA_META_KEY = '_fahad_ai_rma_requests';
+	private const RMA_META_KEY = '_dukandaar_rma_requests';
 
-	/** Default return window in days (overridable via `fahad_ai_return_window_days`). */
+	/** Default return window in days (overridable via `dukandaar_return_window_days`). */
 	private const DEFAULT_WINDOW_DAYS = 30;
 
 	/**
@@ -59,7 +59,7 @@ final class Fahad_AI_Returns_Tools {
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope). Static
 	 * because the pack holds no per-instance state, its tools call WooCommerce order
-	 * functions and the shared Fahad_AI_Auth boundary directly.
+	 * functions and the shared Dukandaar_Auth boundary directly.
 	 *
 	 * Both tools carry `'personal' => true` so the registry login-gates them centrally
 	 * (the first authorization layer).
@@ -158,7 +158,7 @@ final class Fahad_AI_Returns_Tools {
 		$items = self::resolve_items( $order, $input['items'] ?? [] );
 		if ( empty( $items ) ) {
 			return [
-				'error'           => __( 'Tell me which item(s) from this order you want to return.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error'           => __( 'Tell me which item(s) from this order you want to return.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				'recorded'        => false,
 				'contact_support' => true,
 				'support'         => self::support_message(),
@@ -188,7 +188,7 @@ final class Fahad_AI_Returns_Tools {
 					'rma_id'            => (string) ( $record['rma_id'] ?? '' ),
 					'order_id'          => $order->get_id(),
 					'items'             => $items,
-					'message'           => __( 'A return request for these items has already been recorded; our team will be in touch.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					'message'           => __( 'A return request for these items has already been recorded; our team will be in touch.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					'contact_support'   => true,
 					'support'           => self::support_message(),
 				];
@@ -202,7 +202,7 @@ final class Fahad_AI_Returns_Tools {
 			'items'     => $items,
 			'reason'    => $reason,
 			'status'    => 'requested', // a REQUEST only, never an approval/refund.
-			'requested_by' => Fahad_AI_Auth::current_user_id(),
+			'requested_by' => Dukandaar_Auth::current_user_id(),
 			'requested_at' => self::now(),
 		];
 
@@ -215,7 +215,7 @@ final class Fahad_AI_Returns_Tools {
 			$order->add_order_note(
 				sprintf(
 					/* translators: 1: RMA reference id, 2: comma-separated item list */
-					__( 'Return request %1$s recorded via the AI assistant for: %2$s. No refund has been issued; awaiting store review.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'Return request %1$s recorded via the AI assistant for: %2$s. No refund has been issued; awaiting store review.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$rma_id,
 					implode( ', ', $items )
 				),
@@ -228,7 +228,7 @@ final class Fahad_AI_Returns_Tools {
 			'rma_id'          => $rma_id,
 			'order_id'        => $order->get_id(),
 			'items'           => $items,
-			'message'         => __( 'Your return request has been recorded. Our team will review it and follow up, no refund is issued automatically.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'message'         => __( 'Your return request has been recorded. Our team will review it and follow up, no refund is issued automatically.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			// Always keep the human path open for anything beyond recording the request.
 			'contact_support' => true,
 			'support'         => self::support_message(),
@@ -243,9 +243,9 @@ final class Fahad_AI_Returns_Tools {
 	 * Judge an owned order (optionally a single named item) against the policy.
 	 *
 	 * Order of checks, each producing an honest reason on failure:
-	 *   1. status, must be one of `fahad_ai_return_eligible_statuses` (default
+	 *   1. status, must be one of `dukandaar_return_eligible_statuses` (default
 	 *      completed/processing). Cancelled/refunded/failed/pending are not returnable.
-	 *   2. window, order date + `fahad_ai_return_window_days` (default 30) must not be in
+	 *   2. window, order date + `dukandaar_return_window_days` (default 30) must not be in
 	 *      the past relative to now.
 	 *   3. item  , when an item name is given it must be on the order.
 	 *
@@ -267,7 +267,7 @@ final class Fahad_AI_Returns_Tools {
 		// 1. Status gate.
 		if ( ! in_array( $order->get_status(), self::eligible_statuses(), true ) ) {
 			return $base + self::ineligible(
-				__( 'This order\'s status means it is not eligible for a self-service return. Our support team can still help.', 'fahad-ai-shopping-assistant-for-woocommerce' )
+				__( 'This order\'s status means it is not eligible for a self-service return. Our support team can still help.', 'dukandaar-ai-shopping-assistant-for-woocommerce' )
 			);
 		}
 
@@ -276,7 +276,7 @@ final class Fahad_AI_Returns_Tools {
 		if ( null === $ordered_at ) {
 			// No usable order date, don't guess eligibility; route to a human.
 			return $base + self::ineligible(
-				__( 'I can\'t confirm this order\'s date to check the return window, so our support team should take a look.', 'fahad-ai-shopping-assistant-for-woocommerce' )
+				__( 'I can\'t confirm this order\'s date to check the return window, so our support team should take a look.', 'dukandaar-ai-shopping-assistant-for-woocommerce' )
 			);
 		}
 		$deadline = $ordered_at + ( $window_days * DAY_IN_SECONDS );
@@ -284,7 +284,7 @@ final class Fahad_AI_Returns_Tools {
 			return $base + self::ineligible(
 				sprintf(
 					/* translators: %d: the store's return window in days */
-					__( 'This order is outside the %d-day return window, so it is not eligible for a self-service return. Our support team can still help.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'This order is outside the %d-day return window, so it is not eligible for a self-service return. Our support team can still help.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 					$window_days
 				)
 			);
@@ -293,7 +293,7 @@ final class Fahad_AI_Returns_Tools {
 		// 3. Specific-item gate.
 		if ( '' !== $item && ! self::order_has_item( $order, $item ) ) {
 			return $base + self::ineligible(
-				__( 'I can\'t find that item on this order, so I can\'t start a return for it. Our support team can help if something looks off.', 'fahad-ai-shopping-assistant-for-woocommerce' )
+				__( 'I can\'t find that item on this order, so I can\'t start a return for it. Our support team can help if something looks off.', 'dukandaar-ai-shopping-assistant-for-woocommerce' )
 			);
 		}
 
@@ -334,7 +334,7 @@ final class Fahad_AI_Returns_Tools {
 
 		$order = wc_get_order( $order_id );
 
-		if ( ! $order instanceof WC_Order || ! Fahad_AI_Auth::user_owns( $order->get_customer_id() ) ) {
+		if ( ! $order instanceof WC_Order || ! Dukandaar_Auth::user_owns( $order->get_customer_id() ) ) {
 			return null;
 		}
 
@@ -350,7 +350,7 @@ final class Fahad_AI_Returns_Tools {
 	 */
 	private static function not_found(): array {
 		return [
-			'error'           => __( 'Order not found.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'error'           => __( 'Order not found.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			'contact_support' => true,
 			'support'         => self::support_message(),
 		];
@@ -411,24 +411,24 @@ final class Fahad_AI_Returns_Tools {
 
 	/**
 	 * The configured return window in days. Default self::DEFAULT_WINDOW_DAYS, overridable
-	 * via the documented `fahad_ai_return_window_days` filter. Coerced to a sane positive
+	 * via the documented `dukandaar_return_window_days` filter. Coerced to a sane positive
 	 * integer so a filter returning junk can't open an infinite (or negative) window.
 	 */
 	private static function window_days(): int {
-		$days = (int) apply_filters( 'fahad_ai_return_window_days', self::DEFAULT_WINDOW_DAYS );
+		$days = (int) apply_filters( 'dukandaar_return_window_days', self::DEFAULT_WINDOW_DAYS );
 		return $days > 0 ? $days : self::DEFAULT_WINDOW_DAYS;
 	}
 
 	/**
 	 * Order statuses that are eligible for a self-service return. Default completed +
 	 * processing (a paid/fulfilled order), overridable via
-	 * `fahad_ai_return_eligible_statuses`. Cancelled/refunded/failed/pending/on-hold are
+	 * `dukandaar_return_eligible_statuses`. Cancelled/refunded/failed/pending/on-hold are
 	 * intentionally NOT default-eligible.
 	 *
 	 * @return array<int,string>
 	 */
 	private static function eligible_statuses(): array {
-		$statuses = apply_filters( 'fahad_ai_return_eligible_statuses', [ 'completed', 'processing' ] );
+		$statuses = apply_filters( 'dukandaar_return_eligible_statuses', [ 'completed', 'processing' ] );
 		return is_array( $statuses ) && ! empty( $statuses ) ? array_values( array_map( 'strval', $statuses ) ) : [ 'completed', 'processing' ];
 	}
 
@@ -485,7 +485,7 @@ final class Fahad_AI_Returns_Tools {
 
 	/** The standard "reach a human" message, support is always available, never blocked. */
 	private static function support_message(): string {
-		return __( 'If you need more help, our support team can assist with your return or refund.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+		return __( 'If you need more help, our support team can assist with your return or refund.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 	}
 }
 
@@ -494,5 +494,5 @@ final class Fahad_AI_Returns_Tools {
 // wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before pcov's per-test window opens; its effect is asserted in ReturnsToolsTest::test_returns_tools_are_registered_via_register_pack.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Returns_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Returns_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

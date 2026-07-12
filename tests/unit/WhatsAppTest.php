@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_WhatsApp (issue #62: omnichannel, WhatsApp assistant).
+ * Unit tests for Dukandaar_WhatsApp (issue #62: omnichannel, WhatsApp assistant).
  *
  * Red → Green → Refactor. Conventions mirror VoiceTest / ProactiveTest: WP functions
  * mocked via Brain\Monkey; the singleton reset via reflection between cases (NEVER
@@ -11,7 +11,7 @@
  *
  * A live WhatsApp Business (Meta Cloud API) account is NOT available, so this is TESTED
  * SCAFFOLDING behind a provider seam, going live needs Meta credentials. There is NO
- * real outbound HTTP call to Meta anywhere; the actual send is a `fahad_ai_whatsapp_send`
+ * real outbound HTTP call to Meta anywhere; the actual send is a `dukandaar_whatsapp_send`
  * filter a provider implements. These tests pin the security- and routing-critical PHP:
  *
  *   - GET webhook verify: Meta's hub.mode/hub.verify_token/hub.challenge handshake returns
@@ -23,7 +23,7 @@
  *   - Disabled (default OFF) / unconfigured → no send.
  *
  * Identity: a WhatsApp user is treated as a GUEST. We never auto-trust a phone number as a
- * logged-in user, so the central login gate (Fahad_AI_Auth) still blocks personal-data
+ * logged-in user, so the central login gate (Dukandaar_Auth) still blocks personal-data
  * tools, pinned by test_inbound_does_not_authenticate_the_sender.
  */
 
@@ -63,16 +63,16 @@ class WhatsAppTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_WhatsApp::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_API_Handler::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_WhatsApp::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_API_Handler::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh singleton (reset between cases via reflection). */
-	private function whatsapp(): Fahad_AI_WhatsApp {
-		( new ReflectionProperty( Fahad_AI_WhatsApp::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_WhatsApp::instance();
+	private function whatsapp(): Dukandaar_WhatsApp {
+		( new ReflectionProperty( Dukandaar_WhatsApp::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_WhatsApp::instance();
 	}
 
 	/** A GET verify request: hub.mode / hub.verify_token / hub.challenge params. */
@@ -137,7 +137,7 @@ class WhatsAppTest extends TestCase {
 		// unstubbed functions and reset its singleton (mirrors the dispatch tests).
 		Functions\when( 'update_option' )->justReturn( true );
 		Functions\when( 'wp_generate_uuid4' )->justReturn( 'uuid-analytics' );
-		( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Analytics::class, 'instance' ) )->setValue( null, null );
 
 		Functions\when( 'wp_remote_post' )->alias(
 			static fn( $url, $args = [] ) => [ '__eval' => true, 'code' => 200, 'body' => json_encode( [
@@ -162,7 +162,7 @@ class WhatsAppTest extends TestCase {
 	}
 
 	public function test_enabled_reflects_the_option_when_on(): void {
-		$this->options['fahad_ai_whatsapp_enabled'] = 1;
+		$this->options['dukandaar_whatsapp_enabled'] = 1;
 		$this->assertTrue( $this->whatsapp()->enabled() );
 	}
 
@@ -172,7 +172,7 @@ class WhatsAppTest extends TestCase {
 		// Meta's subscription handshake: when hub.mode is 'subscribe' AND the supplied
 		// verify token matches the configured one, echo the challenge back verbatim. Meta
 		// echoes it as an integer; we return it so the subscription is confirmed.
-		$this->options['fahad_ai_whatsapp_verify_token'] = 'sekret-verify';
+		$this->options['dukandaar_whatsapp_verify_token'] = 'sekret-verify';
 
 		$response = $this->whatsapp()->handle_verify(
 			$this->verify_request( 'subscribe', 'sekret-verify', '1158201444' )
@@ -185,7 +185,7 @@ class WhatsAppTest extends TestCase {
 	public function test_verify_rejects_when_token_does_not_match(): void {
 		// A wrong verify token is rejected (403) and the challenge is NOT echoed, an
 		// attacker who guesses the endpoint but not the token cannot confirm a webhook.
-		$this->options['fahad_ai_whatsapp_verify_token'] = 'sekret-verify';
+		$this->options['dukandaar_whatsapp_verify_token'] = 'sekret-verify';
 
 		$response = $this->whatsapp()->handle_verify(
 			$this->verify_request( 'subscribe', 'WRONG-token', '1158201444' )
@@ -208,7 +208,7 @@ class WhatsAppTest extends TestCase {
 
 	public function test_verify_rejects_when_mode_is_not_subscribe(): void {
 		// hub.mode must be 'subscribe'; any other mode is rejected even with a good token.
-		$this->options['fahad_ai_whatsapp_verify_token'] = 'sekret-verify';
+		$this->options['dukandaar_whatsapp_verify_token'] = 'sekret-verify';
 
 		$response = $this->whatsapp()->handle_verify(
 			$this->verify_request( 'unsubscribe', 'sekret-verify', '1158201444' )
@@ -222,8 +222,8 @@ class WhatsAppTest extends TestCase {
 	public function test_inbound_rejects_a_missing_signature_before_processing(): void {
 		// HARDENING: no X-Hub-Signature-256 header → reject (403) BEFORE parsing or
 		// running the agent. The send seam must never fire on an unsigned request.
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
 
 		$payload = $this->text_payload( '15551234567', 'hello' );
 		$raw     = json_encode( $payload );
@@ -231,7 +231,7 @@ class WhatsAppTest extends TestCase {
 		$sent = [];
 		Functions\when( 'apply_filters' )->alias(
 			function ( $hook, $value = null ) use ( &$sent ) {
-				if ( 'fahad_ai_whatsapp_send' === $hook ) {
+				if ( 'dukandaar_whatsapp_send' === $hook ) {
 					$sent[] = func_get_args();
 				}
 				return $value;
@@ -248,8 +248,8 @@ class WhatsAppTest extends TestCase {
 	public function test_inbound_rejects_a_bad_signature_before_processing(): void {
 		// A signature computed with the WRONG secret must fail the constant-time compare,
 		// so the request is rejected (403) before the agent runs or any send fires.
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
 
 		$payload = $this->text_payload( '15551234567', 'hello' );
 		$raw     = json_encode( $payload );
@@ -258,7 +258,7 @@ class WhatsAppTest extends TestCase {
 		$sent = [];
 		Functions\when( 'apply_filters' )->alias(
 			function ( $hook, $value = null ) use ( &$sent ) {
-				if ( 'fahad_ai_whatsapp_send' === $hook ) {
+				if ( 'dukandaar_whatsapp_send' === $hook ) {
 					$sent[] = func_get_args();
 				}
 				return $value;
@@ -275,7 +275,7 @@ class WhatsAppTest extends TestCase {
 	public function test_inbound_rejects_when_app_secret_is_unconfigured(): void {
 		// Without a configured app secret the signature cannot be verified, so EVERY
 		// inbound POST is rejected (fail closed), never processed on trust.
-		$this->options['fahad_ai_whatsapp_enabled'] = 1;
+		$this->options['dukandaar_whatsapp_enabled'] = 1;
 
 		$payload = $this->text_payload( '15551234567', 'hello' );
 		$raw     = json_encode( $payload );
@@ -293,12 +293,12 @@ class WhatsAppTest extends TestCase {
 	public function test_valid_signed_text_routes_into_agent_and_replies_to_send_seam(): void {
 		// The end-to-end happy path WITHOUT any live HTTP to Meta: a correctly-signed
 		// inbound text reaches the REAL agent loop (scripted transport) and the resulting
-		// reply text is handed to the fahad_ai_whatsapp_send SEAM, addressed to the
+		// reply text is handed to the dukandaar_whatsapp_send SEAM, addressed to the
 		// sender. We assert the seam is invoked with the reply; we do NOT make a network
 		// call. A provider implementing the filter is what actually talks to Meta.
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
-		$this->options['fahad_ai_anthropic_api_key']   = 'sk-ant-key';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_anthropic_api_key']   = 'sk-ant-key';
 
 		$payload = $this->text_payload( '15551234567', 'do you have running shoes?' );
 		$raw     = json_encode( $payload );
@@ -311,7 +311,7 @@ class WhatsAppTest extends TestCase {
 		$captured = [];
 		Functions\when( 'apply_filters' )->alias(
 			function ( $hook, $value = null, $to = null, $text = null ) use ( &$captured ) {
-				if ( 'fahad_ai_whatsapp_send' === $hook ) {
+				if ( 'dukandaar_whatsapp_send' === $hook ) {
 					$captured = [ 'to' => $to, 'text' => $text ];
 					return [ 'sent' => true ];
 				}
@@ -337,7 +337,7 @@ class WhatsAppTest extends TestCase {
 		// Even a perfectly-signed inbound is NOT processed (and nothing is sent) when the
 		// merchant kill-switch is OFF (the default). The channel must be explicitly opted
 		// into. The signature still validates; the disabled gate short-circuits after.
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
 		// enabled NOT set → default OFF.
 
 		$payload = $this->text_payload( '15551234567', 'hello' );
@@ -347,7 +347,7 @@ class WhatsAppTest extends TestCase {
 		$sent = [];
 		Functions\when( 'apply_filters' )->alias(
 			function ( $hook, $value = null ) use ( &$sent ) {
-				if ( 'fahad_ai_whatsapp_send' === $hook ) {
+				if ( 'dukandaar_whatsapp_send' === $hook ) {
 					$sent[] = func_get_args();
 				}
 				return $value;
@@ -361,14 +361,14 @@ class WhatsAppTest extends TestCase {
 	}
 
 	public function test_default_send_seam_is_a_noop_when_no_provider_configured(): void {
-		// Unconfigured: with NO provider hooked onto fahad_ai_whatsapp_send (the default
+		// Unconfigured: with NO provider hooked onto dukandaar_whatsapp_send (the default
 		// identity apply_filters from setUp), a valid signed text routes into the agent
 		// but NOTHING is sent (the seam returns null). This is the "default no-op / nothing
 		// is sent until a provider + tokens are set" guarantee, the live Meta call is the
 		// provider's job, not this plugin's.
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
-		$this->options['fahad_ai_anthropic_api_key']   = 'sk-ant-key';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_anthropic_api_key']   = 'sk-ant-key';
 
 		$payload = $this->text_payload( '15551234567', 'hello' );
 		$raw     = json_encode( $payload );
@@ -390,11 +390,11 @@ class WhatsAppTest extends TestCase {
 	public function test_inbound_does_not_authenticate_the_sender(): void {
 		// HARDENING: a phone number must NOT be auto-trusted as a logged-in WC customer.
 		// We assert the handler never calls wp_set_current_user, so the central login
-		// gate (Fahad_AI_Auth::guard_logged_in) keeps personal-data tools blocked. Building
+		// gate (Dukandaar_Auth::guard_logged_in) keeps personal-data tools blocked. Building
 		// the verified phone→customer mapping is explicitly out of scope for #62.
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
-		$this->options['fahad_ai_anthropic_api_key']   = 'sk-ant-key';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_anthropic_api_key']   = 'sk-ant-key';
 
 		$payload = $this->text_payload( '15551234567', 'what is my order status?' );
 		$raw     = json_encode( $payload );
@@ -415,8 +415,8 @@ class WhatsAppTest extends TestCase {
 		// A correctly-signed delivery that carries no text message (e.g. a status webhook,
 		// or an unsupported message type) must be acknowledged (200) without running the
 		// agent or sending anything, Meta retries on a non-200, so we must not error.
-		$this->options['fahad_ai_whatsapp_enabled']    = 1;
-		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
+		$this->options['dukandaar_whatsapp_enabled']    = 1;
+		$this->options['dukandaar_whatsapp_app_secret'] = 'app-secret';
 
 		$raw = json_encode( [
 			'object' => 'whatsapp_business_account',
@@ -430,7 +430,7 @@ class WhatsAppTest extends TestCase {
 		$sent = [];
 		Functions\when( 'apply_filters' )->alias(
 			function ( $hook, $value = null ) use ( &$sent ) {
-				if ( 'fahad_ai_whatsapp_send' === $hook ) {
+				if ( 'dukandaar_whatsapp_send' === $hook ) {
 					$sent[] = func_get_args();
 				}
 				return $value;

@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Rrf {
+final class Dukandaar_Rrf {
 
 	/** Standard RRF constant; dampens the weight of any single high rank. */
 	public const DEFAULT_K = 60;

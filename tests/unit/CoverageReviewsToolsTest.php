@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage companion for Fahad_AI_Reviews_Tools (issue #11: reviews & ratings).
+ * Coverage companion for Dukandaar_Reviews_Tools (issue #11: reviews & ratings).
  *
  * Sibling ReviewsToolsTest already exercises dispatch, the empty/error states and
  * the snippet-building path; this file pins down the remaining contract edges so
@@ -9,7 +9,7 @@
  *   - the file-scope self-registration target (the pack class exists and its
  *     register() callback is a real, invokable provider that appends exactly the
  *     get_product_reviews tool, the exact contract the file-scope
- *     Fahad_AI_Tool_Registry::register_pack() call wires up at load),
+ *     Dukandaar_Tool_Registry::register_pack() call wires up at load),
  *   - register() is purely ADDITIVE: it appends to whatever tool list it is handed
  *     without dropping or reordering existing entries,
  *   - the get_product_reviews spec shape (integer params, the documented limit
@@ -19,7 +19,7 @@
  *     capping and the limit floor of 1.
  *
  * Conventions mirror the sibling: register the pack's REAL provider through
- * Fahad_AI_Tool_Registry::register_pack() (after snapshotting + clearing the
+ * Dukandaar_Tool_Registry::register_pack() (after snapshotting + clearing the
  * static pack list), then dispatch through the singleton, so the production
  * registration + merge + dispatch path is what is under test. WordPress/Woo
  * functions are stubbed with Brain\Monkey.
@@ -47,7 +47,7 @@ class CoverageReviewsToolsTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
-		$this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+		$this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
 		Functions\stubs( [
 			'absint'              => fn( $n ) => abs( (int) $n ),
@@ -67,7 +67,7 @@ class CoverageReviewsToolsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
@@ -78,14 +78,14 @@ class CoverageReviewsToolsTest extends TestCase {
 	 * reviews pack's REAL provider, exactly as the pack's file-scope
 	 * self-registration does in production.
 	 */
-	private function registry(): Fahad_AI_Tool_Registry {
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+	private function registry(): Dukandaar_Tool_Registry {
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
 
-		Fahad_AI_Tool_Registry::reset_packs();
-		Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Reviews_Tools', 'register' ] );
+		Dukandaar_Tool_Registry::reset_packs();
+		Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Reviews_Tools', 'register' ] );
 
-		return Fahad_AI_Tool_Registry::instance();
+		return Dukandaar_Tool_Registry::instance();
 	}
 
 	/** A product mock that reports an average rating and review count. */
@@ -112,19 +112,19 @@ class CoverageReviewsToolsTest extends TestCase {
 	// ── file-scope self-registration target ─────────────────────────────────────
 
 	/**
-	 * The pack file self-registers via Fahad_AI_Tool_Registry::register_pack() at
+	 * The pack file self-registers via Dukandaar_Tool_Registry::register_pack() at
 	 * file scope the moment it is require'd, the only wiring needed. The bootstrap
 	 * glob-requires includes/tools/*.php, so the class is loaded and its register()
 	 * method is a valid, callable pack provider. Asserting that proves the
 	 * file-scope registration call references a real, invokable provider.
 	 */
 	public function test_pack_self_registration_references_a_callable_register(): void {
-		$this->assertTrue( class_exists( 'Fahad_AI_Reviews_Tools' ) );
-		$this->assertTrue( is_callable( [ 'Fahad_AI_Reviews_Tools', 'register' ] ) );
+		$this->assertTrue( class_exists( 'Dukandaar_Reviews_Tools' ) );
+		$this->assertTrue( is_callable( [ 'Dukandaar_Reviews_Tools', 'register' ] ) );
 
 		// register() really appends the reviews tool onto a tool list, the exact
 		// contract the file-scope register_pack() wires up.
-		$tools = Fahad_AI_Reviews_Tools::register( [] );
+		$tools = Dukandaar_Reviews_Tools::register( [] );
 		$names = array_column( $tools, 'name' );
 		$this->assertSame( [ 'get_product_reviews' ], $names );
 	}
@@ -140,7 +140,7 @@ class CoverageReviewsToolsTest extends TestCase {
 			[ 'name' => 'add_to_cart' ],
 		];
 
-		$tools = Fahad_AI_Reviews_Tools::register( $existing );
+		$tools = Dukandaar_Reviews_Tools::register( $existing );
 		$names = array_column( $tools, 'name' );
 
 		$this->assertSame( [ 'search_products', 'add_to_cart', 'get_product_reviews' ], $names );
@@ -152,7 +152,7 @@ class CoverageReviewsToolsTest extends TestCase {
 		// routing an invalid product through it and reading the error contract back.
 		Functions\when( 'wc_get_product' )->justReturn( false );
 
-		$tools    = Fahad_AI_Reviews_Tools::register( [] );
+		$tools    = Dukandaar_Reviews_Tools::register( [] );
 		$reviews  = $tools[0];
 		$callback = $reviews['callback'];
 

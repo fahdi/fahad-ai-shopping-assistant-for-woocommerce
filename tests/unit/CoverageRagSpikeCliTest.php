@@ -1,11 +1,11 @@
 <?php
 /**
- * Coverage tests for Fahad_AI_Rag_Spike_CLI (the `wp fahad-ai rag-spike` runner).
+ * Coverage tests for Dukandaar_Rag_Spike_CLI (the `wp dukandaar rag-spike` runner).
  *
  * The CLI file is NOT loaded by tests/bootstrap.php: it guards itself with a
  * file-scope `return;` unless `WP_CLI` is defined, and ends with a
  * `\WP_CLI::add_command()` call. So this test stands up a minimal `WP_CLI`
- * stub (constant + class) and `FAHAD_AI_PATH`, then require_once's the file , 
+ * stub (constant + class) and `DUKANDAAR_PATH`, then require_once's the file , 
  * which is what exercises the file-scope guards and the add_command line.
  *
  * Every WordPress/WooCommerce dependency the command touches is stubbed via
@@ -49,8 +49,8 @@ if ( ! defined( 'WP_CLI' ) ) {
 	define( 'WP_CLI', true );
 }
 
-if ( ! defined( 'FAHAD_AI_PATH' ) ) {
-	define( 'FAHAD_AI_PATH', sys_get_temp_dir() . '/fahad-ai-rag-spike-cli-test/' );
+if ( ! defined( 'DUKANDAAR_PATH' ) ) {
+	define( 'DUKANDAAR_PATH', sys_get_temp_dir() . '/dukandaar-rag-spike-cli-test/' );
 }
 
 class CoverageRagSpikeCliTest extends TestCase {
@@ -77,9 +77,9 @@ class CoverageRagSpikeCliTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_response_code' )->justReturn( 200 );
 
 		// Uploads-dir surface: the command may only ever write inside
-		// uploads/fahad-ai-shopping-assistant-for-woocommerce/, so the stubs model a
+		// uploads/dukandaar-ai-shopping-assistant-for-woocommerce/, so the stubs model a
 		// real uploads basedir under the system temp dir.
-		$this->uploads_basedir = sys_get_temp_dir() . '/fahad-ai-uploads-' . uniqid();
+		$this->uploads_basedir = sys_get_temp_dir() . '/dukandaar-uploads-' . uniqid();
 		Functions\when( 'wp_upload_dir' )->alias( fn() => [ 'basedir' => $this->uploads_basedir ] );
 		Functions\when( 'trailingslashit' )->alias( static fn( $s ) => rtrim( (string) $s, '/\\' ) . '/' );
 		Functions\when( 'sanitize_file_name' )->alias( static fn( $s ) => preg_replace( '/[^A-Za-z0-9._-]/', '-', (string) $s ) );
@@ -91,7 +91,7 @@ class CoverageRagSpikeCliTest extends TestCase {
 
 	/** The only directory the command is allowed to write into. */
 	private function report_dir(): string {
-		return $this->uploads_basedir . '/fahad-ai-shopping-assistant-for-woocommerce/';
+		return $this->uploads_basedir . '/dukandaar-ai-shopping-assistant-for-woocommerce/';
 	}
 
 	protected function tearDown(): void {
@@ -115,8 +115,8 @@ class CoverageRagSpikeCliTest extends TestCase {
 		parent::tearDown();
 	}
 
-	private function cli(): Fahad_AI_Rag_Spike_CLI {
-		return new Fahad_AI_Rag_Spike_CLI();
+	private function cli(): Dukandaar_Rag_Spike_CLI {
+		return new Dukandaar_Rag_Spike_CLI();
 	}
 
 	private function tmp_path( string $name ): string {
@@ -131,8 +131,8 @@ class CoverageRagSpikeCliTest extends TestCase {
 		// Line 240 ran when the file was required: the command is registered to the
 		// CLI class. This proves the file-scope guards (ABSPATH ok, WP_CLI truthy)
 		// fell through rather than `return;`-ing or `exit`-ing.
-		$this->assertArrayHasKey( 'fahad-ai rag-spike', WP_CLI::$commands );
-		$this->assertSame( Fahad_AI_Rag_Spike_CLI::class, WP_CLI::$commands['fahad-ai rag-spike'] );
+		$this->assertArrayHasKey( 'dukandaar rag-spike', WP_CLI::$commands );
+		$this->assertSame( Dukandaar_Rag_Spike_CLI::class, WP_CLI::$commands['dukandaar rag-spike'] );
 	}
 
 	// ── __invoke: offline/canned happy path ───────────────────────────────────
@@ -188,7 +188,7 @@ class CoverageRagSpikeCliTest extends TestCase {
 	public function test_invoke_confines_report_to_uploads_subdir_even_for_traversal_paths(): void {
 		// WP.org review 30Jun26: --report must not write to arbitrary filesystem
 		// locations. Absolute paths and ../ traversal collapse to a sanitized
-		// basename inside uploads/fahad-ai-shopping-assistant-for-woocommerce/.
+		// basename inside uploads/dukandaar-ai-shopping-assistant-for-woocommerce/.
 		Functions\when( 'get_option' )->justReturn( '' );
 
 		$outside = sys_get_temp_dir() . '/rag-spike-escape-' . uniqid() . '.md';
@@ -314,7 +314,7 @@ class CoverageRagSpikeCliTest extends TestCase {
 	// ── live_dataset() branch coverage via reflection ─────────────────────────
 
 	private function call_private( string $method, array $args ) {
-		$ref = new ReflectionMethod( Fahad_AI_Rag_Spike_CLI::class, $method );
+		$ref = new ReflectionMethod( Dukandaar_Rag_Spike_CLI::class, $method );
 		$ref->setAccessible( true );
 		return $ref->invokeArgs( $this->cli(), $args );
 	}
@@ -502,7 +502,7 @@ class CoverageRagSpikeCliTest extends TestCase {
 	// ── canned() golden set shape ─────────────────────────────────────────────
 
 	public function test_canned_returns_aligned_texts_vecs_and_queries(): void {
-		$ref = new ReflectionMethod( Fahad_AI_Rag_Spike_CLI::class, 'canned' );
+		$ref = new ReflectionMethod( Dukandaar_Rag_Spike_CLI::class, 'canned' );
 		$ref->setAccessible( true );
 		$canned = $ref->invoke( null );
 

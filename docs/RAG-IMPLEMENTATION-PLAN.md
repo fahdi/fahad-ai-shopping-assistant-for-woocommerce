@@ -20,7 +20,7 @@ Mirrors the project's standing bar (CLAUDE.md "Release workflow", epic #47):
 - **Never regress.** No key / API down / stale index ⇒ silently fall back to today's keyword search. Embeddings errors never reach the shopper. (§4.3, §5.5, §6.2)
 - **Model + dimensions are stored beside every vector.** A model change marks the index stale and never mixes vectors across models. (§3, §5.5)
 - **Grounding unchanged.** Semantic retrieval changes *which* products surface, not the no-hallucination / budget / abstain rules. (§6.2)
-- **Backend is swappable behind an interface.** `Fahad_AI_Vector_Store` has MySQL (default), MariaDB-native, and external implementations; retrieval logic does not change when the backend does. (§7.1, §7.4)
+- **Backend is swappable behind an interface.** `Dukandaar_Vector_Store` has MySQL (default), MariaDB-native, and external implementations; retrieval logic does not change when the backend does. (§7.1, §7.4)
 
 ---
 
@@ -62,7 +62,7 @@ A deterministic, offline retrieval-quality harness under `tests/eval/`.
 
 ### S0.5, Spike runner + decision report
 A runnable path to close the real gate, plus a written verdict.
-- **AC1** A WP-CLI command (`wp fahad-ai rag-spike`) that, given a configured embeddings key, embeds the live demo catalog into a temporary BLOB table, runs the golden set through keyword/vector/hybrid, and prints recall@k + p50/p95 scan latency at the catalog's product count.
+- **AC1** A WP-CLI command (`wp dukandaar rag-spike`) that, given a configured embeddings key, embeds the live demo catalog into a temporary BLOB table, runs the golden set through keyword/vector/hybrid, and prints recall@k + p50/p95 scan latency at the catalog's product count.
 - **AC2** Runs offline with canned embeddings when no key is set, so the command and output format are verifiable without spend.
 - **AC3** Writes `docs/RAG-SPIKE-REPORT.md` with the numbers and an explicit **GO / NO-GO** recommendation against the gate (hybrid beats keyword; latency acceptable).
 - **AC4** No shipped plugin surface (no new tool, no admin UI, no release). Primitives live where Phase 1 will reuse them.
@@ -76,28 +76,28 @@ A runnable path to close the real gate, plus a written verdict.
 Gated on Phase 0 GO. Each story is its own per-PR release.
 
 ### S1.1, Embedding provider abstraction + OpenAI implementation
-- **AC1** `Fahad_AI_Embedding_Provider` interface: `embed(string[]) : float[][]`, `model() : string`, `dimensions() : int` (RAG-DESIGN §7.4).
-- **AC2** OpenAI implementation (`text-embedding-3-small`, `dimensions: 512` default) using the existing HTTP layer; selected via a `fahad_ai_embedding_provider` factory + filter (mirrors the chat-provider pattern).
+- **AC1** `Dukandaar_Embedding_Provider` interface: `embed(string[]) : float[][]`, `model() : string`, `dimensions() : int` (RAG-DESIGN §7.4).
+- **AC2** OpenAI implementation (`text-embedding-3-small`, `dimensions: 512` default) using the existing HTTP layer; selected via a `dukandaar_embedding_provider` factory + filter (mirrors the chat-provider pattern).
 - **AC3** Defaults to **off / keyword-only** until a key is configured; a missing key is not an error.
 - **AC4** Batch endpoint used where available; 429/5xx surface as a typed failure the caller degrades on (never to the shopper).
 - **AC5** Tests stub HTTP and assert request shape (model, dims, batched inputs) and failure handling.
 
 ### S1.2, Vector store interface + MySQL backend + schema
-- **AC1** `Fahad_AI_Vector_Store` interface: `upsert/delete/query/is_available/rebuild_required` (RAG-DESIGN §7.4).
-- **AC2** MySQL backend creates `{$wpdb->prefix}fahad_ai_embeddings` via `dbDelta` on activation (schema per §5.1: product_id PK, model, dim, embedding LONGBLOB, content_hash, updated_at; index on model).
+- **AC1** `Dukandaar_Vector_Store` interface: `upsert/delete/query/is_available/rebuild_required` (RAG-DESIGN §7.4).
+- **AC2** MySQL backend creates `{$wpdb->prefix}dukandaar_embeddings` via `dbDelta` on activation (schema per §5.1: product_id PK, model, dim, embedding LONGBLOB, content_hash, updated_at; index on model).
 - **AC3** `query(vector, k, filters)` runs the PHP brute-force cosine scan with category/price/stock/visibility **pre-filtering** before the scan (§4.4).
 - **AC4** Uninstall cleanup drops the table; activation/upgrade is idempotent.
 - **AC5** Integration tests cover upsert→query ranking, pre-filter correctness, and the model/dim columns.
 
 ### S1.3, Indexer + Action Scheduler sync
-- **AC1** `Fahad_AI_Indexer`: `backfill()` (batched bulk embed via Action Scheduler) and `reindex_product(id)` (async).
+- **AC1** `Dukandaar_Indexer`: `backfill()` (batched bulk embed via Action Scheduler) and `reindex_product(id)` (async).
 - **AC2** Incremental hooks: `woocommerce_update_product`/`woocommerce_new_product` enqueue async re-embed (unique-coalesced); `before_delete_post`/`wp_trash_post` enqueue delete (§5.3).
 - **AC3** `content_hash` skip: a price-only edit triggers **no** re-embed (asserted).
 - **AC4** Idempotent and safe to re-run; respects a per-day token cap option.
 - **AC5** Tests assert enqueue-on-save, no-op on unchanged hash, delete-on-trash, batch sizing.
 
 ### S1.4, Hybrid retriever + `semantic_search` tool
-- **AC1** `Fahad_AI_Retriever::search(query, filters, k)` runs keyword leg (reuse existing `wc_get_products` search) + vector leg, fuses with RRF (S0.2), applies live filters, returns product summaries.
+- **AC1** `Dukandaar_Retriever::search(query, filters, k)` runs keyword leg (reuse existing `wc_get_products` search) + vector leg, fuses with RRF (S0.2), applies live filters, returns product summaries.
 - **AC2** New `includes/tools/class-semantic-tools.php` registers a `semantic_search` tool via `register_pack()`, returning the canonical `{ found, products[] }` shape so cards render with **no api-handler change** (§4.5). Gateable via existing tool-disable settings.
 - **AC3** Live price/stock read at call time via `format_product_summary()` (no stale data).
 - **AC4** No key / empty index ⇒ returns keyword-only results (degradation), never an error.
@@ -135,12 +135,12 @@ Gated on Phase 0 GO. Each story is its own per-PR release.
 ## Phase 3, Scale tier (opt-in, no default change)
 
 ### S3.1, MariaDB-native vector backend
-- **AC1** `Fahad_AI_MariaDb_Vector_Store` using `VECTOR(dim)` + `VECTOR INDEX`, auto-detected when `VEC_DISTANCE_COSINE`/MariaDB ≥ 11.7 is present (§2.2).
+- **AC1** `Dukandaar_MariaDb_Vector_Store` using `VECTOR(dim)` + `VECTOR INDEX`, auto-detected when `VEC_DISTANCE_COSINE`/MariaDB ≥ 11.7 is present (§2.2).
 - **AC2** Same interface; identical retrieval results vs the MySQL backend on the golden set (parity test).
 - **AC3** Default behaviour unchanged on hosts without the capability.
 
 ### S3.2, External vector store (Qdrant reference) + optional rerank
-- **AC1** `Fahad_AI_External_Vector_Store` (Qdrant reference), opt-in only; credentials via settings; egress/privacy disclosed.
+- **AC1** `Dukandaar_External_Vector_Store` (Qdrant reference), opt-in only; credentials via settings; egress/privacy disclosed.
 - **AC2** Optional cross-encoder rerank (Cohere/Voyage) behind a setting, added only if Phase 1 eval shows precision headroom (§4.3 step 4).
 - **AC3** Falls back to the default backend if the external store is unreachable.
 

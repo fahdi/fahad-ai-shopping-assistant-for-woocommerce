@@ -1,26 +1,26 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Stock_Alert_Tools (issue #51: back-in-stock & price-drop
+ * Unit tests for Dukandaar_Stock_Alert_Tools (issue #51: back-in-stock & price-drop
  * alerts, the agent TOOL `subscribe_stock_alert`).
  *
  * Red → Green → Refactor. Conventions mirror CatalogToolsTest / MemoryToolsTest:
  * WP/WC functions mocked via Brain\Monkey; WC objects via Mockery; the registry
  * singleton + its static pack list snapshotted/restored so a case here neither
  * inherits another suite's packs nor leaks the stock-alert pack we register; the
- * Fahad_AI_Stock_Alerts store singleton reset via reflection (NEVER
+ * Dukandaar_Stock_Alerts store singleton reset via reflection (NEVER
  * ReflectionMethod::setAccessible, host runs PHP 8.5).
  *
  * The tool is NOT a built-in, it ships as a drop-in feature pack that
- * self-registers via Fahad_AI_Tool_Registry::register_pack() at file load. Every
+ * self-registers via Dukandaar_Tool_Registry::register_pack() at file load. Every
  * test registers the pack's REAL provider, then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production
+ * Dukandaar_Tool_Registry::instance()->dispatch(), so the production
  * registration + merge + dispatch path is what is under test.
  *
  * NO FAKE SCARCITY IS THE POINT (issue #51, ROADMAP §6 anti-features). The headline
  * test is first-class: a back_in_stock alert is REFUSED for an item that is
  * currently IN stock, the tool never manufactures urgency, and only an
  * out-of-stock item (or a price_drop) is a valid back-in-stock subscription.
- * Consent is captured as a double-opt-in PENDING row (see Fahad_AI_Stock_Alerts),
+ * Consent is captured as a double-opt-in PENDING row (see Dukandaar_Stock_Alerts),
  * and the shopper is told to confirm via email; PII (the raw email) is never echoed
  * back unmasked.
  */
@@ -48,7 +48,7 @@ class StockAlertToolsTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
-		$this->pack_snapshot = (array) ( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->getValue();
+		$this->pack_snapshot = (array) ( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->getValue();
 
 		$this->options = [];
 
@@ -83,8 +83,8 @@ class StockAlertToolsTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
-		( new ReflectionProperty( Fahad_AI_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'pack_providers' ) )->setValue( null, $this->pack_snapshot );
+		( new ReflectionProperty( Dukandaar_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
@@ -95,15 +95,15 @@ class StockAlertToolsTest extends TestCase {
 	 * registers the pack's REAL provider, exactly what the file-scope
 	 * self-registration does in production.
 	 */
-	private function registry(): Fahad_AI_Tool_Registry {
-		( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Tool_Registry::class, 'instance' ) )->setValue( null, null );
-		( new ReflectionProperty( Fahad_AI_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
+	private function registry(): Dukandaar_Tool_Registry {
+		( new ReflectionProperty( Dukandaar_Tools::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Tool_Registry::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Stock_Alerts::class, 'instance' ) )->setValue( null, null );
 
-		Fahad_AI_Tool_Registry::reset_packs();
-		Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Stock_Alert_Tools', 'register' ] );
+		Dukandaar_Tool_Registry::reset_packs();
+		Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Stock_Alert_Tools', 'register' ] );
 
-		return Fahad_AI_Tool_Registry::instance();
+		return Dukandaar_Tool_Registry::instance();
 	}
 
 	/** Mock a product with a given in-stock state (and optional type/parent for variations). */
@@ -119,7 +119,7 @@ class StockAlertToolsTest extends TestCase {
 
 	/** Stored subscription rows (raw option value). */
 	private function rows(): array {
-		return $this->options[ Fahad_AI_Stock_Alerts::OPTION ] ?? [];
+		return $this->options[ Dukandaar_Stock_Alerts::OPTION ] ?? [];
 	}
 
 	// ── registration ────────────────────────────────────────────────────────────
@@ -230,7 +230,7 @@ class StockAlertToolsTest extends TestCase {
 		] );
 
 		$this->assertTrue( $res['subscribed'] ?? false );
-		$row = reset( $this->options[ Fahad_AI_Stock_Alerts::OPTION ] );
+		$row = reset( $this->options[ Dukandaar_Stock_Alerts::OPTION ] );
 		$this->assertSame( 'price_drop', $row['type'] );
 	}
 

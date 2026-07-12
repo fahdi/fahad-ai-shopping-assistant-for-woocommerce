@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Embedding_Document (RAG Phase 0, S0.3).
+ * Unit tests for Dukandaar_Embedding_Document (RAG Phase 0, S0.3).
  *
  * Composes the single text document embedded per product (RAG-DESIGN.md §4.2):
  * title / categories / short desc / long desc / attributes / tags, in salience
@@ -46,7 +46,7 @@ class EmbeddingDocumentTest extends TestCase {
 	}
 
 	public function test_composes_sections_in_salience_order(): void {
-		$doc = Fahad_AI_Embedding_Document::compose( $this->fields() );
+		$doc = Dukandaar_Embedding_Document::compose( $this->fields() );
 
 		// Title first, then categories, then descriptions, attributes, tags.
 		$this->assertStringStartsWith( 'Premium Pullover Hoodie', $doc );
@@ -57,7 +57,7 @@ class EmbeddingDocumentTest extends TestCase {
 	}
 
 	public function test_excludes_sku_price_and_stock(): void {
-		$doc = Fahad_AI_Embedding_Document::compose( $this->fields() );
+		$doc = Dukandaar_Embedding_Document::compose( $this->fields() );
 		$this->assertStringNotContainsStringIgnoringCase( 'SKU-XYZ-999', $doc, 'SKU must not pollute the embedding' );
 		$this->assertStringNotContainsString( '45.00', $doc, 'price is live data, never embedded' );
 		$this->assertStringNotContainsString( 'STOCKMARKER', $doc, 'stock is live data, never embedded' );
@@ -66,7 +66,7 @@ class EmbeddingDocumentTest extends TestCase {
 	public function test_strips_html_and_truncates_long_description(): void {
 		$fields                = $this->fields();
 		$fields['description'] = '<p>' . str_repeat( 'winterword ', 1000 ) . '</p>'; // ~11k chars
-		$doc                   = Fahad_AI_Embedding_Document::compose( $fields );
+		$doc                   = Dukandaar_Embedding_Document::compose( $fields );
 
 		$this->assertStringNotContainsString( '<p>', $doc, 'HTML stripped' );
 		$this->assertLessThanOrEqual( 1800, strlen( $doc ), 'long description truncated (~1500) so the doc stays bounded' );
@@ -74,7 +74,7 @@ class EmbeddingDocumentTest extends TestCase {
 	}
 
 	public function test_omits_empty_sections(): void {
-		$doc = Fahad_AI_Embedding_Document::compose(
+		$doc = Dukandaar_Embedding_Document::compose(
 			[ 'title' => 'Plain Item', 'categories' => [], 'attributes' => [], 'tags' => [] ]
 		);
 		$this->assertStringContainsString( 'Plain Item', $doc );
@@ -86,10 +86,10 @@ class EmbeddingDocumentTest extends TestCase {
 	public function test_content_hash_is_stable_and_field_sensitive(): void {
 		$base = $this->fields();
 
-		$h1 = Fahad_AI_Embedding_Document::content_hash( Fahad_AI_Embedding_Document::compose( $base ) );
+		$h1 = Dukandaar_Embedding_Document::content_hash( Dukandaar_Embedding_Document::compose( $base ) );
 
 		// Same embedded fields -> identical hash.
-		$h2 = Fahad_AI_Embedding_Document::content_hash( Fahad_AI_Embedding_Document::compose( $base ) );
+		$h2 = Dukandaar_Embedding_Document::content_hash( Dukandaar_Embedding_Document::compose( $base ) );
 		$this->assertSame( $h1, $h2 );
 		$this->assertMatchesRegularExpression( '/^[0-9a-f]{40}$/', $h1, 'SHA-1 hex' );
 
@@ -99,7 +99,7 @@ class EmbeddingDocumentTest extends TestCase {
 		$priceEdit['stock'] = 'STOCKMARKER-OUTOFSTOCK';
 		$this->assertSame(
 			$h1,
-			Fahad_AI_Embedding_Document::content_hash( Fahad_AI_Embedding_Document::compose( $priceEdit ) ),
+			Dukandaar_Embedding_Document::content_hash( Dukandaar_Embedding_Document::compose( $priceEdit ) ),
 			'a price/stock-only change must not trigger a re-embed'
 		);
 
@@ -108,7 +108,7 @@ class EmbeddingDocumentTest extends TestCase {
 		$titleEdit['title'] = 'Different Hoodie';
 		$this->assertNotSame(
 			$h1,
-			Fahad_AI_Embedding_Document::content_hash( Fahad_AI_Embedding_Document::compose( $titleEdit ) )
+			Dukandaar_Embedding_Document::content_hash( Dukandaar_Embedding_Document::compose( $titleEdit ) )
 		);
 	}
 }

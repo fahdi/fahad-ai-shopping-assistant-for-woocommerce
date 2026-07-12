@@ -2,7 +2,7 @@
 
 Golden-conversation tests for the AI shopping assistant. This is the AI analogue
 of the unit tests in `tests/unit`: instead of testing one method in isolation, it
-drives the **real agent loop** (`Fahad_AI_API_Handler::run_anthropic_agent()` /
+drives the **real agent loop** (`Dukandaar_API_Handler::run_anthropic_agent()` /
 `run_moonshot_agent()`) end-to-end and asserts on **tool-call quality** and
 **answer quality**.
 
@@ -18,7 +18,7 @@ fixture ──► EvalHarness::stub_environment()    (API keys, model, currency,
         ──► EvalHarness::script_transport()    (stubs wp_remote_post → queue of canned responses)
         ──► EvalHarness::run( provider, msgs ) (invokes the private agent loop via reflection)
                 │
-                ├─ real Fahad_AI_Tools::execute() runs inside the loop
+                ├─ real Dukandaar_Tools::execute() runs inside the loop
                 └─ returns { result, tool_calls, tool_results, answer, products }
         ──► assertions: tool sequence, cards, answer pattern, grounding
 ```
@@ -28,7 +28,7 @@ fixture ──► EvalHarness::stub_environment()    (API keys, model, currency,
   `tool_use` / `tool_calls` response; the final turn returns the `end_turn` /
   `stop` text. `wp_remote_retrieve_response_code` / `wp_remote_retrieve_body` are
   stubbed to read from those canned responses.
-- **Real tools.** `Fahad_AI_Tools` runs for real inside the loop. Only the
+- **Real tools.** `Dukandaar_Tools` runs for real inside the loop. Only the
   underlying WooCommerce functions are mocked (same approach as `ToolsTest`), so
   tool execution and product-card emission are exercised genuinely.
 - **Reflection.** The agent-loop methods are `private`; the harness invokes them
@@ -157,10 +157,10 @@ Honesty is this assistant's core thesis, so the trust policy is encoded in two
 places that must stay in sync:
 
 1. **The policy text**, a consolidated "Trust & honesty, these rules are
-   absolute" section in `Fahad_AI_API_Handler::get_system_prompt()`
+   absolute" section in `Dukandaar_API_Handler::get_system_prompt()`
    (`includes/class-api-handler.php`). It is pinned by
    `ApiHandlerTest::test_default_prompt_states_the_trust_guardrail_policy` so a
-   prompt edit can't silently drop it. (The `fahad_ai_system_prompt` filter
+   prompt edit can't silently drop it. (The `dukandaar_system_prompt` filter
    pass-through is preserved, so the memory pack can still append preferences.)
 2. **Deterministic guardrail checkers** in `EvalHarness.php`, the offline
    analogue of `grounding_violations()`. Like grounding they are containment /

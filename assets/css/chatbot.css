@@ -1,4 +1,4 @@
-/* Fahad AI Shopping Assistant Widget */
+/* Dukandaar AI Shopping Assistant Widget */
 
 :root {
 	--chatbot-accent:      #2563eb;
@@ -902,7 +902,7 @@ a.chatbot-compare-name:hover {
    theme forcing a transition onto these elements) when the user asks to reduce
    motion (WCAG 2.3.3). */
 @media (prefers-reduced-motion: reduce) {
-	#fahad-ai-chatbot-root *,
+	#dukandaar-chatbot-root *,
 	#chatbot-toggle,
 	#chatbot-panel {
 		animation-duration:        .001ms !important;

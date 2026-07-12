@@ -222,14 +222,14 @@ if ( ! class_exists( 'WC_Order' ) ) {
 }
 
 // ── WooCommerce shipping stubs (issue #19) ───────────────────────────────────
-// The shipping tool (Fahad_AI_Shipping_Tools) isolates ALL WC shipping access
+// The shipping tool (Dukandaar_Shipping_Tools) isolates ALL WC shipping access
 // behind one overridable seam, so the UNIT tests stub it via a subclass and never
 // touch these classes. They exist for the EVAL fixture (tests/eval/fixtures/shipping.php),
 // which drives the REAL tool end-to-end: there is no harness hook to inject zones,
 // so the tool reads them from this static stub. The data is deliberately fixed , 
 // one flat_rate method at 5.00 with NO delivery window, so the eval can assert a
 // GROUNDED cost ($5.00 appears in the tool result) and that no delivery date is
-// invented (WooCommerce core has none). Only Fahad_AI_Shipping_Tools reads these,
+// invented (WooCommerce core has none). Only Dukandaar_Shipping_Tools reads these,
 // so a fixed return is safe for the rest of the suite.
 
 if ( ! class_exists( 'WC_Shipping_Method' ) ) {

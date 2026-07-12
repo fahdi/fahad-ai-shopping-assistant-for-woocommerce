@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental line-coverage tests for Fahad_AI_Tools.
+ * Supplemental line-coverage tests for Dukandaar_Tools.
  *
  * Targets the branches ToolsTest.php does not reach: the OR token_search
  * fallback (scoring/usort/slice), the build_variations skip when a variation
@@ -46,10 +46,10 @@ class CoverageToolsTest extends TestCase {
 		parent::tearDown();
 	}
 
-	private function tools(): Fahad_AI_Tools {
-		$ref = new ReflectionProperty( Fahad_AI_Tools::class, 'instance' );
+	private function tools(): Dukandaar_Tools {
+		$ref = new ReflectionProperty( Dukandaar_Tools::class, 'instance' );
 		$ref->setValue( null, null );
-		return Fahad_AI_Tools::instance();
+		return Dukandaar_Tools::instance();
 	}
 
 	/** Minimal product mock, only what format_product_summary reads. */
@@ -84,7 +84,7 @@ class CoverageToolsTest extends TestCase {
 		// The retriever filter returns ranked IDs; capture the filters it receives so
 		// we can assert semantic_filters() projected category + price through.
 		Functions\when( 'apply_filters' )->alias( function ( $hook, $value, ...$args ) use ( &$captured ) {
-			if ( 'fahad_ai_semantic_retriever' === $hook ) {
+			if ( 'dukandaar_semantic_retriever' === $hook ) {
 				$captured = $args[1] ?? []; // [ $query, $filters ]
 				return [ 88 ];              // ranked product IDs.
 			}

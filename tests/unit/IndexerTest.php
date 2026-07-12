@@ -32,7 +32,7 @@ class IndexerTest extends TestCase {
 	}
 
 	private function provider( array $vectors = [ [ 0.1, 0.2, 0.3 ] ], string $model = 'text-embedding-3-small' ) {
-		$p = Mockery::mock( Fahad_AI_Embedding_Provider::class );
+		$p = Mockery::mock( Dukandaar_Embedding_Provider::class );
 		$p->allows( 'model' )->andReturn( $model );
 		$p->allows( 'dimensions' )->andReturn( 512 );
 		$p->allows( 'is_available' )->andReturn( true );
@@ -41,7 +41,7 @@ class IndexerTest extends TestCase {
 	}
 
 	public function test_indexes_a_product_when_its_text_changed(): void {
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'content_hash' )->andReturn( '' ); // nothing stored yet
 		$store->shouldReceive( 'upsert' )->once()->with(
 			10,
@@ -50,41 +50,41 @@ class IndexerTest extends TestCase {
 			Mockery::type( 'string' )
 		);
 
-		$indexer = new Fahad_AI_Indexer( $this->provider(), $store );
+		$indexer = new Dukandaar_Indexer( $this->provider(), $store );
 		$this->assertTrue( $indexer->index_fields( 10, [ 'title' => 'Hoodie', 'description' => 'warm fleece' ] ) );
 	}
 
 	public function test_skips_re_embed_when_text_is_unchanged(): void {
 		$fields = [ 'title' => 'Hoodie', 'description' => 'warm fleece' ];
-		$hash   = Fahad_AI_Embedding_Document::content_hash( Fahad_AI_Embedding_Document::compose( $fields ) );
+		$hash   = Dukandaar_Embedding_Document::content_hash( Dukandaar_Embedding_Document::compose( $fields ) );
 
 		$provider = $this->provider();
 		$provider->shouldNotReceive( 'embed' ); // the whole point: no API call on a no-op edit
 
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'content_hash' )->with( 10 )->andReturn( $hash ); // already indexed with same text
 		$store->shouldNotReceive( 'upsert' );
 
-		$indexer = new Fahad_AI_Indexer( $provider, $store );
+		$indexer = new Dukandaar_Indexer( $provider, $store );
 		$this->assertFalse( $indexer->index_fields( 10, $fields ), 'unchanged text -> skipped (a price-only edit never re-embeds)' );
 	}
 
 	public function test_respects_the_daily_token_cap(): void {
-		Functions\when( 'get_option' )->alias( static fn( $k, $d = '' ) => Fahad_AI_Indexer::OPTION_DAILY_CAP === $k ? 5 : $d );
+		Functions\when( 'get_option' )->alias( static fn( $k, $d = '' ) => Dukandaar_Indexer::OPTION_DAILY_CAP === $k ? 5 : $d );
 		Functions\when( 'get_transient' )->justReturn( 5 ); // cap already reached today
 
 		$provider = $this->provider();
 		$provider->shouldNotReceive( 'embed' );
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->allows( 'content_hash' )->andReturn( '' );
 
-		$indexer = new Fahad_AI_Indexer( $provider, $store );
+		$indexer = new Dukandaar_Indexer( $provider, $store );
 		$this->assertFalse( $indexer->index_fields( 10, [ 'title' => 'X' ] ), 'over the daily cap -> deferred, no embed' );
 	}
 
 	public function test_zero_cap_means_unlimited(): void {
 		Functions\when( 'get_transient' )->justReturn( 999999 );
-		$indexer = new Fahad_AI_Indexer( $this->provider(), Mockery::mock( Fahad_AI_Vector_Store::class ) );
+		$indexer = new Dukandaar_Indexer( $this->provider(), Mockery::mock( Dukandaar_Vector_Store::class ) );
 		$this->assertTrue( $indexer->within_daily_cap() );
 	}
 
@@ -97,11 +97,11 @@ class IndexerTest extends TestCase {
 			}
 		);
 
-		Fahad_AI_Indexer::enqueue_reembed( 42 );
+		Dukandaar_Indexer::enqueue_reembed( 42 );
 
-		$this->assertSame( Fahad_AI_Indexer::ACTION_EMBED, $captured['hook'] );
+		$this->assertSame( Dukandaar_Indexer::ACTION_EMBED, $captured['hook'] );
 		$this->assertSame( [ 'product_id' => 42 ], $captured['args'] );
-		$this->assertSame( Fahad_AI_Indexer::GROUP, $captured['group'] );
+		$this->assertSame( Dukandaar_Indexer::GROUP, $captured['group'] );
 		$this->assertTrue( $captured['unique'], 'unique=true coalesces rapid repeated saves of the same product' );
 	}
 
@@ -110,24 +110,24 @@ class IndexerTest extends TestCase {
 		Functions\when( 'as_enqueue_async_action' )->alias(
 			static function ( $hook, $args ) use ( &$captured ) { $captured = compact( 'hook', 'args' ); return 1; }
 		);
-		Fahad_AI_Indexer::enqueue_delete( 7 );
-		$this->assertSame( Fahad_AI_Indexer::ACTION_DELETE, $captured['hook'] );
+		Dukandaar_Indexer::enqueue_delete( 7 );
+		$this->assertSame( Dukandaar_Indexer::ACTION_DELETE, $captured['hook'] );
 		$this->assertSame( [ 'product_id' => 7 ], $captured['args'] );
 	}
 
 	public function test_reindex_deletes_when_the_product_is_gone(): void {
 		Functions\when( 'wc_get_product' )->justReturn( false );
-		$store = Mockery::mock( Fahad_AI_Vector_Store::class );
+		$store = Mockery::mock( Dukandaar_Vector_Store::class );
 		$store->shouldReceive( 'delete' )->once()->with( 99 );
 
-		$indexer = new Fahad_AI_Indexer( $this->provider(), $store );
+		$indexer = new Dukandaar_Indexer( $this->provider(), $store );
 		$indexer->reindex_product( 99 );
 	}
 
 	public function test_backfill_enqueues_one_action_per_product(): void {
 		$count = 0;
 		Functions\when( 'as_enqueue_async_action' )->alias( static function () use ( &$count ) { ++$count; return 1; } );
-		$indexer = new Fahad_AI_Indexer( $this->provider(), Mockery::mock( Fahad_AI_Vector_Store::class ) );
+		$indexer = new Dukandaar_Indexer( $this->provider(), Mockery::mock( Dukandaar_Vector_Store::class ) );
 		$this->assertSame( 3, $indexer->backfill( [ 10, 11, 12 ] ) );
 		$this->assertSame( 3, $count );
 	}

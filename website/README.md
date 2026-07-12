@@ -1,4 +1,4 @@
-# Fahad AI marketing site
+# Dukandaar marketing site
 
 Source for **fahadai.isupercoder.com** (landing page, changelog, contact).
 Static HTML/CSS, no build step. `website/` maps to the web root on the server.

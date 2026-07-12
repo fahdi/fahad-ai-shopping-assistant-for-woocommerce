@@ -21,14 +21,14 @@ class RagRelevanceGateTest extends TestCase {
 		$texts = RagGoldenSet::texts();
 		$vecs  = RagGoldenSet::vectors();
 
-		$keyword = Fahad_AI_Rag_Spike_Retriever::keyword_rank( $q['query'], $texts );
-		$vector  = Fahad_AI_Rag_Spike_Retriever::vector_rank( $q['vec'], $vecs );
-		$hybrid  = Fahad_AI_Rag_Spike_Retriever::hybrid_rank( $keyword, $vector );
+		$keyword = Dukandaar_Rag_Spike_Retriever::keyword_rank( $q['query'], $texts );
+		$vector  = Dukandaar_Rag_Spike_Retriever::vector_rank( $q['vec'], $vecs );
+		$hybrid  = Dukandaar_Rag_Spike_Retriever::hybrid_rank( $keyword, $vector );
 
 		return [
-			'keyword' => Fahad_AI_Relevance_Metrics::recall_at_k( $keyword, $q['relevant'], self::K ),
-			'vector'  => Fahad_AI_Relevance_Metrics::recall_at_k( $vector, $q['relevant'], self::K ),
-			'hybrid'  => Fahad_AI_Relevance_Metrics::recall_at_k( $hybrid, $q['relevant'], self::K ),
+			'keyword' => Dukandaar_Relevance_Metrics::recall_at_k( $keyword, $q['relevant'], self::K ),
+			'vector'  => Dukandaar_Relevance_Metrics::recall_at_k( $vector, $q['relevant'], self::K ),
+			'hybrid'  => Dukandaar_Relevance_Metrics::recall_at_k( $hybrid, $q['relevant'], self::K ),
 		];
 	}
 

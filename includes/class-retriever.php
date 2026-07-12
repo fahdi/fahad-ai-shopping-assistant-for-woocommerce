@@ -9,8 +9,8 @@
  * then RRF-fuses the two ranked lists (RAG-DESIGN.md §4.3). Pure vector misses
  * exact tokens and pure keyword misses intent; hybrid recovers both.
  *
- * It plugs into the EXISTING `fahad_ai_semantic_retriever` seam (#60), returning
- * ranked product IDs only, Fahad_AI_Semantic_Search resolves them to LIVE
+ * It plugs into the EXISTING `dukandaar_semantic_retriever` seam (#60), returning
+ * ranked product IDs only, Dukandaar_Semantic_Search resolves them to LIVE
  * price/stock summaries (§5.4). So search_products becomes hybrid with no new
  * tool and no api-handler change. With no provider or an empty vector index the
  * retriever returns [], and search_products runs its full keyword path
@@ -19,16 +19,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
-final class Fahad_AI_Retriever {
+final class Dukandaar_Retriever {
 
 	public function __construct(
-		private Fahad_AI_Embedding_Provider $provider,
-		private Fahad_AI_Vector_Store $store
+		private Dukandaar_Embedding_Provider $provider,
+		private Dukandaar_Vector_Store $store
 	) {}
 
 	/** Register the hybrid retriever on the semantic-search seam. */
 	public static function register(): void {
-		add_filter( 'fahad_ai_semantic_retriever', [ self::class, 'resolve_seam' ], 10, 3 );
+		add_filter( 'dukandaar_semantic_retriever', [ self::class, 'resolve_seam' ], 10, 3 );
 	}
 
 	/**
@@ -41,15 +41,15 @@ final class Fahad_AI_Retriever {
 	 * @return mixed Ranked product IDs, or $ids to fall back to keyword search.
 	 */
 	public static function resolve_seam( $ids, string $query, array $filters ) {
-		if ( ! Fahad_AI_Embeddings::enabled() ) {
+		if ( ! Dukandaar_Embeddings::enabled() ) {
 			return $ids; // semantic search is opt-in, keyword search runs until switched on
 		}
-		$provider = Fahad_AI_Embeddings::provider();
+		$provider = Dukandaar_Embeddings::provider();
 		if ( ! $provider || ! $provider->is_available() ) {
 			return $ids;
 		}
 
-		$store = Fahad_AI_Vector_Stores::resolve( $provider->model(), $provider->dimensions() );
+		$store = Dukandaar_Vector_Stores::resolve( $provider->model(), $provider->dimensions() );
 		try {
 			$limit  = isset( $filters['limit'] ) ? max( 1, (int) $filters['limit'] ) : 10;
 			$hybrid = ( new self( $provider, $store ) )->search( $query, $filters, $limit );
@@ -79,7 +79,7 @@ final class Fahad_AI_Retriever {
 		}
 
 		$keyword_ids = $this->keyword_ids( $query, $filters, $k * 3 );
-		$fused       = Fahad_AI_Rrf::fuse( [ $keyword_ids, $vector_ids ] );
+		$fused       = Dukandaar_Rrf::fuse( [ $keyword_ids, $vector_ids ] );
 
 		/**
 		 * Optional cross-encoder rerank seam (#113). Off by default, a Cohere/Voyage
@@ -90,7 +90,7 @@ final class Fahad_AI_Retriever {
 		 * @param string         $query   The shopper's query.
 		 * @param array          $filters Structured constraints.
 		 */
-		$fused = (array) apply_filters( 'fahad_ai_rerank', $fused, $query, $filters );
+		$fused = (array) apply_filters( 'dukandaar_rerank', $fused, $query, $filters );
 
 		return array_slice( $fused, 0, $k );
 	}
@@ -103,7 +103,7 @@ final class Fahad_AI_Retriever {
 	 * @return array<int, float>
 	 */
 	private function embed_query( string $query ): array {
-		$key    = 'fahad_ai_qe_' . md5( $query . '|' . $this->provider->model() . '|' . $this->provider->dimensions() );
+		$key    = 'dukandaar_qe_' . md5( $query . '|' . $this->provider->model() . '|' . $this->provider->dimensions() );
 		$cached = get_transient( $key );
 		if ( is_array( $cached ) && $cached ) {
 			return $cached;

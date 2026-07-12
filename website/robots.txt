@@ -1,4 +1,4 @@
-# Fahad AI is an open-source assistant built so AI agents can shop a store.
+# Dukandaar is an open-source assistant built so AI agents can shop a store.
 # We welcome AI crawlers and retrieval bots, and publish a machine guide at /llms.txt.
 
 User-agent: *

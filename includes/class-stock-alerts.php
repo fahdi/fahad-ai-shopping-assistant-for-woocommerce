@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
  * Back-in-stock & price-drop alert subscriptions, store + notifier (issue #51).
  *
  * The persistence + email engine behind the `subscribe_stock_alert` agent tool
- * (Fahad_AI_Stock_Alert_Tools). The tool decides WHETHER an alert is legitimate
+ * (Dukandaar_Stock_Alert_Tools). The tool decides WHETHER an alert is legitimate
  * (no fake scarcity: a back-in-stock alert is refused for an in-stock item); THIS
  * class owns the consented subscription lifecycle and the WooCommerce hooks that
  * actually fire a notification on a real stock/price change.
@@ -53,19 +53,19 @@ defined( 'ABSPATH' ) || exit;
  *
  * Subscriber emails are PII: they live ONLY in this option and in the wp_mail
  * envelope. They are never returned to the model, the tool echoes back at most a
- * masked address (Fahad_AI_Auth::mask_email).
+ * masked address (Dukandaar_Auth::mask_email).
  *
  * Storage: a single autoload=no option holding an id => row map. This keeps the
  * feature self-contained and trivially testable (no custom table, no migration) at
  * the scale a per-product watch list realistically reaches.
  */
-final class Fahad_AI_Stock_Alerts {
+final class Dukandaar_Stock_Alerts {
 
 	/** Option name holding the id => subscription-row map (autoload off). */
-	public const OPTION = 'fahad_ai_stock_alert_subs';
+	public const OPTION = 'dukandaar_stock_alert_subs';
 
 	/** Query var that routes a request to a confirm / unsubscribe handler. */
-	public const QUERY_VAR = 'fahad_ai_stock_alert';
+	public const QUERY_VAR = 'dukandaar_stock_alert';
 
 	/** Valid subscription types. */
 	public const TYPE_BACK_IN_STOCK = 'back_in_stock';
@@ -74,7 +74,7 @@ final class Fahad_AI_Stock_Alerts {
 	/** Hard cap on stored subscriptions (storage hygiene, bound the option). */
 	public const MAX_SUBSCRIPTIONS = 5000;
 
-	private static ?Fahad_AI_Stock_Alerts $instance = null;
+	private static ?Dukandaar_Stock_Alerts $instance = null;
 
 	public static function instance(): self {
 		if ( null === self::$instance ) {
@@ -139,7 +139,7 @@ final class Fahad_AI_Stock_Alerts {
 		if ( ! is_email( $email ) ) {
 			return [
 				'ok'    => false,
-				'error' => __( 'That email address looks invalid.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error' => __( 'That email address looks invalid.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -147,7 +147,7 @@ final class Fahad_AI_Stock_Alerts {
 		if ( '' === $type ) {
 			return [
 				'ok'    => false,
-				'error' => __( 'Unknown alert type.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'error' => __( 'Unknown alert type.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -163,7 +163,7 @@ final class Fahad_AI_Stock_Alerts {
 			if ( count( $subs ) >= self::MAX_SUBSCRIPTIONS ) {
 				return [
 					'ok'    => false,
-					'error' => __( 'Alerts are temporarily unavailable. Please try again later.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					'error' => __( 'Alerts are temporarily unavailable. Please try again later.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 				];
 			}
 
@@ -451,8 +451,8 @@ final class Fahad_AI_Stock_Alerts {
 		if ( 'confirm' === $action ) {
 			$ok      = $this->confirm( $id, $token );
 			$message = $ok
-				? __( 'Thanks! Your alert is confirmed. We will email you when it triggers.', 'fahad-ai-shopping-assistant-for-woocommerce' )
-				: __( 'This confirmation link is invalid or has expired.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+				? __( 'Thanks! Your alert is confirmed. We will email you when it triggers.', 'dukandaar-ai-shopping-assistant-for-woocommerce' )
+				: __( 'This confirmation link is invalid or has expired.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 			$this->render_page( $message );
 			return;
 		}
@@ -460,8 +460,8 @@ final class Fahad_AI_Stock_Alerts {
 		if ( 'unsubscribe' === $action ) {
 			$ok      = $this->unsubscribe( $id, $token );
 			$message = $ok
-				? __( 'You have been unsubscribed from this alert.', 'fahad-ai-shopping-assistant-for-woocommerce' )
-				: __( 'This unsubscribe link is invalid or has expired.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+				? __( 'You have been unsubscribed from this alert.', 'dukandaar-ai-shopping-assistant-for-woocommerce' )
+				: __( 'This unsubscribe link is invalid or has expired.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 			$this->render_page( $message );
 			return;
 		}
@@ -492,7 +492,7 @@ final class Fahad_AI_Stock_Alerts {
 		}
 		wp_die(
 			esc_html( $message ),
-			esc_html__( 'Stock alert', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			esc_html__( 'Stock alert', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			[ 'response' => 200 ]
 		);
 	}
@@ -509,8 +509,8 @@ final class Fahad_AI_Stock_Alerts {
 	 * @return array
 	 */
 	public function register_eraser( array $erasers ): array {
-		$erasers['fahad-ai-stock-alerts'] = [
-			'eraser_friendly_name' => __( 'Fahad AI stock alerts', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		$erasers['dukandaar-stock-alerts'] = [
+			'eraser_friendly_name' => __( 'Dukandaar stock alerts', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			'callback'             => [ $this, 'gdpr_erase' ],
 		];
 		return $erasers;
@@ -557,7 +557,7 @@ final class Fahad_AI_Stock_Alerts {
 
 	/** Site secret for the token HMAC, derived via wp_hash so it is salted per-site. */
 	private function secret(): string {
-		return wp_hash( 'fahad_ai_stock_alert_secret' );
+		return wp_hash( 'dukandaar_stock_alert_secret' );
 	}
 
 	// -------------------------------------------------------------------------
@@ -569,10 +569,10 @@ final class Fahad_AI_Stock_Alerts {
 		$site    = get_bloginfo( 'name' );
 		$subject = sprintf(
 			/* translators: %s: store name. */
-			__( 'Back in stock at %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			__( 'Back in stock at %s', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			$site
 		);
-		$intro = __( 'Good news, an item you wanted is back in stock.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+		$intro = __( 'Good news, an item you wanted is back in stock.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 
 		return [ $subject, $this->wrap_email( $intro, $row ) ];
 	}
@@ -582,10 +582,10 @@ final class Fahad_AI_Stock_Alerts {
 		$site    = get_bloginfo( 'name' );
 		$subject = sprintf(
 			/* translators: %s: store name. */
-			__( 'Price drop at %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			__( 'Price drop at %s', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			$site
 		);
-		$intro = __( 'Good news, the price dropped on an item you were watching.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+		$intro = __( 'Good news, the price dropped on an item you were watching.', 'dukandaar-ai-shopping-assistant-for-woocommerce' );
 
 		return [ $subject, $this->wrap_email( $intro, $row ) ];
 	}
@@ -600,7 +600,7 @@ final class Fahad_AI_Stock_Alerts {
 		return wp_kses_post(
 			'<p>' . esc_html( $intro ) . '</p>' .
 			'<p style="font-size:12px;color:#666">' .
-			esc_html( __( 'Don\'t want these alerts? Unsubscribe in one click:', 'fahad-ai-shopping-assistant-for-woocommerce' ) ) .
+			esc_html( __( 'Don\'t want these alerts? Unsubscribe in one click:', 'dukandaar-ai-shopping-assistant-for-woocommerce' ) ) .
 			' <a href="' . esc_url( $unsub ) . '">' . esc_html( $unsub ) . '</a></p>'
 		);
 	}

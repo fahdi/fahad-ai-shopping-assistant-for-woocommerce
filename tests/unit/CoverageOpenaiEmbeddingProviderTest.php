@@ -1,10 +1,10 @@
 <?php
 /**
- * Coverage tests for Fahad_AI_OpenAI_Embedding_Provider, the two paths the
+ * Coverage tests for Dukandaar_OpenAI_Embedding_Provider, the two paths the
  * existing EmbeddingsTest does not exercise:
  *
  *   - request(): a 200 response whose body has no usable `data[]` is a MALFORMED
- *     response and must throw a NON-retryable Fahad_AI_Embedding_Exception
+ *     response and must throw a NON-retryable Dukandaar_Embedding_Exception
  *     (line 104). A malformed payload is a server/contract fault we can't fix by
  *     retrying, so the indexer gives up rather than hammering the API.
  *
@@ -48,9 +48,9 @@ class CoverageOpenaiEmbeddingProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( json_encode( [ 'object' => 'list' ] ) );
 
 		try {
-			( new Fahad_AI_OpenAI_Embedding_Provider( 'sk-test' ) )->embed( [ 'x' ] );
-			$this->fail( 'expected Fahad_AI_Embedding_Exception for a malformed response' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+			( new Dukandaar_OpenAI_Embedding_Provider( 'sk-test' ) )->embed( [ 'x' ] );
+			$this->fail( 'expected Dukandaar_Embedding_Exception for a malformed response' );
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertSame( 'Malformed embeddings response.', $e->getMessage() );
 			$this->assertFalse( $e->is_retryable(), 'a malformed response is terminal, not retryable' );
 		}
@@ -63,9 +63,9 @@ class CoverageOpenaiEmbeddingProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( json_encode( [ 'data' => [] ] ) );
 
 		try {
-			( new Fahad_AI_OpenAI_Embedding_Provider( 'sk-test' ) )->embed( [ 'x' ] );
-			$this->fail( 'expected Fahad_AI_Embedding_Exception for an empty data array' );
-		} catch ( Fahad_AI_Embedding_Exception $e ) {
+			( new Dukandaar_OpenAI_Embedding_Provider( 'sk-test' ) )->embed( [ 'x' ] );
+			$this->fail( 'expected Dukandaar_Embedding_Exception for an empty data array' );
+		} catch ( Dukandaar_Embedding_Exception $e ) {
 			$this->assertFalse( $e->is_retryable() );
 		}
 	}
@@ -76,9 +76,9 @@ class CoverageOpenaiEmbeddingProviderTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_response_code' )->justReturn( 200 );
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn( json_encode( [ 'data' => 'oops' ] ) );
 
-		$this->expectException( Fahad_AI_Embedding_Exception::class );
+		$this->expectException( Dukandaar_Embedding_Exception::class );
 		$this->expectExceptionMessage( 'Malformed embeddings response.' );
-		( new Fahad_AI_OpenAI_Embedding_Provider( 'sk-test' ) )->embed( [ 'x' ] );
+		( new Dukandaar_OpenAI_Embedding_Provider( 'sk-test' ) )->embed( [ 'x' ] );
 	}
 
 	// ── lines 121-123: backoff body runs when retry_base_ms > 0 ─────────────────
@@ -116,7 +116,7 @@ class CoverageOpenaiEmbeddingProviderTest extends TestCase {
 			}
 		);
 
-		$provider = new Fahad_AI_OpenAI_Embedding_Provider( 'sk-test', 'text-embedding-3-small', 512, 1 );
+		$provider = new Dukandaar_OpenAI_Embedding_Provider( 'sk-test', 'text-embedding-3-small', 512, 1 );
 		$out      = $provider->embed( [ 'hello' ] );
 
 		$this->assertSame( [ [ 0.5, 0.25 ] ], $out, 'retry must return the second attempt\'s vectors' );
@@ -138,9 +138,9 @@ class CoverageOpenaiEmbeddingProviderTest extends TestCase {
 				return 0;
 			}
 		);
-		$provider = new Fahad_AI_OpenAI_Embedding_Provider( 'sk-test', 'text-embedding-3-small', 512, 1 );
+		$provider = new Dukandaar_OpenAI_Embedding_Provider( 'sk-test', 'text-embedding-3-small', 512, 1 );
 
-		$m = new ReflectionMethod( Fahad_AI_OpenAI_Embedding_Provider::class, 'backoff' );
+		$m = new ReflectionMethod( Dukandaar_OpenAI_Embedding_Provider::class, 'backoff' );
 		$m->invoke( $provider, 2 ); // attempt 2 → base * 2^1 = 2ms, completes fast
 
 		$this->assertSame( 1, $jitter_max, 'jitter must be drawn over [0, retry_base_ms]' );
@@ -149,8 +149,8 @@ class CoverageOpenaiEmbeddingProviderTest extends TestCase {
 	// ── backoff() short-circuits when base is 0 (the no-op guard, line 118-119) ──
 
 	public function test_backoff_is_a_noop_when_base_is_zero(): void {
-		$provider = new Fahad_AI_OpenAI_Embedding_Provider( 'sk-test' ); // default base = 0
-		$m        = new ReflectionMethod( Fahad_AI_OpenAI_Embedding_Provider::class, 'backoff' );
+		$provider = new Dukandaar_OpenAI_Embedding_Provider( 'sk-test' ); // default base = 0
+		$m        = new ReflectionMethod( Dukandaar_OpenAI_Embedding_Provider::class, 'backoff' );
 
 		$start = microtime( true );
 		$m->invoke( $provider, 3 ); // any attempt number, must return immediately

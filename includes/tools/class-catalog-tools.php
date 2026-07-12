@@ -7,12 +7,12 @@ defined( 'ABSPATH' ) || exit;
  * This is the FIRST feature tool pack and the reference pattern every later
  * feature follows: a self-contained class, in its own file under
  * includes/tools/, that DROPS IN with no other wiring. The file self-registers a
- * provider at the bottom via Fahad_AI_Tool_Registry::register_pack(); the plugin
+ * provider at the bottom via Dukandaar_Tool_Registry::register_pack(); the plugin
  * bootstrap (and the test bootstrap) simply glob-require everything in
  * includes/tools/, so adding a new pack means adding ONLY a new file here, no
  * edits to the bootstrap, the test bootstrap, or the eval harness. The registry
  * layers packs after the built-ins and before the third-party
- * `fahad_ai_register_tools` filter. Keeping features modular this way lets
+ * `dukandaar_register_tools` filter. Keeping features modular this way lets
  * separate features be built in parallel without touching the core tool list.
  *
  * Tools provided:
@@ -28,7 +28,7 @@ defined( 'ABSPATH' ) || exit;
  * (subjective, sparse) or recency (a new arrival is not a "best seller"). The
  * query therefore sorts by the `total_sales` meta value numerically, DESC.
  */
-final class Fahad_AI_Catalog_Tools {
+final class Dukandaar_Catalog_Tools {
 
 	/**
 	 * Append the catalog tools to the registry's tool list.
@@ -36,7 +36,7 @@ final class Fahad_AI_Catalog_Tools {
 	 * Registered as a pack provider (see the register_pack() call at file scope):
 	 * the registry calls this with the running tool list when it lazily builds.
 	 * Static because the pack holds no per-instance state, its tools just call
-	 * WooCommerce functions and the shared Fahad_AI_Tools formatter singleton.
+	 * WooCommerce functions and the shared Dukandaar_Tools formatter singleton.
 	 *
 	 * @param array $tools Existing tool definitions.
 	 * @return array Tools with the catalog tools appended.
@@ -102,12 +102,12 @@ final class Fahad_AI_Catalog_Tools {
 			return [
 				'found'    => 0,
 				'products' => [],
-				'message'  => __( 'No best-selling products are available yet.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message'  => __( 'No best-selling products are available yet.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
 		// Reuse the shared formatter so best-seller cards match search cards exactly.
-		$formatter = Fahad_AI_Tools::instance();
+		$formatter = Dukandaar_Tools::instance();
 
 		return [
 			'found'    => count( $products ),
@@ -132,7 +132,7 @@ final class Fahad_AI_Catalog_Tools {
 			return [
 				'found'      => 0,
 				'categories' => [],
-				'message'    => __( 'No product categories were found.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				'message'    => __( 'No product categories were found.', 'dukandaar-ai-shopping-assistant-for-woocommerce' ),
 			];
 		}
 
@@ -157,5 +157,5 @@ final class Fahad_AI_Catalog_Tools {
 // file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before pcov's per-test window opens; its effect is asserted in CoverageCatalogToolsTest::test_pack_self_registration_wires_the_catalog_provider.
-Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Catalog_Tools', 'register' ] );
+Dukandaar_Tool_Registry::register_pack( [ 'Dukandaar_Catalog_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

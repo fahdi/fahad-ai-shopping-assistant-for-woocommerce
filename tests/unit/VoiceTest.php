@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Voice (issue #64: voice input/output).
+ * Unit tests for Dukandaar_Voice (issue #64: voice input/output).
  *
  * Red → Green → Refactor. Conventions mirror ProactiveTest / FeedbackTest: WP functions
  * mocked via Brain\Monkey; the singleton reset via reflection between cases (NEVER
@@ -57,15 +57,15 @@ class VoiceTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		( new ReflectionProperty( Fahad_AI_Voice::class, 'instance' ) )->setValue( null, null );
+		( new ReflectionProperty( Dukandaar_Voice::class, 'instance' ) )->setValue( null, null );
 		Monkey\tearDown();
 		parent::tearDown();
 	}
 
 	/** Fresh singleton (reset between cases via reflection). */
-	private function voice(): Fahad_AI_Voice {
-		( new ReflectionProperty( Fahad_AI_Voice::class, 'instance' ) )->setValue( null, null );
-		return Fahad_AI_Voice::instance();
+	private function voice(): Dukandaar_Voice {
+		( new ReflectionProperty( Dukandaar_Voice::class, 'instance' ) )->setValue( null, null );
+		return Dukandaar_Voice::instance();
 	}
 
 	// ── enabled(): the merchant kill-switch, default OFF ────────────────────────────
@@ -77,7 +77,7 @@ class VoiceTest extends TestCase {
 	}
 
 	public function test_enabled_reflects_the_option_when_on(): void {
-		$this->options['fahad_ai_voice_enabled'] = 1;
+		$this->options['dukandaar_voice_enabled'] = 1;
 		$this->assertTrue( $this->voice()->enabled() );
 	}
 
@@ -90,7 +90,7 @@ class VoiceTest extends TestCase {
 	}
 
 	public function test_tts_reflects_the_option_when_on(): void {
-		$this->options['fahad_ai_voice_tts'] = 1;
+		$this->options['dukandaar_voice_tts'] = 1;
 		$this->assertTrue( $this->voice()->tts_enabled() );
 	}
 
@@ -100,12 +100,12 @@ class VoiceTest extends TestCase {
 		// Master kill-switch OFF (default) → the widget is handed NO voice config, so the JS
 		// literally cannot render the mic/speaker controls. TTS being on is irrelevant when
 		// the master switch is off.
-		$this->options['fahad_ai_voice_tts'] = 1;
+		$this->options['dukandaar_voice_tts'] = 1;
 		$this->assertSame( [], $this->voice()->config() );
 	}
 
 	public function test_config_carries_enabled_and_lang_when_voice_on(): void {
-		$this->options['fahad_ai_voice_enabled'] = 1;
+		$this->options['dukandaar_voice_enabled'] = 1;
 
 		$config = $this->voice()->config();
 
@@ -117,7 +117,7 @@ class VoiceTest extends TestCase {
 
 	public function test_config_tts_is_false_when_voice_on_but_tts_off(): void {
 		// Voice INPUT only: the mic works, but the assistant does not speak replies.
-		$this->options['fahad_ai_voice_enabled'] = 1;
+		$this->options['dukandaar_voice_enabled'] = 1;
 
 		$config = $this->voice()->config();
 
@@ -125,8 +125,8 @@ class VoiceTest extends TestCase {
 	}
 
 	public function test_config_tts_is_true_when_both_on(): void {
-		$this->options['fahad_ai_voice_enabled'] = 1;
-		$this->options['fahad_ai_voice_tts']     = 1;
+		$this->options['dukandaar_voice_enabled'] = 1;
+		$this->options['dukandaar_voice_tts']     = 1;
 
 		$config = $this->voice()->config();
 
@@ -136,7 +136,7 @@ class VoiceTest extends TestCase {
 	public function test_config_lang_falls_back_to_empty_when_site_language_blank(): void {
 		// A blank site language yields '' (the widget then lets the browser pick its
 		// default locale), never a crash, never a bogus tag.
-		$this->options['fahad_ai_voice_enabled'] = 1;
+		$this->options['dukandaar_voice_enabled'] = 1;
 		Functions\when( 'get_bloginfo' )->alias( fn( $show = '' ) => '' );
 
 		$config = $this->voice()->config();
@@ -146,10 +146,10 @@ class VoiceTest extends TestCase {
 
 	public function test_config_is_filterable(): void {
 		// A site can force-disable voice (return []) or adjust the config via the filter,
-		// without code edits, mirrors fahad_ai_proactive_config.
-		$this->options['fahad_ai_voice_enabled'] = 1;
+		// without code edits, mirrors dukandaar_proactive_config.
+		$this->options['dukandaar_voice_enabled'] = 1;
 		Functions\when( 'apply_filters' )->alias(
-			fn( $hook, $value = null ) => 'fahad_ai_voice_config' === $hook ? [] : $value
+			fn( $hook, $value = null ) => 'dukandaar_voice_config' === $hook ? [] : $value
 		);
 
 		$this->assertSame( [], $this->voice()->config() );
@@ -158,9 +158,9 @@ class VoiceTest extends TestCase {
 	public function test_config_survives_a_non_array_filter_return(): void {
 		// Defensive: a misbehaving filter that returns a non-array must not corrupt the
 		// localized config, it collapses to [] (no voice) rather than a fatal later.
-		$this->options['fahad_ai_voice_enabled'] = 1;
+		$this->options['dukandaar_voice_enabled'] = 1;
 		Functions\when( 'apply_filters' )->alias(
-			fn( $hook, $value = null ) => 'fahad_ai_voice_config' === $hook ? 'nonsense' : $value
+			fn( $hook, $value = null ) => 'dukandaar_voice_config' === $hook ? 'nonsense' : $value
 		);
 
 		$this->assertSame( [], $this->voice()->config() );

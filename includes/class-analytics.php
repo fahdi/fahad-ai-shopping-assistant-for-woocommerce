@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
  * time), token/cost numbers, an OPAQUE conversation ref (a model-supplied token,
  * never an email/name), and a created timestamp. It NEVER stores an email, a name,
  * an IP, or a user id, there is deliberately no such field, so the option cannot
- * become a PII sink. The question snippet is run through Fahad_AI_Auth::mask_email()
+ * become a PII sink. The question snippet is run through Dukandaar_Auth::mask_email()
  * for EVERY email-shaped token in it, so a shopper who types their address into the
  * chat does not leave it here verbatim. Nothing in here is EVER fed back to the
  * model (it is owner telemetry, read only by this store's own aggregates), that is
@@ -52,16 +52,16 @@ defined( 'ABSPATH' ) || exit;
  * the enabled() short-circuit lives here so there is a single gate.
  *
  * Storage: a single autoload=no option holding an id => row map, the same
- * option-backed, no-migration approach as Fahad_AI_Feedback / Fahad_AI_Stock_Alerts,
+ * option-backed, no-migration approach as Dukandaar_Feedback / Dukandaar_Stock_Alerts,
  * at the scale a bounded, rolling analytics window realistically reaches.
  */
-final class Fahad_AI_Analytics {
+final class Dukandaar_Analytics {
 
 	/** Option name holding the id => event-row map (autoload off). */
-	public const OPTION = 'fahad_ai_analytics';
+	public const OPTION = 'dukandaar_analytics';
 
 	/** Option name for the merchant opt-out flag (default ON). */
-	public const OPTION_ENABLED = 'fahad_ai_analytics_enabled';
+	public const OPTION_ENABLED = 'dukandaar_analytics_enabled';
 
 	// Outcome enum, the coarse classification of an assistant turn. The three
 	// "couldn't answer" outcomes (abstain / escalate / no-tool-match) are what the
@@ -103,7 +103,7 @@ final class Fahad_AI_Analytics {
 		self::OUTCOME_NO_TOOL_MATCH,
 	];
 
-	private static ?Fahad_AI_Analytics $instance = null;
+	private static ?Dukandaar_Analytics $instance = null;
 
 	public static function instance(): self {
 		if ( null === self::$instance ) {
@@ -434,14 +434,14 @@ final class Fahad_AI_Analytics {
 	/**
 	 * Replace every email-shaped token in a string with its masked form
 	 * (jane@example.com → j***@example.com), reusing the plugin's existing
-	 * Fahad_AI_Auth::mask_email() helper so masking is consistent with the rest of the
+	 * Dukandaar_Auth::mask_email() helper so masking is consistent with the rest of the
 	 * privacy boundary (#25). A conservative address regex is used; anything it matches
 	 * is masked, so the local part never survives.
 	 */
 	private function mask_emails( string $text ): string {
 		return (string) preg_replace_callback(
 			'/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i',
-			static fn( array $m ) => Fahad_AI_Auth::mask_email( $m[0] ),
+			static fn( array $m ) => Dukandaar_Auth::mask_email( $m[0] ),
 			$text
 		);
 	}
@@ -554,7 +554,7 @@ final class Fahad_AI_Analytics {
 
 	/**
 	 * Truncate a string to at most $max characters. Uses mb_substr when available so a
-	 * multibyte snippet is not chopped mid-character (mirrors Fahad_AI_Feedback::cap).
+	 * multibyte snippet is not chopped mid-character (mirrors Dukandaar_Feedback::cap).
 	 */
 	private function cap( string $text, int $max ): string {
 		if ( function_exists( 'mb_substr' ) ) {
