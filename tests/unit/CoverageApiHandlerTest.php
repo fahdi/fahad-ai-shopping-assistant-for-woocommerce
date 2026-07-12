@@ -611,6 +611,22 @@ class CoverageApiHandlerTest extends TestCase {
 		$this->assertStringNotContainsString( 'Returns', $block );
 	}
 
+	public function test_merchant_config_block_includes_support_contact(): void {
+		$this->set_option_alias( [ 'fahad_ai_support_contact' => 'help@store.com' ] );
+
+		$block = (string) $this->invoke( 'merchant_config_block' );
+
+		$this->assertStringContainsString( 'Human support', $block );
+		$this->assertStringContainsString( 'help@store.com', $block );
+		$this->assertStringContainsString( 'Store preferences', $block );
+	}
+
+	public function test_merchant_config_block_omits_support_contact_when_blank(): void {
+		$this->set_option_alias( [ 'fahad_ai_support_contact' => '   ' ] );
+		$block = (string) $this->invoke( 'merchant_config_block' );
+		$this->assertStringNotContainsString( 'Human support', $block );
+	}
+
 	// =========================================================================
 	// language_directive(), specific (non-auto) value (line 918)
 	// =========================================================================

@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.16
+Stable tag: 2.14.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.17 =
+No more dead ends: give the assistant your support contact so "talk to a human" leads somewhere.
+
+* Added a "Support Contact" setting (email, phone, or contact page). When set, the assistant shares it exactly when a shopper needs a person or it cannot help, instead of vaguely saying "contact support". It never invents a contact. A small change that stops losing the shoppers who reach the edge of what the assistant can do.
 
 = 2.14.16 =
 Don't lose sales to your own cost cap: get warned before the daily limit turns shoppers away.
@@ -523,6 +528,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.17 =
+Adds a Support Contact setting so the assistant can hand shoppers to a real person instead of a vague "contact support". No breaking changes.
 
 = 2.14.16 =
 Warns you before your daily AI cap starts turning shoppers away, so you can raise it in time. No breaking changes.

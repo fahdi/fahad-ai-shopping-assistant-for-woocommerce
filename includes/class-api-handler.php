@@ -913,6 +913,14 @@ Writing style, follow exactly:
 			$lines[] = '- Returns & refunds: answer return, refund, and exchange questions using only this stated policy; never invent terms, and if a shopper asks something it does not cover, say you are not certain and offer human support. Policy: ' . $returns;
 		}
 
+		// Human-support contact (issue #212): a grounded handoff target so "talk to a person"
+		// moments end in a real next step instead of a dead end. Use this exact contact; the
+		// assistant must never invent an email, phone, or link that is not set here.
+		$support = trim( (string) get_option( 'fahad_ai_support_contact', '' ) );
+		if ( '' !== $support ) {
+			$lines[] = '- Human support: when a shopper needs a person (you cannot help, they ask for a human, or the request is outside what you can do), direct them to this exact contact and never invent another: ' . $support;
+		}
+
 		if ( empty( $lines ) ) {
 			return '';
 		}
