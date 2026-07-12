@@ -311,6 +311,7 @@ function fahad_ai_analytics_page(): void {
 				<tr><td><?php esc_html_e( 'Conversations', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['conversations'] ); ?></strong></td></tr>
 				<tr><td><?php esc_html_e( 'Saw a product', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['product_surfaced'] ); ?></strong></td></tr>
 				<tr><td><?php esc_html_e( 'Added to cart', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( (string) $funnel['added_to_cart'] ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Chat-to-cart rate', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( round( $funnel['cart_rate'] * 100 ) . '%' ); ?></strong></td></tr>
 				<tr><td><?php esc_html_e( 'Chat-attributed orders', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo null === $funnel['orders'] ? esc_html__( 'n/a', 'fahad-ai-shopping-assistant-for-woocommerce' ) : esc_html( (string) $funnel['orders'] ); ?></strong></td></tr>
 			</tbody>
 		</table>

@@ -321,10 +321,15 @@ final class Fahad_AI_Analytics {
 			$orders   = max( 0, (int) $resolved );
 		}
 
+		$conversation_count = count( $conversations );
+
 		return [
-			'conversations'    => count( $conversations ),
+			'conversations'    => $conversation_count,
 			'product_surfaced' => $surfaced,
 			'added_to_cart'    => $cart,
+			// Headline ROI number: share of conversations that reached the cart. Kept as a
+			// 0..1 fraction so the caller can format it; 0 when there are no conversations.
+			'cart_rate'        => $conversation_count > 0 ? $cart / $conversation_count : 0.0,
 			'orders'           => $orders,
 		];
 	}
