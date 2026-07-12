@@ -1,8 +1,10 @@
+![Fahad AI: the honest WooCommerce shopping assistant](.github/banner.gif)
+
 # Fahad AI Shopping Assistant for WooCommerce
 
-An AI-powered shopping assistant for WooCommerce. Customers can search products, get recommendations, and manage their cart through a natural chat interface, without leaving the page.
+The honest WooCommerce shopping assistant. Customers can search products, get recommendations, and manage their cart through a natural chat interface, without leaving the page. Every answer is grounded in your real store data, no invented prices, stock, or reviews.
 
-Supports **Anthropic Claude** and **Moonshot AI (Kimi K2)** with real-time streaming responses.
+Works with **13+ AI providers** (Anthropic Claude, OpenAI, Google Gemini, Moonshot AI / Kimi K2, and more), with real-time streaming responses.
 
 ---
 
@@ -11,7 +13,7 @@ Supports **Anthropic Claude** and **Moonshot AI (Kimi K2)** with real-time strea
 - **Natural language shopping**: customers describe what they want, the AI finds it
 - **Rich product cards**: results show as cards with photo, price (incl. sale), stock, short description, and View / Add to cart buttons
 - **Full cart control**: add, view, and remove items through conversation
-- **Two AI providers**: Anthropic Claude or Moonshot AI (Kimi K2), switchable from the admin
+- **13+ AI providers**: Anthropic Claude, OpenAI, Google Gemini, Moonshot AI (Kimi K2), and more, switchable from the admin
 - **Global & China Moonshot platforms**: pick the region your Moonshot key was issued on (`api.moonshot.ai` or `api.moonshot.cn`)
 - **Real-time streaming**: responses appear word-by-word (Moonshot provider)
 - **Agentic reasoning**: multi-step tool use: the AI can search, evaluate, and add to cart in a single message
