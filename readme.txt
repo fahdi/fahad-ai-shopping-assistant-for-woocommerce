@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.8
+Stable tag: 2.14.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.9 =
+Cost safety, now owner-friendly: set the daily usage cap from the settings screen, no code needed.
+
+* Added a "Daily Message Limit" field to Settings > Cost &amp; Performance. Store owners can now cap total AI answers per day right from the admin, so the cost safeguard is usable without touching PHP. The fahad_ai_daily_message_cap filter still overrides the saved value for developers, and enforcement is unchanged (graceful hand-off to human support at the limit, resets daily).
 
 = 2.14.8 =
 Cost safety: a store-wide daily cap keeps your AI spend predictable.
@@ -483,6 +488,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.9 =
+The daily usage cap is now settable from Settings > Cost &amp; Performance, no code required. No breaking changes.
 
 = 2.14.8 =
 Adds an optional store-wide daily usage cap for predictable AI costs. No breaking changes.

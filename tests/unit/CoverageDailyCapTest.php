@@ -21,19 +21,28 @@ class CoverageDailyCapTest extends TestCase {
 		parent::tearDown();
 	}
 
-	// ── daily_cap (filterable, clamped to >= 0) ─────────────────────────────────
+	// ── daily_cap (option-backed base, filter override, clamped to >= 0) ─────────
 
 	public function test_cap_is_unlimited_by_default(): void {
-		Functions\when( 'apply_filters' )->justReturn( 0 );
+		Functions\when( 'get_option' )->justReturn( 0 );
+		Functions\when( 'apply_filters' )->alias( fn( $tag, $value ) => $value );
 		$this->assertSame( 0, Fahad_AI_Auth::daily_cap() );
 	}
 
-	public function test_cap_reads_the_filter(): void {
-		Functions\when( 'apply_filters' )->justReturn( 500 );
+	public function test_cap_reads_the_saved_setting(): void {
+		Functions\when( 'get_option' )->justReturn( 500 );
+		Functions\when( 'apply_filters' )->alias( fn( $tag, $value ) => $value );
 		$this->assertSame( 500, Fahad_AI_Auth::daily_cap() );
 	}
 
+	public function test_cap_filter_overrides_the_saved_setting(): void {
+		Functions\when( 'get_option' )->justReturn( 500 );
+		Functions\when( 'apply_filters' )->justReturn( 999 );
+		$this->assertSame( 999, Fahad_AI_Auth::daily_cap() );
+	}
+
 	public function test_cap_clamps_negative_values_to_zero(): void {
+		Functions\when( 'get_option' )->justReturn( 0 );
 		Functions\when( 'apply_filters' )->justReturn( -5 );
 		$this->assertSame( 0, Fahad_AI_Auth::daily_cap() );
 	}

@@ -577,6 +577,7 @@ function fahad_ai_settings_page(): void {
 
 		// Cost / model knobs (issue #23, surfaced for #56).
 		update_option( 'fahad_ai_token_budget',        absint( $_POST['token_budget'] ?? 0 ) );
+		update_option( 'fahad_ai_daily_message_cap',   absint( $_POST['daily_message_cap'] ?? 0 ) );
 		update_option( 'fahad_ai_fast_model_routing',  empty( $_POST['fast_model_routing'] ) ? 0 : 1 );
 		update_option( 'fahad_ai_fast_model',          sanitize_text_field( wp_unslash( $_POST['fast_model'] ?? '' ) ) );
 
@@ -625,6 +626,7 @@ function fahad_ai_settings_page(): void {
 	$languages          = get_option( 'fahad_ai_languages',            'auto' ); // multilingual (#61)
 	$disabled_tools     = (array) get_option( 'fahad_ai_disabled_tools', [] );
 	$token_budget       = (int) get_option( 'fahad_ai_token_budget',   0 );
+	$daily_message_cap  = (int) get_option( 'fahad_ai_daily_message_cap', 0 );
 	$fast_model_routing = (bool) get_option( 'fahad_ai_fast_model_routing', false );
 	$fast_model         = get_option( 'fahad_ai_fast_model',           '' );
 
@@ -969,6 +971,16 @@ function fahad_ai_settings_page(): void {
 							value="<?php echo esc_attr( (string) $token_budget ); ?>" class="small-text">
 						<p class="description">
 							<?php esc_html_e( 'Approximate cap on the context sent to the model per turn (older history is trimmed first; the current turn is always kept). 0 = unlimited.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="daily_message_cap"><?php esc_html_e( 'Daily Message Limit', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<td>
+						<input type="number" id="daily_message_cap" name="daily_message_cap" min="0" step="10"
+							value="<?php echo esc_attr( (string) $daily_message_cap ); ?>" class="small-text">
+						<p class="description">
+							<?php esc_html_e( 'Maximum AI answers the whole store will serve per day, to keep costs predictable. When reached, shoppers are pointed to human support instead of making more billable calls; the count resets each day. 0 = unlimited.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>
