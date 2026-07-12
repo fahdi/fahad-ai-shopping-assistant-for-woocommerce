@@ -227,7 +227,7 @@ final class Fahad_AI_Admin_Copilot {
 
 	// ── grounded data helpers ───────────────────────────────────────────────────
 
-	/** Clamp a requested window to a sane 1–90 days (default 7). */
+	/** Clamp a requested window to a sane 1-90 days (default 7). */
 	private function window_days( $raw ): int {
 		$days = (int) $raw;
 		if ( $days < 1 ) {

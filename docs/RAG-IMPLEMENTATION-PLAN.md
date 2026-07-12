@@ -149,7 +149,7 @@ Gated on Phase 0 GO. Each story is its own per-PR release.
 ## Issue map
 
 - **Epic:** RAG / semantic product retrieval.
-- **Phase 0:** S0.1–S0.5 (one spike issue with these as acceptance criteria, or split if useful).
+- **Phase 0:** S0.1-S0.5 (one spike issue with these as acceptance criteria, or split if useful).
 - **Phase 1:** S1.1, S1.2, S1.3, S1.4, S1.5.
 - **Phase 2:** S2.1, S2.2, S2.3.
 - **Phase 3:** S3.1, S3.2.

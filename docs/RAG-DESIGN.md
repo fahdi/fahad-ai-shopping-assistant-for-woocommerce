@@ -4,7 +4,7 @@ Status: **Research + Design (no code yet).** This document is for review, not im
 Plugin: Fahad AI Shopping Assistant for WooCommerce, `v2.4.0` (canonical repo, branch `main`).
 Scope: a retrieval-augmented-generation layer over the store's **product catalog**, backed by a vector index, so the assistant retrieves semantically relevant products as agent context instead of relying only on WooCommerce keyword search. Closes ROADMAP issue **#60 (Semantic / vector search)**.
 
-> This document is decision-oriented. Section 7 states a concrete **recommended default** and the **2–3 decisions the client must make**. Everything before it is the reasoning, with comparison tables and cited sources.
+> This document is decision-oriented. Section 7 states a concrete **recommended default** and the **2-3 decisions the client must make**. Everything before it is the reasoning, with comparison tables and cited sources.
 
 ---
 
@@ -46,7 +46,7 @@ The five realistic options, scored against the deployment reality.
 Store one row per product (or per chunk) in a custom table: `product_id`, `model`, `dim`, `embedding LONGBLOB` (packed float32 via `pack('g*', ...)`), plus metadata. At query time, load the candidate vectors and compute cosine similarity in PHP, sort, take top-k.
 
 - **Host compatibility:** Universal. Works on any MySQL/MariaDB + PHP. No extensions, no privileges, no external service. **This is the only option that works everywhere.**
-- **Scale ceiling:** It is an O(n) linear scan, fine for hundreds to a few thousand products; degrades as the catalog grows because every query touches every vector. With 1536-dim float32, a brute-force query over ~1M vectors is ~1.5B float ops and is too slow for real time; even 10M flat search is not real-time ([sarthakai](https://sarthakai.substack.com/p/a-vectordb-doesnt-actually-work-the-way-you-think-it-does)). In **PHP specifically** the ceiling is lower than in a compiled language, so the practical comfortable ceiling is roughly **a few thousand to ~10–20k products** with two mitigations: (1) **reduce dimensions** (use a 256–512-dim embedding or OpenAI's `dimensions` shortening, see §3) to cut per-vector work ~3–6x; (2) **pre-filter by SQL** (category/price/in-stock) so the scan runs over a subset, not the whole catalog.
+- **Scale ceiling:** It is an O(n) linear scan, fine for hundreds to a few thousand products; degrades as the catalog grows because every query touches every vector. With 1536-dim float32, a brute-force query over ~1M vectors is ~1.5B float ops and is too slow for real time; even 10M flat search is not real-time ([sarthakai](https://sarthakai.substack.com/p/a-vectordb-doesnt-actually-work-the-way-you-think-it-does)). In **PHP specifically** the ceiling is lower than in a compiled language, so the practical comfortable ceiling is roughly **a few thousand to ~10-20k products** with two mitigations: (1) **reduce dimensions** (use a 256-512-dim embedding or OpenAI's `dimensions` shortening, see §3) to cut per-vector work ~3-6x; (2) **pre-filter by SQL** (category/price/in-stock) so the scan runs over a subset, not the whole catalog.
 - **Latency:** Dominated by loading BLOBs from MySQL + the PHP loop. Acceptable (tens to low-hundreds of ms) at the few-thousand scale with reduced dimensions; we will not block the shopper, retrieval happens inside a tool call that already costs an LLM round-trip.
 - **Cost:** Zero infra cost. Only the one-time + incremental embedding API cost (§5, §8).
 - **Privacy / data-egress:** Vectors and catalog text stay in the site's own DB. The only egress is product **text** sent to the embeddings API at index time (§9). No per-query egress to a vector DB.
@@ -80,7 +80,7 @@ Push vectors to a hosted ANN service; query it over HTTPS per request.
 
 - **Host compatibility:** Universal (it is just HTTPS), works regardless of the WP host.
 - **Scale ceiling / latency:** Best in class. Real ANN at millions of vectors, low-ms queries, metadata filtering server-side.
-- **Cost (representative, 2025–2026):**
+- **Cost (representative, 2025-2026):**
 
   | Service | Free tier | Paid floor | At ~10M vectors |
   |---|---|---|---|
@@ -107,10 +107,10 @@ Upload the catalog as files; let OpenAI chunk, embed, store, and retrieve via th
 
 | Option | Host compat | Scale ceiling | Latency | Infra cost | Egress / privacy | Ops complexity | Role |
 |---|---|---|---|---|---|---|---|
-| **(a) MySQL brute force (BLOB)** | Universal | ~few k–~10–20k products (PHP) | OK at default scale | $0 | Index-time text only | Lowest | **Default** |
+| **(a) MySQL brute force (BLOB)** | Universal | ~few k-~10-20k products (PHP) | OK at default scale | $0 | Index-time text only | Lowest | **Default** |
 | (b) Native VECTOR (MariaDB 11.8 / MySQL HeatWave) | Low (version-gated) | Large | Excellent | $0 | Index-time text only | Low if present | Progressive enhancement |
 | (c) SQLite + sqlite-vec | Mixed/low | Same as (a) w/o ext | OK | $0 | None extra | Medium, odd for WP | Rejected |
-| (d) External (Qdrant/Pinecone/Weaviate) | Universal | Millions | Best | $25–$135+/mo | Text + every query egress | High | **Scale Tier (opt-in)** |
+| (d) External (Qdrant/Pinecone/Weaviate) | Universal | Millions | Best | $25-$135+/mo | Text + every query egress | High | **Scale Tier (opt-in)** |
 | (e) OpenAI File Search | Universal | Large | Good | ~free for a catalog | Text egress, OpenAI-coupled | Medium | Rejected (wrong shape) |
 
 ---
@@ -123,9 +123,9 @@ Anthropic/Moonshot give us no embeddings, so we choose an embeddings provider. S
 |---|---|---|---|---|
 | **OpenAI `text-embedding-3-small`** | 1536 (shortenable via `dimensions`) | **$0.02** ($0.01 batch) | Yes (decent) | Cheapest, ubiquitous, supports MRL dimension shortening to 256/512 |
 | OpenAI `text-embedding-3-large` | 3072 (shortenable) | $0.13 ($0.065 batch) | Yes | Higher quality, 6.5x cost, 3072 dims heavy for PHP scan |
-| **Cohere `embed-multilingual-v3.0`** | 1024 (Matryoshka: 256/512/1024/1536) | $0.10 | **100+ langs, strong on non-Latin** (Arabic/Hindi ~15–20% better than OpenAI) | Best multilingual; native 1024 dims is scan-friendly |
+| **Cohere `embed-multilingual-v3.0`** | 1024 (Matryoshka: 256/512/1024/1536) | $0.10 | **100+ langs, strong on non-Latin** (Arabic/Hindi ~15-20% better than OpenAI) | Best multilingual; native 1024 dims is scan-friendly |
 | Cohere `embed-english-light-v3.0` | 384 | $0.02 | English | Tiny + cheap, English-only |
-| **Voyage `voyage-3-large`** | flexible (256–2048) | ~mid | Best overall (beats OpenAI-large ~9.7%, Cohere-en ~20.7%) | Highest quality; Anthropic's recommended embeddings partner |
+| **Voyage `voyage-3-large`** | flexible (256-2048) | ~mid | Best overall (beats OpenAI-large ~9.7%, Cohere-en ~20.7%) | Highest quality; Anthropic's recommended embeddings partner |
 | Open-source **`bge-small-en-v1.5`** / **`e5-small`** | 384 | $0 (self-host) | English (multilingual e5 variants exist) | 33M params, CPU-friendly, but needs a Python/inference runtime the WP host won't have |
 
 Sources: [OpenAI embedding pricing 2026 (TokenMix)](https://tokenmix.ai/blog/openai-embedding-pricing) / [CloudZero](https://www.cloudzero.com/blog/openai-pricing/); [Cohere & Voyage comparison (reintech)](https://reintech.io/blog/embedding-models-comparison-2026-openai-cohere-voyage-bge) / [Voyage-3-large announcement](https://blog.voyageai.com/2025/01/07/voyage-3-large/); [bge/e5 dims (HF, BAAI)](https://huggingface.co/BAAI/bge-small-en-v1.5) / [Multilingual E5 report](https://arxiv.org/pdf/2402.05672); [model specs table (pecollective)](https://pecollective.com/tools/text-embedding-models-compared/).
@@ -220,7 +220,7 @@ Index on `(model)` so a model change can be batch-invalidated. On the MariaDB-ve
 ### 5.2 Initial bulk embed
 
 On enable (or via an admin "Build index" button), enqueue an Action Scheduler **recurring/batched backfill**:
-- Page product IDs in batches of ~25–50 (Action Scheduler's default claim is 25 actions; each action embeds a batch). Action Scheduler is designed exactly for "background processing large queues in WP plugins, no server access required" and processes a batch until ~90% memory or ~30s ([actionscheduler.org](https://actionscheduler.org/)).
+- Page product IDs in batches of ~25-50 (Action Scheduler's default claim is 25 actions; each action embeds a batch). Action Scheduler is designed exactly for "background processing large queues in WP plugins, no server access required" and processes a batch until ~90% memory or ~30s ([actionscheduler.org](https://actionscheduler.org/)).
 - Each batch: compose text → call embeddings API (use the provider's **batch endpoint** where available to halve cost) → `pack()` → upsert rows.
 - Idempotent: skip products whose `content_hash` is unchanged. Safe to re-run.
 
@@ -292,7 +292,7 @@ This is chosen because it is the **only design that runs on every WooCommerce ho
 | Granularity | One vector per product | Per-variant nuance | 3x less storage/scan; variant concerns are live filters anyway |
 | Search type | Hybrid (vector + keyword, RRF) | Simplicity of pure vector | Pure vector misses SKUs/exact tokens, fatal for commerce |
 | Embeddings provider | Hosted (OpenAI default) | Free self-hosted bge/e5 | WP hosts can't run a model runtime; HTTP is the only portable path |
-| Dimensions | 512 (shortened) | Marginal quality of 1536/3072 | 3–6x lighter PHP scan; negligible quality loss with MRL |
+| Dimensions | 512 (shortened) | Marginal quality of 1536/3072 | 3-6x lighter PHP scan; negligible quality loss with MRL |
 | Reranking | Deferred | A few % more precision | Extra API call/cost; add only if eval demands it |
 | External vector DB | Opt-in only | Best relevance by default | Cost + privacy egress + merchant must configure an account |
 
@@ -354,7 +354,7 @@ Embedding cost is dominated by the one-time backfill; incremental sync is neglig
 | 5,000 products | ~750k | ~$0.015 | ~$0.075 | ~10 MB |
 | 50,000 products | ~7.5M | ~$0.15 | ~$0.75 | ~100 MB |
 
-Query-time embedding: each shopper search embeds one short query (~10–30 tokens) ⇒ effectively **fractions of a cent per thousand searches** with `3-small`. Incremental re-embeds: one product's tokens per changed product. **The embedding bill is trivial for typical stores**; the real "cost" of the external Scale Tier is the **monthly vector-DB subscription** ($25–$135+/mo), which is why it's opt-in. Sources: pricing as cited in §3 and §2.4.
+Query-time embedding: each shopper search embeds one short query (~10-30 tokens) ⇒ effectively **fractions of a cent per thousand searches** with `3-small`. Incremental re-embeds: one product's tokens per changed product. **The embedding bill is trivial for typical stores**; the real "cost" of the external Scale Tier is the **monthly vector-DB subscription** ($25-$135+/mo), which is why it's opt-in. Sources: pricing as cited in §3 and §2.4.
 
 ---
 

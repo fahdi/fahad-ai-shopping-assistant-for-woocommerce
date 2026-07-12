@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..'); // website/
 const ORIGIN = 'https://fahadai.isupercoder.com';
-const DASH = /[, –]/; // em dash / en dash, banned in title + description
+const DASH = /[, -]/; // em dash / en dash, banned in title + description
 
 function walk(dir) {
   const out = [];

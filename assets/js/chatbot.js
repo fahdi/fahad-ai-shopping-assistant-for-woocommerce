@@ -1204,7 +1204,7 @@
 		const count = Number(p.review_count) || 0;
 		if (count <= 0) return null;
 
-		// Clamp the average to 0–5; render fractional values precisely with a clipped
+		// Clamp the average to 0-5; render fractional values precisely with a clipped
 		// overlay of filled stars over a base of empty stars (no half-star glyph,
 		// which fonts render inconsistently, only the common ★/☆ are used).
 		const avg     = Math.max(0, Math.min(5, Number(p.rating) || 0));

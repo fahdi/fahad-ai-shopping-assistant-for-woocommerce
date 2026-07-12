@@ -1035,7 +1035,7 @@ Writing style, follow exactly:
 					? (int) hexdec( substr( $raw, 1 ) )
 					: (int) $raw;
 
-				// Unsafe codepoints: C0 controls (0–0x1F), C1 controls (0x7F–0x9F),
+				// Unsafe codepoints: C0 controls (0-0x1F), C1 controls (0x7F-0x9F),
 				// and combining marks (the corruption class, e.g. U+0344). Repair to
 				// the plain currency symbol rather than ever rendering the artifact.
 				$is_control   = $code <= 0x1F || ( $code >= 0x7F && $code <= 0x9F );
@@ -1061,10 +1061,10 @@ Writing style, follow exactly:
 	 * Humanize the assistant's reply text (issue #130).
 	 *
 	 * The system prompt asks the model to write like a person and to never use an
-	 * em-dash (, , U+2014) or en-dash (–, U+2013), but models ignore that often, so
+	 * em-dash (U+2014) or en-dash (U+2013), but models ignore that often, so
 	 * this is the deterministic server-side guard applied to the assistant TEXT on
 	 * BOTH the non-stream return and the buffered streaming chunk. A dash between two
-	 * digits is a numeric range and becomes a plain hyphen (e.g. "30–40" → "30-40");
+	 * digits is a numeric range and becomes a plain hyphen (e.g. "30-40" → "30-40");
 	 * any other em/en dash (with its surrounding spaces) becomes a comma, which reads
 	 * naturally where the model used a dash to join clauses. Idempotent: re-running on
 	 * already-clean text is a no-op. Only the assistant's own prose is touched, product
@@ -1075,7 +1075,7 @@ Writing style, follow exactly:
 			return $text; // No em/en dash, nothing to humanize.
 		}
 
-		// Numeric ranges keep a hyphen so "30–40" stays a range, not "30, 40".
+		// Numeric ranges keep a hyphen so "30-40" stays a range, not "30, 40".
 		$text = (string) preg_replace( '/(\d)\s*[\x{2014}\x{2013}]\s*(\d)/u', '$1-$2', $text );
 		// Any remaining em/en dash (with surrounding spaces) becomes a comma.
 		$text = (string) preg_replace( '/\s*[\x{2014}\x{2013}]\s*/u', ', ', $text );

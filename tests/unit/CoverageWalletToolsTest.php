@@ -166,7 +166,7 @@ class CoverageWalletToolsTest extends TestCase {
 		$this->assertStringContainsString( 'not available', strtolower( $result['error'] ) );
 	}
 
-	// ── self::call(): throwing provider is isolated to null (364–368) ───────────
+	// ── self::call(): throwing provider is isolated to null (364-368) ───────────
 
 	/**
 	 * A misbehaving adapter that THROWS must never fatal the agent request: call()

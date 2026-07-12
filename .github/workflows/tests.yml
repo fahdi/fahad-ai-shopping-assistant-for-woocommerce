@@ -42,6 +42,26 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      # Hard rule: no em-dashes (U+2014) or en-dashes (U+2013) in shipped files.
+      - name: No em/en dashes
+        run: |
+          python3 - <<'PY'
+          import glob, sys
+          pats = ['fahad-ai-shopping-assistant-for-woocommerce.php','uninstall.php','readme.txt',
+                  'includes/**/*.php','assets/**/*.js','assets/**/*.css','website/**/*.html','docs/**/*.md']
+          bad = []
+          for pat in pats:
+              for f in glob.glob(pat, recursive=True):
+                  t = open(f, encoding='utf-8', errors='ignore').read()
+                  if '—' in t or '–' in t:
+                      bad.append(f)
+          if bad:
+              print('Fancy dash (em/en) found, use a comma or plain hyphen:')
+              for f in bad: print('  -', f)
+              sys.exit(1)
+          print('OK: no em/en dashes')
+          PY
+
       # Run the suites separately so each shows up as its own step in the log.
       - name: Unit suite (parallel)
         run: composer test

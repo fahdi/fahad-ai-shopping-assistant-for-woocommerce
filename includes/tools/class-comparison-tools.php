@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
  * to the bootstrap, the test bootstrap, or the eval harness.
  *
  * Tool provided:
- *   - compare_products, "what's the difference between A and B?". Given 2–4 product
+ *   - compare_products, "what's the difference between A and B?". Given 2-4 product
  *     ids, returns each product's NORMALIZED base summary (reusing the shared
  *     Fahad_AI_Tools::format_product_summary so the fields match every other product
  *     surface) PLUS an ALIGNED attribute table: one row per attribute, each row
@@ -79,7 +79,7 @@ final class Fahad_AI_Comparison_Tools {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Compare 2–4 products: per-product base summary + an aligned attribute table.
+	 * Compare 2-4 products: per-product base summary + an aligned attribute table.
 	 *
 	 * @param array $input { ids: int[] }
 	 * @return array {

@@ -92,9 +92,8 @@ The conversation history (user messages and assistant replies) and the results o
 
 == Screenshots ==
 
-1. The assistant answers a product question with grounded store data and a product card
-2. Chat widget on the storefront
-3. Admin settings, provider and API key configuration
+1. The assistant answers a product question with grounded store data and a product card, then declines to invent a discount when there is no sale.
+2. The Dukandar chat widget live on a WooCommerce storefront, grounded in the store's real catalogue.
 
 == External services ==
 

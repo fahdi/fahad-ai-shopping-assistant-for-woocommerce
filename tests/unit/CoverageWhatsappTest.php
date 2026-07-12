@@ -95,7 +95,7 @@ class CoverageWhatsappTest extends TestCase {
 		);
 	}
 
-	// ── register_routes(): the REST route declaration (lines 117–133) ───────────────
+	// ── register_routes(): the REST route declaration (lines 117-133) ───────────────
 
 	public function test_register_routes_registers_the_whatsapp_endpoint(): void {
 		// register_routes() declares ONE endpoint on fahad-ai/v1 carrying both a GET

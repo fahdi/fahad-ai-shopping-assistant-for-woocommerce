@@ -6,6 +6,9 @@ Concise router for this repo. To keep context lean, the detail lives in two focu
 - **[docs/ai-assistant.md](docs/ai-assistant.md)**, *our AI assistant*: providers, the agentic loop, the tool registry + extensibility, the system prompt + trust guardrails, the privacy/auth boundary, cost controls, and the eval harness.
 - **[ROADMAP.md](ROADMAP.md)**, product strategy, the v2.1+ backlog (epic #47), and the release workflow rationale.
 
+## Writing rule (hard, enforced)
+**No em-dashes or en-dashes anywhere.** Not in readme/copy, code comments, docs, commit messages, or the marketing site. Use commas, colons, periods, parentheses, or a plain hyphen `-` for ranges. This is enforced two ways: CI **fails the build** if a `—` (U+2014) or `–` (U+2013) appears in shipped files, and the runtime `humanize_text()` strips them from the assistant's replies. When writing or generating any text for this project, produce plain text with no fancy dashes.
+
 ## Identity
 - Main file: `fahad-ai-shopping-assistant-for-woocommerce.php` · GitHub: https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
 - **Current version: 2.14.3**

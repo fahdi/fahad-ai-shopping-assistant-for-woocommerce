@@ -70,7 +70,7 @@ Every feature should map to one of these:
 
 ## 3. Roadmap
 
-Effort: **S** ≈ <1 day, **M** ≈ 2–4 days, **L** ≈ a week+. Every item ships with tests (project rule: no feature without tests) and, where it changes answers, an eval case.
+Effort: **S** ≈ <1 day, **M** ≈ 2-4 days, **L** ≈ a week+. Every item ships with tests (project rule: no feature without tests) and, where it changes answers, an eval case.
 
 ### Now, high impact, mostly local WooCommerce data
 | Feature | Job | Owner value | Implementation sketch | Effort | Key risk |
@@ -87,15 +87,15 @@ Effort: **S** ≈ <1 day, **M** ≈ 2–4 days, **L** ≈ a week+. Every item sh
 | **Recommendations & cross-sell** | Discover/Decide | AOV | Use WC related/upsell/cross-sell + AI need-matching; "frequently bought together"; gift/use-case mode | M | Stay relevant, disclose upsell, respect budget |
 | **Order status & tracking** | Follow up | Deflects support tickets | Auth-gated `get_my_orders`/`get_order_status`; requires a real authorization boundary, not just the nonce | M | **Privacy**, strict ownership checks; never expose others' orders |
 | **Wallet / store credit** *(see §5)* | Save/Transact | Ties to your wallet plugins | `get_wallet_balance`, `top_up` (+deposit bonus), pay-with-credit | M | Money-safety; mirror Account Funds invariants |
-| **Shipping & delivery estimate** | Qualify | Removes "will it arrive?" doubt | `estimate_delivery` from WC zones + customer location | M–L | Accuracy across zones/carriers |
-| **Personalization & memory** | Context | Retention | Remember stated preferences across sessions (opt-in, per-user) | M–L | Privacy/consent; storage hygiene |
+| **Shipping & delivery estimate** | Qualify | Removes "will it arrive?" doubt | `estimate_delivery` from WC zones + customer location | M-L | Accuracy across zones/carriers |
+| **Personalization & memory** | Context | Retention | Remember stated preferences across sessions (opt-in, per-user) | M-L | Privacy/consent; storage hygiene |
 
 ### Later, platform bets
 | Feature | Job | Owner value | Implementation sketch | Effort | Key risk |
 |---|---|---|---|---|---|
 | **Semantic / vector search** | Discover | Better matches than keyword | Embed catalog; vector lookup feeding `search_products` | L | Index freshness, hosting of embeddings |
-| **Multilingual (Urdu/English)** | All | Reach for this store specifically | Detect/select language; localized prompts + UI strings | M–L | Quality of non-English answers |
-| **Owner analytics & "unanswered questions"** |, (owner) | Product stickiness + merchandising | Log intents/outcomes; dashboard of top questions, failures, chat→conversion | M–L | Privacy-safe logging; storage |
+| **Multilingual (Urdu/English)** | All | Reach for this store specifically | Detect/select language; localized prompts + UI strings | M-L | Quality of non-English answers |
+| **Owner analytics & "unanswered questions"** |, (owner) | Product stickiness + merchandising | Log intents/outcomes; dashboard of top questions, failures, chat→conversion | M-L | Privacy-safe logging; storage |
 | **Visual search** | Discover | Novelty, apparel/decor fit | Image upload → similarity over catalog | L | Cost, accuracy |
 | **Proactive assist** | Discover/Recover | Recover abandons | Exit-intent / PDP / cart nudges | M | Easily becomes spam, strict frequency + value gate |
 
@@ -192,36 +192,36 @@ Four next-order themes the shipped product + live QA reveal, each sharpens a pri
 - **Prove ROI to the merchant.** No owner analytics yet, the #1 commercial gap; the merchant can't justify the API spend without it.
 - **Meet shoppers in their language and channel.** Deployed on a ₨/Pakistan store but English-only and web-widget-only; Urdu/Roman-Urdu and WhatsApp are the biggest reach levers here.
 
-Effort: S ≈ <1d, M ≈ 2–4d, L ≈ week+. Impact: H/M/L.
+Effort: S ≈ <1d, M ≈ 2-4d, L ≈ week+. Impact: H/M/L.
 
 ### Now, high value, mostly local data; several surfaced by live QA
 | Issue | Opportunity | Job | Effort | Impact | Key risk |
 |---|---|---|---|---|---|
 | #48 | Direct, verified cart actions (no agent round-trip) | Transact | M | H | Keep nonce + rate-limit; idempotency |
-| #49 | Owner analytics & "unanswered questions" dashboard | Owner/Measurable | M–L | H | Privacy-safe logging, retention |
-| #50 | Reply feedback (thumbs) + prod guardrail telemetry | Improvable | S–M | M–H | Low |
+| #49 | Owner analytics & "unanswered questions" dashboard | Owner/Measurable | M-L | H | Privacy-safe logging, retention |
+| #50 | Reply feedback (thumbs) + prod guardrail telemetry | Improvable | S-M | M-H | Low |
 | #51 | Back-in-stock & price-drop alerts (consented) | Qualify/Recover | M | H | Consent, deliverability |
-| #52 | Reorder / buy-it-again | Follow-up | S–M | M–H | Auth (boundary exists) |
+| #52 | Reorder / buy-it-again | Follow-up | S-M | M-H | Auth (boundary exists) |
 
 ### Next, differentiation; some need integration
 | Issue | Opportunity | Job | Effort | Impact | Key risk |
 |---|---|---|---|---|---|
-| #53 | Returns / exchange (RMA) assistant | Follow-up/Recover | M–L | H | Money/policy correctness; never auto-refund |
-| #54 | Size/fit advisor (grounded) | Decide | M | M–H | Must ground in data, not guess |
-| #55 | Conversational checkout assist | Transact | M–L | H | Stop at PCI boundary |
-| #56 | Merchant scope/tone/rules config (admin) | Owner/Extensible | M | M–H | Config must not weaken guardrails |
+| #53 | Returns / exchange (RMA) assistant | Follow-up/Recover | M-L | H | Money/policy correctness; never auto-refund |
+| #54 | Size/fit advisor (grounded) | Decide | M | M-H | Must ground in data, not guess |
+| #55 | Conversational checkout assist | Transact | M-L | H | Stop at PCI boundary |
+| #56 | Merchant scope/tone/rules config (admin) | Owner/Extensible | M | M-H | Config must not weaken guardrails |
 | #57 | Curated bundles / "complete the look" | Save/Decide | M | M | Relevance; disclose as optional |
-| #58 | Provider failover & graceful degradation | Reliability | S–M | M | Cost/consistency |
-| #59 | GDPR export/erase for the memory pack | Private/safe | S–M | M | Must fully purge |
+| #58 | Provider failover & graceful degradation | Reliability | S-M | M | Cost/consistency |
+| #59 | GDPR export/erase for the memory pack | Private/safe | S-M | M | Must fully purge |
 
 ### Later, platform bets
 | Issue | Opportunity | Job | Effort | Impact | Key risk |
 |---|---|---|---|---|---|
 | #60 | Semantic / vector search | Discover | L | H | Index freshness, embedding cost |
-| #61 | Multilingual (Urdu / Roman Urdu) + locale | All | M–L | H (local) | Non-English answer quality |
+| #61 | Multilingual (Urdu / Roman Urdu) + locale | All | M-L | H (local) | Non-English answer quality |
 | #62 | Omnichannel, WhatsApp | All | L | H | Platform approval, async UX, cost |
 | #63 | Visual / image search | Discover | L | M | Vision cost/accuracy |
-| #64 | Voice input/output | Accessibility | M–L | L–M | Browser support, cost |
+| #64 | Voice input/output | Accessibility | M-L | L-M | Browser support, cost |
 | #65 | Proactive, consented, value-gated assist | Discover/Recover | M | M | Spam/dark-pattern, guardrail-gated |
 
 ### Hardening / chore

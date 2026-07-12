@@ -224,7 +224,7 @@ class ApiHandlerTest extends TestCase {
 
     // ── humanized replies, no em-dashes (#130) ──────────────────────────────────
     // Replies must read like a person, not a machine, and must never contain an
-    // em-dash (, , U+2014) or en-dash (–, U+2013). humanize_text() is a deterministic
+    // em-dash (U+2014) or en-dash (U+2013). humanize_text() is a deterministic
     // server-side guard applied to the assistant TEXT on BOTH the non-stream return
     // and the buffered streaming chunk, so a dash the model still emits despite the
     // prompt can never reach the shopper. The em-dash glyph below is U+2014; en-dash
@@ -246,7 +246,7 @@ class ApiHandlerTest extends TestCase {
     }
 
     public function test_humanize_keeps_numeric_ranges_as_a_hyphen(): void {
-        $in  = "Sizes 30\xE2\x80\x9340 are in stock.";                 // 30–40
+        $in  = "Sizes 30\xE2\x80\x9340 are in stock.";                 // 30-40
         $this->assertSame( 'Sizes 30-40 are in stock.', $this->humanize_text( $in ) );
     }
 
