@@ -1,6 +1,6 @@
 # Dukandar marketing site
 
-Source for **fahadai.isupercoder.com** (landing page, changelog, contact).
+Source for **getdukandar.com** (landing page, changelog, contact).
 Static HTML/CSS, no build step. `website/` maps to the web root on the server.
 
 ## Structure
@@ -47,10 +47,10 @@ The build script `apply-fixes.mjs` (idempotent audit fixes) and `tests/og-card.h
 (OG image source, rendered to `og-image-1200x630.png` with headless Chrome at 1200x630)
 are generators, not served assets, so they are excluded above.
 
-First-time setup (one-off): create the nginx server block for `fahadai.isupercoder.com`
+First-time setup (one-off): create the nginx server block for `getdukandar.com`
 pointing at `/var/www/fahadai`, add the DNS A record (`fahadai` -> 207.244.253.120) on
 Namecheap, then issue SSL:
 
 ```
-certbot certonly --webroot -w /var/www/certbot -d fahadai.isupercoder.com --non-interactive --agree-tos -m info@fahdmurtaza.com
+certbot certonly --webroot -w /var/www/certbot -d getdukandar.com --non-interactive --agree-tos -m info@fahdmurtaza.com
 ```

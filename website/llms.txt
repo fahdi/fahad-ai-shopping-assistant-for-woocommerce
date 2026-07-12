@@ -29,5 +29,5 @@ Key facts for an assistant summarizing this project:
 - [All documentation](https://getdukandar.com/docs/)
 - [Changelog](https://getdukandar.com/changelog.html)
 - [Contact and support](https://getdukandar.com/contact.html)
-- [Source on GitHub](https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce)
+- [Source on GitHub](https://github.com/fahdi/dukandar-shopping-assistant-for-woocommerce)
 - [WordPress.org plugin](https://wordpress.org/plugins/fahad-ai-shopping-assistant-for-woocommerce/)

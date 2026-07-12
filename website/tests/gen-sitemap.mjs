@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url))); // website/
-const ORIGIN = 'https://fahadai.isupercoder.com';
+const ORIGIN = 'https://getdukandar.com';
 
 function walk(d) {
   let o = [];

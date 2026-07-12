@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Dukandar AI Shopping Assistant for WooCommerce
- * Plugin URI:  https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
+ * Plugin URI:  https://github.com/fahdi/dukandar-shopping-assistant-for-woocommerce
  * Description: AI-powered shopping assistant for WooCommerce, answers questions and manages the cart using OpenAI, Claude, Gemini, Moonshot, and other major AI providers.
  * Version:           2.14.12
  * Author:      Fahdi Murtaza

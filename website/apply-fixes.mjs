@@ -5,7 +5,7 @@ import { join, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const ORIGIN = 'https://fahadai.isupercoder.com';
+const ORIGIN = 'https://getdukandar.com';
 
 function walk(d) {
   let o = [];

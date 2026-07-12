@@ -8,8 +8,8 @@ import { join, dirname, resolve, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..'); // website/
-const ORIGIN = 'https://fahadai.isupercoder.com';
-const DASH = /[, -]/; // em dash / en dash, banned in title + description
+const ORIGIN = 'https://getdukandar.com';
+const DASH = /[\u2014\u2013]/; // em dash (U+2014) / en dash (U+2013), banned in title + description
 
 function walk(dir) {
   const out = [];
@@ -109,7 +109,7 @@ const sitemapPath = join(ROOT, 'sitemap.xml');
 if (!existsSync(robotsPath)) errors.push('robots.txt: missing');
 else {
   const robots = readFileSync(robotsPath, 'utf8');
-  if (!/Sitemap:\s*https:\/\/fahadai\.isupercoder\.com\/sitemap\.xml/i.test(robots))
+  if (!/Sitemap:\s*https:\/\/getdukandar\.com\/sitemap\.xml/i.test(robots))
     errors.push('robots.txt: missing Sitemap directive');
 }
 if (!existsSync(sitemapPath)) errors.push('sitemap.xml: missing');

@@ -8,7 +8,7 @@ import { join, dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..'); // website/
-const SELF_HOST = 'fahadai.isupercoder.com';
+const SELF_HOST = 'getdukandar.com';
 
 function walk(dir) {
   const out = [];
