@@ -12,7 +12,8 @@
         "squizlabs/php_codesniffer": "^3.9",
         "wp-coding-standards/wpcs": "^3.1",
         "phpcompatibility/phpcompatibility-wp": "^2.1",
-        "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "brianium/paratest": "~7.3.0"
     },
     "autoload-dev": {
         "psr-4": {
@@ -22,11 +23,18 @@
     "scripts": {
         "phpcs": "phpcs",
         "phpcbf": "phpcbf",
-        "test": "phpunit --testsuite unit",
+        "test": "@test:parallel",
+        "test:parallel": "php -d pcov.enabled=0 vendor/bin/paratest --functional --no-coverage --passthru-php='-d pcov.enabled=0' --testsuite unit",
+        "test:serial": "phpunit --testsuite unit",
         "test:coverage": [
             "phpunit --testsuite unit --coverage-clover build/clover.xml --coverage-filter includes",
             "php tests/check-coverage.php build/clover.xml 100"
         ]
+    },
+    "scripts-descriptions": {
+        "test": "Fast parallel run of the unit suite (paratest, all cores, no coverage). ~8x faster than serial.",
+        "test:serial": "Single-process unit run (clearer output when debugging one failure).",
+        "test:coverage": "Serial run with the strict 100% coverage gate (parallel coverage is slower and drops lines, so the gate stays serial)."
     },
     "config": {
         "allow-plugins": {

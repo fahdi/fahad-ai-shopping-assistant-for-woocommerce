@@ -43,8 +43,8 @@ jobs:
         run: composer install --prefer-dist --no-interaction --no-progress
 
       # Run the suites separately so each shows up as its own step in the log.
-      - name: Unit suite
-        run: vendor/bin/phpunit --testsuite unit
+      - name: Unit suite (parallel)
+        run: composer test
 
       - name: Eval suite (golden-conversation tests)
         run: vendor/bin/phpunit --testsuite eval --testdox
