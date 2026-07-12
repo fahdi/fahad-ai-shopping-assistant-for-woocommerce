@@ -426,6 +426,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertStringContainsString( 'Escalated', $out );                      // outcome label (2nd)
 		$this->assertStringContainsString( 'TS:' . $ts, $out );                       // formatted time
 		$this->assertStringContainsString( 'Reset', $out );                          // active-range reset link
+		$this->assertStringContainsString( '33%', $out );                            // chat-to-cart rate (1 of 3 convs)
 	}
 
 	// ── fahad_ai_analytics_page (save the opt-out toggle) ────────────────────────

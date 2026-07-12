@@ -315,6 +315,15 @@ class AnalyticsTest extends TestCase {
 		$this->assertSame( 3, $funnel['conversations'], 'Three distinct conversations.' );
 		$this->assertSame( 2, $funnel['product_surfaced'], 'Two conversations saw a product (A, B).' );
 		$this->assertSame( 1, $funnel['added_to_cart'], 'One conversation added to cart (A).' );
+		// Headline ROI number: share of conversations that reached the cart (1 of 3).
+		$this->assertEqualsWithDelta( 1 / 3, $funnel['cart_rate'], 0.0001, 'One cart across three conversations.' );
+	}
+
+	public function test_funnel_cart_rate_is_zero_when_there_are_no_conversations(): void {
+		$funnel = $this->store()->funnel();
+
+		$this->assertSame( 0, $funnel['conversations'] );
+		$this->assertSame( 0.0, $funnel['cart_rate'], 'No conversations must not divide by zero.' );
 	}
 
 	// ── aggregates: cost per conversation ────────────────────────────────────────

@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.9
+Stable tag: 2.14.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.10 =
+ROI at a glance: the analytics now show your chat-to-cart conversion rate.
+
+* Added a "Chat-to-cart rate" row to the Conversion funnel (Settings analytics), showing the share of assistant conversations that reached the cart as a single percentage. Owners no longer have to do the math on raw counts to see the assistant's impact.
 
 = 2.14.9 =
 Cost safety, now owner-friendly: set the daily usage cap from the settings screen, no code needed.
@@ -488,6 +493,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.10 =
+The analytics funnel now shows your chat-to-cart conversion rate as a single percentage. No breaking changes.
 
 = 2.14.9 =
 The daily usage cap is now settable from Settings > Cost &amp; Performance, no code required. No breaking changes.
