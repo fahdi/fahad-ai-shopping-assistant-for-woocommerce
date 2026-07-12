@@ -124,11 +124,14 @@ final class Fahad_AI_Auth {
 	}
 
 	/**
-	 * The store-wide daily cap on billable AI answers (issue #194). A filterable cost
-	 * ceiling; 0 (the default) means unlimited. Negative filters are clamped to 0.
+	 * The store-wide daily cap on billable AI answers (issues #194, #196). The base is the
+	 * owner-set 'Daily message limit' setting (0 = unlimited, the default); the
+	 * fahad_ai_daily_message_cap filter can still override it for code-level users. Negative
+	 * values are clamped to 0.
 	 */
 	public static function daily_cap(): int {
-		return max( 0, (int) apply_filters( 'fahad_ai_daily_message_cap', 0 ) );
+		$configured = (int) get_option( 'fahad_ai_daily_message_cap', 0 );
+		return max( 0, (int) apply_filters( 'fahad_ai_daily_message_cap', $configured ) );
 	}
 
 	/**
