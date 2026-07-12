@@ -215,6 +215,48 @@ function fahad_ai_provider_health_notice(): void {
 }
 
 /**
+ * Approaching-daily-cap warning (issue #210): when today's AI usage nears the configured
+ * cap, warn the owner so they can raise it before the assistant starts pointing shoppers to
+ * human support at peak time (a lost-sales risk). Self-clears at the day boundary (the
+ * counter resets), so no dismissal is needed. A stronger message shows once the cap is
+ * fully reached and shoppers are actively being turned away.
+ */
+function fahad_ai_daily_cap_notice(): void {
+	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+		return;
+	}
+	if ( ! Fahad_AI_Auth::daily_cap_approaching() ) {
+		return;
+	}
+	$count    = Fahad_AI_Auth::daily_count();
+	$cap      = Fahad_AI_Auth::daily_cap();
+	$reached  = Fahad_AI_Auth::daily_cap_reached();
+	$settings = admin_url( 'options-general.php?page=fahad-ai-shopping-assistant-for-woocommerce' );
+
+	$headline = $reached
+		? sprintf(
+			/* translators: 1: answers used today, 2: the configured daily cap. */
+			esc_html__( 'Daily AI answer limit reached (%1$d of %2$d). Shoppers are now pointed to human support instead of the assistant until tomorrow.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			$count,
+			$cap
+		)
+		: sprintf(
+			/* translators: 1: answers used today, 2: the configured daily cap. */
+			esc_html__( 'The assistant has used %1$d of its %2$d daily answers. Once the limit is reached, shoppers are pointed to human support instead of the assistant.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			$count,
+			$cap
+		);
+
+	printf(
+		'<div class="notice %s"><p><strong>%s</strong> <a href="%s" class="button" style="margin-left:8px">%s</a></p></div>',
+		$reached ? 'notice-error' : 'notice-warning',
+		esc_html( $headline ),
+		esc_url( $settings ),
+		esc_html__( 'Raise the limit', 'fahad-ai-shopping-assistant-for-woocommerce' )
+	);
+}
+
+/**
  * Handle the "No thanks" dismissal of the review request (issue #192). Nonce-protected
  * and capability-gated; persists so the notice never returns.
  */

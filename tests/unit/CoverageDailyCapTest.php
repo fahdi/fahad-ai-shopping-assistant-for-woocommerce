@@ -84,6 +84,47 @@ class CoverageDailyCapTest extends TestCase {
 		$this->assertTrue( Fahad_AI_Auth::daily_cap_reached() );
 	}
 
+	// ── daily_cap_approaching (warn before the cap bites) ───────────────────────
+
+	/** get_option seam: the cap for the cap option, a today-dated counter otherwise. */
+	private function seed_cap_and_count( int $cap, int $count ): void {
+		Functions\when( 'get_option' )->alias(
+			fn( $k, $d = '' ) => 'fahad_ai_daily_message_cap' === $k
+				? $cap
+				: [ 'date' => gmdate( 'Ymd' ), 'count' => $count ]
+		);
+	}
+
+	public function test_not_approaching_when_unlimited(): void {
+		$this->seed_cap_and_count( 0, 9999 );
+		Functions\when( 'apply_filters' )->alias( fn( $tag, $val ) => $val );
+		$this->assertFalse( Fahad_AI_Auth::daily_cap_approaching() );
+	}
+
+	public function test_not_approaching_below_the_ratio(): void {
+		$this->seed_cap_and_count( 100, 79 ); // 79 < ceil(80)
+		Functions\when( 'apply_filters' )->alias( fn( $tag, $val ) => $val );
+		$this->assertFalse( Fahad_AI_Auth::daily_cap_approaching() );
+	}
+
+	public function test_approaching_at_the_ratio(): void {
+		$this->seed_cap_and_count( 100, 80 ); // 80 >= ceil(80)
+		Functions\when( 'apply_filters' )->alias( fn( $tag, $val ) => $val );
+		$this->assertTrue( Fahad_AI_Auth::daily_cap_approaching() );
+	}
+
+	public function test_approaching_stays_true_once_reached(): void {
+		$this->seed_cap_and_count( 100, 100 );
+		Functions\when( 'apply_filters' )->alias( fn( $tag, $val ) => $val );
+		$this->assertTrue( Fahad_AI_Auth::daily_cap_approaching() );
+	}
+
+	public function test_warn_ratio_is_filterable(): void {
+		$this->seed_cap_and_count( 100, 50 ); // 50 >= ceil(50) when ratio is 0.5
+		Functions\when( 'apply_filters' )->alias( fn( $tag, $val ) => 'fahad_ai_cap_warn_ratio' === $tag ? 0.5 : $val );
+		$this->assertTrue( Fahad_AI_Auth::daily_cap_approaching() );
+	}
+
 	// ── record_daily_message ────────────────────────────────────────────────────
 
 	public function test_record_starts_a_fresh_day(): void {

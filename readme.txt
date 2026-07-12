@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.15
+Stable tag: 2.14.16
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.16 =
+Don't lose sales to your own cost cap: get warned before the daily limit turns shoppers away.
+
+* If you set a daily usage cap, the admin now warns you once the store nears it (at 80% by default), so you can raise the limit before the assistant starts pointing shoppers to human support at a busy time. A stronger notice appears once the limit is reached. The warning clears itself each day. This makes the cost cap safe to use without risking a silent afternoon of lost assisted sales.
 
 = 2.14.15 =
 Clean install on modern WooCommerce: declared High-Performance Order Storage (HPOS) compatibility.
@@ -518,6 +523,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.16 =
+Warns you before your daily AI cap starts turning shoppers away, so you can raise it in time. No breaking changes.
 
 = 2.14.15 =
 Declares WooCommerce HPOS (High-Performance Order Storage) compatibility, removing the "incompatible" warning on modern stores. No behaviour change.

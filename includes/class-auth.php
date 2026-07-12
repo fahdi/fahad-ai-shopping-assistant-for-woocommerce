@@ -154,6 +154,22 @@ final class Fahad_AI_Auth {
 	}
 
 	/**
+	 * Whether today's usage is nearing the cap (issue #210), so the owner can raise it
+	 * before the assistant starts turning shoppers away at peak time. True only when a cap
+	 * is set and the count is at/above the warn ratio (default 0.8, filter
+	 * fahad_ai_cap_warn_ratio, clamped to 0..1). Stays true once the cap is fully reached.
+	 */
+	public static function daily_cap_approaching(): bool {
+		$cap = self::daily_cap();
+		if ( $cap <= 0 ) {
+			return false;
+		}
+		$ratio = (float) apply_filters( 'fahad_ai_cap_warn_ratio', 0.8 );
+		$ratio = min( 1.0, max( 0.0, $ratio ) );
+		return self::daily_count() >= (int) ceil( $cap * $ratio );
+	}
+
+	/**
 	 * Count one billable AI answer against today's total, resetting the counter when the
 	 * stored record belongs to an earlier day. Autoload is off; this option changes often.
 	 */
