@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.10
+Stable tag: 2.14.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.11 =
+Health guard: get warned if your AI provider stops working, instead of losing sales silently.
+
+* Added an admin warning that appears when the assistant has failed a cluster of responses in the last 24 hours, the usual sign of an API key that is wrong, expired, or out of credit. It points you straight to your provider settings so a broken key gets fixed fast, instead of the widget quietly going dead and costing you sales. The alert threshold is filterable (fahad_ai_error_alert_threshold, default 3) and it clears itself once things recover.
 
 = 2.14.10 =
 ROI at a glance: the analytics now show your chat-to-cart conversion rate.
@@ -493,6 +498,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.11 =
+Adds an admin warning when your AI provider starts failing (usually a bad or expired key), so a dead widget gets noticed and fixed. No breaking changes.
 
 = 2.14.10 =
 The analytics funnel now shows your chat-to-cart conversion rate as a single percentage. No breaking changes.

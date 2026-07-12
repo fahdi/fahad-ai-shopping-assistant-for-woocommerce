@@ -335,6 +335,22 @@ final class Fahad_AI_Analytics {
 	}
 
 	/**
+	 * Best-effort provider-health signal: how many turns ended in an ERROR outcome since
+	 * $since (a unix time). Used to warn the owner when the AI provider is failing (a wrong,
+	 * expired, or credit-exhausted key), which otherwise only surfaces as a silently dead
+	 * widget. Returns 0 when logging is off or nothing is stored.
+	 */
+	public function error_count_since( int $since ): int {
+		$errors = 0;
+		foreach ( $this->in_range( [ 'from' => $since ] ) as $row ) {
+			if ( self::OUTCOME_ERROR === ( $row['outcome'] ?? '' ) ) {
+				++$errors;
+			}
+		}
+		return $errors;
+	}
+
+	/**
 	 * Cost / token totals and a per-conversation average over an optional date range.
 	 * Cost per conversation = total cost / number of distinct conversations (the
 	 * metric the issue asks for). An empty window yields zeros (no divide-by-zero).

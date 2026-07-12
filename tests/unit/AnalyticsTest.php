@@ -326,6 +326,28 @@ class AnalyticsTest extends TestCase {
 		$this->assertSame( 0.0, $funnel['cart_rate'], 'No conversations must not divide by zero.' );
 	}
 
+	// ── health signal: recent error-outcome count ───────────────────────────────
+
+	public function test_error_count_since_counts_only_recent_errors(): void {
+		$store = $this->store();
+
+		$this->options[ Fahad_AI_Analytics::OPTION ] = [
+			// Old error (before the cutoff) → excluded.
+			'e0' => [ 'id' => 'e0', 'question' => 'q', 'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ERROR,    'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'a', 'created' => 1000 ],
+			// Two recent errors → counted.
+			'e1' => [ 'id' => 'e1', 'question' => 'q', 'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ERROR,    'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'b', 'created' => 100000 ],
+			'e2' => [ 'id' => 'e2', 'question' => 'q', 'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ERROR,    'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'c', 'created' => 100001 ],
+			// Recent but not an error → excluded.
+			'a1' => [ 'id' => 'a1', 'question' => 'q', 'tools' => [], 'outcome' => Fahad_AI_Analytics::OUTCOME_ANSWERED, 'product_surfaced' => false, 'added_to_cart' => false, 'tokens' => 0, 'cost' => 0.0, 'conversation_ref' => 'd', 'created' => 100002 ],
+		];
+
+		$this->assertSame( 2, $store->error_count_since( 50000 ) );
+	}
+
+	public function test_error_count_since_is_zero_with_no_rows(): void {
+		$this->assertSame( 0, $this->store()->error_count_since( 0 ) );
+	}
+
 	// ── aggregates: cost per conversation ────────────────────────────────────────
 
 	public function test_cost_summary_totals_and_averages_per_conversation(): void {

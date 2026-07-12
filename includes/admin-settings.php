@@ -96,6 +96,48 @@ function fahad_ai_review_notice(): void {
 }
 
 /**
+ * Provider-health warning (issue #200): when the assistant has hit a cluster of failed
+ * responses in the last 24 hours, warn the owner that their AI provider is likely
+ * misconfigured (wrong, expired, or credit-exhausted key). Left unnoticed this is the
+ * classic silent-churn cause: the widget just stops answering and the store blames the
+ * plugin. The threshold is filterable and the notice self-clears once errors subside, so
+ * it needs no dismiss. Best-effort: it reads recorded telemetry, so it is silent when
+ * analytics logging is off.
+ */
+function fahad_ai_provider_health_notice(): void {
+	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+		return;
+	}
+	if ( ! fahad_ai_is_provider_configured() ) {
+		return;
+	}
+	$threshold = max( 1, (int) apply_filters( 'fahad_ai_error_alert_threshold', 3 ) );
+	$errors    = Fahad_AI_Analytics::instance()->error_count_since( time() - DAY_IN_SECONDS );
+	if ( $errors < $threshold ) {
+		return;
+	}
+	$settings = admin_url( 'options-general.php?page=fahad-ai-shopping-assistant-for-woocommerce' );
+	printf(
+		'<div class="notice notice-error"><p><strong>%s</strong> %s <a href="%s" class="button" style="margin-left:8px">%s</a></p></div>',
+		esc_html(
+			sprintf(
+				/* translators: %d: number of failed assistant responses in the last 24 hours. */
+				_n(
+					'The shopping assistant failed %d response in the last 24 hours.',
+					'The shopping assistant failed %d responses in the last 24 hours.',
+					$errors,
+					'fahad-ai-shopping-assistant-for-woocommerce'
+				),
+				$errors
+			)
+		),
+		esc_html__( 'This usually means an API key problem: it may be wrong, expired, or out of credit. Please check your AI provider settings.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		esc_url( $settings ),
+		esc_html__( 'Open settings', 'fahad-ai-shopping-assistant-for-woocommerce' )
+	);
+}
+
+/**
  * Handle the "No thanks" dismissal of the review request (issue #192). Nonce-protected
  * and capability-gated; persists so the notice never returns.
  */

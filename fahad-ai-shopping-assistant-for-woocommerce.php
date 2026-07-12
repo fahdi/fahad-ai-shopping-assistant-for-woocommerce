@@ -3,7 +3,7 @@
  * Plugin Name: Dukandar AI Shopping Assistant for WooCommerce
  * Plugin URI:  https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
  * Description: AI-powered shopping assistant for WooCommerce, answers questions and manages the cart using OpenAI, Claude, Gemini, Moonshot, and other major AI providers.
- * Version:           2.14.10
+ * Version:           2.14.11
  * Author:      Fahdi Murtaza
  * Author URI:  https://github.com/fahdi
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FAHAD_AI_VERSION', '2.14.10' );
+define( 'FAHAD_AI_VERSION', '2.14.11' );
 define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -523,6 +523,11 @@ add_action( 'plugins_loaded', function () {
 	}
 	add_action( 'admin_notices', 'fahad_ai_review_notice' );
 	add_action( 'admin_init', 'fahad_ai_maybe_dismiss_review' );
+
+	// Provider-health warning (issue #200): alert the owner when the AI provider has been
+	// failing recently (usually a bad/expired/credit-exhausted API key), which otherwise
+	// only surfaces as a silently dead widget and drives churn.
+	add_action( 'admin_notices', 'fahad_ai_provider_health_notice' );
 
 	// Keep product embeddings in step with the catalog (async; no-op without a key).
 	Fahad_AI_Indexer::init();
