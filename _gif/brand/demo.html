@@ -4,209 +4,96 @@
 <meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Hanken+Grotesk:wght@500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0c0d10;--ink-2:#111318;--ink-3:#1a1d24;
-    --paper:#f3efe6;--paper-soft:#c7c3b8;--paper-dim:#8a877e;
-    --lime:#d6fb4f;--lime-deep:#aee02a;--rose:#ff6b5e;
-    --line:rgba(255,255,255,.09);
-    --shadow:0 40px 90px -34px rgba(0,0,0,.78);
+    --paper:#f3efe6;--card:#faf8f2;--ink:#1b1d21;--ink-soft:#5b5d63;
+    --line:rgba(20,18,10,.09);--taupe:#e8e4d9;--limebub:#edf4d6;--limebub-line:rgba(140,170,40,.30);
+    --lime:#d6fb4f;--olive:#5f7a17;--olive-soft:#6f8a1f;
+    --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Hanken Grotesk',system-ui,sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{width:720px;height:600px;overflow:hidden;
-    font-family:'Hanken Grotesk',system-ui,sans-serif;
+  html,body{width:820px;height:812px;overflow:hidden;background:var(--paper);font-family:var(--sans);color:var(--ink)}
+  .stage{position:relative;width:820px;height:812px;
     background:
-      radial-gradient(80% 120% at 20% 20%, #16181d 0%, #0f1013 48%, #0a0b0d 100%),
-      radial-gradient(60% 120% at 92% 96%, rgba(214,251,79,.09), transparent 60%),
-      var(--ink);
-  }
-  .stage{position:relative;width:720px;height:600px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+      linear-gradient(var(--line) 1px, transparent 1px) 0 0/46px 46px,
+      linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0/46px 46px,
+      radial-gradient(120% 90% at 50% -10%, #f7f3ea, var(--paper) 60%);
+    display:flex;align-items:center;justify-content:center;}
+  .card-wrap{position:relative;width:632px}
 
-  .grain{position:absolute;inset:0;opacity:.045;mix-blend-mode:overlay;pointer-events:none;z-index:5;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");}
+  .chat{background:var(--card);border:1px solid var(--line);border-radius:22px;
+    box-shadow:0 30px 70px -34px rgba(30,26,10,.34), 0 2px 0 rgba(255,255,255,.6) inset;overflow:hidden}
+  .top{display:flex;align-items:center;gap:11px;padding:19px 24px;border-bottom:1px solid var(--line)}
+  .top .dot{width:11px;height:11px;border-radius:50%;background:#cbe93b;box-shadow:0 0 0 5px rgba(203,233,59,.18)}
+  .top .who{font-weight:600;font-size:19px;letter-spacing:-.01em}
+  .top .live{margin-left:auto;font-family:var(--mono);font-weight:500;font-size:12.5px;letter-spacing:.16em;color:#a09b8f;text-transform:uppercase}
 
-  /* caption / brand line above the chat */
-  .frame{width:560px}
-  .eyebrow{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--lime-deep);display:flex;align-items:center;gap:10px;margin:0 4px 16px}
-  .eyebrow .disc{width:11px;height:11px;border-radius:50%;background:var(--lime);
-    box-shadow:0 0 0 4px rgba(214,251,79,.16)}
-  .eyebrow b{color:var(--paper-soft);font-weight:500}
+  .body{padding:26px 24px 28px;display:flex;flex-direction:column;gap:16px}
+  .bub{max-width:82%;padding:15px 19px;font-size:19px;line-height:1.45;border-radius:18px;
+    opacity:0;transform:translateY(12px);will-change:opacity,transform}
+  .bub.user{align-self:flex-end;background:var(--taupe);border-bottom-right-radius:6px}
+  .bub.bot{align-self:flex-start;background:var(--limebub);border:1px solid var(--limebub-line);border-bottom-left-radius:6px}
 
-  /* chat mock (matches marketing hero) */
-  .mock{background:linear-gradient(180deg,var(--ink-2),#101218);border:1px solid var(--line);
-    border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
-  .mock-top{display:flex;align-items:center;gap:9px;padding:14px 16px;border-bottom:1px solid var(--line);
-    background:rgba(255,255,255,.015)}
-  .mock-top .dot{width:8px;height:8px;border-radius:50%;background:var(--lime)}
-  .mock-top .name{font-weight:600;font-size:14px;color:var(--paper)}
-  .mock-top .live{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.1em;
-    color:var(--paper-dim);text-transform:uppercase}
-  .mock-body{padding:18px 16px;display:flex;flex-direction:column;gap:12px;min-height:300px}
-
-  .bub{max-width:86%;padding:11px 14px;border-radius:14px;font-size:14.5px;line-height:1.5;color:var(--paper)}
-  .bub.user{align-self:flex-end;background:var(--ink-3);border-bottom-right-radius:5px}
-  .bub.bot{align-self:flex-start;background:#0c1408;border:1px solid rgba(214,251,79,.22);border-bottom-left-radius:5px}
-
-  .typing{align-self:flex-start;display:flex;gap:5px;align-items:center;padding:13px 15px;border-radius:14px;
-    border-bottom-left-radius:5px;background:#0c1408;border:1px solid rgba(214,251,79,.22)}
-  .typing i{width:6px;height:6px;border-radius:50%;background:var(--lime-deep)}
-
-  .card{display:flex;gap:11px;align-items:center;background:rgba(255,255,255,.025);border:1px solid var(--line);
-    border-radius:12px;padding:10px;margin-top:8px}
-  .card .ph{width:46px;height:46px;border-radius:8px;background:linear-gradient(135deg,#23262e,#171a20);
-    flex-shrink:0;display:flex;align-items:center;justify-content:center}
-  .card .ph svg{width:28px;height:28px;display:block}
-  .card .t{font-weight:600;font-size:13.5px;color:var(--paper)}
-  .card .pr{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--lime);margin-top:3px}
-  .src{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--lime-deep);margin-top:8px;
-    display:inline-flex;gap:7px;align-items:center}
+  .card{display:flex;gap:15px;align-items:center;background:#fff;border:1px solid var(--line);
+    border-radius:14px;padding:14px;margin-top:12px}
+  .card .ph{width:58px;height:58px;border-radius:11px;background:var(--taupe);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center}
+  .card .ph svg{width:38px;height:38px;display:block}
+  .card .t{font-weight:600;font-size:17.5px}
+  .card .pr{font-family:var(--mono);font-weight:600;font-size:16px;color:var(--olive);margin-top:3px}
+  .src{font-family:var(--mono);font-weight:500;font-size:13.5px;color:var(--olive-soft);
+    margin-top:11px;display:inline-flex;gap:8px;align-items:center}
   .src::before{content:"\2713";font-weight:700}
 
-  /* elements are shown/hidden + animated by JS */
-  .row{display:none}
-  .row.on{display:block}
-  .bub .caret{display:none;width:2px;height:1.05em;margin-left:1px;vertical-align:-0.16em;
-    background:var(--paper)}
-  .bub.typing-now .caret{display:inline-block}
-  .anim{opacity:0;transform:translateY(10px)}
+  .cta{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%) translateY(10px);
+    display:inline-flex;align-items:center;gap:11px;white-space:nowrap;
+    background:var(--lime);color:#10130a;font-weight:700;font-size:17px;letter-spacing:-.01em;
+    padding:15px 26px;border-radius:999px;box-shadow:0 16px 34px -10px rgba(174,224,42,.6);
+    opacity:0;will-change:opacity,transform}
+  .cta .pl{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+    border-radius:50%;background:#10130a;color:var(--lime);font-size:10px;padding-left:2px;flex-shrink:0}
 </style>
 </head>
 <body>
   <div class="stage">
-    <div class="frame">
-      <div class="eyebrow"><span class="disc"></span>Fahad AI <b>·</b> grounded in your store data</div>
-      <div class="mock">
-        <div class="mock-top">
-          <span class="dot"></span><span class="name">Store Assistant</span><span class="live">grounded</span>
-        </div>
-        <div class="mock-body">
-          <div class="row bub user" id="r0"><span class="txt"></span><span class="caret"></span></div>
-          <div class="row typing" id="r1"><i></i><i></i><i></i></div>
-          <div class="row bub bot" id="r2">
-            <span class="reply">Yes, the AeroBeat Wireless Headphones are in stock right now.</span>
-            <div class="card">
-              <div class="ph">
-                <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                  <path d="M10 27v-2c0-7.7 6.3-14 14-14s14 6.3 14 14v2" stroke="var(--paper-soft)" stroke-width="2.4" stroke-linecap="round"/>
-                  <rect x="7" y="26" width="7" height="12" rx="3.2" fill="var(--paper-soft)"/>
-                  <rect x="34" y="26" width="7" height="12" rx="3.2" fill="var(--lime)"/>
-                </svg>
-              </div>
-              <div>
-                <div class="t">AeroBeat Wireless Headphones</div>
-                <div class="pr">$89.00 &middot; In stock</div>
-              </div>
-            </div>
+    <div class="card-wrap">
+      <div class="chat">
+        <div class="top"><span class="dot"></span><span class="who">Store Assistant</span><span class="live">Grounded</span></div>
+        <div class="body">
+          <div class="bub user" id="b1">do you have the running sneakers in stock, and the price?</div>
+          <div class="bub bot" id="b2">
+            Yes, the Trailblazer Runners are in stock right now.
+            <div class="card"><div class="ph"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M5 30.2c-.5-3 .7-5.8 3.4-7.2l5.1-2.7c1.3-.7 2.9-.2 3.6 1.1l1.9 3c.7 1.1 1.8 1.9 3.1 2.2l9.6 2.1c2.6.6 4.5 1.8 5.1 4.4.3 1.4-.7 2.6-2.1 2.6H8.6C7.2 37.7 6.2 36.6 6 35.1z" fill="#c9c4b6"/><path d="M7 36.6h33.5" stroke="#8ba51f" stroke-width="3" stroke-linecap="round"/><path d="M17.5 23.4l2.6 3.3M21.4 21.9l2.7 3.4M25.4 21.2l2.5 3.2" stroke="#3a3d33" stroke-width="1.7" stroke-linecap="round"/></svg></div><div><div class="t">Trailblazer Runners</div><div class="pr">$89.00 &middot; In stock</div></div></div>
             <div class="src">read live from your catalogue</div>
           </div>
+          <div class="bub user" id="b3">any chance of a discount?</div>
+          <div class="bub bot" id="b4">There are no active sales on that item today. I won't invent one, but I can let you know if that changes.</div>
         </div>
       </div>
+      <span class="cta" id="cta"><span class="pl">&#9654;</span> See it live on a real store</span>
     </div>
-    <div class="grain"></div>
   </div>
-
 <script>
-  var USER_TEXT = "What wireless headphones do you have, and how much?";
-  var r0 = document.getElementById('r0');
-  var r1 = document.getElementById('r1');
-  var r2 = document.getElementById('r2');
-  var userTxt = r0.querySelector('.txt');
-  var typingDots = [].slice.call(r1.querySelectorAll('i'));
-
-  var easeOut = function(x){ return 1 - Math.pow(1 - x, 3); };
-
-  // ---- timeline (milliseconds) ----
-  var CH = 42;                                  // ms per typed character
-  var typeDur = USER_TEXT.length * CH;          // ~1932ms
-  var T = {
-    userStart:  350,
-    userTyped:  350 + typeDur,                  // finished typing
-    dotsStart:  350 + typeDur + 320,
-    replyStart: 350 + typeDur + 320 + 1150,     // hide dots, show reply + card
+  const b=[document.getElementById('b1'),document.getElementById('b2'),document.getElementById('b3'),document.getElementById('b4')];
+  const cta=document.getElementById('cta');
+  // reveal thresholds within the 0..1 loop; each bubble fades + rises over RAMP.
+  const START=[0.06,0.22,0.42,0.56], RAMP=0.09, CTA_AT=0.68;
+  const clamp=(x)=>x<0?0:x>1?1:x;
+  const ease=(x)=>1-Math.pow(1-x,3);
+  window.__draw=function(t){
+    b.forEach((el,i)=>{
+      const p=ease(clamp((t-START[i])/RAMP));
+      el.style.opacity=p.toFixed(3);
+      el.style.transform=`translateY(${(12*(1-p)).toFixed(2)}px)`;
+    });
+    const cp=ease(clamp((t-CTA_AT)/0.10));
+    cta.style.opacity=cp.toFixed(3);
+    cta.style.transform=`translateX(-50%) translateY(${(10*(1-cp)).toFixed(2)}px)`;
   };
-  var HOLD = 2900;                              // hold finished state
-  var TAIL = 650;                               // fade-out breath before loop
-  var CYCLE = T.replyStart + HOLD + TAIL;
-
-  function show(el){ el.classList.add('on'); }
-  function hide(el){ el.classList.remove('on'); }
-
-  // spring-ish entrance for a bubble given its local progress 0..1
-  function entrance(el, p){
-    var e = easeOut(Math.min(1, p));
-    el.style.opacity = e.toFixed(3);
-    el.style.transform = 'translateY(' + (10 * (1 - e)).toFixed(2) + 'px)';
-  }
-
-  window.__draw = function(t){
-    var ms = t * CYCLE;
-
-    // reset visibility each frame (idempotent draw)
-    hide(r0); hide(r1); hide(r2);
-    r0.classList.remove('typing-now');
-
-    // global gentle fade at the very end so the loop restart is soft
-    var fade = 1;
-    var fadeStart = CYCLE - TAIL;
-    if (ms > fadeStart) fade = 1 - easeOut((ms - fadeStart) / TAIL);
-    document.querySelector('.mock').style.opacity = (0.35 + 0.65 * fade).toFixed(3);
-    document.querySelector('.eyebrow').style.opacity = fade.toFixed(3);
-
-    // 1) shopper types turn 1
-    if (ms >= T.userStart){
-      show(r0);
-      var typeP = (ms - T.userStart) / typeDur;         // 0..1 across typing
-      var isTyping = typeP < 1;
-      var k = Math.max(0, Math.min(USER_TEXT.length, Math.round(typeP * USER_TEXT.length)));
-      userTxt.textContent = USER_TEXT.slice(0, k);
-      if (isTyping) r0.classList.add('typing-now');
-      // subtle entrance in first 240ms
-      entrance(r0, (ms - T.userStart) / 240);
-    }
-
-    // 2) typing indicator (three dots), only between dotsStart and replyStart
-    if (ms >= T.dotsStart && ms < T.replyStart){
-      show(r1);
-      entrance(r1, (ms - T.dotsStart) / 240);
-      // animate the three dots (bounce)
-      var dt = (ms - T.dotsStart) / 1100;
-      typingDots.forEach(function(dot, i){
-        var ph = (dt - i * 0.16);
-        var frac = ph - Math.floor(ph);
-        // pulse: up around frac~0.35
-        var up = Math.max(0, Math.sin(frac * Math.PI));
-        dot.style.opacity = (0.35 + 0.65 * up).toFixed(3);
-        dot.style.transform = 'translateY(' + (-3 * up).toFixed(2) + 'px)';
-      });
-    }
-
-    // 3) grounded reply + product card, then hold
-    if (ms >= T.replyStart){
-      show(r0);
-      userTxt.textContent = USER_TEXT;                  // keep full user message
-      show(r2);
-      entrance(r2, (ms - T.replyStart) / 360);
-    }
-  };
-
-  window.__ready = true;
-
-  // Live preview loop for viewing demo.html in a browser. The frame renderer calls
-  // __draw(t) directly; the first such external call cancels this loop so it does not
-  // fight the deterministic per-frame draws.
-  var _rafId = null, _internal = false;
-  var _draw = window.__draw;
-  window.__draw = function(t){
-    if (!_internal && _rafId !== null){ cancelAnimationFrame(_rafId); _rafId = null; }
-    return _draw(t);
-  };
-  var s = performance.now();
-  (function loop(now){
-    _internal = true; window.__draw(((now - s) / CYCLE) % 1); _internal = false;
-    _rafId = requestAnimationFrame(loop);
-  })(performance.now());
+  window.__ready=true;
+  let s=performance.now();
+  (function loop(now){window.__draw(((now-s)/5200)%1);requestAnimationFrame(loop);})(performance.now());
 </script>
 </body>
 </html>

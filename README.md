@@ -6,6 +6,12 @@ The honest WooCommerce shopping assistant. Customers can search products, get re
 
 Works with **13+ AI providers** (Anthropic Claude, OpenAI, Google Gemini, Moonshot AI / Kimi K2, and more), with real-time streaming responses.
 
+## See it in action
+
+![A shopper asks about a product; the assistant answers from your real catalogue with an in-stock price card, then declines to invent a discount when there is no sale](.github/demo.gif)
+
+A shopper asks about a product, and the assistant answers from your real catalogue with an in-stock price card. When asked for a discount that does not exist, it refuses to invent one. Grounded, honest, and auditable.
+
 ---
 
 ## Features
