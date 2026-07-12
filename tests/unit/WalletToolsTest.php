@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Wallet_Tools (issue #18: wallet-aware shopping — the
+ * Unit tests for Fahad_AI_Wallet_Tools (issue #18: wallet-aware shopping, the
  * differentiator, MONEY-sensitive).
  *
  * Red → Green → Refactor. Conventions mirror OrderToolsTest (the other personal
@@ -10,10 +10,10 @@
  * inherits another suite's packs nor leaks the wallet pack we register.
  *
  * The three wallet tools (get_wallet_balance, top_up, pay_with_credit) are NOT
- * built-ins — they ship as a drop-in feature pack that self-registers via
+ * built-ins, they ship as a drop-in feature pack that self-registers via
  * Fahad_AI_Tool_Registry::register_pack() at file load and declare
  * `'personal' => true`. Every test registers the pack's REAL provider, then
- * dispatches through Fahad_AI_Tool_Registry::instance()->dispatch() — so the
+ * dispatches through Fahad_AI_Tool_Registry::instance()->dispatch(), so the
  * production registration + merge + dispatch path (INCLUDING the central login
  * gate for `personal` tools) is what is under test.
  *
@@ -21,11 +21,11 @@
  * tools resolve a provider at runtime via apply_filters( 'fahad_ai_wallet_provider',
  * null ). With no provider registered the tools degrade gracefully (never fatal,
  * never invent a balance). The wallet plugin (WalletPro / Account Funds) is the
- * thing that registers the provider — these tests stand in for it with a mock.
+ * thing that registers the provider, these tests stand in for it with a mock.
  *
  * MONEY-SAFETY IS THE POINT. The highest-severity tests are first-class:
  *   - GUEST-BLOCK: a guest dispatching any wallet tool is stopped centrally by the
- *     registry's login gate BEFORE the callback runs — the provider is NEVER touched.
+ *     registry's login gate BEFORE the callback runs, the provider is NEVER touched.
  *   - NO DOUBLE-SPEND: pay_with_credit with insufficient balance returns an error and
  *     the provider's pay_with_credit is NEVER called (no debit attempt).
  *   - NO SUCCESS WITHOUT CONFIRMATION: a provider failure surfaces an error; the tool
@@ -49,7 +49,7 @@ class WalletToolsTest extends TestCase {
      * Snapshot of the registry's static pack providers, restored in tearDown so a
      * test here neither inherits another suite's packs nor leaks the wallet pack we
      * register. (Pack providers are static so they survive a singleton instance
-     * reset — see Fahad_AI_Tool_Registry::register_pack.)
+     * reset, see Fahad_AI_Tool_Registry::register_pack.)
      *
      * @var array<int, callable>
      */
@@ -80,7 +80,7 @@ class WalletToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the wallet tools.
      *
      * Resets the Tools + registry singletons, then registers the wallet pack's REAL
-     * provider via register_pack() — exactly what the pack's file-scope
+     * provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production. Registering it explicitly (after
      * clearing the static list) keeps the test hermetic and order-independent.
      */
@@ -168,7 +168,7 @@ class WalletToolsTest extends TestCase {
 
     public function test_get_wallet_balance_uses_current_user_not_model_supplied_id(): void {
         // A malicious/confused model passes someone else's user_id. It MUST be ignored
-        // — the provider is always asked about the authenticated current user (5).
+        //, the provider is always asked about the authenticated current user (5).
         $provider = $this->withProvider();
         $provider->shouldReceive( 'get_balance' )
             ->once()
@@ -281,7 +281,7 @@ class WalletToolsTest extends TestCase {
 
         $this->assertArrayNotHasKey( 'error', $result );
         $this->assertSame( 50.0, $result['balance']['amount'] );
-        // No bonus key (or null) when the provider offers none — never fabricated.
+        // No bonus key (or null) when the provider offers none, never fabricated.
         $this->assertTrue( ! array_key_exists( 'deposit_bonus', $result ) || null === $result['deposit_bonus'] );
     }
 
@@ -289,7 +289,7 @@ class WalletToolsTest extends TestCase {
      * AMOUNT VALIDATION (money-safety). A non-positive / non-numeric amount must be
      * rejected BEFORE the provider is touched: neither get_deposit_bonus NOR the
      * money-mutating top_up may be called. never() turns any such call into a hard
-     * failure — proving validation guards the provider.
+     * failure, proving validation guards the provider.
      *
      * @dataProvider invalidAmountProvider
      */
@@ -349,7 +349,7 @@ class WalletToolsTest extends TestCase {
      *
      * Balance is 10.00; the customer tries to pay 30.00. The tool must check the
      * balance FIRST, return an "insufficient" error, and NEVER call the provider's
-     * pay_with_credit — there must be NO debit attempt at all. never() turns a debit
+     * pay_with_credit, there must be NO debit attempt at all. never() turns a debit
      * call into a hard failure. Without the sufficient-balance gate this fails: the
      * tool would call pay_with_credit and risk a debit the customer cannot cover.
      */
@@ -371,7 +371,7 @@ class WalletToolsTest extends TestCase {
 
     /**
      * AMOUNT VALIDATION for pay: a non-positive / non-numeric amount is rejected
-     * BEFORE touching the provider — neither the balance read NOR the debit run.
+     * BEFORE touching the provider, neither the balance read NOR the debit run.
      *
      * @dataProvider invalidAmountProvider
      */
@@ -389,7 +389,7 @@ class WalletToolsTest extends TestCase {
     /**
      * NO SUCCESS WITHOUT CONFIRMATION. Balance is sufficient, but the provider's
      * atomic debit fails (returns an error). The tool must surface that error and
-     * NOT report a paid/success — there is no partial state on the assistant side.
+     * NOT report a paid/success, there is no partial state on the assistant side.
      */
     public function test_pay_with_credit_surfaces_provider_failure_without_reporting_success(): void {
         $provider = $this->withProvider();
@@ -406,7 +406,7 @@ class WalletToolsTest extends TestCase {
     }
 
     public function test_pay_with_credit_uses_current_user_not_model_supplied_id(): void {
-        // Model supplies someone else's user_id; it MUST be ignored — balance read and
+        // Model supplies someone else's user_id; it MUST be ignored, balance read and
         // debit both target the authenticated current user (5).
         $provider = $this->withProvider();
         $provider->shouldReceive( 'get_balance' )->once()->with( 5 )
@@ -444,14 +444,14 @@ class WalletToolsTest extends TestCase {
     /**
      * A guest dispatching ANY wallet tool must be stopped CENTRALLY by the registry's
      * login gate, before the tool callback runs. We assert the standard login-required
-     * error AND — critically — that the wallet PROVIDER is NEVER resolved or touched,
+     * error AND, critically, that the wallet PROVIDER is NEVER resolved or touched,
      * proving the callback was never reached. is_user_logged_in() is stubbed false.
      * Mirrors OrderToolsTest's guest-block test.
      *
      * NB: apply_filters fires legitimately for the registry's OWN
      * `fahad_ai_register_tools` filter while it builds the tool list, so we cannot
      * assert apply_filters is never called at all. Instead we record every hook it is
-     * applied with and assert the wallet PROVIDER hook was never among them — the seam
+     * applied with and assert the wallet PROVIDER hook was never among them, the seam
      * the callback would use to reach the provider was never touched. A provider mock
      * with all money ops set to never() backs this up: even if the seam were reached,
      * touching the provider would fail the test.
@@ -462,7 +462,7 @@ class WalletToolsTest extends TestCase {
         Functions\when( 'is_user_logged_in' )->justReturn( false );
         Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
-        // A real provider whose every money op is forbidden — proves the callback never
+        // A real provider whose every money op is forbidden, proves the callback never
         // reached the provider even if the seam somehow resolved one.
         $provider = Mockery::mock( 'Fahad_AI_Wallet_Provider_Stub' );
         $provider->shouldReceive( 'get_balance' )->never();
@@ -482,7 +482,7 @@ class WalletToolsTest extends TestCase {
 
         $result = $this->registry()->dispatch( $tool, $input );
 
-        // The provider seam was NEVER reached — the gate stopped the guest first.
+        // The provider seam was NEVER reached, the gate stopped the guest first.
         $this->assertNotContains( 'fahad_ai_wallet_provider', $applied_hooks );
 
         $this->assertArrayHasKey( 'requires_login', $result );

@@ -1,30 +1,30 @@
 <?php
 /**
- * Unit tests for Fahad_AI_WhatsApp (issue #62: omnichannel — WhatsApp assistant).
+ * Unit tests for Fahad_AI_WhatsApp (issue #62: omnichannel, WhatsApp assistant).
  *
  * Red → Green → Refactor. Conventions mirror VoiceTest / ProactiveTest: WP functions
  * mocked via Brain\Monkey; the singleton reset via reflection between cases (NEVER
- * ReflectionMethod::setAccessible — host runs PHP 8.5); get_option stubbed via an
+ * ReflectionMethod::setAccessible, host runs PHP 8.5); get_option stubbed via an
  * in-memory $this->options map; additive stubs only.
  *
  * ─── WHAT IS ACTUALLY TESTABLE HERE ─────────────────────────────────────────────────
  *
  * A live WhatsApp Business (Meta Cloud API) account is NOT available, so this is TESTED
- * SCAFFOLDING behind a provider seam — going live needs Meta credentials. There is NO
+ * SCAFFOLDING behind a provider seam, going live needs Meta credentials. There is NO
  * real outbound HTTP call to Meta anywhere; the actual send is a `fahad_ai_whatsapp_send`
  * filter a provider implements. These tests pin the security- and routing-critical PHP:
  *
  *   - GET webhook verify: Meta's hub.mode/hub.verify_token/hub.challenge handshake returns
  *     the challenge ONLY when the configured verify token matches (else it is rejected).
  *   - POST inbound: the X-Hub-Signature-256 HMAC (sha256, app secret, hash_equals) is
- *     verified BEFORE any processing — a bad/missing signature is rejected outright.
+ *     verified BEFORE any processing, a bad/missing signature is rejected outright.
  *   - A valid signed inbound text routes into the SAME agentic core and the reply text is
- *     handed to the send SEAM (asserted via the filter — NOT a live HTTP call).
+ *     handed to the send SEAM (asserted via the filter, NOT a live HTTP call).
  *   - Disabled (default OFF) / unconfigured → no send.
  *
  * Identity: a WhatsApp user is treated as a GUEST. We never auto-trust a phone number as a
  * logged-in user, so the central login gate (Fahad_AI_Auth) still blocks personal-data
- * tools — pinned by test_inbound_does_not_authenticate_the_sender.
+ * tools, pinned by test_inbound_does_not_authenticate_the_sender.
  */
 
 use Brain\Monkey;
@@ -56,7 +56,7 @@ class WhatsAppTest extends TestCase {
 			fn( $name, $default = false ) => $this->options[ $name ] ?? $default
 		);
 		// apply_filters: identity on the value unless a test overrides it (so the send
-		// seam is a no-op by default — nothing is sent until a provider hooks it).
+		// seam is a no-op by default, nothing is sent until a provider hooks it).
 		Functions\when( 'apply_filters' )->alias(
 			fn( $hook, $value = null ) => $value
 		);
@@ -123,7 +123,7 @@ class WhatsAppTest extends TestCase {
 
 	/**
 	 * Stub the API-handler transport so a routed inbound text reaches the REAL agent
-	 * loop and produces a deterministic reply — the SAME scripted-transport pattern the
+	 * loop and produces a deterministic reply, the SAME scripted-transport pattern the
 	 * ApiHandlerTest dispatch tests use. Anthropic is the default provider; one end_turn
 	 * answer (no tool calls) means no WC tool mocks are needed. NO live Meta call.
 	 */
@@ -183,7 +183,7 @@ class WhatsAppTest extends TestCase {
 	}
 
 	public function test_verify_rejects_when_token_does_not_match(): void {
-		// A wrong verify token is rejected (403) and the challenge is NOT echoed — an
+		// A wrong verify token is rejected (403) and the challenge is NOT echoed, an
 		// attacker who guesses the endpoint but not the token cannot confirm a webhook.
 		$this->options['fahad_ai_whatsapp_verify_token'] = 'sekret-verify';
 
@@ -196,7 +196,7 @@ class WhatsAppTest extends TestCase {
 	}
 
 	public function test_verify_rejects_when_verify_token_is_unconfigured(): void {
-		// With no verify token configured, the handshake can never succeed — an empty
+		// With no verify token configured, the handshake can never succeed, an empty
 		// configured token must not match an empty supplied token (no accidental open).
 		$response = $this->whatsapp()->handle_verify(
 			$this->verify_request( 'subscribe', '', '1158201444' )
@@ -274,7 +274,7 @@ class WhatsAppTest extends TestCase {
 
 	public function test_inbound_rejects_when_app_secret_is_unconfigured(): void {
 		// Without a configured app secret the signature cannot be verified, so EVERY
-		// inbound POST is rejected (fail closed) — never processed on trust.
+		// inbound POST is rejected (fail closed), never processed on trust.
 		$this->options['fahad_ai_whatsapp_enabled'] = 1;
 
 		$payload = $this->text_payload( '15551234567', 'hello' );
@@ -293,7 +293,7 @@ class WhatsAppTest extends TestCase {
 	public function test_valid_signed_text_routes_into_agent_and_replies_to_send_seam(): void {
 		// The end-to-end happy path WITHOUT any live HTTP to Meta: a correctly-signed
 		// inbound text reaches the REAL agent loop (scripted transport) and the resulting
-		// reply text is handed to the fahad_ai_whatsapp_send SEAM — addressed to the
+		// reply text is handed to the fahad_ai_whatsapp_send SEAM, addressed to the
 		// sender. We assert the seam is invoked with the reply; we do NOT make a network
 		// call. A provider implementing the filter is what actually talks to Meta.
 		$this->options['fahad_ai_whatsapp_enabled']    = 1;
@@ -304,7 +304,7 @@ class WhatsAppTest extends TestCase {
 		$raw     = json_encode( $payload );
 		$sig     = $this->sign( $raw, 'app-secret' );
 
-		$this->stub_agent_reply( 'Yes — we have several running shoes in stock.' );
+		$this->stub_agent_reply( 'Yes, we have several running shoes in stock.' );
 
 		// Capture the send seam (mock the provider). It must be called once with the
 		// recipient and the reply text; return a truthy "sent" so the handler can report.
@@ -324,7 +324,7 @@ class WhatsAppTest extends TestCase {
 		$this->assertFalse( is_wp_error( $response ), 'A valid signed text must be accepted.' );
 		$this->assertSame( '15551234567', $captured['to'] ?? null, 'Reply goes back to the sender.' );
 		// The reply is humanized by the shared dispatch (#130): WhatsApp replies, like web
-		// replies, must contain no em-dash. The stubbed "Yes — we have…" reaches the send
+		// replies, must contain no em-dash. The stubbed "Yes, we have…" reaches the send
 		// seam as "Yes, we have…".
 		$this->assertSame(
 			'Yes, we have several running shoes in stock.',
@@ -364,7 +364,7 @@ class WhatsAppTest extends TestCase {
 		// Unconfigured: with NO provider hooked onto fahad_ai_whatsapp_send (the default
 		// identity apply_filters from setUp), a valid signed text routes into the agent
 		// but NOTHING is sent (the seam returns null). This is the "default no-op / nothing
-		// is sent until a provider + tokens are set" guarantee — the live Meta call is the
+		// is sent until a provider + tokens are set" guarantee, the live Meta call is the
 		// provider's job, not this plugin's.
 		$this->options['fahad_ai_whatsapp_enabled']    = 1;
 		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
@@ -389,7 +389,7 @@ class WhatsAppTest extends TestCase {
 
 	public function test_inbound_does_not_authenticate_the_sender(): void {
 		// HARDENING: a phone number must NOT be auto-trusted as a logged-in WC customer.
-		// We assert the handler never calls wp_set_current_user — so the central login
+		// We assert the handler never calls wp_set_current_user, so the central login
 		// gate (Fahad_AI_Auth::guard_logged_in) keeps personal-data tools blocked. Building
 		// the verified phone→customer mapping is explicitly out of scope for #62.
 		$this->options['fahad_ai_whatsapp_enabled']    = 1;
@@ -414,7 +414,7 @@ class WhatsAppTest extends TestCase {
 	public function test_signed_non_text_payload_is_acked_without_sending(): void {
 		// A correctly-signed delivery that carries no text message (e.g. a status webhook,
 		// or an unsupported message type) must be acknowledged (200) without running the
-		// agent or sending anything — Meta retries on a non-200, so we must not error.
+		// agent or sending anything, Meta retries on a non-200, so we must not error.
 		$this->options['fahad_ai_whatsapp_enabled']    = 1;
 		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
 

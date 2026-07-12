@@ -2,16 +2,16 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * WhatsApp omnichannel assistant — webhook, verification, routing and a pluggable
+ * WhatsApp omnichannel assistant, webhook, verification, routing and a pluggable
  * outbound SEND seam (issue #62).
  *
  * ─── WHAT THIS IS (AND IS NOT) ───────────────────────────────────────────────────────
  *
  * The PK market is WhatsApp-first; the assistant was web-widget-only. This drives the
  * SAME agentic core + tools over WhatsApp Business (Meta Cloud API). It is delivered as
- * TESTED SCAFFOLDING behind a provider seam: this class owns the INBOUND half — Meta's
+ * TESTED SCAFFOLDING behind a provider seam: this class owns the INBOUND half, Meta's
  * webhook verify handshake, the X-Hub-Signature-256 HMAC check, parsing a text message,
- * routing it into the existing non-streaming agent loop — and hands the reply text to a
+ * routing it into the existing non-streaming agent loop, and hands the reply text to a
  * pluggable SEND seam. It deliberately does NOT make the live Meta HTTP call: GOING LIVE
  * NEEDS A META WHATSAPP BUSINESS ACCOUNT + TOKENS, supplied by a provider that implements
  * the `fahad_ai_whatsapp_send` filter (see send()). With no provider hooked, the seam is
@@ -21,9 +21,9 @@ defined( 'ABSPATH' ) || exit;
  *
  *   1. GET verify: the challenge is echoed ONLY when hub.mode is 'subscribe' AND the
  *      supplied verify token equals the configured one (an empty configured token can
- *      never match — fail closed). Otherwise 403.
+ *      never match, fail closed). Otherwise 403.
  *   2. POST inbound: the X-Hub-Signature-256 HMAC (sha256, keyed by the app secret,
- *      compared with hash_equals — constant time) is verified BEFORE any parsing or
+ *      compared with hash_equals, constant time) is verified BEFORE any parsing or
  *      agent work. A missing/bad signature, or an unconfigured app secret, is rejected
  *      (403) and NOTHING is processed or sent (fail closed).
  *   3. Opt-in: the channel is OFF by default. A signed inbound on a disabled channel is
@@ -49,13 +49,13 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Fahad_AI_WhatsApp {
 
-	/** Merchant kill-switch (default OFF — the channel is opt-in). */
+	/** Merchant kill-switch (default OFF, the channel is opt-in). */
 	public const OPTION_ENABLED = 'fahad_ai_whatsapp_enabled';
 
 	/** The verify token used in Meta's GET webhook subscription handshake. */
 	public const OPTION_VERIFY_TOKEN = 'fahad_ai_whatsapp_verify_token';
 
-	/** The Meta App Secret — the HMAC key for the X-Hub-Signature-256 header. */
+	/** The Meta App Secret, the HMAC key for the X-Hub-Signature-256 header. */
 	public const OPTION_APP_SECRET = 'fahad_ai_whatsapp_app_secret';
 
 	private static ?Fahad_AI_WhatsApp $instance = null;
@@ -74,7 +74,7 @@ final class Fahad_AI_WhatsApp {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Is the WhatsApp channel enabled by the merchant? Default OFF — opt-in, the
+	 * Is the WhatsApp channel enabled by the merchant? Default OFF, opt-in, the
 	 * conservative choice for a channel that processes inbound messages and drives
 	 * billable agent turns.
 	 */
@@ -100,11 +100,11 @@ final class Fahad_AI_WhatsApp {
 	 * Register the WhatsApp webhook routes on the fahad-ai/v1 namespace.
 	 *
 	 * Two methods on ONE endpoint, matching Meta's webhook contract:
-	 *   GET  /whatsapp — the subscription verify handshake (hub.* query params).
-	 *   POST /whatsapp — inbound message deliveries (signed JSON body).
+	 *   GET  /whatsapp, the subscription verify handshake (hub.* query params).
+	 *   POST /whatsapp, inbound message deliveries (signed JSON body).
 	 *
 	 * permission_callback is __return_true on purpose: Meta cannot send a WordPress
-	 * nonce, so the security boundary is NOT a nonce here — it is the verify-token check
+	 * nonce, so the security boundary is NOT a nonce here, it is the verify-token check
 	 * (GET) and the X-Hub-Signature-256 HMAC (POST), both enforced INSIDE the handlers
 	 * before anything happens. This mirrors the plugin's "public endpoint, real auth
 	 * inside" philosophy (the chat endpoints are public + nonce/rate-limit; this channel
@@ -134,7 +134,7 @@ final class Fahad_AI_WhatsApp {
 	}
 
 	// -------------------------------------------------------------------------
-	// GET — webhook verification handshake
+	// GET, webhook verification handshake
 	// -------------------------------------------------------------------------
 
 	/**
@@ -174,7 +174,7 @@ final class Fahad_AI_WhatsApp {
 	}
 
 	// -------------------------------------------------------------------------
-	// POST — inbound message delivery
+	// POST, inbound message delivery
 	// -------------------------------------------------------------------------
 
 	/**
@@ -189,11 +189,11 @@ final class Fahad_AI_WhatsApp {
 	 *   3. Parse the first text message. A delivery with no text (status webhook,
 	 *      unsupported type, …) is ACKed without running the agent or sending.
 	 *   4. Route the text into the SAME non-streaming agent loop AS A GUEST (no identity
-	 *      is trusted — personal-data tools stay login-gated), then hand the reply text to
+	 *      is trusted, personal-data tools stay login-gated), then hand the reply text to
 	 *      the SEND seam, addressed to the sender.
 	 *
 	 * Always returns 200 once the signature passes (even when nothing is sent), because a
-	 * non-200 makes Meta retry the delivery — we never want a retry storm for a benign
+	 * non-200 makes Meta retry the delivery, we never want a retry storm for a benign
 	 * "no text to answer" or "no provider configured" case.
 	 *
 	 * @return WP_REST_Response|WP_Error 403 on a failed signature; otherwise a 200 ack.
@@ -202,7 +202,7 @@ final class Fahad_AI_WhatsApp {
 		$raw       = (string) $request->get_body();
 		$signature = $request->get_header( 'x_hub_signature_256' );
 
-		// 1. Signature FIRST — before parsing or any agent work (constant-time, fail closed).
+		// 1. Signature FIRST, before parsing or any agent work (constant-time, fail closed).
 		if ( ! $this->verify_signature( $raw, is_string( $signature ) ? $signature : null ) ) {
 			return new WP_Error(
 				'fahad_ai_whatsapp_bad_signature',
@@ -220,13 +220,13 @@ final class Fahad_AI_WhatsApp {
 		$message = $this->first_text_message( $raw );
 
 		if ( null === $message ) {
-			// A non-text delivery (status update, unsupported type, malformed) — ack
+			// A non-text delivery (status update, unsupported type, malformed), ack
 			// without running the agent or sending. No PII is logged.
 			return $this->ack( false );
 		}
 
 		// 4. Route into the SAME agent core as a GUEST, then hand the reply to the seam.
-		// NOTE: we do NOT call wp_set_current_user — the sender is unverified, so personal
+		// NOTE: we do NOT call wp_set_current_user, the sender is unverified, so personal
 		// tools stay blocked by Fahad_AI_Auth (identity hardening, #62).
 		$reply = Fahad_AI_API_Handler::instance()->run_text_turn( [
 			[ 'role' => 'user', 'content' => $message['text'] ],
@@ -246,7 +246,7 @@ final class Fahad_AI_WhatsApp {
 	 *
 	 * Meta signs the RAW request body with HMAC-SHA256 keyed by the App Secret and sends
 	 * it as `sha256=<hexdigest>`. We recompute it over the raw body and compare with
-	 * hash_equals (constant time — never leaks via timing).
+	 * hash_equals (constant time, never leaks via timing).
 	 *
 	 * Fail closed: an unconfigured app secret, a missing/blank header, or any mismatch all
 	 * return false, so an inbound is processed ONLY when its signature is provably valid.
@@ -280,7 +280,7 @@ final class Fahad_AI_WhatsApp {
 	 *
 	 * Meta's shape is entry[].changes[].value.messages[]; a text message carries
 	 * type=text with text.body, plus the sender's phone number in `from`. We return only
-	 * the minimum the agent + reply need — { from, text } — and ignore everything else
+	 * the minimum the agent + reply need, { from, text }, and ignore everything else
 	 * (status webhooks, reactions, media, etc.) by returning null, so the caller acks
 	 * without processing. Empty/whitespace-only text is treated as no message.
 	 *
@@ -326,15 +326,15 @@ final class Fahad_AI_WhatsApp {
 	}
 
 	// -------------------------------------------------------------------------
-	// Outbound SEND seam (the deliverable — NOT a live Meta call)
+	// Outbound SEND seam (the deliverable, NOT a live Meta call)
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Hand a reply to the pluggable outbound SEND seam — the documented extension point a
+	 * Hand a reply to the pluggable outbound SEND seam, the documented extension point a
 	 * provider implements to actually call the Meta Cloud API (issue #62).
 	 *
 	 * THIS PLUGIN MAKES NO LIVE META CALL. By default (no provider hooked) the filter
-	 * returns null and nothing is sent — the "nothing happens until a provider + tokens
+	 * returns null and nothing is sent, the "nothing happens until a provider + tokens
 	 * are configured" guarantee. A provider (a companion plugin, or a future paid add-on
 	 * that holds the merchant's WhatsApp phone-number id + access token) registers:
 	 *
@@ -365,7 +365,7 @@ final class Fahad_AI_WhatsApp {
 		 * @param mixed  $result Provider result; null by default (no provider = no send).
 		 * @param string $to     Recipient WhatsApp phone number.
 		 * @param string $text   Reply text.
-		 * @param array  $context { channel: 'whatsapp' } — room for future routing hints.
+		 * @param array  $context { channel: 'whatsapp' }, room for future routing hints.
 		 */
 		return apply_filters( 'fahad_ai_whatsapp_send', null, $to, $text, [ 'channel' => 'whatsapp' ] );
 	}

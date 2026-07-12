@@ -9,7 +9,7 @@
  * never execute. This suite exercises those seams DIRECTLY on the real class via
  * reflection, mocking the concrete WC surfaces (WC(), WC_Cart, WC()->session,
  * WC()->shipping(), WC_Discounts, WC_Coupon, get_posts) through Brain\Monkey +
- * Mockery — exactly the convention CouponToolsTest established. It also fills the
+ * Mockery, exactly the convention CouponToolsTest established. It also fills the
  * remaining pure-helper branch gaps (non-array guards, the select-failed path of
  * set_shipping_method) so the file reaches full statement coverage.
  *
@@ -153,7 +153,7 @@ class CoverageCheckoutToolsTest extends TestCase {
 	// ── set_shipping_method: the select seam reports failure (lines 204-207) ──────
 
 	public function test_set_shipping_method_surfaces_select_failure(): void {
-		// A method that IS offered, but the (real) select seam returns false — the tool
+		// A method that IS offered, but the (real) select seam returns false, the tool
 		// must report an honest failure, not a faked success.
 		Fahad_AI_Checkout_Tools_SelectFails_Stub::$shipping = [
 			'needed'        => true,
@@ -196,7 +196,7 @@ class CoverageCheckoutToolsTest extends TestCase {
 	 * @preserveGlobalState disabled
 	 *
 	 * In an isolated process where WooCommerce is entirely absent (the WC() function
-	 * is never defined), cart() must degrade to null rather than fatal — so the seam
+	 * is never defined), cart() must degrade to null rather than fatal, so the seam
 	 * returns an honest empty state. Run in a separate process so no other case's
 	 * Brain\Monkey stub of WC() leaks in and defines the function.
 	 */
@@ -380,7 +380,7 @@ class CoverageCheckoutToolsTest extends TestCase {
 
 	public function test_candidate_coupons_empty_when_discounts_class_unavailable(): void {
 		// wc-stubs deliberately leaves WC_Discounts undefined in the default process, so
-		// the class_exists guard short-circuits to an honest empty list — we never
+		// the class_exists guard short-circuits to an honest empty list, we never
 		// re-implement WC's validation.
 		if ( class_exists( 'WC_Discounts', false ) ) {
 			$this->markTestSkipped( 'WC_Discounts already loaded in this process.' );

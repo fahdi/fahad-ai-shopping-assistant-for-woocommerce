@@ -182,7 +182,7 @@ class CoverageReturnsToolsTest extends TestCase {
 
     /**
      * A dispatch with order_id 0 (e.g. the model omitted/zeroed it) must collapse to the
-     * standard "not found" result WITHOUT ever loading an order — wc_get_order must not be
+     * standard "not found" result WITHOUT ever loading an order, wc_get_order must not be
      * called, because load_owned_order() bails on the non-positive id first.
      */
     public function test_eligibility_with_a_zero_order_id_is_not_found_without_a_lookup(): void {
@@ -209,7 +209,7 @@ class CoverageReturnsToolsTest extends TestCase {
     /**
      * The write path tolerates a malformed `items` (the model sent a string, not an array):
      * resolve_items() returns [] for a non-array, so request_return reports "tell me which
-     * item(s)" and records NOTHING — no RMA may be written.
+     * item(s)" and records NOTHING, no RMA may be written.
      */
     public function test_request_return_with_non_array_items_records_nothing(): void {
         $order = $this->mockOrder( [ 'id' => 100, 'customer_id' => 5, 'status' => 'completed', 'created_days_ago' => 4 ] );

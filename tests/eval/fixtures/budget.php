@@ -19,7 +19,7 @@
  * get_recommendations comes from the recommendation feature pack
  * (Fahad_AI_Recommendation_Tools), which self-registers via
  * Fahad_AI_Tool_Registry::register_pack() when the test bootstrap glob-loads
- * includes/tools/*.php — so the real tool executes in the loop with no per-fixture
+ * includes/tools/*.php, so the real tool executes in the loop with no per-fixture
  * wiring (the free-text need path uses wc_get_products only).
  */
 
@@ -46,7 +46,7 @@ return [
 		// Turn 2: grounded + in-budget. The one price it states ($45.00) is real and
 		// under the $50 cap; it does NOT push the pricier speaker.
 		EvalHarness::anthropic_text_turn(
-			'Both of these are lovely gifts that stay under your budget — the Travel Mug at $45.00 is my pick. Take a look below.'
+			'Both of these are lovely gifts that stay under your budget, the Travel Mug at $45.00 is my pick. Take a look below.'
 		),
 	],
 	'expect'   => [

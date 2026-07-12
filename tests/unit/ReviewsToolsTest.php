@@ -7,7 +7,7 @@
  * Fahad_AI_Tool_Registry::register_pack() at file load. Each test registers the
  * pack's REAL provider through register_pack() (after snapshotting/clearing the
  * static pack list), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch() — so the production
+ * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production
  * registration + merge + dispatch path is what is under test.
  *
  * WooCommerce reviews are comments: get_product_reviews queries approved review
@@ -67,7 +67,7 @@ class ReviewsToolsTest extends TestCase {
     /**
      * Fresh registry whose built tool list includes the reviews tools.
      * Resets the Tools + registry singletons, clears the static pack list, then
-     * registers the reviews pack's REAL provider — exactly what the pack's
+     * registers the reviews pack's REAL provider, exactly what the pack's
      * file-scope self-registration does in production.
      */
     private function registry(): Fahad_AI_Tool_Registry {
@@ -107,7 +107,7 @@ class ReviewsToolsTest extends TestCase {
         $names = array_column( $this->registry()->specs(), 'name' );
 
         $this->assertContains( 'get_product_reviews', $names );
-        // Additive — the five built-ins remain.
+        // Additive, the five built-ins remain.
         $this->assertContains( 'search_products', $names );
         $this->assertCount( 6, $names );
     }
@@ -123,7 +123,7 @@ class ReviewsToolsTest extends TestCase {
         $this->assertContains( 'product_id', $spec['parameters']['required'] );
     }
 
-    // ── get_product_reviews — happy path ────────────────────────────────────────
+    // ── get_product_reviews, happy path ────────────────────────────────────────
 
     public function test_returns_average_rating_and_review_count(): void {
         $product = $this->mockProduct( 5, 4.5, 12 );
@@ -143,7 +143,7 @@ class ReviewsToolsTest extends TestCase {
         Functions\when( 'wc_get_product' )->justReturn( $product );
 
         Functions\when( 'get_comments' )->justReturn( [
-            $this->review( 101, 'Alice', 'Absolutely love this — great quality and fast shipping.', '2026-01-10 09:00:00' ),
+            $this->review( 101, 'Alice', 'Absolutely love this, great quality and fast shipping.', '2026-01-10 09:00:00' ),
             $this->review( 102, 'Bob',   'Decent value for the price.',                              '2026-01-09 12:00:00' ),
         ] );
 

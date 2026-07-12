@@ -39,7 +39,7 @@ return [
 		] ),
 		// Turn 3: final answer with the required links (URLs come from the tool result).
 		EvalHarness::anthropic_text_turn(
-			'Done — I added the Trail Runner to your cart. [View Cart](http://example.com/cart) · [Checkout](http://example.com/checkout)'
+			'Done, I added the Trail Runner to your cart. [View Cart](http://example.com/cart) · [Checkout](http://example.com/checkout)'
 		),
 	],
 	'expect'   => [

@@ -1,19 +1,19 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Fit_Tools (issue #54: size/fit advisor — grounded).
+ * Unit tests for Fahad_AI_Fit_Tools (issue #54: size/fit advisor, grounded).
  *
  * Red → Green → Refactor cycle. Conventions mirror ReviewsToolsTest /
  * ComparisonToolsTest: WP/WC functions mocked via Brain\Monkey; WC objects via
- * Mockery; singletons reset via reflection (never ReflectionMethod::setAccessible —
+ * Mockery; singletons reset via reflection (never ReflectionMethod::setAccessible , 
  * the host is PHP 8.5); the registry's static pack-provider list snapshotted in
  * setUp and restored in tearDown.
  *
- * get_fit_advice is NOT a built-in — it ships as a drop-in feature pack that
+ * get_fit_advice is NOT a built-in, it ships as a drop-in feature pack that
  * self-registers a provider via Fahad_AI_Tool_Registry::register_pack() at file
  * load. To exercise that registration genuinely (rather than inlining tool entries
  * by hand) every test registers the fit pack's REAL provider through
  * register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch() — so the production registration
+ * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration
  * + merge + dispatch path is what is under test.
  *
  * GROUNDING is the whole point of this tool. The tests assert the two things the
@@ -74,7 +74,7 @@ class FitToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the fit tools.
      *
      * Resets the Tools + registry singletons, clears the static pack list, then
-     * registers the fit pack's REAL provider via register_pack() — exactly what the
+     * registers the fit pack's REAL provider via register_pack(), exactly what the
      * pack's file-scope self-registration does in production.
      */
     private function registry(): Fahad_AI_Tool_Registry {
@@ -136,7 +136,7 @@ class FitToolsTest extends TestCase {
         } );
 
         // Size-chart meta (empty unless the fixture sets it). The tool reads it via
-        // get_meta() and surfaces it verbatim — it never invents a chart.
+        // get_meta() and surfaces it verbatim, it never invents a chart.
         $size_chart = $opts['size_chart'] ?? '';
         $p->shouldReceive( 'get_meta' )->andReturnUsing( static fn( $key = '' ) => '_fahad_ai_size_chart' === $key ? $size_chart : '' );
 
@@ -168,7 +168,7 @@ class FitToolsTest extends TestCase {
         $names = array_column( $this->registry()->specs(), 'name' );
 
         $this->assertContains( 'get_fit_advice', $names );
-        // Additive — the five built-ins remain.
+        // Additive, the five built-ins remain.
         $this->assertContains( 'search_products', $names );
         $this->assertCount( 6, $names );
     }
@@ -295,7 +295,7 @@ class FitToolsTest extends TestCase {
     }
 
     public function test_abstains_when_fit_reviews_conflict_without_a_clear_majority(): void {
-        // Signals split evenly between "small" and "large" — no defensible direction,
+        // Signals split evenly between "small" and "large", no defensible direction,
         // so the tool abstains instead of guessing.
         $product = $this->mockVariableProduct( 5, 'Cotton Tee', [ 'S', 'M', 'L' ] );
         Functions\when( 'wc_get_product' )->justReturn( $product );
@@ -318,7 +318,7 @@ class FitToolsTest extends TestCase {
         $product = $this->mockVariableProduct( 5, 'Cotton Tee', [ 'S', 'M', 'L' ] );
         Functions\when( 'wc_get_product' )->justReturn( $product );
         Functions\when( 'get_comments' )->justReturn( [
-            $this->review( 1, 'Runs small — I had to size up to a Large.' ),
+            $this->review( 1, 'Runs small, I had to size up to a Large.' ),
             $this->review( 2, 'Fits tight, order a size up.' ),
             $this->review( 3, 'Too small, definitely size up.' ),
         ] );
@@ -327,7 +327,7 @@ class FitToolsTest extends TestCase {
 
         $this->assertTrue( $result['fit_available'] );
         $this->assertSame( 'runs_small', $result['fit_hint'] );
-        // The hint is grounded — a basis string ties it back to the review evidence.
+        // The hint is grounded, a basis string ties it back to the review evidence.
         $this->assertArrayHasKey( 'fit_basis', $result );
         $this->assertNotSame( '', $result['fit_basis'] );
     }
@@ -338,7 +338,7 @@ class FitToolsTest extends TestCase {
         Functions\when( 'get_comments' )->justReturn( [
             $this->review( 1, 'Runs large, I sized down to a Small.' ),
             $this->review( 2, 'Too big, order a size down.' ),
-            $this->review( 3, 'Roomy fit — runs large.' ),
+            $this->review( 3, 'Roomy fit, runs large.' ),
         ] );
 
         $result = $this->registry()->dispatch( 'get_fit_advice', [ 'product_id' => 5 ] );
@@ -384,7 +384,7 @@ class FitToolsTest extends TestCase {
 
     public function test_explicit_fit_attribute_grounds_a_hint_without_reviews(): void {
         // A merchant-set "Fit" attribute is real product data, so it can ground a hint
-        // even with zero reviews — this is explicit data, not an inference.
+        // even with zero reviews, this is explicit data, not an inference.
         $product = $this->mockVariableProduct( 5, 'Slim Jeans', [ '30', '32', '34' ], [ 'fit_attr' => 'Runs small' ] );
         Functions\when( 'wc_get_product' )->justReturn( $product );
         Functions\when( 'get_comments' )->justReturn( [] );
@@ -439,7 +439,7 @@ class FitToolsTest extends TestCase {
     }
 
     public function test_recommended_size_reports_unavailable_when_variation_out_of_stock(): void {
-        // The shopper's size exists but is sold out — the tool must SAY it is
+        // The shopper's size exists but is sold out, the tool must SAY it is
         // unavailable rather than silently recommending an out-of-stock variation.
         $parent = $this->mockVariableProduct( 5, 'Cotton Tee', [ 'small', 'medium', 'large' ] );
         $this->wireVariations( $parent, 5, [
@@ -457,7 +457,7 @@ class FitToolsTest extends TestCase {
     }
 
     public function test_recommended_size_reports_unavailable_when_size_not_offered(): void {
-        // A size the product simply does not offer cannot be recommended — reported
+        // A size the product simply does not offer cannot be recommended, reported
         // unavailable, never invented.
         $parent = $this->mockVariableProduct( 5, 'Cotton Tee', [ 'small', 'medium' ] );
         $this->wireVariations( $parent, 5, [
@@ -485,7 +485,7 @@ class FitToolsTest extends TestCase {
         Functions\when( 'get_comments' )->justReturn( [
             $this->review( 1, 'Runs small, size up.' ),
             $this->review( 2, 'Too tight, order a size up.' ),
-            $this->review( 3, 'Small fit — size up.' ),
+            $this->review( 3, 'Small fit, size up.' ),
         ] );
 
         $result = $this->registry()->dispatch( 'get_fit_advice', [ 'product_id' => 5, 'usual_size' => 'medium' ] );

@@ -34,7 +34,7 @@ test.describe('core widget (desktop)', () => {
 	});
 });
 
-test.describe('mobile portrait — iPhone 390×844', () => {
+test.describe('mobile portrait, iPhone 390×844', () => {
 	test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
 	test('fullscreen panel fills the viewport, no gap (#129 dvh)', async ({ page }) => {
@@ -82,7 +82,7 @@ test.describe('mobile portrait — iPhone 390×844', () => {
 	});
 });
 
-test.describe('mobile portrait — small 320×568', () => {
+test.describe('mobile portrait, small 320×568', () => {
 	test.use({ viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true });
 
 	test('product cards stay within the panel width (#126/#129)', async ({ page }) => {
@@ -101,7 +101,7 @@ test.describe('mobile portrait — small 320×568', () => {
 	});
 });
 
-test.describe('landscape phone — 844×390', () => {
+test.describe('landscape phone, 844×390', () => {
 	test.use({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
 
 	test('header & close button stay within the viewport (#126)', async ({ page }) => {
@@ -125,7 +125,7 @@ test.describe('landscape phone — 844×390', () => {
 	});
 });
 
-test.describe('tablet — 768×1024', () => {
+test.describe('tablet, 768×1024', () => {
 	test.use({ viewport: { width: 768, height: 1024 }, isMobile: true, hasTouch: true });
 
 	test('floating panel fits within the viewport', async ({ page }) => {
@@ -144,7 +144,7 @@ test.describe('tablet — 768×1024', () => {
 	});
 });
 
-test.describe('short desktop window — 1280×420', () => {
+test.describe('short desktop window, 1280×420', () => {
 	test.use({ viewport: { width: 1280, height: 420 } });
 
 	test('floating panel is capped to the viewport height (#126)', async ({ page }) => {

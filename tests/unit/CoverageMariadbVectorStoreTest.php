@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage tests for Fahad_AI_MariaDb_Vector_Store — exercises the write paths
+ * Coverage tests for Fahad_AI_MariaDb_Vector_Store, exercises the write paths
  * (upsert / delete / content_hash / rebuild_required / maybe_create_table) and the
  * version-mismatch guard in is_available() that the sibling MariaDbVectorStoreTest
  * does not reach. The native VECTOR SQL is still only verified for shape (the live
@@ -44,7 +44,7 @@ class CoverageMariadbVectorStoreTest extends TestCase {
 	}
 
 	public function test_is_available_false_when_wpdb_missing_db_server_info(): void {
-		// Bare object without db_server_info — the is_callable guard returns false.
+		// Bare object without db_server_info, the is_callable guard returns false.
 		$GLOBALS['wpdb'] = new stdClass();
 		$store           = new Fahad_AI_MariaDb_Vector_Store( 'm', 3 );
 		$this->assertFalse( $store->is_available() );

@@ -3,7 +3,7 @@
  * Supplemental line-coverage tests for Fahad_AI_Proactive (issue #65).
  *
  * Companion to ProactiveTest: this file pins the remaining defensive / branch paths
- * that ProactiveTest does not exercise — a malformed coupons result, the no-description
+ * that ProactiveTest does not exercise, a malformed coupons result, the no-description
  * coupon nudge, and the credit nudge falling back to the raw amount when no formatted
  * string is supplied. Conventions mirror ProactiveTest exactly (Brain\Monkey for WP
  * functions, singleton reset by reflection, get_option stubbed via an in-memory map).
@@ -27,7 +27,7 @@ class CoverageProactiveTest extends TestCase {
 
 		$this->options = [];
 
-		// __ / esc_html__ are real pass-throughs from tests/stubs/wc-stubs.php — do NOT
+		// __ / esc_html__ are real pass-throughs from tests/stubs/wc-stubs.php, do NOT
 		// re-stub them here (DefinedTooEarly).
 		Functions\stubs( [
 			'sanitize_text_field' => fn( $s ) => is_string( $s ) ? trim( $s ) : '',
@@ -60,7 +60,7 @@ class CoverageProactiveTest extends TestCase {
 
 	public function test_value_signal_is_null_when_coupons_key_is_not_an_array(): void {
 		// Defensive grounding (line 185): a list_active_coupons() result whose 'coupons'
-		// is not an array is malformed — it is NOT a real deal and must yield no signal.
+		// is not an array is malformed, it is NOT a real deal and must yield no signal.
 		// With no wallet credit either, value_signal() must resolve to null.
 		$signal = $this->proactive()->value_signal( [ 'found' => 1, 'coupons' => 'oops' ], null );
 		$this->assertNull( $signal );
@@ -68,7 +68,7 @@ class CoverageProactiveTest extends TestCase {
 
 	public function test_value_signal_is_null_when_coupons_key_is_missing(): void {
 		// The '?? []' default keeps a totally-empty result safe (it iterates an empty
-		// list and returns null) — no coupon, no credit → nothing of value.
+		// list and returns null), no coupon, no credit → nothing of value.
 		$this->assertNull( $this->proactive()->value_signal( [ 'found' => 0 ], null ) );
 	}
 
@@ -76,7 +76,7 @@ class CoverageProactiveTest extends TestCase {
 
 	public function test_coupon_message_omits_parens_when_there_is_no_description(): void {
 		// Lines 222-226: a real coupon with NO description still produces an honest,
-		// urgency-free nudge that references the grounded code — and, crucially, the
+		// urgency-free nudge that references the grounded code, and, crucially, the
 		// short form has no parenthetical description segment.
 		$coupons = [ 'found' => 1, 'coupons' => [ [ 'code' => 'SAVE10' ] ] ];
 		$signal  = $this->proactive()->value_signal( $coupons, null );
@@ -123,7 +123,7 @@ class CoverageProactiveTest extends TestCase {
 
 	public function test_credit_message_falls_back_when_formatted_is_empty_string(): void {
 		// An explicit empty formatted string also triggers the raw-amount fallback (the
-		// "'' === $formatted" guard is true) — the grounded amount must still surface.
+		// "'' === $formatted" guard is true), the grounded amount must still surface.
 		$balance = [ 'amount' => 12.5, 'formatted' => '' ];
 		$signal  = $this->proactive()->value_signal( [ 'found' => 0, 'coupons' => [] ], $balance );
 

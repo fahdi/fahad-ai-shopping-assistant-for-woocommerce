@@ -4,7 +4,7 @@
  *
  * Binary-relevance recall@k / precision@k / nDCG@k over a retrieved id-list and
  * a relevant-id set. Used by the golden-set comparison (keyword vs vector vs
- * hybrid, RAG-DESIGN.md §6.1) and by the spike CLI report. Pure — no WordPress.
+ * hybrid, RAG-DESIGN.md §6.1) and by the spike CLI report. Pure, no WordPress.
  */
 
 defined( 'ABSPATH' ) || exit;

@@ -15,7 +15,7 @@
  * SKU, price and stock are DELIBERATELY excluded: SKUs are opaque tokens best
  * matched by the keyword leg, and price/stock are live data read at retrieval
  * time (§4.4, §5.4). The content_hash lets the indexer skip re-embedding when
- * the embedded text has not changed — so a price-only edit never re-embeds.
+ * the embedded text has not changed, so a price-only edit never re-embeds.
  */
 
 defined( 'ABSPATH' ) || exit;

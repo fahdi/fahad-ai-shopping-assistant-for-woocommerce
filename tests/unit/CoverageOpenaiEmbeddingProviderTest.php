@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage tests for Fahad_AI_OpenAI_Embedding_Provider — the two paths the
+ * Coverage tests for Fahad_AI_OpenAI_Embedding_Provider, the two paths the
  * existing EmbeddingsTest does not exercise:
  *
  *   - request(): a 200 response whose body has no usable `data[]` is a MALFORMED
@@ -41,7 +41,7 @@ class CoverageOpenaiEmbeddingProviderTest extends TestCase {
 	// ── line 104: malformed 200 response → non-retryable ────────────────────────
 
 	public function test_embed_throws_non_retryable_when_data_key_is_missing(): void {
-		// HTTP 200 but the body carries no `data` array at all — a contract breach
+		// HTTP 200 but the body carries no `data` array at all, a contract breach
 		// the provider cannot recover from, so it fails fast (not retryable).
 		Functions\when( 'wp_remote_post' )->justReturn( [ 'ok' => true ] );
 		Functions\when( 'wp_remote_retrieve_response_code' )->justReturn( 200 );
@@ -153,7 +153,7 @@ class CoverageOpenaiEmbeddingProviderTest extends TestCase {
 		$m        = new ReflectionMethod( Fahad_AI_OpenAI_Embedding_Provider::class, 'backoff' );
 
 		$start = microtime( true );
-		$m->invoke( $provider, 3 ); // any attempt number — must return immediately
+		$m->invoke( $provider, 3 ); // any attempt number, must return immediately
 		$elapsed = microtime( true ) - $start;
 
 		$this->assertLessThan( 0.05, $elapsed, 'a zero base must not sleep' );

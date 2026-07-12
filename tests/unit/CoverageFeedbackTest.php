@@ -13,7 +13,7 @@
  *
  * Conventions mirror FeedbackTest / the Coverage* siblings: Brain\Monkey for the
  * WP option seam, the MockeryPHPUnitIntegration trait, and the singleton reset by
- * reflection between cases (never ReflectionMethod::setAccessible — the host runs
+ * reflection between cases (never ReflectionMethod::setAccessible, the host runs
  * PHP 8.5).
  */
 
@@ -47,7 +47,7 @@ class CoverageFeedbackTest extends TestCase {
 			'sanitize_key'            => fn( $s ) => is_string( $s ) ? strtolower( trim( $s ) ) : '',
 		] );
 
-		// wp_generate_uuid4 is intentionally NOT stubbed when it is undefined —
+		// wp_generate_uuid4 is intentionally NOT stubbed when it is undefined , 
 		// leaving it absent forces new_id()'s md5 fallback branch (the coverage
 		// target). But Brain\Monkey leaves a once-stubbed function defined in the
 		// global namespace for the rest of the process, so if a prior test (e.g.
@@ -93,7 +93,7 @@ class CoverageFeedbackTest extends TestCase {
 	/**
 	 * new_id() falls back to `md5( uniqid( '', true ) )` when wp_generate_uuid4 is
 	 * not available. The sibling FeedbackTest stubs wp_generate_uuid4, and a stubbed
-	 * function stays defined in the global namespace for the rest of the process —
+	 * function stays defined in the global namespace for the rest of the process , 
 	 * so once that test has run, function_exists() is true and the fallback can no
 	 * longer be reached in the same process. This case runs in its OWN process
 	 * (preserveGlobalState disabled) so wp_generate_uuid4 is guaranteed undefined,
@@ -135,7 +135,7 @@ class CoverageFeedbackTest extends TestCase {
 		// cap() runs through the mb_substr branch (mb_substr is a loaded builtin in
 		// this runtime, so the function_exists guard is true). Feed a multibyte
 		// reason longer than the cap and assert it is truncated to MAX_REASON_LENGTH
-		// *characters* — and not chopped mid-character into invalid UTF-8.
+		// *characters*, and not chopped mid-character into invalid UTF-8.
 		$reason = str_repeat( 'é', Fahad_AI_Feedback::MAX_REASON_LENGTH + 50 );
 
 		$res = $this->store()->record( 'down', $reason, 'conv-1', 'msg-1' );

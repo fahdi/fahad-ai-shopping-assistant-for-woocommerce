@@ -8,14 +8,14 @@
  * coverage:
  *
  *   - top_questions(): an EMPTY question snippet is skipped (does not pollute the
- *     ranking) — the `continue` guard.
+ *     ranking), the `continue` guard.
  *   - clean_question(): a whitespace-only question collapses to '' and is stored
  *     as an empty snippet (the early `return ''`).
  *   - clean_tools(): a non-array `tools` value yields []; a non-string / empty
  *     entry inside the array is skipped.
- *   - funnel(): the order_resolver branch — a supplied resolver is handed the
+ *   - funnel(): the order_resolver branch, a supplied resolver is handed the
  *     cart conversation refs and its (clamped) result is reported as `orders`.
- *   - in_range(): the upper-bound `to` filter — a row newer than `to` is excluded.
+ *   - in_range(): the upper-bound `to` filter, a row newer than `to` is excluded.
  *   - new_id(): the md5(uniqid()) fallback when wp_generate_uuid4() is absent.
  *
  * Conventions mirror AnalyticsTest / ApiHandlerTest: Brain\Monkey for the WP
@@ -54,7 +54,7 @@ class CoverageAnalyticsTest extends TestCase {
 		// new_id() calls wp_generate_uuid4() ONLY when it EXISTS. In a shared process a
 		// sibling test may already have defined it (via Patchwork), in which case calling
 		// it unmocked would throw; so when it is already defined we (re)mock it. When it
-		// is NOT defined — e.g. an @runInSeparateProcess case — we leave it absent so
+		// is NOT defined, e.g. an @runInSeparateProcess case, we leave it absent so
 		// new_id() exercises its md5( uniqid() ) FALLBACK branch (line 571).
 		if ( function_exists( 'wp_generate_uuid4' ) ) {
 			Functions\when( 'wp_generate_uuid4' )->alias( static fn() => 'uuid-' . md5( uniqid( '', true ) ) );
@@ -126,7 +126,7 @@ class CoverageAnalyticsTest extends TestCase {
 	}
 
 	/**
-	 * Invoke a private method on the store via reflection (no setAccessible —
+	 * Invoke a private method on the store via reflection (no setAccessible , 
 	 * host runs PHP 8.x where private methods are reachable directly on PHP 8.1+
 	 * once the method object is obtained; matches the sibling's reflection style).
 	 */
@@ -142,7 +142,7 @@ class CoverageAnalyticsTest extends TestCase {
 	 * @preserveGlobalState disabled
 	 *
 	 * wp_generate_uuid4() is a real WordPress function the unit env never bootstraps,
-	 * but Brain\Monkey DEFINES it the moment any other test stubs it — and Patchwork
+	 * but Brain\Monkey DEFINES it the moment any other test stubs it, and Patchwork
 	 * leaves it defined for the rest of the process, so function_exists() then reports
 	 * true. To exercise the md5( uniqid() ) FALLBACK branch deterministically we run in
 	 * a SEPARATE process where the function is genuinely undefined (the same isolation
@@ -315,7 +315,7 @@ class CoverageAnalyticsTest extends TestCase {
 
 	public function test_funnel_resolver_excludes_anonymous_cart_refs(): void {
 		// A cart turn with NO conversation ref is an anonymous (#id) bucket and must NOT
-		// be handed to the resolver — only real refs can be order-attributed.
+		// be handed to the resolver, only real refs can be order-attributed.
 		$store = $this->store();
 		$store->record( $this->event( [ 'conversation_ref' => '', 'added_to_cart' => true ] ) );
 		$store->record( $this->event( [ 'conversation_ref' => 'real', 'added_to_cart' => true ] ) );

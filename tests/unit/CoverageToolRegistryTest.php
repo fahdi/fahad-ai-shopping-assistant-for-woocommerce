@@ -101,7 +101,7 @@ class CoverageToolRegistryTest extends TestCase {
 
     /**
      * Even with the non-array junk present, a VALID sibling entry in the same
-     * batch must still register — proving validate() `continue`s past the bad
+     * batch must still register, proving validate() `continue`s past the bad
      * entry rather than aborting the whole loop.
      */
     public function test_valid_entry_survives_alongside_non_array_junk(): void {
@@ -128,7 +128,7 @@ class CoverageToolRegistryTest extends TestCase {
     // ── validate(): bad/absent description is skipped (line 289) ──────────────
 
     /**
-     * An entry with a non-string `description` (here an array) must be skipped —
+     * An entry with a non-string `description` (here an array) must be skipped , 
      * validate() requires a string description before the tool is advertised.
      */
     public function test_entry_with_non_string_description_is_skipped(): void {
@@ -185,7 +185,7 @@ class CoverageToolRegistryTest extends TestCase {
      * reset() must null the cached tool list so the NEXT call rebuilds it. We
      * build once with a filter that contributes a tool, assert it is present,
      * then swap the filter so it contributes nothing, call reset(), and assert
-     * the rebuilt list no longer contains the tool — proving reset() forced a
+     * the rebuilt list no longer contains the tool, proving reset() forced a
      * fresh build rather than returning the stale cache.
      */
     public function test_reset_forces_a_rebuild_of_the_tool_list(): void {
@@ -277,7 +277,7 @@ class CoverageToolRegistryTest extends TestCase {
     /**
      * Built-in tools are a protected floor: even if a merchant (or a tampered
      * option) lists a built-in name in the disabled set, it must NOT be removed.
-     * This drives the `! isset( $protected[ $name ] )` FALSE branch — the unset is
+     * This drives the `! isset( $protected[ $name ] )` FALSE branch, the unset is
      * skipped for a protected name.
      */
     public function test_builtin_tool_cannot_be_disabled_even_if_listed(): void {
@@ -327,7 +327,7 @@ class CoverageToolRegistryTest extends TestCase {
 
     /**
      * A non-array option value (e.g. a corrupt `false`/string stored under the
-     * key) must short-circuit gating to identity — the tool list is returned
+     * key) must short-circuit gating to identity, the tool list is returned
      * unchanged. This drives the `! is_array( $disabled )` guard.
      */
     public function test_non_array_disabled_option_is_treated_as_no_gating(): void {

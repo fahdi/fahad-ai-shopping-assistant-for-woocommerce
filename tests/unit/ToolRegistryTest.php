@@ -25,7 +25,7 @@ class ToolRegistryTest extends TestCase {
      * setUp and restored in tearDown.
      *
      * Pack providers live in a STATIC list (so they survive a singleton instance
-     * reset — that is the whole point of register_pack). Feature packs such as the
+     * reset, that is the whole point of register_pack). Feature packs such as the
      * catalog pack self-register into that list at file load. These isolation
      * tests assert on the exact built-in tool set + the third-party filter path, so
      * they must run against a registry with NO first-party packs. We clear the list
@@ -148,7 +148,7 @@ class ToolRegistryTest extends TestCase {
 
     public function test_dispatch_isolates_a_throwing_callback(): void {
         // A third-party tool whose callback throws must NOT bubble the exception
-        // up and fatal the request — dispatch returns an error array instead.
+        // up and fatal the request, dispatch returns an error array instead.
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
             if ( 'fahad_ai_register_tools' === $hook ) {
                 $tools[] = [
@@ -168,7 +168,7 @@ class ToolRegistryTest extends TestCase {
         $this->assertIsArray( $result );
         $this->assertArrayHasKey( 'error', $result );
         // The error must come from catching the throw (callback WAS reached),
-        // not from the tool being unknown — otherwise the test would pass even
+        // not from the tool being unknown, otherwise the test would pass even
         // if the tool never registered.
         $this->assertStringNotContainsString( 'Unknown tool', $result['error'] );
     }
@@ -221,7 +221,7 @@ class ToolRegistryTest extends TestCase {
     // ── first-party packs: register_pack() (drop-in feature packs) ────────────
 
     /**
-     * A feature pack registers its tools by handing the registry a PROVIDER — a
+     * A feature pack registers its tools by handing the registry a PROVIDER, a
      * callable `fn( array $tools ): array` that appends its definitions. This is
      * the deterministic, WordPress-filter-free path feature packs (catalog,
      * shipping, …) use so they are picked up identically in production and tests.
@@ -455,7 +455,7 @@ class ToolRegistryTest extends TestCase {
     /**
      * GUEST-BLOCK (headline acceptance criterion): a personal-flagged tool must
      * be gated centrally. When the caller is a guest, dispatch() returns the
-     * login-required error and the callback is NEVER invoked — a personal tool
+     * login-required error and the callback is NEVER invoked, a personal tool
      * cannot leak by forgetting to check login itself.
      */
     public function test_personal_tool_blocks_guest_and_never_invokes_callback(): void {
@@ -466,7 +466,7 @@ class ToolRegistryTest extends TestCase {
 
         $result = $this->registry()->dispatch( 'order_status', [] );
 
-        $this->assertFalse( $invoked, 'guest reached a personal tool callback — login gate failed' );
+        $this->assertFalse( $invoked, 'guest reached a personal tool callback, login gate failed' );
         $this->assertArrayHasKey( 'requires_login', $result );
         $this->assertTrue( $result['requires_login'] );
         $this->assertArrayHasKey( 'error', $result );
@@ -477,7 +477,7 @@ class ToolRegistryTest extends TestCase {
     /**
      * For a logged-in caller the central gate is satisfied, so dispatch() proceeds
      * to the personal tool's callback exactly like a normal tool. (Per-RECORD
-     * ownership is still the callback's job — see Fahad_AI_Auth::user_owns.)
+     * ownership is still the callback's job, see Fahad_AI_Auth::user_owns.)
      */
     public function test_personal_tool_runs_for_logged_in_user(): void {
         Functions\when( 'is_user_logged_in' )->justReturn( true );
@@ -494,7 +494,7 @@ class ToolRegistryTest extends TestCase {
 
     /**
      * A NON-personal (normal) tool must be unaffected by the gate: a guest can
-     * still call it. We register a normal tool and dispatch it as a guest — the
+     * still call it. We register a normal tool and dispatch it as a guest, the
      * callback runs and no login error is returned.
      */
     public function test_non_personal_tool_is_not_login_gated_for_guests(): void {
@@ -505,7 +505,7 @@ class ToolRegistryTest extends TestCase {
             if ( 'fahad_ai_register_tools' === $hook ) {
                 $tools[] = [
                     'name'        => 'store_hours',
-                    'description' => 'Public store hours — no login needed.',
+                    'description' => 'Public store hours, no login needed.',
                     'parameters'  => [ 'type' => 'object', 'properties' => new stdClass() ],
                     'callback'    => function ( array $input ) use ( &$invoked ): array {
                         $invoked = true;

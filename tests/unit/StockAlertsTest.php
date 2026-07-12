@@ -5,7 +5,7 @@
  *
  * Red → Green → Refactor. Conventions mirror MemoryToolsTest / OrderToolsTest: WP
  * functions mocked via Brain\Monkey; the singleton reset via reflection between
- * cases (NEVER ReflectionMethod::setAccessible — host runs PHP 8.5). The store is
+ * cases (NEVER ReflectionMethod::setAccessible, host runs PHP 8.5). The store is
  * option-backed, so a single in-memory $this->options map stands in for the WP
  * options table and a test asserts exactly what was persisted.
  *
@@ -140,7 +140,7 @@ class StockAlertsTest extends TestCase {
 		$this->assertSame( 'back_in_stock', $row['type'] );
 		// DOUBLE OPT-IN: the row is PENDING, never confirmed on creation.
 		$this->assertSame( 'pending', $row['status'] );
-		// Email is sanitized (lower-cased here) and stored — never confirmed yet.
+		// Email is sanitized (lower-cased here) and stored, never confirmed yet.
 		$this->assertSame( 'jane@example.com', $row['email'] );
 	}
 
@@ -252,7 +252,7 @@ class StockAlertsTest extends TestCase {
 	/**
 	 * The headline notifier test. Three back-in-stock subs on product 42:
 	 *   - confirmed (must be emailed),
-	 *   - pending (must NOT be emailed — never confirmed),
+	 *   - pending (must NOT be emailed, never confirmed),
 	 *   - confirmed but already sent (must NOT be emailed again).
 	 * Plus a confirmed sub on a DIFFERENT product (must NOT be emailed).
 	 * After the run only the first is emailed and is marked sent.
@@ -306,7 +306,7 @@ class StockAlertsTest extends TestCase {
 		$store->notify_back_in_stock( 42, 0 );
 		$store->notify_back_in_stock( 42, 0 ); // second restock event
 
-		// Still only ONE email total — a confirmed sub is notified once per restock.
+		// Still only ONE email total, a confirmed sub is notified once per restock.
 		$this->assertCount( 1, $this->mail );
 	}
 
@@ -331,7 +331,7 @@ class StockAlertsTest extends TestCase {
 		$store->notify_price_drop( 42, 0, 40.0, 50.0 );
 
 		$this->assertCount( 0, $this->mail );
-		// And the row is NOT marked sent — it is still armed for a real future drop.
+		// And the row is NOT marked sent, it is still armed for a real future drop.
 		$this->assertEmpty( $this->rows()[ $id ]['sent'] ?? 0 );
 	}
 

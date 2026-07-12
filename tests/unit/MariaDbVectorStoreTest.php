@@ -5,7 +5,7 @@
  * OPT-IN scale tier: when MariaDB >= 11.7 (native VECTOR + VEC_DISTANCE_COSINE) is
  * detected, the store factory uses this backend instead of post meta; on any other
  * DB (e.g. MySQL 8) it stays on the default. The native SQL itself can only be
- * verified against a real MariaDB 11.7+ instance (not available here) — these tests
+ * verified against a real MariaDB 11.7+ instance (not available here), these tests
  * cover capability detection, query SQL construction, and factory selection.
  */
 
@@ -38,7 +38,7 @@ class MariaDbVectorStoreTest extends TestCase {
 		$this->assertInstanceOf( Fahad_AI_Vector_Store::class, new Fahad_AI_MariaDb_Vector_Store( 'm', 3 ) );
 	}
 
-	/** Fresh mock per case — stacking allows() on one mock makes the first return win. */
+	/** Fresh mock per case, stacking allows() on one mock makes the first return win. */
 	private function available_on( string $server_info ): bool {
 		$wpdb            = Mockery::mock();
 		$wpdb->prefix    = 'wp_';

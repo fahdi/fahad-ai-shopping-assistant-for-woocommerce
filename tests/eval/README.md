@@ -6,7 +6,7 @@ drives the **real agent loop** (`Fahad_AI_API_Handler::run_anthropic_agent()` /
 `run_moonshot_agent()`) end-to-end and asserts on **tool-call quality** and
 **answer quality**.
 
-It is fully **deterministic and offline** — it never makes a live LLM API call.
+It is fully **deterministic and offline**, it never makes a live LLM API call.
 Each conversation's model responses are *scripted*, and the real WooCommerce
 tools run against *mocked* WooCommerce data.
 
@@ -24,7 +24,7 @@ fixture ──► EvalHarness::stub_environment()    (API keys, model, currency,
 ```
 
 - **Scripted transport.** `wp_remote_post` is stubbed to return a queue of canned
-  HTTP responses — one per turn of the loop. Turn 1 typically returns a
+  HTTP responses, one per turn of the loop. Turn 1 typically returns a
   `tool_use` / `tool_calls` response; the final turn returns the `end_turn` /
   `stop` text. `wp_remote_retrieve_response_code` / `wp_remote_retrieve_body` are
   stubbed to read from those canned responses.
@@ -36,7 +36,7 @@ fixture ──► EvalHarness::stub_environment()    (API keys, model, currency,
   production code in `includes/` is modified.**
 - **Tool trace.** After the loop returns, the harness reconstructs the ordered
   `(tool name, input, result)` trace from the loop's own returned `messages`
-  transcript — no spy/wrapper needed.
+  transcript, no spy/wrapper needed.
 
 ## Running
 
@@ -140,7 +140,7 @@ heuristic**, not a semantic judge:
    some tool result (or otherwise appear in the results).
 
 **Known limits (by design, documented in `EvalHarness.php`):**
-- String/number containment, not semantics — it can't catch a *plausible but
+- String/number containment, not semantics, it can't catch a *plausible but
   swapped* claim (attributing product A's real price to product B).
 - Only price tokens and quoted names are checked; a fabricated non-numeric,
   non-name claim ("ships free worldwide") is not caught.
@@ -149,20 +149,20 @@ heuristic**, not a semantic judge:
 
 The checker is proven to actually fail by **negative self-tests** in
 `GoldenConversationTest` (`test_grounding_self_test_fails_for_fabricated_price`
-and `…_fabricated_product_name`) — a checker that always passes would be useless.
+and `…_fabricated_product_name`), a checker that always passes would be useless.
 
 ## Trust & anti-dark-pattern policy (issue #24)
 
 Honesty is this assistant's core thesis, so the trust policy is encoded in two
 places that must stay in sync:
 
-1. **The policy text** — a consolidated "Trust & honesty — these rules are
+1. **The policy text**, a consolidated "Trust & honesty, these rules are
    absolute" section in `Fahad_AI_API_Handler::get_system_prompt()`
    (`includes/class-api-handler.php`). It is pinned by
    `ApiHandlerTest::test_default_prompt_states_the_trust_guardrail_policy` so a
    prompt edit can't silently drop it. (The `fahad_ai_system_prompt` filter
    pass-through is preserved, so the memory pack can still append preferences.)
-2. **Deterministic guardrail checkers** in `EvalHarness.php` — the offline
+2. **Deterministic guardrail checkers** in `EvalHarness.php`, the offline
    analogue of `grounding_violations()`. Like grounding they are containment /
    phrasing heuristics (not semantic judges) and each is proven to have teeth by a
    **positive + negative self-test** in `GoldenConversationTest` (the
@@ -178,7 +178,7 @@ places that must stay in sync:
 
 **Known limits (by design, documented in `EvalHarness.php`):**
 - `scarcity_violations` matches a finite phrase list (extend it when a new dark
-  pattern appears) and grounds a quantity by numeric containment — a claimed count
+  pattern appears) and grounds a quantity by numeric containment, a claimed count
   that coincidentally equals another number in the results would pass.
 - `budget_violations` only checks prices the answer states **in text** (the cards
   render the rest); the recommendation tools already filter over-budget items out
@@ -186,7 +186,7 @@ places that must stay in sync:
 - `escalation_present` / `abstains` are presence heuristics over common phrasings.
 
 These guardrails are intentionally narrow: they catch the high-value dark-pattern
-failure modes without policing ordinary, honest selling — the assistant can still
+failure modes without policing ordinary, honest selling, the assistant can still
 recommend and upsell, just truthfully.
 
 ## How to add a new case
@@ -200,9 +200,9 @@ recommend and upsell, just truthfully.
 3. Provide the `wc` data your tools need (products / product_by_id / cart).
 4. List the expected `tool_calls` in order and any answer/card/grounding
    expectations. If the final answer states product facts, set `'grounded' => true`.
-   If the feature touches a trust guardrail, add the matching expectation too —
+   If the feature touches a trust guardrail, add the matching expectation too , 
    `no_scarcity`, `budget => <cap>`, `must_abstain`, or `must_escalate` (see the
-   "Trust & anti-dark-pattern policy" table above) — so the policy can't regress.
+   "Trust & anti-dark-pattern policy" table above), so the policy can't regress.
 5. Run `vendor/bin/phpunit --testsuite eval --testdox` and confirm your case is
    listed and green.
 

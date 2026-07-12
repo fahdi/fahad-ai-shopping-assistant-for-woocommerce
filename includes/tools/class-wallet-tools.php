@@ -2,10 +2,10 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Wallet / store-credit tools (issue #18) — the DIFFERENTIATOR, and MONEY-sensitive.
+ * Wallet / store-credit tools (issue #18), the DIFFERENTIATOR, and MONEY-sensitive.
  *
  * "What's my balance?", "top up $50 (and what bonus do I get?)", "pay with my store
- * credit" — for LOGGED-IN customers only. This is the highest-differentiation feature:
+ * credit", for LOGGED-IN customers only. This is the highest-differentiation feature:
  * it ties the assistant to the org's own wallet plugins (WalletPro / Account Funds).
  *
  * ─── DECOUPLING: the assistant core does NOT depend on any wallet plugin ───────────
@@ -22,19 +22,19 @@ defined( 'ABSPATH' ) || exit;
  *
  * The assistant ships these TOOLS; the wallet plugin ships the PROVIDER. Either side
  * can change independently. (This pack itself self-registers via the first-party
- * register_pack() drop-in mechanism — issue #22 — so adding it is one new file with
+ * register_pack() drop-in mechanism, issue #22, so adding it is one new file with
  * no bootstrap edits; the provider seam is what keeps it decoupled from the wallet
  * plugin specifically.)
  *
  * ─── PROVIDER ADAPTER CONTRACT (what the wallet plugin must register) ──────────────
  *
  * A provider is an OBJECT exposing the methods below, OR an ARRAY of callables keyed
- * by the same operation names (both are accepted — see self::call()). All money
+ * by the same operation names (both are accepted, see self::call()). All money
  * amounts are floats in the store currency. Every operation that the wallet plugin
- * cannot service should return an `[ 'error' => string ]` array — NEVER throw, and
+ * cannot service should return an `[ 'error' => string ]` array, NEVER throw, and
  * NEVER report a success it did not perform. Atomicity/idempotency of the LEDGER are
  * the PROVIDER's responsibility (this tool layer only guarantees it never creates an
- * unsafe condition — see the money-safety section below).
+ * unsafe condition, see the money-safety section below).
  *
  *   get_balance( int $user_id ): array
  *       → [ 'amount' => float, 'currency' => string, 'formatted' => string ]
@@ -62,14 +62,14 @@ defined( 'ABSPATH' ) || exit;
  *   1. AMOUNT VALIDATION. Non-numeric / non-positive amounts are rejected BEFORE the
  *      provider is touched (no bogus debit/credit ever reaches the ledger).
  *   2. SUFFICIENT-BALANCE-BEFORE-PAY (no double-spend). pay_with_credit reads the
- *      balance and refuses if it cannot cover the amount — the provider's debit is
+ *      balance and refuses if it cannot cover the amount, the provider's debit is
  *      never even attempted. (The provider is still the final authority; this is the
  *      tool refusing to ask for an impossible debit.)
  *   3. NO SUCCESS WITHOUT CONFIRMATION. The tool reports success ONLY by passing
  *      through what the provider returned. A provider error is surfaced verbatim-ish;
  *      the tool never fabricates a balance or a "paid". The assistant holds no balance,
  *      so a provider failure is a clean no-op on our side (no partial/rolled-back state
- *      to reconcile — the debit is ONE atomic provider call, never split here).
+ *      to reconcile, the debit is ONE atomic provider call, never split here).
  *   4. CURRENT-USER-ONLY. Every operation acts on Fahad_AI_Auth::current_user_id();
  *      a user id in the model INPUT is ignored, so the model cannot touch another
  *      customer's wallet. (The `personal` flag below blocks guests centrally; using the
@@ -78,13 +78,13 @@ defined( 'ABSPATH' ) || exit;
  * ─── AUTH: personal-data tools, login-gated centrally (issue #25) ──────────────────
  *
  * All three tools declare `'personal' => true`, so Fahad_AI_Tool_Registry::dispatch()
- * runs Fahad_AI_Auth::guard_logged_in() BEFORE the callback — a guest is blocked
+ * runs Fahad_AI_Auth::guard_logged_in() BEFORE the callback, a guest is blocked
  * centrally with the standard login-required error and the provider is never touched.
  *
  * ─── GRACEFUL DEGRADATION ──────────────────────────────────────────────────────────
  *
  * The tools are ALWAYS registered, even with no wallet plugin present. With no provider
- * the tools return a clear `[ 'error' => 'Wallet is not available on this store.' ]` —
+ * the tools return a clear `[ 'error' => 'Wallet is not available on this store.' ]` , 
  * never fatal, never an invented balance. Registering-always (rather than only when a
  * provider exists) is the simplest path AND lets the model honestly explain that the
  * store has no wallet, instead of the capability silently vanishing.
@@ -110,7 +110,7 @@ final class Fahad_AI_Wallet_Tools {
 	 * Append the wallet tools to the registry's tool list.
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope).
-	 * Static because the pack holds no per-instance state — its tools resolve the
+	 * Static because the pack holds no per-instance state, its tools resolve the
 	 * wallet provider via the filter and call the shared Fahad_AI_Auth boundary.
 	 *
 	 * All three tools carry `'personal' => true` so the registry login-gates them
@@ -133,7 +133,7 @@ final class Fahad_AI_Wallet_Tools {
 
 		$tools[] = [
 			'name'        => 'top_up',
-			'description' => 'Add funds to the logged-in customer\'s wallet / store credit by a given amount. Use this when the customer asks to "top up", "add credit", or "load my wallet". If the store offers a deposit bonus for this amount, the result includes it under "deposit_bonus" — mention any bonus HONESTLY and factually (e.g. "adding $50 also earns a $5 bonus"); never pressure the customer to deposit. Returns the new balance. Requires the customer to be logged in.',
+			'description' => 'Add funds to the logged-in customer\'s wallet / store credit by a given amount. Use this when the customer asks to "top up", "add credit", or "load my wallet". If the store offers a deposit bonus for this amount, the result includes it under "deposit_bonus", mention any bonus HONESTLY and factually (e.g. "adding $50 also earns a $5 bonus"); never pressure the customer to deposit. Returns the new balance. Requires the customer to be logged in.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -181,8 +181,8 @@ final class Fahad_AI_Wallet_Tools {
 	/**
 	 * Current customer's wallet balance, straight from the provider.
 	 *
-	 * Always asks the provider about Fahad_AI_Auth::current_user_id() — never a user
-	 * id from the model input — so the model cannot read another customer's balance.
+	 * Always asks the provider about Fahad_AI_Auth::current_user_id(), never a user
+	 * id from the model input, so the model cannot read another customer's balance.
 	 * With no provider, degrades to the graceful "not available" error (no invented
 	 * balance). The central login gate has already ensured the caller is logged in.
 	 *
@@ -204,7 +204,7 @@ final class Fahad_AI_Wallet_Tools {
 
 	/**
 	 * The current customer's referral details (code, link, reward terms), straight from
-	 * the provider — so the assistant can help them refer a friend with REAL data, never
+	 * the provider, so the assistant can help them refer a friend with REAL data, never
 	 * an invented code or reward. Always asks the provider about the current user id (the
 	 * login gate has already ensured the caller is logged in); a missing provider or an
 	 * unsupported op degrades to the graceful "not available" error.
@@ -231,7 +231,7 @@ final class Fahad_AI_Wallet_Tools {
 	 * Money-safety: the amount is validated (> 0, numeric) BEFORE the provider is
 	 * touched. The deposit bonus is surfaced honestly (so the model can mention it),
 	 * then the ATOMIC top_up is delegated to the provider in ONE call. Success is
-	 * reported ONLY from what the provider returns — a provider error is surfaced and
+	 * reported ONLY from what the provider returns, a provider error is surfaced and
 	 * no balance is fabricated. Always acts on the current user id.
 	 *
 	 * @return array { balance:array, deposit_bonus?:array } on success, else { error }.
@@ -281,7 +281,7 @@ final class Fahad_AI_Wallet_Tools {
 	 * Money-safety, in order:
 	 *   1. Validate the amount (> 0, numeric) BEFORE touching the provider.
 	 *   2. SUFFICIENT-BALANCE GATE (no double-spend): read the balance and refuse if it
-	 *      cannot cover the amount — the provider's debit is NEVER attempted.
+	 *      cannot cover the amount, the provider's debit is NEVER attempted.
 	 *   3. Delegate the ATOMIC + idempotent debit to the provider in ONE call; report
 	 *      success ONLY from what the provider returns (a provider error → error, no
 	 *      fabricated "paid"). The debit is never split into non-atomic steps here, so
@@ -303,7 +303,7 @@ final class Fahad_AI_Wallet_Tools {
 
 		$user_id = Fahad_AI_Auth::current_user_id();
 
-		// (2) Sufficient-balance gate — read first, refuse before any debit attempt.
+		// (2) Sufficient-balance gate, read first, refuse before any debit attempt.
 		$balance = self::call( $provider, 'get_balance', [ $user_id ] );
 		if ( ! is_array( $balance ) || ! isset( $balance['amount'] ) ) {
 			return self::unavailable();
@@ -350,7 +350,7 @@ final class Fahad_AI_Wallet_Tools {
 	/**
 	 * Resolve the wallet provider via the decoupling filter. Returns the registered
 	 * provider (object or array of callables), or null when no wallet plugin supplied
-	 * one — the signal for graceful degradation. This is the ONLY coupling point to the
+	 * one, the signal for graceful degradation. This is the ONLY coupling point to the
 	 * wallet plugin, and it is a runtime filter, so the assistant core depends on no
 	 * wallet-plugin class.
 	 *
@@ -373,7 +373,7 @@ final class Fahad_AI_Wallet_Tools {
 	 *
 	 * Returns the operation's result, or null when the provider does not support the
 	 * operation (so the caller can degrade gracefully rather than fatal). A throwing
-	 * provider is isolated to null too — a misbehaving wallet adapter must never fatal
+	 * provider is isolated to null too, a misbehaving wallet adapter must never fatal
 	 * the agent request (mirrors the registry's callback isolation), and for a money op
 	 * "null" means "unconfirmed", which the callers treat as a no-op / unavailable.
 	 *
@@ -443,7 +443,7 @@ final class Fahad_AI_Wallet_Tools {
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this file
-// in is the ONLY wiring needed — no bootstrap or harness edits.
+// in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require_once time, before PHPUnit's per-test pcov window, so it can never be measured in-process (the callable it wires is verified by test_pack_self_registration_references_a_callable_register).
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Wallet_Tools', 'register' ] );

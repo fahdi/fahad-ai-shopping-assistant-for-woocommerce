@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Auth — the privacy / authorization BOUNDARY used by
+ * Unit tests for Fahad_AI_Auth, the privacy / authorization BOUNDARY used by
  * personal-data tools (order status #17, wallet #18, cross-session memory #20).
  *
  * Red → Green → Refactor. The negative paths are first-class here: data leakage
@@ -46,7 +46,7 @@ class AuthTest extends TestCase {
 		$this->assertSame( 42, Fahad_AI_Auth::current_user_id() );
 	}
 
-	// ── guard_logged_in() — the central guest gate ───────────────────────────
+	// ── guard_logged_in(), the central guest gate ───────────────────────────
 
 	public function test_guard_logged_in_returns_true_when_logged_in(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( true );
@@ -59,18 +59,18 @@ class AuthTest extends TestCase {
 
 		$result = Fahad_AI_Auth::guard_logged_in();
 
-		// A tool returns arrays to the model — NOT a WP_Error — so the guard must
+		// A tool returns arrays to the model, NOT a WP_Error, so the guard must
 		// hand back a plain array the tool can return directly.
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'error', $result );
 		$this->assertArrayHasKey( 'requires_login', $result );
 		$this->assertTrue( $result['requires_login'] );
-		// Clear, human message — not a fatal, not silent.
+		// Clear, human message, not a fatal, not silent.
 		$this->assertIsString( $result['error'] );
 		$this->assertNotSame( '', trim( $result['error'] ) );
 	}
 
-	// ── user_owns() — the per-record ownership primitive ──────────────────────
+	// ── user_owns(), the per-record ownership primitive ──────────────────────
 
 	public function test_user_owns_true_when_owner_matches_current_user(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 7 );
@@ -116,7 +116,7 @@ class AuthTest extends TestCase {
 		$this->assertFalse( Fahad_AI_Auth::user_owns( 0, 0 ) );
 	}
 
-	// ── mask_email() — PII minimization helper ────────────────────────────────
+	// ── mask_email(), PII minimization helper ────────────────────────────────
 
 	public function test_mask_email_masks_local_part_keeps_domain(): void {
 		$this->assertSame( 'j***@example.com', Fahad_AI_Auth::mask_email( 'jane@example.com' ) );
@@ -132,7 +132,7 @@ class AuthTest extends TestCase {
 	}
 
 	public function test_mask_email_handles_malformed_input_safely(): void {
-		// No "@" — not a valid email. Must not throw or leak a domain it cannot find.
+		// No "@", not a valid email. Must not throw or leak a domain it cannot find.
 		$masked = Fahad_AI_Auth::mask_email( 'not-an-email' );
 		$this->assertIsString( $masked );
 		// The original full string must NOT survive unmasked.

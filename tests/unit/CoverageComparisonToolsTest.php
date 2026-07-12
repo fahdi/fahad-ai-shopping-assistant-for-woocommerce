@@ -6,12 +6,12 @@
  * common guard clauses, but two defensive branches remain unexecuted by it:
  *
  *   - sanitize_ids() returning an empty list when the model hands `ids` a
- *     NON-ARRAY value (e.g. a string or null) — the primary suite always passes
+ *     NON-ARRAY value (e.g. a string or null), the primary suite always passes
  *     an array or omits the key (which defaults to an empty array), so the
  *     `! is_array( $raw )` early return is never reached.
  *   - product_attributes() skipping an attribute whose display value resolves to
  *     an empty / whitespace-only string even though its name IS listed by
- *     get_attributes() — the primary suite's mock gives every listed attribute a
+ *     get_attributes(), the primary suite's mock gives every listed attribute a
  *     non-empty value, so the `'' === $value` continue is never reached.
  *
  * Conventions mirror ComparisonToolsTest exactly: WP/WC functions are stubbed via
@@ -73,8 +73,8 @@ class CoverageComparisonToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the comparison tools.
      *
      * Resets the Tools + registry singletons, then registers the comparison pack's
-     * REAL provider via register_pack() — exactly the pack's file-scope
-     * self-registration — so the test is hermetic and order-independent.
+     * REAL provider via register_pack(), exactly the pack's file-scope
+     * self-registration, so the test is hermetic and order-independent.
      */
     private function registry(): Fahad_AI_Tool_Registry {
         ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
@@ -128,7 +128,7 @@ class CoverageComparisonToolsTest extends TestCase {
     public function test_compare_returns_error_when_ids_is_a_string(): void {
         // The model hands `ids` a STRING instead of an array. sanitize_ids() cannot
         // iterate it, so its `! is_array( $raw )` guard returns an empty list, which
-        // compare_products turns into the friendly "tell me which products" error —
+        // compare_products turns into the friendly "tell me which products" error , 
         // never a fatal from foreach-ing a scalar.
         $result = $this->registry()->dispatch( 'compare_products', [ 'ids' => 'not-an-array' ] );
 
@@ -148,7 +148,7 @@ class CoverageComparisonToolsTest extends TestCase {
 
     public function test_compare_returns_error_when_ids_is_an_integer(): void {
         // A bare integer (e.g. a single id passed un-wrapped) is also non-array; the
-        // tool must not try to compare it as a degenerate one-product list — it asks
+        // tool must not try to compare it as a degenerate one-product list, it asks
         // for products instead.
         $result = $this->registry()->dispatch( 'compare_products', [ 'ids' => 42 ] );
 
@@ -182,7 +182,7 @@ class CoverageComparisonToolsTest extends TestCase {
     public function test_compare_skips_attribute_that_is_only_whitespace(): void {
         // get_attribute() returning whitespace ("  ") is trimmed to '' inside
         // product_attributes(), so it hits the same empty-value continue and is
-        // dropped — a whitespace value must not create a row either.
+        // dropped, a whitespace value must not create a row either.
         $a = $this->mockProduct( 1, 'Tee A', '19.99', [ 'pa_color' => 'Blue', 'pa_pattern' => '   ' ] );
         $b = $this->mockProduct( 2, 'Tee B', '24.99', [ 'pa_color' => 'Red' ] );
         Functions\when( 'wc_get_product' )->alias( fn( $id ) => [ 1 => $a, 2 => $b ][ (int) $id ] ?? false );

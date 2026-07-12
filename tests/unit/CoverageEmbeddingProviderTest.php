@@ -9,7 +9,7 @@
  * the `fahad_ai_embedding_provider` filter without touching core.
  *
  * Coverage note (the guard line). The interface is loaded once by tests/bootstrap.php,
- * BEFORE any test runs — i.e. outside the per-test pcov collection window — so the
+ * BEFORE any test runs, i.e. outside the per-test pcov collection window, so the
  * guard line never registers as covered. The conventional re-execution trick used by
  * the sibling interface coverage tests (a `@runInSeparateProcess` test that re-`require`s
  * the file so pcov attributes line 12 to a running test) does NOT work in this
@@ -17,12 +17,12 @@
  * bootstrap, which re-declares the interface before the test body executes, so a fresh
  * `require` of the real file fatally redeclares the symbol (a compile-time fatal that
  * cannot be caught). The guard line is therefore the genuinely-uncoverable residue for
- * this file in this environment — see uncoverableNotes. Re-executing the file fresh under
+ * this file in this environment, see uncoverableNotes. Re-executing the file fresh under
  * pcov in a process I fully control (no bootstrap) does record the line, which proves the
  * non-coverage is a harness/bootstrap-timing artifact, not a missing test.
  *
  * What this suite DOES assert, faithfully, is the actual substance of the file: the
- * embedding-provider contract — the exact method names, return types and parameter
+ * embedding-provider contract, the exact method names, return types and parameter
  * shapes the indexer/retriever depend on, and that the contract is implementable and
  * type-checks. Conventions mirror the sibling coverage tests (Brain\Monkey + Mockery,
  * no whole-suite dependence, ReflectionClass to inspect the declared contract).
@@ -50,7 +50,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 	 * The guard short-circuits cleanly: ABSPATH is defined (by the WC stubs / bootstrap),
 	 * so `defined( 'ABSPATH' ) || exit;` never reaches `exit` and the interface is declared.
 	 * If the guard had hit `exit` at load time the bootstrap would have aborted and this
-	 * whole suite could not run — so reaching this assertion is itself proof the `||`
+	 * whole suite could not run, so reaching this assertion is itself proof the `||`
 	 * short-circuited past `exit`.
 	 */
 	public function test_guard_short_circuits_so_the_interface_is_declared(): void {
@@ -60,7 +60,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 		);
 		$this->assertTrue(
 			interface_exists( 'Fahad_AI_Embedding_Provider', false ),
-			'The interface loaded — the guard fell through rather than exiting.'
+			'The interface loaded, the guard fell through rather than exiting.'
 		);
 	}
 
@@ -86,11 +86,11 @@ class CoverageEmbeddingProviderTest extends TestCase {
 			'Every provider-swappable operation is part of the contract.'
 		);
 
-		// The interface declares no constants or properties — it is a pure behavioural seam.
+		// The interface declares no constants or properties, it is a pure behavioural seam.
 		$this->assertSame( [], $ref->getConstants() );
 		$this->assertSame( [], $ref->getProperties() );
 
-		// All four are public, abstract (interface) instance methods — none static.
+		// All four are public, abstract (interface) instance methods, none static.
 		foreach ( $ref->getMethods() as $method ) {
 			$this->assertTrue( $method->isPublic(), $method->getName() . ' must be public.' );
 			$this->assertTrue( $method->isAbstract(), $method->getName() . ' is an interface method (abstract).' );
@@ -100,7 +100,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 
 	/**
 	 * The exact signatures each backend (OpenAI / Cohere / …) must implement.
-	 * embed( string[] ): array — one vector per input, in input order; the scalar
+	 * embed( string[] ): array, one vector per input, in input order; the scalar
 	 * probes return string/int/bool respectively.
 	 */
 	public function test_method_signatures_match_what_the_pipeline_expects(): void {
@@ -134,7 +134,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 	 * A concrete in-memory implementation proves the contract is satisfiable and
 	 * type-checks: implementing every method with the declared signatures is accepted
 	 * by the engine, and `instanceof` reports the implementation as the interface type.
-	 * embed() must return one vector per input in input order — the property the indexer
+	 * embed() must return one vector per input in input order, the property the indexer
 	 * relies on to pair vectors back with their source texts.
 	 */
 	public function test_contract_is_implementable_and_type_checks(): void {
@@ -177,7 +177,7 @@ class CoverageEmbeddingProviderTest extends TestCase {
 	}
 
 	/**
-	 * A provider may legitimately report itself unavailable (no key configured) — the
+	 * A provider may legitimately report itself unavailable (no key configured), the
 	 * branch the retriever/admin use to fall back to keyword-only. The contract must
 	 * accept an implementation whose is_available() returns false.
 	 */

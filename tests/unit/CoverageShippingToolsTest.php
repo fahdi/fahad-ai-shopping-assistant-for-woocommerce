@@ -4,8 +4,8 @@
  *
  * The primary suite (ShippingToolsTest) drives the tool through its overridable
  * seam (a stub subclass that replaces resolve_zone_methods() with canned data),
- * so the REAL seam body — the only method that touches the WooCommerce shipping
- * stack — and a couple of private-helper branches it feeds never execute there.
+ * so the REAL seam body, the only method that touches the WooCommerce shipping
+ * stack, and a couple of private-helper branches it feeds never execute there.
  *
  * This file closes those gaps WITHOUT a live WooCommerce install by exercising
  * the REAL Fahad_AI_Shipping_Tools class against the WC_Shipping_* CLASS stubs
@@ -60,7 +60,7 @@ class CoverageShippingToolsTest extends TestCase {
 
 	public function test_resolve_zone_methods_normalizes_real_zone_methods(): void {
 		// Guard: this exercise only makes sense if the bootstrap WC class stubs are
-		// present (they are — see tests/stubs/wc-stubs.php).
+		// present (they are, see tests/stubs/wc-stubs.php).
 		$this->assertTrue( class_exists( 'WC_Shipping_Zones' ) );
 
 		$package = [
@@ -73,7 +73,7 @@ class CoverageShippingToolsTest extends TestCase {
 		$descriptors = $this->invokeStatic( 'resolve_zone_methods', $package );
 
 		// The stub zone exposes exactly one enabled flat_rate method costing 5.00
-		// with no delivery window — normalized to the tool's descriptor shape.
+		// with no delivery window, normalized to the tool's descriptor shape.
 		$this->assertIsArray( $descriptors );
 		$this->assertCount( 1, $descriptors );
 
@@ -91,7 +91,7 @@ class CoverageShippingToolsTest extends TestCase {
 
 	public function test_resolve_zone_methods_returns_a_list_not_null_for_a_matched_zone(): void {
 		// A matched zone with methods must yield a real array (the "[] / list" arm of
-		// the seam), never null — null is reserved for "no zone matched".
+		// the seam), never null, null is reserved for "no zone matched".
 		$descriptors = $this->invokeStatic( 'resolve_zone_methods', [
 			'destination' => [ 'country' => 'GB', 'state' => '', 'postcode' => '' ],
 		] );

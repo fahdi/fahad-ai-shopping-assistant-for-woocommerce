@@ -3,7 +3,7 @@
  * Fixture: search → cards.
  *
  * The user asks to find running shoes; the model calls search_products, then
- * replies with a short intro (no inline prices — the cards render those).
+ * replies with a short intro (no inline prices, the cards render those).
  * Asserts search_products ran, that the loop surfaced product cards, and that
  * the answer is grounded (it invents no price/product).
  */
@@ -26,7 +26,7 @@ return [
 			[ 'name' => 'search_products', 'input' => [ 'query' => 'running shoes', 'limit' => 5 ] ],
 		] ),
 		// Turn 2: short grounded intro, no prices repeated in text.
-		EvalHarness::anthropic_text_turn( 'Here are a couple of great running shoes I found for you — take a look below.' ),
+		EvalHarness::anthropic_text_turn( 'Here are a couple of great running shoes I found for you, take a look below.' ),
 	],
 	'expect'   => [
 		'tool_calls'       => [ 'search_products' ],

@@ -1,6 +1,6 @@
 <?php
 /**
- * PHPUnit bootstrap — sets up Brain\Monkey and loads plugin files.
+ * PHPUnit bootstrap, sets up Brain\Monkey and loads plugin files.
  */
 
 // pcov coverage collection over the full suite needs more than the default 128M

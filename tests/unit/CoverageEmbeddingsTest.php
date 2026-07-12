@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental coverage for Fahad_AI_Embeddings::provider() — the Cohere branch.
+ * Supplemental coverage for Fahad_AI_Embeddings::provider(), the Cohere branch.
  *
  * EmbeddingsTest only exercises the OpenAI-compatible path; the Cohere branch
  * (provider type === 'cohere') and, specifically, its keyless `: null` fallback
@@ -30,7 +30,7 @@ class CoverageEmbeddingsTest extends TestCase {
 
 	/**
 	 * enabled() reflects the opt-in flag. Embeddings cost money, so a chat-only
-	 * OpenAI key must not silently incur them — semantic search is off by default.
+	 * OpenAI key must not silently incur them, semantic search is off by default.
 	 */
 	public function test_enabled_reflects_option_flag(): void {
 		Functions\when( 'get_option' )->alias(
@@ -83,7 +83,7 @@ class CoverageEmbeddingsTest extends TestCase {
 	}
 
 	/**
-	 * The Cohere model option is threaded through to the provider — a non-default
+	 * The Cohere model option is threaded through to the provider, a non-default
 	 * model name proves the factory passes the stored value, not a constant.
 	 */
 	public function test_factory_passes_configured_cohere_model(): void {

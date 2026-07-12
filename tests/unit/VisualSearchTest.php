@@ -4,19 +4,19 @@
  *
  * Red → Green → Refactor. Conventions mirror SemanticSearchTest (#60) and WhatsAppTest
  * (#62): WP/WC functions mocked via Brain\Monkey; WC objects via Mockery; the singleton
- * reset via reflection between cases (NEVER ReflectionMethod::setAccessible — host runs
+ * reset via reflection between cases (NEVER ReflectionMethod::setAccessible, host runs
  * PHP 8.5); get_option defaulted; additive stubs only.
  *
  * ─── WHAT IS ACTUALLY TESTABLE HERE ─────────────────────────────────────────────────
  *
  * A real vision-embeddings provider is NOT available, so this is TESTED SCAFFOLDING
- * behind a provider seam — going live needs a vision/embeddings backend. There is NO real
+ * behind a provider seam, going live needs a vision/embeddings backend. There is NO real
  * outbound vision-API call anywhere; the actual ranking is a `fahad_ai_visual_retriever`
  * filter a provider implements (exactly the shape #60 uses for text). These tests pin the
  * security- and contract-critical PHP:
  *
  *   - Upload validation: an oversized image, or one with an invalid/unsafe MIME type, is
- *     rejected cleanly (WP_Error) BEFORE any retrieval runs — never a fatal, never a spew.
+ *     rejected cleanly (WP_Error) BEFORE any retrieval runs, never a fatal, never a spew.
  *   - The seam: a registered retriever returns ranked product IDs for the image; those IDs
  *     are resolved LIVE via wc_get_product() so price/stock come from the live WC_Product
  *     at call time (never cached/embedded), and invisible/unpublished IDs are dropped.
@@ -24,7 +24,7 @@
  *     available" result (no error spew, no fatal). A retriever that returns nothing → a
  *     graceful "no match" result.
  *   - No retention: the validated image is never moved/copied/persisted by the search core
- *     (default: do not store) — pinned by asserting no move_uploaded_file/copy is invoked.
+ *     (default: do not store), pinned by asserting no move_uploaded_file/copy is invoked.
  *
  * A STUB retriever proves the seam, exactly as SemanticSearchTest stubs a semantic
  * provider and WhatsAppTest stubs a send provider.
@@ -46,7 +46,7 @@ class VisualSearchTest extends TestCase {
 		// Tool-layer stubs (mirrors SemanticSearchTest) so the SHARED product formatter
 		// runs against mocked products. get_option defaults so any future option-read is a
 		// no-op; apply_filters backs the retriever seam (overridden per test). __ / esc_html__
-		// are real pass-throughs from wc-stubs.php (loaded before Patchwork) — NOT re-stubbed.
+		// are real pass-throughs from wc-stubs.php (loaded before Patchwork), NOT re-stubbed.
 		Functions\stubs( [
 			'absint'                      => fn( $n ) => abs( (int) $n ),
 			'sanitize_text_field'         => fn( $s ) => is_string( $s ) ? trim( $s ) : $s,
@@ -77,7 +77,7 @@ class VisualSearchTest extends TestCase {
 	/**
 	 * Register a stub visual retriever on the seam filter for one test. The retriever
 	 * receives ( $passthrough, array $image, array $filters ) and returns ranked product
-	 * IDs — exactly the contract a real vision-embeddings provider implements.
+	 * IDs, exactly the contract a real vision-embeddings provider implements.
 	 *
 	 * @param callable $retriever fn( $value, array $image, array $filters ): mixed
 	 */
@@ -97,7 +97,7 @@ class VisualSearchTest extends TestCase {
 			'tmp_name' => '/tmp/fahad-ai-upload.jpg',
 			'name'     => 'look.jpg',
 			'type'     => 'image/jpeg',
-			'size'     => 250 * 1024, // 250 KB — comfortably under the default ceiling.
+			'size'     => 250 * 1024, // 250 KB, comfortably under the default ceiling.
 		], $overrides );
 	}
 
@@ -175,7 +175,7 @@ class VisualSearchTest extends TestCase {
 
 	public function test_results_carry_live_price_and_stock_not_cached(): void {
 		// The retriever returns only an id. Price and stock MUST come from the live
-		// WC_Product resolved via wc_get_product at call time — never embedded/cached. We
+		// WC_Product resolved via wc_get_product at call time, never embedded/cached. We
 		// prove it by making the live product report a specific price + OUT of stock; the
 		// card must reflect the live values, not anything the seam stored.
 		$live = $this->mockProduct( 50, 'Wool Coat', '199.99', /* inStock */ false );
@@ -197,7 +197,7 @@ class VisualSearchTest extends TestCase {
 
 	public function test_ids_resolving_to_invisible_products_are_dropped(): void {
 		// An id the retriever ranks may be unpublished/hidden by the time we resolve it (the
-		// index can lag live truth). Such products are filtered out — never surfaced — and a
+		// index can lag live truth). Such products are filtered out, never surfaced, and a
 		// missing id (wc_get_product false) is skipped, not fatal. Mirrors the #60 invariant.
 		$visible = $this->mockProduct( 1, 'Visible Boot', '70.00' );
 		$hidden  = $this->mockProduct( 2, 'Hidden Boot', '70.00' );
@@ -237,7 +237,7 @@ class VisualSearchTest extends TestCase {
 
 	public function test_oversized_image_is_rejected_before_retrieval(): void {
 		// An image over the size ceiling is rejected with a clean WP_Error and the seam is
-		// NEVER consulted — no retrieval, no resolution, no fatal. (Default ceiling is 5 MB.)
+		// NEVER consulted, no retrieval, no resolution, no fatal. (Default ceiling is 5 MB.)
 		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
 		Functions\expect( 'wc_get_product' )->never();
 
@@ -249,7 +249,7 @@ class VisualSearchTest extends TestCase {
 
 	public function test_invalid_mime_type_is_rejected_before_retrieval(): void {
 		// A non-image MIME (e.g. a disguised PDF/script) is rejected cleanly and the seam is
-		// never consulted — the content-safety / unsafe-upload guard.
+		// never consulted, the content-safety / unsafe-upload guard.
 		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
 		Functions\expect( 'wc_get_product' )->never();
 
@@ -261,7 +261,7 @@ class VisualSearchTest extends TestCase {
 
 	public function test_empty_or_missing_image_is_rejected(): void {
 		// A request with no usable image reference (no tmp_name, no url, no data) is a clean
-		// 400 — never a fatal on a missing key.
+		// 400, never a fatal on a missing key.
 		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
 
 		$result = $this->visual()->search( [] );
@@ -286,7 +286,7 @@ class VisualSearchTest extends TestCase {
 	public function test_image_is_not_persisted_by_the_search_core(): void {
 		// Privacy invariant: the search core never persists the uploaded image (default = do
 		// not store). We pin this by asserting the WordPress upload-persistence functions are
-		// never invoked while a full happy-path search runs — core hands the image to the
+		// never invoked while a full happy-path search runs, core hands the image to the
 		// seam for the request only and stores nothing.
 		Functions\expect( 'wp_handle_upload' )->never();
 		Functions\expect( 'wp_insert_attachment' )->never();
@@ -307,7 +307,7 @@ class VisualSearchTest extends TestCase {
 
 	public function test_no_provider_returns_graceful_not_available(): void {
 		// Default state: NO vision provider registered. A valid image must yield an honest
-		// "visual search isn't available" result — available=false, found=0, a message — NOT
+		// "visual search isn't available" result, available=false, found=0, a message, NOT
 		// an error spew and NOT a fatal. wc_get_product is never reached.
 		Functions\when( 'apply_filters' )->alias( fn( $hook, $value = null ) => $value ); // identity ⇒ null retriever
 		Functions\expect( 'wc_get_product' )->never();
@@ -324,7 +324,7 @@ class VisualSearchTest extends TestCase {
 	public function test_retriever_returning_nothing_is_graceful_no_match(): void {
 		// A vision provider IS registered but finds no visually-similar product (empty index
 		// / below threshold). The result is a graceful "no match": available=true, found=0,
-		// a message — never an error.
+		// a message, never an error.
 		Functions\expect( 'wc_get_product' )->never();
 		$this->registerRetriever( fn( $value, $image, $filters ) => [] );
 
@@ -338,7 +338,7 @@ class VisualSearchTest extends TestCase {
 
 	public function test_retriever_returning_the_null_passthrough_is_not_available(): void {
 		// A provider that returns the passthrough untouched (null) is INDISTINGUISHABLE from
-		// no provider at all — apply_filters returns null either way — so it correctly maps to
+		// no provider at all, apply_filters returns null either way, so it correctly maps to
 		// the graceful "not available" state, never a fatal. (A registered provider proves its
 		// presence by returning an array, even an empty one.)
 		Functions\expect( 'wc_get_product' )->never();
@@ -354,7 +354,7 @@ class VisualSearchTest extends TestCase {
 
 	public function test_retriever_returning_a_scalar_is_treated_as_no_match(): void {
 		// A misbehaving provider that returns a non-null scalar (it IS present, but produced
-		// garbage) degrades to a graceful no-match — available stays true, found 0, no fatal.
+		// garbage) degrades to a graceful no-match, available stays true, found 0, no fatal.
 		Functions\expect( 'wc_get_product' )->never();
 		$this->registerRetriever( fn( $value, $image, $filters ) => 'not-an-array' );
 
@@ -366,7 +366,7 @@ class VisualSearchTest extends TestCase {
 	}
 
 	public function test_throwing_retriever_degrades_to_no_match(): void {
-		// A callable retriever that throws is isolated — it degrades to a graceful no-match,
+		// A callable retriever that throws is isolated, it degrades to a graceful no-match,
 		// never propagating a fatal to the shopper (mirrors the #60 throwing-retriever case).
 		Functions\expect( 'wc_get_product' )->never();
 		$this->registerRetriever( fn( $value, $image, $filters ) => static function () {
@@ -382,7 +382,7 @@ class VisualSearchTest extends TestCase {
 
 	public function test_callable_retriever_shape_is_supported(): void {
 		// Shape 2 (like #60): the provider may return a callable retriever resolved per call
-		// — fn( array $image, array $filters ): int[]. The seam invokes it and resolves live.
+		//, fn( array $image, array $filters ): int[]. The seam invokes it and resolves live.
 		$byId = [ 9 => $this->mockProduct( 9, 'Striped Scarf', '25.00' ) ];
 		Functions\when( 'wc_get_product' )->alias( fn( $id ) => $byId[ (int) $id ] ?? false );
 
@@ -437,7 +437,7 @@ class VisualSearchTest extends TestCase {
 
 	public function test_rest_handler_rejects_oversized_upload_with_wp_error(): void {
 		// An oversized upload through the REST surface returns the WP_Error (413) straight to
-		// the client — the seam is never consulted.
+		// the client, the seam is never consulted.
 		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
 
 		$request = Mockery::mock( 'WP_REST_Request' );

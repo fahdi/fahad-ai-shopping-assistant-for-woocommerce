@@ -4,7 +4,7 @@
  *
  * The primary behavioural suite lives in WalletToolsTest (it drives every tool
  * through the production registry dispatch path with a Mockery provider). This
- * sibling file targets the remaining UNCOVERED branches of the tool layer — the
+ * sibling file targets the remaining UNCOVERED branches of the tool layer, the
  * defensive / degradation paths that the headline tests do not reach:
  *
  *   - get_wallet_balance: provider present but the get_balance op is UNSUPPORTED
@@ -26,7 +26,7 @@
  * runs through Fahad_AI_Tool_Registry::instance()->dispatch(), the real path.
  *
  * Unlike the headline suite, several cases here inject a PLAIN provider (an array of
- * closures, or an object missing a method) rather than a Mockery mock — that is the
+ * closures, or an object missing a method) rather than a Mockery mock, that is the
  * only way to exercise the "unsupported op" and "array shape" branches of
  * self::call(), which a fully-stubbed Mockery double can never reach.
  */
@@ -75,7 +75,7 @@ class CoverageWalletToolsTest extends TestCase {
 	}
 
 	/**
-	 * Fresh registry whose built tool list includes the wallet tools — resets the
+	 * Fresh registry whose built tool list includes the wallet tools, resets the
 	 * Tools + registry singletons, then registers the wallet pack's REAL provider,
 	 * exactly as the pack's file-scope self-registration does in production.
 	 */
@@ -115,7 +115,7 @@ class CoverageWalletToolsTest extends TestCase {
 	 * than invent a balance.
 	 */
 	public function test_get_wallet_balance_degrades_when_provider_lacks_get_balance(): void {
-		// An object provider with NO get_balance method — call() finds no callable.
+		// An object provider with NO get_balance method, call() finds no callable.
 		$this->provide( new stdClass() );
 
 		$result = $this->registry()->dispatch( 'get_wallet_balance', [] );
@@ -154,7 +154,7 @@ class CoverageWalletToolsTest extends TestCase {
 	/**
 	 * Array-of-callables provider whose 'get_balance' value is NOT callable (a bare
 	 * scalar). call()'s array branch requires is_callable(), so it falls through to the
-	 * null-callable return (361) and the tool degrades — proving a malformed array
+	 * null-callable return (361) and the tool degrades, proving a malformed array
 	 * entry never fatals.
 	 */
 	public function test_array_provider_with_non_callable_entry_degrades(): void {
@@ -171,7 +171,7 @@ class CoverageWalletToolsTest extends TestCase {
 	/**
 	 * A misbehaving adapter that THROWS must never fatal the agent request: call()
 	 * catches the Throwable and returns null (366, 367), so get_wallet_balance degrades
-	 * to the graceful "not available" error — a clean no-op on our side.
+	 * to the graceful "not available" error, a clean no-op on our side.
 	 */
 	public function test_throwing_provider_is_caught_and_degrades_gracefully(): void {
 		$this->provide( [
@@ -192,7 +192,7 @@ class CoverageWalletToolsTest extends TestCase {
 	/**
 	 * Line 225: amount is valid and a provider exists, but its top_up op is UNSUPPORTED
 	 * (the object has get_deposit_bonus but no top_up), so call('top_up') returns null.
-	 * The tool must NOT fabricate a balance — it degrades to "not available".
+	 * The tool must NOT fabricate a balance, it degrades to "not available".
 	 */
 	public function test_top_up_degrades_when_provider_lacks_top_up_op(): void {
 		// Array provider: only get_deposit_bonus is supported; top_up is absent → null.
@@ -210,7 +210,7 @@ class CoverageWalletToolsTest extends TestCase {
 
 	/**
 	 * Line 228: the provider's top_up returns a NON-ARRAY scalar (e.g. a bare bool/int
-	 * — a non-contract return). The tool must reject it as unconfirmed and degrade to
+	 *, a non-contract return). The tool must reject it as unconfirmed and degrade to
 	 * "not available", never wrap a scalar as a balance.
 	 */
 	public function test_top_up_degrades_when_provider_returns_non_array(): void {
@@ -256,7 +256,7 @@ class CoverageWalletToolsTest extends TestCase {
 	/**
 	 * Line 275 (array WITHOUT an 'amount' key): a balance array that is missing the
 	 * required 'amount' field is unusable for the gate, so the tool degrades the same
-	 * way — no debit attempt.
+	 * way, no debit attempt.
 	 */
 	public function test_pay_with_credit_degrades_when_balance_array_has_no_amount(): void {
 		$debit_attempted = false;
@@ -341,7 +341,7 @@ class CoverageWalletToolsTest extends TestCase {
 	/**
 	 * Happy-path through the ARRAY-of-callables provider for pay_with_credit WITHOUT an
 	 * order_id (the context stays empty) and where the provider's result omits 'paid'
-	 * — the tool then defaults paid to true in its success envelope. Complements the
+	 *, the tool then defaults paid to true in its success envelope. Complements the
 	 * order_id case above by covering the no-order_id branch of the same method.
 	 */
 	public function test_pay_with_credit_defaults_paid_true_when_provider_omits_it(): void {
@@ -369,7 +369,7 @@ class CoverageWalletToolsTest extends TestCase {
 
 	/**
 	 * The pack file self-registers via Fahad_AI_Tool_Registry::register_pack() at file
-	 * scope (line 413) the moment it is require'd — the only wiring needed. The bootstrap
+	 * scope (line 413) the moment it is require'd, the only wiring needed. The bootstrap
 	 * glob-requires includes/tools/*.php, so the class is loaded and its register()
 	 * method is a valid, callable pack provider. Asserting that proves the file-scope
 	 * registration call references a real, invokable provider.
@@ -378,7 +378,7 @@ class CoverageWalletToolsTest extends TestCase {
 		$this->assertTrue( class_exists( 'Fahad_AI_Wallet_Tools' ) );
 		$this->assertTrue( is_callable( [ 'Fahad_AI_Wallet_Tools', 'register' ] ) );
 
-		// And register() really appends the three wallet tools onto a tool list — the
+		// And register() really appends the three wallet tools onto a tool list, the
 		// exact contract the file-scope register_pack() wires up.
 		$tools = Fahad_AI_Wallet_Tools::register( [] );
 		$names = array_column( $tools, 'name' );

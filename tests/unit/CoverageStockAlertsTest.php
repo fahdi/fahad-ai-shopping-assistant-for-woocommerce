@@ -20,7 +20,7 @@
  *
  * Conventions mirror StockAlertsTest / ApiHandlerTest: Brain\Monkey for WP functions,
  * the MockeryPHPUnitIntegration trait, an in-memory options map, and the singleton
- * reset via ReflectionProperty (NEVER setAccessible — host runs PHP 8.5).
+ * reset via ReflectionProperty (NEVER setAccessible, host runs PHP 8.5).
  */
 
 use Brain\Monkey;
@@ -491,7 +491,7 @@ class CoverageStockAlertsTest extends TestCase {
 
 		$this->assertCount( 1, $this->died );
 		$this->assertStringContainsString( 'invalid', $this->died[0][0] );
-		// Still pending — a forged token confirms nothing.
+		// Still pending, a forged token confirms nothing.
 		$this->assertSame( 'pending', $this->rows()[ $id ]['status'] );
 	}
 

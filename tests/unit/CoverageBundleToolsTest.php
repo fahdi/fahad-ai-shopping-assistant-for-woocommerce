@@ -1,18 +1,18 @@
 <?php
 /**
  * Coverage-focused unit tests for Fahad_AI_Bundle_Tools
- * (includes/tools/class-bundle-tools.php — issue #57 curated bundles).
+ * (includes/tools/class-bundle-tools.php, issue #57 curated bundles).
  *
  * Companion to BundleToolsTest: this suite drives every branch of the bundle
- * tool independently — guard clauses, helper methods (numeric_price / budget /
+ * tool independently, guard clauses, helper methods (numeric_price / budget /
  * display_price / sum / unique_ids / candidate_ids), the per-item stock and
  * visibility skips, the MAX_ITEMS cap, the genuine-vs-fabricated discount split,
- * the budget trim/decline paths, and the empty-state shape — so the file's line
+ * the budget trim/decline paths, and the empty-state shape, so the file's line
  * coverage holds on its own.
  *
  * Conventions mirror BundleToolsTest / RecommendationToolsTest: WP/WC functions
  * mocked via Brain\Monkey; WC_Product instances via Mockery; singletons reset via
- * reflection (no setAccessible — a deprecated no-op on PHP 8.5); the registry's
+ * reflection (no setAccessible, a deprecated no-op on PHP 8.5); the registry's
  * static pack-provider list snapshotted in setUp and restored in tearDown so this
  * suite neither inherits another suite's packs nor leaks its own. Each test
  * dispatches through the LIVE Fahad_AI_Tool_Registry so the real
@@ -241,7 +241,7 @@ class CoverageBundleToolsTest extends TestCase {
     }
 
     public function test_non_visible_complementary_item_is_skipped_silently(): void {
-        // A non-visible item is `continue`d before the stock check — not even reported.
+        // A non-visible item is `continue`d before the stock check, not even reported.
         $anchor = $this->mockProduct( 1, 'Jacket', '100.00', [ 'cross_sell_ids' => [ 2, 3 ] ] );
         $shirt  = $this->mockProduct( 2, 'Shirt', '40.00' );
         $hidden = $this->mockProduct( 3, 'Hidden', '25.00', [ 'visible' => false ] );
@@ -371,7 +371,7 @@ class CoverageBundleToolsTest extends TestCase {
         $result = $this->getBundle( [ 'product_id' => 1 ] );
 
         $this->assertEqualsWithDelta( 140.00, $result['combined_price'], 0.001 );
-        // Regular sum is 0 (empty regular prices), but savings clamps at 0 — never negative.
+        // Regular sum is 0 (empty regular prices), but savings clamps at 0, never negative.
         $this->assertSame( 0.0, $result['savings'] );
         $this->assertFalse( $result['has_discount'] );
     }

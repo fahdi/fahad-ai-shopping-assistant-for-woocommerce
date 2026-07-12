@@ -7,7 +7,7 @@
  * provider registered through Fahad_AI_Tool_Registry::register_pack() so the
  * production registration + merge + dispatch path is what is under test.
  *
- * The WooCommerce shipping API is awkward to mock — WC_Shipping_Zones is a
+ * The WooCommerce shipping API is awkward to mock, WC_Shipping_Zones is a
  * concrete class with a STATIC matcher and zone/method OBJECTS, none of which
  * Brain\Monkey (a FUNCTION mocker) can intercept. So the pack isolates every WC
  * shipping touch behind one overridable seam, Fahad_AI_Shipping_Tools::resolve_zone_methods(),
@@ -65,7 +65,7 @@ class ShippingToolsTest extends TestCase {
 
 	/**
 	 * Fresh registry whose built tool list includes the shipping tools, registered
-	 * via the pack's REAL provider — exactly what the file-scope self-registration
+	 * via the pack's REAL provider, exactly what the file-scope self-registration
 	 * does in production.
 	 */
 	private function registry(): Fahad_AI_Tool_Registry {
@@ -84,7 +84,7 @@ class ShippingToolsTest extends TestCase {
 		$names = array_column( $this->registry()->specs(), 'name' );
 
 		$this->assertContains( 'estimate_delivery', $names );
-		// Additive — the five built-ins remain.
+		// Additive, the five built-ins remain.
 		$this->assertContains( 'search_products', $names );
 		$this->assertCount( 6, $names );
 	}
@@ -101,7 +101,7 @@ class ShippingToolsTest extends TestCase {
 
 	public function test_shipping_tool_is_not_personal(): void {
 		// Shipping rates are not customer-specific data, so the tool must NOT be
-		// login-gated (no `personal` flag) — guests asking "how much is shipping?"
+		// login-gated (no `personal` flag), guests asking "how much is shipping?"
 		// must get an answer.
 		$get_tools = new ReflectionMethod( Fahad_AI_Tool_Registry::class, 'get_tools' );
 		$built     = $get_tools->invoke( $this->registry() );
@@ -213,7 +213,7 @@ class ShippingToolsTest extends TestCase {
 	// ── missing / invalid destination → guidance, not a guess ───────────────────
 
 	public function test_missing_country_returns_guidance_not_error(): void {
-		// Should never reach the WC seam — no country, nothing to match.
+		// Should never reach the WC seam, no country, nothing to match.
 		$this->stubZoneMethods( [
 			[ 'id' => 'flat_rate:1', 'title' => 'Flat rate', 'cost' => '5.00', 'delivery_window' => null ],
 		] );
@@ -239,7 +239,7 @@ class ShippingToolsTest extends TestCase {
 	// ── never fabricates: dispatch through the registry isolates throws ─────────
 
 	public function test_dispatch_isolates_a_throwing_seam(): void {
-		// If the WC seam throws, the registry's error isolation must catch it — the
+		// If the WC seam throws, the registry's error isolation must catch it, the
 		// tool must never fatal the request.
 		Fahad_AI_Shipping_Tools_Stub::$zone_methods = 'throw';
 
@@ -327,7 +327,7 @@ class ShippingToolsTest extends TestCase {
 /**
  * Test seam: overrides the single WC-touching method so the cost/window/fallback
  * logic runs without a live WooCommerce shipping stack. This is the "injectable
- * seam" the recipe calls for — production code stays decoupled from WC internals
+ * seam" the recipe calls for, production code stays decoupled from WC internals
  * behind resolve_zone_methods().
  */
 class Fahad_AI_Shipping_Tools_Stub extends Fahad_AI_Shipping_Tools {

@@ -15,7 +15,7 @@
  *   - gdpr_erase(): purges BOTH meta rows for the resolved user only, reports the
  *     WP eraser shape, and is a safe no-op for an unknown / empty email.
  *   - user_id_for_email(): an email that sanitizes to '' short-circuits to 0
- *     (no get_user_by call) — the no-op guard the callbacks rely on.
+ *     (no get_user_by call), the no-op guard the callbacks rely on.
  *   - has_consent() / read_prefs(): the defensive `$user_id <= 0` guards return a
  *     safe falsey/empty value WITHOUT reading user meta.
  *
@@ -52,7 +52,7 @@ class CoverageMemoryToolsTest extends TestCase {
 
 	/**
 	 * email => user id, consulted by the get_user_by('email', …) stub. An email
-	 * absent from this map resolves to false (no such user) — the no-op path.
+	 * absent from this map resolves to false (no such user), the no-op path.
 	 *
 	 * @var array<string, int>
 	 */
@@ -278,7 +278,7 @@ class CoverageMemoryToolsTest extends TestCase {
 	}
 
 	public function test_gdpr_erase_removes_when_only_consent_flag_was_present(): void {
-		// Only the consent flag exists (no prefs) — still counts as removed.
+		// Only the consent flag exists (no prefs), still counts as removed.
 		$this->seedUser( 'jane@example.com', 7 );
 		$this->meta['7:' . self::OPTIN_META] = '0';
 

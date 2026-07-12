@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.3
+Stable tag: 2.14.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -219,6 +219,12 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.4 =
+Editorial pass: plain-text copy with no em-dashes anywhere in the plugin.
+
+* Removed em-dashes from all user-facing text and code copy (readme, admin settings labels, provider and tool descriptions, inline help, and developer docs) for one consistent plain-text voice across the plugin, the WordPress.org listing, the GitHub project, and the marketing site.
+* No functional changes for shoppers or merchants; the full test suite passes.
 
 = 2.14.3 =
 Packaging fix: development files are no longer bundled in the distribution zip.
@@ -458,6 +464,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.4 =
+Editorial pass: plain-text copy with no em-dashes across the readme, admin UI, and docs. No functional changes for shoppers or merchants.
 
 = 2.14.3 =
 Packaging-only release: development files removed from the distribution zip. No functional changes for shoppers or merchants.

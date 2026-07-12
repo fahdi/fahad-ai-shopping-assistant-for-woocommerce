@@ -1,4 +1,4 @@
-/* Fahad AI Shopping Assistant — admin settings provider toggle */
+/* Fahad AI Shopping Assistant, admin settings provider toggle */
 (function () {
 	'use strict';
 

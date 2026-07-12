@@ -170,7 +170,7 @@ final class GoldenConversationTest extends TestCase {
 		}
 
 		// 7. Trust / anti-dark-pattern guardrails (issue #24). Additive, opt-in per
-		//    fixture — mirrors `grounded` above. Each enforces a documented policy
+		//    fixture, mirrors `grounded` above. Each enforces a documented policy
 		//    line from get_system_prompt() with a deterministic offline checker.
 
 		// 7a. No fake scarcity / urgency unless backed by a real stock figure.
@@ -218,7 +218,7 @@ final class GoldenConversationTest extends TestCase {
 	/**
 	 * A third-party tool registered via the `fahad_ai_register_tools` filter is
 	 * advertised to the model AND invoked by the REAL agent loop when the model
-	 * calls it — proving an add-on can extend the agent without forking core.
+	 * calls it, proving an add-on can extend the agent without forking core.
 	 *
 	 * This is the eval-level analogue of ToolRegistryTest's unit extension test:
 	 * the unit test exercises the registry in isolation; here the custom tool runs
@@ -284,7 +284,7 @@ final class GoldenConversationTest extends TestCase {
 	}
 
 	// =========================================================================
-	// Privacy / auth BOUNDARY — guest-block END-TO-END (issue #25)
+	// Privacy / auth BOUNDARY, guest-block END-TO-END (issue #25)
 	// =========================================================================
 
 	/**
@@ -293,14 +293,14 @@ final class GoldenConversationTest extends TestCase {
 	 * login gate in Fahad_AI_Tool_Registry::dispatch() returns the login-required
 	 * error WITHOUT invoking the tool's callback, that error flows back to the
 	 * model as the tool_result, and the model's scripted answer escalates the user
-	 * to log in (a grounded "abstain"/escalate — no personal data is fabricated).
+	 * to log in (a grounded "abstain"/escalate, no personal data is fabricated).
 	 *
 	 * This is the eval-level analogue of the ToolRegistryTest guest-block unit
 	 * test: there the registry is exercised in isolation; here the gate runs inside
 	 * Fahad_AI_API_Handler::run_anthropic_agent() against the scripted transport,
 	 * exactly as it would for a real guest request. A declarative fixture cannot
-	 * install the apply_filters / is_user_logged_in stubs itself, so — like the
-	 * #22 filter test — this lives as a dedicated test.
+	 * install the apply_filters / is_user_logged_in stubs itself, so, like the
+	 * #22 filter test, this lives as a dedicated test.
 	 */
 	public function test_personal_tool_blocks_guest_end_to_end(): void {
 		$callback_invoked = false;
@@ -324,7 +324,7 @@ final class GoldenConversationTest extends TestCase {
 						],
 						'personal'    => true,
 						'callback'    => function ( array $input ) use ( &$callback_invoked ): array {
-							// Must NEVER run for a guest — proves the gate is central,
+							// Must NEVER run for a guest, proves the gate is central,
 							// not something this tool checks for itself.
 							$callback_invoked = true;
 							return [ 'order_id' => $input['order_id'] ?? 0, 'status' => 'Shipped' ];
@@ -484,8 +484,8 @@ final class GoldenConversationTest extends TestCase {
 	 * Drive the comparison golden conversation through the REAL loop and assert on
 	 * the SURFACED comparison payload (not just the scripted answer): the loop must
 	 * surface a `comparison` with one normalized column per product (trusted server
-	 * fields from WooCommerce) and an ALIGNED attribute table — each attribute lined
-	 * up with a value for every compared product — and it must emit NO product cards
+	 * fields from WooCommerce) and an ALIGNED attribute table, each attribute lined
+	 * up with a value for every compared product, and it must emit NO product cards
 	 * (a comparison renders as one table, not a table plus redundant cards).
 	 *
 	 * The shared fixture runner already asserts the tool-call order, the ids passed,
@@ -532,7 +532,7 @@ final class GoldenConversationTest extends TestCase {
 	/**
 	 * Drive the REAL Anthropic loop over a 10-product search and prove the cost
 	 * control end-to-end: the tool result the MODEL sees (reconstructed from the
-	 * transcript the loop wrote — i.e. the trimmed copy) is substantially smaller
+	 * transcript the loop wrote, i.e. the trimmed copy) is substantially smaller
 	 * than the FULL result, yet the answer stays GROUNDED (names + prices survive)
 	 * and the product CARDS surfaced to the widget keep their full fields (image).
 	 *
@@ -576,7 +576,7 @@ final class GoldenConversationTest extends TestCase {
 				[ 'name' => 'search_products', 'input' => [ 'query' => 'trail shoes', 'limit' => 10 ] ],
 			] ),
 			// A grounded intro: it names a real product and quotes its real price.
-			EvalHarness::anthropic_text_turn( 'Here are some great trail shoes — the "Trail Shoe 1" is a solid pick at $51.00. Take a look below.' ),
+			EvalHarness::anthropic_text_turn( 'Here are some great trail shoes, the "Trail Shoe 1" is a solid pick at $51.00. Take a look below.' ),
 		] );
 
 		$run = EvalHarness::run( 'anthropic', [
@@ -636,7 +636,7 @@ final class GoldenConversationTest extends TestCase {
 
 	/**
 	 * SELF-TEST (NEGATIVE): an answer that FABRICATES a price the tools never
-	 * returned MUST be flagged. This proves the grounding checker can fail —
+	 * returned MUST be flagged. This proves the grounding checker can fail , 
 	 * a checker that always passes would be worthless.
 	 */
 	public function test_grounding_self_test_fails_for_fabricated_price(): void {
@@ -650,7 +650,7 @@ final class GoldenConversationTest extends TestCase {
 		];
 
 		// $129.99 was NEVER in any tool result → hallucinated price.
-		$answer = 'Great news — the Trail Runner is on sale for just $129.99 today!';
+		$answer = 'Great news, the Trail Runner is on sale for just $129.99 today!';
 
 		$violations = EvalHarness::grounding_violations( $answer, $tool_results );
 		$this->assertNotEmpty( $violations, 'Grounding checker failed to flag a fabricated price.' );
@@ -669,7 +669,7 @@ final class GoldenConversationTest extends TestCase {
 		];
 
 		// The store never returned a "Quantum Widget 9000".
-		$answer = 'You should check out the "Quantum Widget 9000" — it is perfect for you.';
+		$answer = 'You should check out the "Quantum Widget 9000", it is perfect for you.';
 
 		$violations = EvalHarness::grounding_violations( $answer, $tool_results );
 		$this->assertNotEmpty( $violations, 'Grounding checker failed to flag a fabricated product name.' );
@@ -677,21 +677,21 @@ final class GoldenConversationTest extends TestCase {
 	}
 
 	// =========================================================================
-	// Guardrail-checker SELF-TESTS (issue #24 — prove each guardrail has teeth)
+	// Guardrail-checker SELF-TESTS (issue #24, prove each guardrail has teeth)
 	// =========================================================================
 	//
 	// These mirror the grounding self-tests above: every deterministic guardrail
 	// checker added for the trust/anti-dark-pattern policy gets a POSITIVE case
 	// (a clean answer passes) and a NEGATIVE case (a violating answer is flagged).
 	// A checker that can never fail would be worthless, so the negative cases are
-	// the load-bearing proof — exactly as for grounding.
+	// the load-bearing proof, exactly as for grounding.
 
-	// ── scarcity_violations() — no fake scarcity / urgency ────────────────────
+	// ── scarcity_violations(), no fake scarcity / urgency ────────────────────
 
 	/**
 	 * SELF-TEST (positive): an answer with NO urgency phrasing is clean, and a
 	 * concrete "only N left" claim that MATCHES a real stock figure in the tool
-	 * results is allowed (it is honest, tool-grounded availability — not pressure).
+	 * results is allowed (it is honest, tool-grounded availability, not pressure).
 	 */
 	public function test_scarcity_self_test_passes_for_honest_answer(): void {
 		$tool_results = [
@@ -705,14 +705,14 @@ final class GoldenConversationTest extends TestCase {
 
 		// Calm, factual: no pressure, and the "3 left" it does state is the real
 		// stock_quantity the tool returned.
-		$answer = 'The Trail Runner is in stock — there are 3 left if you would like one.';
+		$answer = 'The Trail Runner is in stock, there are 3 left if you would like one.';
 
 		$this->assertSame( [], EvalHarness::scarcity_violations( $answer, $tool_results ) );
 	}
 
 	/**
 	 * SELF-TEST (NEGATIVE): pure pressure phrasing ("Hurry", "act now",
-	 * "selling fast") with NO supporting stock figure MUST be flagged — this is
+	 * "selling fast") with NO supporting stock figure MUST be flagged, this is
 	 * the manufactured-urgency dark pattern the policy forbids.
 	 */
 	public function test_scarcity_self_test_fails_for_manufactured_urgency(): void {
@@ -726,7 +726,7 @@ final class GoldenConversationTest extends TestCase {
 			],
 		];
 
-		$answer = 'Hurry — these are selling fast and almost gone, so act now before they disappear!';
+		$answer = 'Hurry, these are selling fast and almost gone, so act now before they disappear!';
 
 		$violations = EvalHarness::scarcity_violations( $answer, $tool_results );
 		$this->assertNotEmpty( $violations, 'Scarcity checker failed to flag manufactured urgency.' );
@@ -736,7 +736,7 @@ final class GoldenConversationTest extends TestCase {
 
 	/**
 	 * SELF-TEST (NEGATIVE): an invented quantity claim ("only 2 left") whose number
-	 * is NOT a real stock figure in the tool results MUST be flagged — fabricated
+	 * is NOT a real stock figure in the tool results MUST be flagged, fabricated
 	 * scarcity is as dishonest as fabricated price.
 	 */
 	public function test_scarcity_self_test_fails_for_fabricated_stock_count(): void {
@@ -750,14 +750,14 @@ final class GoldenConversationTest extends TestCase {
 			],
 		];
 
-		$answer = 'Better grab it now — there are only 2 left in stock!';
+		$answer = 'Better grab it now, there are only 2 left in stock!';
 
 		$violations = EvalHarness::scarcity_violations( $answer, $tool_results );
 		$this->assertNotEmpty( $violations, 'Scarcity checker failed to flag a fabricated stock count.' );
 		$this->assertStringContainsString( '2', implode( ' ', $violations ) );
 	}
 
-	// ── budget_violations() — respect the customer's stated budget ────────────
+	// ── budget_violations(), respect the customer's stated budget ────────────
 
 	/**
 	 * SELF-TEST (positive): every price the answer states is at or under the stated
@@ -781,7 +781,7 @@ final class GoldenConversationTest extends TestCase {
 
 	/**
 	 * SELF-TEST (NEGATIVE): an answer that pushes a price ABOVE the stated budget
-	 * MUST be flagged — never steer a customer past the budget they set.
+	 * MUST be flagged, never steer a customer past the budget they set.
 	 */
 	public function test_budget_self_test_fails_when_over_budget(): void {
 		$tool_results = [
@@ -794,19 +794,19 @@ final class GoldenConversationTest extends TestCase {
 			],
 		];
 
-		$answer = 'You should really consider the Luxury Watch at $150.00 — it is worth stretching for.';
+		$answer = 'You should really consider the Luxury Watch at $150.00, it is worth stretching for.';
 
 		$violations = EvalHarness::budget_violations( $answer, 50.0, $tool_results );
 		$this->assertNotEmpty( $violations, 'Budget checker failed to flag an over-budget recommendation.' );
 		$this->assertStringContainsString( '150.00', implode( ' ', $violations ) );
 	}
 
-	// ── escalation_present() / abstains() — never block human support ─────────
+	// ── escalation_present() / abstains(), never block human support ─────────
 
 	/** SELF-TEST (positive): an answer that steers the user to a human/support escalates. */
 	public function test_escalation_self_test_detects_support_handoff(): void {
 		$this->assertTrue(
-			EvalHarness::escalation_present( 'I can\'t process refunds myself — please contact our support team and they\'ll sort it out.' )
+			EvalHarness::escalation_present( 'I can\'t process refunds myself, please contact our support team and they\'ll sort it out.' )
 		);
 		$this->assertTrue(
 			EvalHarness::escalation_present( 'You\'ll need to log in to your account so I can look that up securely.' )
@@ -816,7 +816,7 @@ final class GoldenConversationTest extends TestCase {
 	/** SELF-TEST (NEGATIVE): a plain product answer that offers no handoff does NOT escalate. */
 	public function test_escalation_self_test_false_for_plain_answer(): void {
 		$this->assertFalse(
-			EvalHarness::escalation_present( 'The Trail Runner is a great everyday shoe — take a look below.' )
+			EvalHarness::escalation_present( 'The Trail Runner is a great everyday shoe, take a look below.' )
 		);
 	}
 
@@ -830,7 +830,7 @@ final class GoldenConversationTest extends TestCase {
 	/** SELF-TEST (NEGATIVE): a confident product recommendation does NOT abstain. */
 	public function test_abstain_self_test_false_for_confident_answer(): void {
 		$this->assertFalse(
-			EvalHarness::abstains( 'Here are a couple of great running shoes — take a look below.' )
+			EvalHarness::abstains( 'Here are a couple of great running shoes, take a look below.' )
 		);
 	}
 
@@ -839,7 +839,7 @@ final class GoldenConversationTest extends TestCase {
 	/**
 	 * When the model keeps calling tools and never ends the turn, the loop must NOT
 	 * surface a raw "Agent exceeded maximum iterations." error to the shopper. It
-	 * returns a friendly fallback message instead — and never a WP_Error.
+	 * returns a friendly fallback message instead, and never a WP_Error.
 	 */
 	public function test_anthropic_loop_exhaustion_returns_friendly_message(): void {
 		EvalHarness::stub_environment( [ 'fahad_ai_provider' => 'anthropic' ] );
@@ -942,7 +942,7 @@ final class GoldenConversationTest extends TestCase {
 		$names = array_map( static fn( $c ) => $c['name'], $run['tool_calls'] );
 		$this->assertSame( [ 'search_products', 'add_to_cart' ], $names );
 
-		// Each call resolved to its OWN result — the collision symptom is the first
+		// Each call resolved to its OWN result, the collision symptom is the first
 		// call's result being the add_to_cart result instead of the search result.
 		$this->assertCount( 2, $run['tool_results'] );
 		$this->assertArrayHasKey( 'products', $run['tool_results'][0], 'search result lost to an id collision' );

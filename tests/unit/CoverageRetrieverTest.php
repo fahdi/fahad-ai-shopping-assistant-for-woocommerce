@@ -15,7 +15,7 @@
  * The provider and store are injected through the existing
  * `fahad_ai_embedding_provider` and `fahad_ai_vector_store` filters so the static
  * factories (Fahad_AI_Embeddings::provider / Fahad_AI_Vector_Stores::resolve) run
- * for real but hand back Mockery doubles — no HTTP, no DB.
+ * for real but hand back Mockery doubles, no HTTP, no DB.
  */
 
 use Brain\Monkey;

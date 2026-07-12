@@ -1,16 +1,16 @@
 <?php
 /**
  * Unit tests for Fahad_AI_Stock_Alert_Tools (issue #51: back-in-stock & price-drop
- * alerts — the agent TOOL `subscribe_stock_alert`).
+ * alerts, the agent TOOL `subscribe_stock_alert`).
  *
  * Red → Green → Refactor. Conventions mirror CatalogToolsTest / MemoryToolsTest:
  * WP/WC functions mocked via Brain\Monkey; WC objects via Mockery; the registry
  * singleton + its static pack list snapshotted/restored so a case here neither
  * inherits another suite's packs nor leaks the stock-alert pack we register; the
  * Fahad_AI_Stock_Alerts store singleton reset via reflection (NEVER
- * ReflectionMethod::setAccessible — host runs PHP 8.5).
+ * ReflectionMethod::setAccessible, host runs PHP 8.5).
  *
- * The tool is NOT a built-in — it ships as a drop-in feature pack that
+ * The tool is NOT a built-in, it ships as a drop-in feature pack that
  * self-registers via Fahad_AI_Tool_Registry::register_pack() at file load. Every
  * test registers the pack's REAL provider, then dispatches through
  * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production
@@ -18,7 +18,7 @@
  *
  * NO FAKE SCARCITY IS THE POINT (issue #51, ROADMAP §6 anti-features). The headline
  * test is first-class: a back_in_stock alert is REFUSED for an item that is
- * currently IN stock — the tool never manufactures urgency, and only an
+ * currently IN stock, the tool never manufactures urgency, and only an
  * out-of-stock item (or a price_drop) is a valid back-in-stock subscription.
  * Consent is captured as a double-opt-in PENDING row (see Fahad_AI_Stock_Alerts),
  * and the shopper is told to confirm via email; PII (the raw email) is never echoed
@@ -92,7 +92,7 @@ class StockAlertToolsTest extends TestCase {
 	/**
 	 * Fresh registry whose built tool list includes the stock-alert tool, plus a
 	 * fresh store singleton. Resets the Tools + registry + store singletons, then
-	 * registers the pack's REAL provider — exactly what the file-scope
+	 * registers the pack's REAL provider, exactly what the file-scope
 	 * self-registration does in production.
 	 */
 	private function registry(): Fahad_AI_Tool_Registry {
@@ -137,7 +137,7 @@ class StockAlertToolsTest extends TestCase {
 
 		$this->assertArrayHasKey( 'subscribe_stock_alert', $specs );
 		$this->assertArrayNotHasKey( 'callback', $specs['subscribe_stock_alert'] );
-		// Public, NOT personal — guests can subscribe by email — so no `personal` key.
+		// Public, NOT personal, guests can subscribe by email, so no `personal` key.
 		$this->assertArrayNotHasKey( 'personal', $specs['subscribe_stock_alert'] );
 		$this->assertSame( 'object', $specs['subscribe_stock_alert']['parameters']['type'] );
 	}
@@ -146,7 +146,7 @@ class StockAlertToolsTest extends TestCase {
 
 	/**
 	 * THE headline anti-scarcity test. The product is currently IN stock, so a
-	 * back-in-stock alert is meaningless and must be REFUSED — the assistant never
+	 * back-in-stock alert is meaningless and must be REFUSED, the assistant never
 	 * manufactures urgency around an available item. Nothing is stored.
 	 */
 	public function test_refuses_back_in_stock_alert_for_an_in_stock_item(): void {
@@ -167,7 +167,7 @@ class StockAlertToolsTest extends TestCase {
 	/**
 	 * The flip side: an OUT-OF-STOCK item is a valid back-in-stock subscription. It
 	 * records a PENDING (double-opt-in) row and tells the shopper to confirm by
-	 * email — it does NOT activate the alert immediately.
+	 * email, it does NOT activate the alert immediately.
 	 */
 	public function test_records_pending_subscription_for_an_out_of_stock_item(): void {
 		Functions\when( 'wc_get_product' )->justReturn( $this->mockProduct( 42, false ) );
@@ -220,7 +220,7 @@ class StockAlertToolsTest extends TestCase {
 
 	public function test_price_drop_alert_is_allowed_for_an_in_stock_item(): void {
 		// A price-drop watch on an in-stock item is legitimate (not scarcity), so it
-		// is NOT refused — it records a pending subscription like any other.
+		// is NOT refused, it records a pending subscription like any other.
 		Functions\when( 'wc_get_product' )->justReturn( $this->mockProduct( 42, true ) );
 
 		$res = $this->registry()->dispatch( 'subscribe_stock_alert', [

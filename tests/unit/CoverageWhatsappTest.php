@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage tests for Fahad_AI_WhatsApp (issue #62) — the lines the behavioural
+ * Coverage tests for Fahad_AI_WhatsApp (issue #62), the lines the behavioural
  * WhatsAppTest does not already exercise: register_routes() (the REST route
  * declaration) and the three "no usable text message" branches inside the private
  * first_text_message() parser (non-array payload, non-text message type, and a
@@ -8,7 +8,7 @@
  *
  * Conventions mirror WhatsAppTest / the other Coverage* suites: WP functions mocked
  * via Brain\Monkey; the singleton reset via reflection between cases (NEVER
- * ReflectionMethod::setAccessible — the host runs PHP 8.5); get_option backed by an
+ * ReflectionMethod::setAccessible, the host runs PHP 8.5); get_option backed by an
  * in-memory options map; apply_filters is the identity stub unless a test overrides
  * it. The parser branches are driven through the PUBLIC handle_inbound() with a
  * correctly-signed body, so they execute exactly as they do in production (and we
@@ -121,7 +121,7 @@ class CoverageWhatsappTest extends TestCase {
 		$config = $captured['config'];
 		$this->assertCount( 2, $config, 'One endpoint with two method handlers (GET + POST).' );
 
-		// GET handler — the verify handshake.
+		// GET handler, the verify handshake.
 		$get = $config[0];
 		$this->assertSame( 'GET', $get['methods'] );
 		$this->assertSame( [ $whatsapp, 'handle_verify' ], $get['callback'] );
@@ -139,7 +139,7 @@ class CoverageWhatsappTest extends TestCase {
 		$this->assertSame( 'sanitize_text_field', $get['args']['hub_verify_token']['sanitize_callback'] );
 		$this->assertSame( 'sanitize_text_field', $get['args']['hub_challenge']['sanitize_callback'] );
 
-		// POST handler — inbound delivery (no nonce; signature is checked inside).
+		// POST handler, inbound delivery (no nonce; signature is checked inside).
 		$post = $config[1];
 		$this->assertSame( 'POST', $post['methods'] );
 		$this->assertSame( [ $whatsapp, 'handle_inbound' ], $post['callback'] );
@@ -172,7 +172,7 @@ class CoverageWhatsappTest extends TestCase {
 
 	public function test_signed_invalid_json_payload_is_acked_without_sending(): void {
 		// Outright malformed JSON also decodes to null (not an array): same null path,
-		// same benign ack — no parse error escapes, nothing is sent.
+		// same benign ack, no parse error escapes, nothing is sent.
 		$this->options['fahad_ai_whatsapp_enabled']    = 1;
 		$this->options['fahad_ai_whatsapp_app_secret'] = 'app-secret';
 

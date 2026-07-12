@@ -1,9 +1,9 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Agent_Gateway (Epic C — store-as-an-agent).
+ * Unit tests for Fahad_AI_Agent_Gateway (Epic C, store-as-an-agent).
  *
  * Covers route registration, the llms.txt + catalog feed, the tool-reusing search /
- * product endpoints, and the human checkout handoff — every branch, so an agent can
+ * product endpoints, and the human checkout handoff, every branch, so an agent can
  * never be served fabricated or unsafe data.
  */
 

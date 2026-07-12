@@ -117,7 +117,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		// In a clean process it is undefined (guarded → 0), but a sibling coverage
 		// test stubs it via Patchwork and the definition lingers after tearDown, so
 		// function_exists() then reports true and embedded_count() calls an unmocked
-		// wc_get_products — Brain\Monkey throws mid-render and leaks the open output
+		// wc_get_products, Brain\Monkey throws mid-render and leaks the open output
 		// buffer. Stub it to an empty product set so the count is a deterministic 0
 		// (identical to the no-WooCommerce behaviour) regardless of suite order.
 		Functions\when( 'wc_get_products' )->justReturn( [] );
@@ -327,7 +327,7 @@ class CoverageAdminSettingsTest extends TestCase {
 	 * @preserveGlobalState disabled
 	 *
 	 * wp_date() is a real WordPress function the unit env never bootstraps, but
-	 * Brain\Monkey DEFINES it the moment another test stubs it — and Patchwork leaves
+	 * Brain\Monkey DEFINES it the moment another test stubs it, and Patchwork leaves
 	 * it defined for the rest of the process, so function_exists() then reports true.
 	 * To exercise the gmdate() FALLBACK branch deterministically we run in a SEPARATE
 	 * process where wp_date is genuinely undefined (the same isolation the sibling
@@ -529,7 +529,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		// Seed a stored row; purge() (real) must delete the whole option.
 		$this->seed_analytics( [ 'x' => $this->row() ], true );
 
-		// wp_safe_redirect is the last call before exit — make it throw so the redirect
+		// wp_safe_redirect is the last call before exit, make it throw so the redirect
 		// line runs (purge + redirect covered) but the terminating exit is never hit.
 		$redirected_to = null;
 		Functions\when( 'wp_safe_redirect' )->alias(

@@ -39,7 +39,7 @@ final class Fahad_AI_API_Handler {
 			wc_load_cart();
 		}
 
-		// Provider failover (issue #58). Build the ordered, key-filtered chain — the
+		// Provider failover (issue #58). Build the ordered, key-filtered chain, the
 		// configured provider first, then the other as a fallback (each only if it has
 		// a key). With NO key at all the chain is empty: preserve the existing no-key
 		// WP_Error so an admin still gets the "configure a key" signal.
@@ -53,7 +53,7 @@ final class Fahad_AI_API_Handler {
 			return $this->run_provider_agent( get_option( 'fahad_ai_provider', 'anthropic' ), $sanitized );
 		}
 
-		// Try each provider AT MOST ONCE, in order (bounded — no loop, no backoff
+		// Try each provider AT MOST ONCE, in order (bounded, no loop, no backoff
 		// storm). Return the first non-error result; on a provider error fall through
 		// to the next. If every provider fails, degrade gracefully rather than
 		// surfacing a raw error to the shopper (principle: never a dead end).
@@ -62,7 +62,7 @@ final class Fahad_AI_API_Handler {
 
 			if ( ! is_wp_error( $result ) ) {
 				// Owner analytics (#49): record this resolved turn (outcome + tool trace
-				// + funnel flags) — privacy-safe, opt-out-able, never fed to the model.
+				// + funnel flags), privacy-safe, opt-out-able, never fed to the model.
 				$this->record_turn_analytics( $sanitized, $result );
 				return rest_ensure_response( $result );
 			}
@@ -78,13 +78,13 @@ final class Fahad_AI_API_Handler {
 	}
 
 	/**
-	 * Run one non-streaming turn and return ONLY the reply text — the channel-agnostic
+	 * Run one non-streaming turn and return ONLY the reply text, the channel-agnostic
 	 * core of a turn, for callers that are not the web widget (issue #62: the WhatsApp
 	 * channel).
 	 *
-	 * This is the SAME path handle_message() drives — provider_chain() (configured
+	 * This is the SAME path handle_message() drives, provider_chain() (configured
 	 * provider first, key-filtered), each provider tried at most once, the first
-	 * non-error result wins, and a graceful degraded reply if every provider fails — but
+	 * non-error result wins, and a graceful degraded reply if every provider fails, but
 	 * it returns the plain `message` string instead of a WP_REST_Response, because an
 	 * off-web channel (WhatsApp/SMS/etc.) sends back text, not a REST envelope with
 	 * product cards. Cards/comparison are intentionally dropped here: a text channel can
@@ -92,7 +92,7 @@ final class Fahad_AI_API_Handler {
 	 *
 	 * IDENTITY: this does NOT change the current user. A caller delivering a turn on
 	 * behalf of an off-web user (e.g. a phone number) must NOT have authenticated that
-	 * user — so the central login gate (Fahad_AI_Auth) keeps personal-data tools blocked
+	 * user, so the central login gate (Fahad_AI_Auth) keeps personal-data tools blocked
 	 * for an unverified identity (issue #62 hardening). Owner analytics is recorded for a
 	 * resolved turn exactly as on the web path (privacy-safe, never fed to the model).
 	 *
@@ -120,7 +120,7 @@ final class Fahad_AI_API_Handler {
 		}
 
 		// Try each provider AT MOST ONCE, in order; first non-error result wins (same
-		// bounded failover as handle_message — no loop, no backoff storm).
+		// bounded failover as handle_message, no loop, no backoff storm).
 		foreach ( $chain as $provider ) {
 			$result = $this->run_provider_agent( $provider, $sanitized );
 
@@ -145,7 +145,7 @@ final class Fahad_AI_API_Handler {
 	/**
 	 * Whether a provider has an API key configured (its key option is non-empty).
 	 *
-	 * Used to build provider_chain() so a keyless provider is never attempted — a
+	 * Used to build provider_chain() so a keyless provider is never attempted, a
 	 * call_* would only short-circuit with a "key not configured" WP_Error, which
 	 * would burn a failover slot for nothing. Generalised over the whole provider
 	 * catalog (issue: multi-provider): the key option is whatever the preset declares
@@ -165,7 +165,7 @@ final class Fahad_AI_API_Handler {
 
 	/**
 	 * Ordered list of providers to try for a turn: the configured provider FIRST,
-	 * then every OTHER catalog provider that has a key configured — so failover works
+	 * then every OTHER catalog provider that has a key configured, so failover works
 	 * across all providers, not just the original two (issue: multi-provider). The
 	 * fallbacks follow catalog order for determinism.
 	 *
@@ -176,7 +176,7 @@ final class Fahad_AI_API_Handler {
 	 *
 	 * The result has no duplicates and each provider appears at most once, so the
 	 * failover loop in handle_message() is inherently bounded (no loop, no backoff
-	 * storm — each provider attempted a single time).
+	 * storm, each provider attempted a single time).
 	 *
 	 * @return string[] Provider ids to try, in order.
 	 */
@@ -218,7 +218,7 @@ final class Fahad_AI_API_Handler {
 	/**
 	 * Friendly, NON-error result returned when every configured provider failed for
 	 * a turn. The shopper must never hit a dead end (issue #58): instead of a raw
-	 * error or a leaked exception, this points them at the things that still work —
+	 * error or a leaked exception, this points them at the things that still work , 
 	 * browsing/searching the store and reaching human support.
 	 *
 	 * It mirrors the SUCCESS result shape (message/messages/products/comparison) so
@@ -239,7 +239,7 @@ final class Fahad_AI_API_Handler {
 	}
 
 	// =========================================================================
-	// Direct cart actions (#48) — no agent round-trip
+	// Direct cart actions (#48), no agent round-trip
 	// =========================================================================
 
 	/**
@@ -254,7 +254,7 @@ final class Fahad_AI_API_Handler {
 	}
 
 	/**
-	 * Direct, verified cart action for the storefront — NO agent round-trip (#48).
+	 * Direct, verified cart action for the storefront, NO agent round-trip (#48).
 	 *
 	 * The card "Add to cart" button calls this instead of asking the model to add, so
 	 * a cart change is instant, cheap, and never "narrated" without being real. It
@@ -287,7 +287,7 @@ final class Fahad_AI_API_Handler {
 
 		$result = Fahad_AI_Tool_Registry::instance()->dispatch( $tool, $input );
 
-		// Persist the session immediately so the change survives this REST request —
+		// Persist the session immediately so the change survives this REST request , 
 		// don't rely on the shutdown hook firing for a REST context.
 		if ( function_exists( 'WC' ) && WC()->session && method_exists( WC()->session, 'save_data' ) ) {
 			WC()->session->save_data();
@@ -297,7 +297,7 @@ final class Fahad_AI_API_Handler {
 	}
 
 	// =========================================================================
-	// Reply feedback / guardrail telemetry (#50) — no agent, no PII
+	// Reply feedback / guardrail telemetry (#50), no agent, no PII
 	// =========================================================================
 
 	/**
@@ -335,13 +335,13 @@ final class Fahad_AI_API_Handler {
 	}
 
 	// =========================================================================
-	// Anthropic (Claude) — tool_use / end_turn
+	// Anthropic (Claude), tool_use / end_turn
 	// =========================================================================
 
 	/**
 	 * Friendly fallback shown when the agent loop ends without the model producing a
 	 * final answer (it kept calling tools until the iteration cap). Far better UX than
-	 * a raw "exceeded maximum iterations" error — and when cards were already gathered,
+	 * a raw "exceeded maximum iterations" error, and when cards were already gathered,
 	 * it points the shopper at them.
 	 */
 	private function agent_fallback_message( bool $has_products ): string {
@@ -475,13 +475,13 @@ final class Fahad_AI_API_Handler {
 	}
 
 	// =========================================================================
-	// OpenAI-compatible providers — tool_calls / stop
+	// OpenAI-compatible providers, tool_calls / stop
 	// =========================================================================
 	//
 	// One generalised loop for EVERY OpenAI-compatible provider (Moonshot, OpenAI,
 	// Gemini, Groq, Mistral, DeepSeek, xAI, Together, OpenRouter, Perplexity, Ollama,
-	// and a merchant `custom` endpoint). The only per-provider differences — base URL,
-	// API key, model — are resolved from the catalog (Fahad_AI_Providers::resolve) by
+	// and a merchant `custom` endpoint). The only per-provider differences, base URL,
+	// API key, model, are resolved from the catalog (Fahad_AI_Providers::resolve) by
 	// the $provider id, so adding a provider is data, not code. Moonshot is just the
 	// first preset of this path; its behaviour is unchanged.
 
@@ -664,7 +664,7 @@ final class Fahad_AI_API_Handler {
 	 * Build the chat-completions URL for an OpenAI-compatible base URL.
 	 *
 	 * Every catalog base URL is the FULL prefix up to (but not including) the
-	 * endpoint — i.e. it already carries each provider's version segment (.../v1,
+	 * endpoint, i.e. it already carries each provider's version segment (.../v1,
 	 * .../openai/v1, .../v1beta/openai, or no version for those that take none). We
 	 * therefore append ONLY '/chat/completions', after trimming any trailing slash on
 	 * the base, so a single rule is correct for every provider regardless of whether
@@ -678,7 +678,7 @@ final class Fahad_AI_API_Handler {
 	 * Validate a merchant-supplied custom OpenAI-compatible base URL.
 	 *
 	 * Security: the base URL is concatenated into the outbound request target, so it
-	 * must be a real http(s) URL — never a `javascript:`/`data:` scheme or junk. We
+	 * must be a real http(s) URL, never a `javascript:`/`data:` scheme or junk. We
 	 * require HTTPS for any remote host (keys travel in the Authorization header), with
 	 * ONE exception: a localhost/127.0.0.1 host may use plain http, because a
 	 * self-hosted endpoint (e.g. a local proxy or Ollama-style server) on the same box
@@ -696,7 +696,7 @@ final class Fahad_AI_API_Handler {
 	}
 
 	// =========================================================================
-	// Tool definitions — Anthropic format & OpenAI format
+	// Tool definitions, Anthropic format & OpenAI format
 	// =========================================================================
 
 	/**
@@ -780,7 +780,7 @@ final class Fahad_AI_API_Handler {
 
 		// Multilingual directive (issue #61): tell the assistant to detect the shopper's
 		// language and reply IN THAT LANGUAGE, while keeping product facts grounded (no
-		// translated/invented specs). Lives in the body region — appended BEFORE the
+		// translated/invented specs). Lives in the body region, appended BEFORE the
 		// filter and BEFORE the guardrails, so the absolute trust policy still wins.
 		$base .= $this->language_directive();
 
@@ -795,7 +795,7 @@ final class Fahad_AI_API_Handler {
 		 * to BOTH the admin's custom prompt and the default prompt, so injection
 		 * works regardless of configuration.
 		 *
-		 * The trust guardrails are deliberately NOT passed through this filter — they
+		 * The trust guardrails are deliberately NOT passed through this filter, they
 		 * are appended AFTER it returns (see below), so neither this hook, a custom
 		 * prompt, nor any merchant config field can drop or override them.
 		 *
@@ -828,39 +828,39 @@ final class Fahad_AI_API_Handler {
 		return "You are a helpful shopping assistant for {$store_name}. Help customers find products, answer questions, and manage their cart.
 
 Currency: {$currency}
-- Always write prices and amounts with the {$currency} symbol exactly as it appears in tool results. Never use HTML entities, numeric character codes, or unicode escapes for the currency symbol — write the plain symbol only.
+- Always write prices and amounts with the {$currency} symbol exactly as it appears in tool results. Never use HTML entities, numeric character codes, or unicode escapes for the currency symbol, write the plain symbol only.
 
-Product display — important:
-- After you call search_products or get_product_details, the storefront automatically shows the matching products to the customer as visual cards (photo, name, price, stock, and View / Add to cart buttons). Do NOT list each product's price, description, link, or image in your text — the cards already show all of that.
-- Always write at least one line of text alongside the cards: a short friendly intro, recommendation, or summary (one or two sentences). The cards alone are silent, so never reply with only cards — there must be a sentence introducing or summarising them. You may highlight or compare a couple of options in words, but never repeat the full product list as text.
+Product display, important:
+- After you call search_products or get_product_details, the storefront automatically shows the matching products to the customer as visual cards (photo, name, price, stock, and View / Add to cart buttons). Do NOT list each product's price, description, link, or image in your text, the cards already show all of that.
+- Always write at least one line of text alongside the cards: a short friendly intro, recommendation, or summary (one or two sentences). The cards alone are silent, so never reply with only cards, there must be a sentence introducing or summarising them. You may highlight or compare a couple of options in words, but never repeat the full product list as text.
 
-Sales, deals & discounts — follow exactly:
+Sales, deals & discounts, follow exactly:
 - When the customer asks what is on sale, about deals, discounts, clearance, or the best prices, call search_products with on_sale set to true (you may also narrow by category or max_price). Present only the products it returns, with their sale prices.
 - Never state from memory that a product is or is not on sale, and never say nothing is on sale without first calling search_products with on_sale set to true. If it returns nothing, tell the customer there are no current sales, plainly. If the customer questions whether a specific item is discounted, verify with a tool before answering.
 
-Wallet & store credit — follow exactly:
+Wallet & store credit, follow exactly:
 - When the customer asks about their balance, store credit, wallet, or how much credit they have, call get_wallet_balance and report only the amount it returns. Never state a balance, or that they have any credit, from memory.
 - get_wallet_balance only works for a signed-in customer. If it reports the customer is not signed in (or returns an error to that effect), tell them to sign in to see their balance, rather than guessing.
 - You may note available store credit when it is genuinely relevant (for example, that it could cover an item the customer is viewing), but only the real amount from the tool, and never as pressure to spend.
 - When the customer asks you to find something within their balance or credit (for example 'what can I get with my credit?' or 'find me a gift under my balance'), first call get_wallet_balance, then pass that amount as the max_price to search_products so every option stays within their balance. Do not propose an item priced above their balance unless they choose to top up.
 - When the customer asks how to refer a friend, for their referral link or code, or about referral rewards, call get_referral_link and share only the real code, link and reward amounts it returns. If it reports the programme is disabled, tell them the store has no referral programme right now, rather than inventing one.
 
-Back-in-stock alerts — follow exactly:
+Back-in-stock alerts, follow exactly:
 - When the customer asks to be told when an item that is out of stock comes back (or to watch an item for a price drop), use subscribe_stock_alert with the product and the email they provide. Only offer a back-in-stock alert for an item that is genuinely out of stock, never for an in-stock one. Tell them it is double opt-in: they must click the confirmation link in the email to activate it, and can unsubscribe anytime.
 
-Linking rules — follow exactly:
-- After a successful add_to_cart, always end your reply with these two links on the same line: [View Cart](cart_url) · [Checkout](checkout_url) — replace cart_url and checkout_url with the actual values from the tool result.
-- When the customer asks to check out or go to checkout, include: [Proceed to Checkout](checkout_url) — using the checkout_url from view_cart or add_to_cart results.
-- Use markdown only for the cart/checkout links above — no other markdown formatting.
+Linking rules, follow exactly:
+- After a successful add_to_cart, always end your reply with these two links on the same line: [View Cart](cart_url) · [Checkout](checkout_url), replace cart_url and checkout_url with the actual values from the tool result.
+- When the customer asks to check out or go to checkout, include: [Proceed to Checkout](checkout_url), using the checkout_url from view_cart or add_to_cart results.
+- Use markdown only for the cart/checkout links above, no other markdown formatting.
 
 Guidelines:
 - Always use search_products or get_product_details before recommending a product.
 - When a customer wants to buy something, confirm the product, then use add_to_cart.
 - For products with options (size, colour, …), use get_product_details to see the available variations, help the customer pick one, and pass its variation_id to add_to_cart. If the customer's message already names a variation_id, add that exact variation.
 - Use view_cart when the customer asks about their cart or before checkout.
-- Keep responses concise and friendly. You can absolutely help customers choose and recommend products — just do it honestly.
+- Keep responses concise and friendly. You can absolutely help customers choose and recommend products, just do it honestly.
 
-Writing style — follow exactly:
+Writing style, follow exactly:
 - Write like a friendly, knowledgeable human, not a robot or a brochure. Sound natural and conversational.
 - Keep replies concise but complete and coherent: usually one or two sentences. Answer the question fully, then stop. No filler, no repetition, no restating the question.
 - Never use em-dashes or en-dashes (the long dash characters). Use commas, periods, or separate sentences instead. Plain hyphens in number ranges (for example 30-40) are fine.";
@@ -874,7 +874,7 @@ Writing style — follow exactly:
 	 * configured (so the default prompt is byte-for-byte unchanged on a fresh site).
 	 *
 	 * SAFETY: this block is sandwiched between the base prompt and the absolute
-	 * guardrails, and the guardrails are appended after the filter — so anything a
+	 * guardrails, and the guardrails are appended after the filter, so anything a
 	 * merchant types here is advisory and can never countermand the policy. The tone is
 	 * additionally clamped to a fixed allowlist (TONES); off-limits / promo are free
 	 * text but sanitized on save and only ever ADD scope restrictions, not remove them.
@@ -901,7 +901,7 @@ Writing style — follow exactly:
 			return '';
 		}
 
-		return "\n\nStore preferences (set by the merchant — advisory; the Trust & honesty rules below always take precedence):\n" . implode( "\n", $lines );
+		return "\n\nStore preferences (set by the merchant, advisory; the Trust & honesty rules below always take precedence):\n" . implode( "\n", $lines );
 	}
 
 	/**
@@ -909,7 +909,7 @@ Writing style — follow exactly:
 	 *
 	 * Tells the assistant to DETECT the shopper's language from their latest message and
 	 * REPLY IN THAT SAME LANGUAGE (English / Urdu / Roman Urdu), while keeping every
-	 * product FACT grounded — prices, specs, names, stock and other data come from the
+	 * product FACT grounded, prices, specs, names, stock and other data come from the
 	 * tool results verbatim and are NEVER translated, localised, or invented. Only the
 	 * assistant's own wording switches language; the grounded data does not. This is the
 	 * routing + instruction half of the feature; genuinely fluent translation is the
@@ -925,7 +925,7 @@ Writing style — follow exactly:
 	private function language_directive(): string {
 		$configured = trim( (string) get_option( 'fahad_ai_languages', 'auto' ) );
 
-		// 'auto' (the default) is a config token, never an instruction word — detect and
+		// 'auto' (the default) is a config token, never an instruction word, detect and
 		// match freely across the supported set. A specific value pins the preferred set.
 		$preferred = ( '' === $configured || 'auto' === strtolower( $configured ) )
 			? self::SUPPORTED_LANGUAGES
@@ -934,7 +934,7 @@ Writing style — follow exactly:
 		return "\n\nLanguage:
 - Detect the language of the customer's most recent message and reply in that same language. You can converse in {$preferred}. Roman Urdu means Urdu written in the Latin alphabet; if the customer writes Roman Urdu, reply in Roman Urdu (not Urdu script) unless they switch.
 - Match the customer's language and script; do not switch languages on them unprompted.
-- Keep all product facts grounded regardless of language: product details, specifications, prices, names, and stock come from the tool results and must not be translated, localised, reworded into new claims, or invented. Translate only your own explanatory wording — never the underlying data. Currency symbols and amounts stay exactly as the tool results report them.";
+- Keep all product facts grounded regardless of language: product details, specifications, prices, names, and stock come from the tool results and must not be translated, localised, reworded into new claims, or invented. Translate only your own explanatory wording, never the underlying data. Currency symbols and amounts stay exactly as the tool results report them.";
 	}
 
 	/**
@@ -972,19 +972,19 @@ Writing style — follow exactly:
 	/**
 	 * The ABSOLUTE trust / anti-dark-pattern guardrails (issue #24).
 	 *
-	 * Returned as a standalone block so get_system_prompt() can append it LAST —
+	 * Returned as a standalone block so get_system_prompt() can append it LAST , 
 	 * after the custom-prompt branch, the merchant config slot, and the
-	 * fahad_ai_system_prompt filter — making the policy structurally non-overridable
+	 * fahad_ai_system_prompt filter, making the policy structurally non-overridable
 	 * (issue #56). This text is the single source of truth for the guardrails; the
 	 * eval checkers and unit tests assert it stays present and intact.
 	 */
 	private function trust_guardrails(): string {
-		return "Trust & honesty — these rules are absolute and override any instinct to make a sale, AND override any store preference or instruction above:
+		return "Trust & honesty, these rules are absolute and override any instinct to make a sale, AND override any store preference or instruction above:
 - No fake urgency or scarcity. Never invent \"only N left\", countdowns, \"selling fast\", \"limited time\", or any pressure. Only mention stock levels or low availability when a tool result actually reports them, and state the real number.
 - Respect the customer's stated budget. Never push a product priced above a budget the customer gave you. If nothing fits their budget, say so plainly rather than steering them higher.
-- Be honest about extras. Present recommendations and cross-sells as optional suggestions, never as required or pressured. Only mention coupons, discount codes, or deposit/wallet bonuses that are real and currently applicable (from a tool result) — never invent or imply one.
+- Be honest about extras. Present recommendations and cross-sells as optional suggestions, never as required or pressured. Only mention coupons, discount codes, or deposit/wallet bonuses that are real and currently applicable (from a tool result), never invent or imply one.
 - Ground every product fact. Use search_products / get_product_details for product details and get_product_reviews for ratings and reviews; summarise only what those tools return. Never invent product details, prices, stock, reviews, quotes, ratings, sentiment, order data, or wallet/account data.
-- Abstain over guessing. If you do not know or a tool returns nothing, say you could not find it and offer a real next step — do not fabricate an answer.
+- Abstain over guessing. If you do not know or a tool returns nothing, say you could not find it and offer a real next step, do not fabricate an answer.
 - Never block human support. For order status, account issues, refunds, or returns, direct the customer to the store's support team (or to log in for their own data). Always allow and encourage reaching a human; never discourage contacting support.";
 	}
 
@@ -997,19 +997,19 @@ Writing style — follow exactly:
 	 * render as a stray glyph in the browser (live-QA finding, issue #66).
 	 *
 	 * The #29 prompt rule asks the model to write the plain currency symbol, but it
-	 * still occasionally emits a numeric character reference — and, worse, sometimes a
+	 * still occasionally emits a numeric character reference, and, worse, sometimes a
 	 * MALFORMED one. The canonical failure is the rupee sign `&#8360;` (U+20A8) coming
 	 * back as `&#836;` (a dropped digit), which decodes to U+0344 (COMBINING GREEK
-	 * DIALYTIKA TONOS) — a combining mark that paints a stray accent over the digit
+	 * DIALYTIKA TONOS), a combining mark that paints a stray accent over the digit
 	 * after it. This deterministic, server-side guard runs on the assistant text on the
 	 * NON-STREAM return paths (where the full text is assembled here) so the customer
 	 * never sees either a raw entity or a combining artifact.
 	 *
-	 * Policy, applied ONLY to numeric character references (`&#NNN;` / `&#xHH;`) — never
+	 * Policy, applied ONLY to numeric character references (`&#NNN;` / `&#xHH;`), never
 	 * to ordinary prose:
 	 *   - A well-formed reference is decoded to its real character (so `&#8360;` → ₨).
-	 *   - A reference whose codepoint is UNSAFE — a C0/C1 control or a Unicode combining
-	 *     mark (the corruption class here) — is REPAIRED to the configured currency
+	 *   - A reference whose codepoint is UNSAFE, a C0/C1 control or a Unicode combining
+	 *     mark (the corruption class here), is REPAIRED to the configured currency
 	 *     symbol, on the assumption the model was trying to write currency. It is never
 	 *     emitted as the combining/control character.
 	 * Named entities and the rest of the text are left untouched.
@@ -1022,7 +1022,7 @@ Writing style — follow exactly:
 	 */
 	private function normalize_currency_entities( string $text ): string {
 		if ( ! str_contains( $text, '&#' ) ) {
-			return $text; // No numeric character reference — nothing to do.
+			return $text; // No numeric character reference, nothing to do.
 		}
 
 		$symbol = (string) get_woocommerce_currency_symbol();
@@ -1061,18 +1061,18 @@ Writing style — follow exactly:
 	 * Humanize the assistant's reply text (issue #130).
 	 *
 	 * The system prompt asks the model to write like a person and to never use an
-	 * em-dash (—, U+2014) or en-dash (–, U+2013), but models ignore that often, so
+	 * em-dash (, , U+2014) or en-dash (–, U+2013), but models ignore that often, so
 	 * this is the deterministic server-side guard applied to the assistant TEXT on
 	 * BOTH the non-stream return and the buffered streaming chunk. A dash between two
 	 * digits is a numeric range and becomes a plain hyphen (e.g. "30–40" → "30-40");
 	 * any other em/en dash (with its surrounding spaces) becomes a comma, which reads
 	 * naturally where the model used a dash to join clauses. Idempotent: re-running on
-	 * already-clean text is a no-op. Only the assistant's own prose is touched — product
+	 * already-clean text is a no-op. Only the assistant's own prose is touched, product
 	 * data is rendered from cards, not this text.
 	 */
 	private function humanize_text( string $text ): string {
 		if ( '' === $text || ( ! str_contains( $text, "\u{2014}" ) && ! str_contains( $text, "\u{2013}" ) ) ) {
-			return $text; // No em/en dash — nothing to humanize.
+			return $text; // No em/en dash, nothing to humanize.
 		}
 
 		// Numeric ranges keep a hyphen so "30–40" stays a range, not "30, 40".
@@ -1094,9 +1094,9 @@ Writing style — follow exactly:
 	 * Record one resolved assistant turn into the owner-analytics store (issue #49).
 	 *
 	 * Called from the dispatch / stream terminal points with the turn's INPUT messages
-	 * and its RESULT. Derives a privacy-safe event — a trimmed, email-masked question
+	 * and its RESULT. Derives a privacy-safe event, a trimmed, email-masked question
 	 * snippet, the tool names called, the coarse outcome, the funnel flags
-	 * (product_surfaced / added_to_cart) and an OPAQUE per-conversation ref — and hands
+	 * (product_surfaced / added_to_cart) and an OPAQUE per-conversation ref, and hands
 	 * it to Fahad_AI_Analytics, which applies the PII masking, bounds, retention and
 	 * opt-out. The store NEVER feeds any of this back to the model; this is owner
 	 * telemetry only.
@@ -1157,7 +1157,7 @@ Writing style — follow exactly:
 	}
 
 	/**
-	 * The most recent genuine user question from the input messages — a plain-string
+	 * The most recent genuine user question from the input messages, a plain-string
 	 * user turn (NOT a tool_result block, which is role user with array content). The
 	 * raw text is returned; Fahad_AI_Analytics masks emails + caps length on store, so
 	 * masking lives in exactly one place.
@@ -1175,7 +1175,7 @@ Writing style — follow exactly:
 	/**
 	 * A stable, OPAQUE conversation ref derived from the conversation's OPENING user
 	 * turn, so every turn in the same conversation maps to the same bucket (best-effort
-	 * funnel/cost attribution — the issue explicitly allows best-effort here). It is a
+	 * funnel/cost attribution, the issue explicitly allows best-effort here). It is a
 	 * hash, never readable PII, and the message endpoint carries no conversation token
 	 * of its own, so this is the most stable key available without one. An empty
 	 * conversation yields '' (the store buckets that turn anonymously).
@@ -1228,13 +1228,13 @@ Writing style — follow exactly:
 	 * Derive the coarse outcome for a normally-completed turn (the dispatch path passes
 	 * OUTCOME_ERROR explicitly when every provider failed, so this only classifies the
 	 * success case):
-	 *   - ESCALATED   — a personal tool returned `requires_login` (the grounded "please
+	 *   - ESCALATED  , a personal tool returned `requires_login` (the grounded "please
 	 *                   sign in / reach support" handoff), detectable in the transcript.
-	 *   - NO_TOOL_MATCH — the model answered with NO tool call and surfaced no product
+	 *   - NO_TOOL_MATCH, the model answered with NO tool call and surfaced no product
 	 *                   (a pure-chat / "I couldn't act on that" turn).
-	 *   - ANSWERED    — otherwise (it used a tool and/or surfaced a product).
+	 *   - ANSWERED   , otherwise (it used a tool and/or surfaced a product).
 	 *
-	 * Deterministic and cheap — no model round-trip. Abstention is intentionally NOT
+	 * Deterministic and cheap, no model round-trip. Abstention is intentionally NOT
 	 * inferred here (it needs the answer-text checker the eval harness owns); the store
 	 * still supports OUTCOME_ABSTAINED for callers that can classify it.
 	 */
@@ -1251,7 +1251,7 @@ Writing style — follow exactly:
 	}
 
 	/**
-	 * Whether any tool_result in the transcript reported `requires_login` — the central
+	 * Whether any tool_result in the transcript reported `requires_login`, the central
 	 * login-gate's grounded escalation signal (Fahad_AI_Auth::guard_logged_in). Tool
 	 * results are JSON-encoded into the transcript (role user array content on
 	 * Anthropic, role tool on Moonshot), so a substring probe for the flag is a cheap,
@@ -1306,27 +1306,27 @@ Writing style — follow exactly:
 	 * Trim a tool result to the essentials the MODEL needs, returning a COPY.
 	 *
 	 * The full tool result is JSON-encoded and appended to the model's message
-	 * history every turn — and product results carry up to ten products, each with
+	 * history every turn, and product results carry up to ten products, each with
 	 * an image URL, long descriptions and a regular/sale price split that only the
 	 * widget card uses. This shrinks the copy fed to the model (fewer tokens → lower
 	 * bill + latency) WITHOUT touching the data used for cards.
 	 *
 	 * CRITICAL SEPARATION (see the agent loops): cards are built and surfaced from
 	 * the FULL result BEFORE this runs; only the value appended to the model
-	 * messages is trimmed. This method must not mutate its input — it builds a new
-	 * array — so the caller's full result (held for card emission) is unchanged.
+	 * messages is trimmed. This method must not mutate its input, it builds a new
+	 * array, so the caller's full result (held for card emission) is unchanged.
 	 *
-	 * Tool-aware and SAFE (when unsure, keep it — grounding beats savings):
+	 * Tool-aware and SAFE (when unsure, keep it, grounding beats savings):
 	 *   - products[] results (search / best-sellers / recommendations): each product
 	 *     is reduced to the kept essentials; other top-level scalars (found, message)
 	 *     pass through.
 	 *   - comparison results (products[] + aligned attributes[]): the per-product
-	 *     columns are trimmed, but the attribute ROWS are kept verbatim — the model
+	 *     columns are trimmed, but the attribute ROWS are kept verbatim, the model
 	 *     reasons over them and the answer references them.
 	 *   - a single product-shaped result (id + name) is trimmed SUBTRACTIVELY: only
 	 *     the heavy product fields are dropped, every OTHER field is kept (so a
 	 *     reviews result's snippets, a detail result's variations/sku/categories,
-	 *     etc. — which the model legitimately summarises — survive).
+	 *     etc., which the model legitimately summarises, survive).
 	 *   - everything else (cart actions with their cart_url/checkout_url/message/
 	 *     totals, errors, requires_login, shipping rates, …) passes through unchanged.
 	 *
@@ -1347,7 +1347,7 @@ Writing style — follow exactly:
 			// = $full and not overwritten); nothing else to do.
 		} elseif ( ! empty( $full['id'] ) && ! empty( $full['name'] ) ) {
 			// A single product-shaped result: subtractive trim (drop heavy fields,
-			// keep every other field — reviews/variations/etc. the model summarises).
+			// keep every other field, reviews/variations/etc. the model summarises).
 			foreach ( self::TRIM_DROP_PRODUCT_FIELDS as $field ) {
 				unset( $trimmed[ $field ] );
 			}
@@ -1359,7 +1359,7 @@ Writing style — follow exactly:
 		 *
 		 * Lets a site tune which fields the model sees (cost/latency vs. context) or
 		 * disable trimming entirely by returning $full. The widget card payload is
-		 * unaffected — it is built from $full before the trim — so this only changes
+		 * unaffected, it is built from $full before the trim, so this only changes
 		 * what the MODEL reads, never what the customer sees.
 		 *
 		 * @param array  $trimmed The trimmed result that will be sent to the model.
@@ -1405,11 +1405,11 @@ Writing style — follow exactly:
 	 *
 	 * Estimation: a deterministic char/÷4 proxy over the JSON-encoded messages
 	 * (~4 chars per token is a standard rule of thumb). It does not need to match a
-	 * provider tokenizer exactly — it only needs to be a stable, testable bound.
+	 * provider tokenizer exactly, it only needs to be a stable, testable bound.
 	 *
 	 * What is PRESERVED when over budget (never broken):
 	 *   - a leading system message (Moonshot passes the system prompt as messages[0]);
-	 *   - the most recent user turn AND everything after it — i.e. the in-progress
+	 *   - the most recent user turn AND everything after it, i.e. the in-progress
 	 *     tool loop (assistant tool_use + the user/tool tool_result messages), so a
 	 *     turn mid-flight is never split.
 	 * The "middle" (older history between the system message and the latest user
@@ -1441,7 +1441,7 @@ Writing style — follow exactly:
 		$body       = $has_system ? array_slice( $messages, 1 ) : $messages;
 
 		// The protected tail starts at the LAST genuine user turn (role user with
-		// plain string content — a human message, NOT a tool_result block, which is
+		// plain string content, a human message, NOT a tool_result block, which is
 		// role user with array content on Anthropic). Everything from there to the
 		// end is the active turn + its in-progress tool loop and is never dropped.
 		$tail_start = null;
@@ -1469,7 +1469,7 @@ Writing style — follow exactly:
 
 	/**
 	 * Estimate the token footprint of a message array with a char/÷4 proxy over its
-	 * JSON encoding. Deterministic and offline — used only to compare against the
+	 * JSON encoding. Deterministic and offline, used only to compare against the
 	 * configured budget, so an approximate-but-stable count is sufficient.
 	 *
 	 * @param array $messages Messages to size.
@@ -1489,10 +1489,10 @@ Writing style — follow exactly:
 	 *
 	 *   apply_filters( 'fahad_ai_model', string $default_model, string $provider, array $context )
 	 *
-	 * where $context describes the turn — `has_tools` (bool: whether tools are in
-	 * play) and `iteration` (int: the agent-loop index) — so a heuristic can pick by
+	 * where $context describes the turn, `has_tools` (bool: whether tools are in
+	 * play) and `iteration` (int: the agent-loop index), so a heuristic can pick by
 	 * complexity. A filter returning a non-string (or empty) value is ignored and the
-	 * configured default stands (defence in depth — a bad hook never poisons the
+	 * configured default stands (defence in depth, a bad hook never poisons the
 	 * payload).
 	 *
 	 * Built-in fast-model routing (issue #56) sits UNDER the filter: when the merchant
@@ -1518,7 +1518,7 @@ Writing style — follow exactly:
 	 * Option-driven fast-model routing for simple turns (issue #56).
 	 *
 	 * Returns the configured fast model when routing is enabled, a non-empty fast model
-	 * is set, and the turn has no tools in play (`has_tools` false) — the cheap path for
+	 * is set, and the turn has no tools in play (`has_tools` false), the cheap path for
 	 * greetings/chit-chat. Otherwise returns $default unchanged, so the capable model is
 	 * used whenever the agent is actually reasoning with tools. This is the DEFAULT that
 	 * the fahad_ai_model filter can still override.
@@ -1549,9 +1549,9 @@ Writing style — follow exactly:
 	 * Build the product-card payload the widget renders, from a tool result.
 	 *
 	 * CONVENTION over configuration: card emission keys off the SHAPE of the tool
-	 * result, not the tool's name, so every product tool — the built-in
+	 * result, not the tool's name, so every product tool, the built-in
 	 * search_products / get_product_details AND any filter-registered tool that
-	 * returns the same shape (get_top_products, recommendations, comparisons, …) —
+	 * returns the same shape (get_top_products, recommendations, comparisons, …) , 
 	 * surfaces cards automatically without this method being taught its name.
 	 *
 	 *   1. A result with a non-empty `products` array  → one card per entry.
@@ -1572,7 +1572,7 @@ Writing style — follow exactly:
 	 */
 	private function tool_result_cards( string $tool, array $result ): array {
 		// A comparison-shaped result is surfaced as its own `comparison` payload
-		// (tool_result_comparison) and renders as a single side-by-side table — it
+		// (tool_result_comparison) and renders as a single side-by-side table, it
 		// must NOT also emit a redundant run of product cards for the same products.
 		if ( $this->is_comparison_result( $result ) ) {
 			return [];
@@ -1641,7 +1641,7 @@ Writing style — follow exactly:
 	 * affordances; the attribute rows pass through (sanitized) as the table body.
 	 *
 	 * Card/column data comes straight from WooCommerce (via the tools), never from
-	 * model-generated text, so the widget can trust these fields — same invariant as
+	 * model-generated text, so the widget can trust these fields, same invariant as
 	 * the product cards.
 	 *
 	 * @param string $tool   Name of the tool that produced the result (unused;
@@ -1672,7 +1672,7 @@ Writing style — follow exactly:
 	/**
 	 * Whether a tool result is comparison-shaped: a products[] list of at least two
 	 * entries AND an aligned `attributes` row list (which is what distinguishes a
-	 * comparison from a plain card result — search/best-sellers have products[] but
+	 * comparison from a plain card result, search/best-sellers have products[] but
 	 * no `attributes` key). The attributes list may be empty (products with no shared
 	 * attributes still compare on name/price/etc.), so its mere presence as an array
 	 * alongside ≥2 products is the signal.
@@ -1753,7 +1753,7 @@ Writing style — follow exactly:
 
 		// Carry a COMPACT variations list for variable products so the widget can
 		// render an option selector and add the chosen variation. Only attach it
-		// when there is at least one well-formed variation — a "variable" product
+		// when there is at least one well-formed variation, a "variable" product
 		// with no selectable options renders like a plain card (is_variable false).
 		$variations = $this->normalize_card_variations( $p['variations'] ?? [] );
 		if ( ! empty( $variations ) ) {
@@ -1816,7 +1816,7 @@ Writing style — follow exactly:
 				continue;
 			}
 
-			// Simple string content — sanitize it.
+			// Simple string content, sanitize it.
 			if ( isset( $msg['content'] ) && is_string( $msg['content'] ) ) {
 				$out[] = [
 					'role'    => $msg['role'],
@@ -1826,7 +1826,7 @@ Writing style — follow exactly:
 			}
 
 			// Structured content (tool_use blocks, tool_result blocks, tool messages)
-			// comes from our own server responses — pass through as-is.
+			// comes from our own server responses, pass through as-is.
 			$out[] = $msg;
 		}
 
@@ -1880,12 +1880,12 @@ Writing style — follow exactly:
 
 		// Load the WC cart and force the guest session cookie out BEFORE any SSE
 		// headers/output are flushed. Once the event-stream headers are sent the
-		// response is committed, so WooCommerce can no longer emit its Set-Cookie —
+		// response is committed, so WooCommerce can no longer emit its Set-Cookie , 
 		// guest carts mutated mid-stream would then be lost on the next request
 		// (live-QA finding #31). Must run before the header() calls below.
 		$this->prime_cart_session();
 
-		// SSE headers — X-Accel-Buffering disables nginx buffering.
+		// SSE headers, X-Accel-Buffering disables nginx buffering.
 		header( 'Content-Type: text/event-stream' );
 		header( 'Cache-Control: no-cache' );
 		header( 'X-Accel-Buffering: no' );
@@ -1910,7 +1910,7 @@ Writing style — follow exactly:
 	 * session Set-Cookie header before output begins. Without the cookie a guest's
 	 * cart mutations (e.g. add_to_cart) are written to session storage under one
 	 * id but the browser is handed none, so the following request reads a fresh,
-	 * empty session. Priming here — before any headers/output — keeps guest carts
+	 * empty session. Priming here, before any headers/output, keeps guest carts
 	 * persistent across the stream (live-QA finding #31). Emits only a cookie
 	 * header; nothing is echoed, so it is safe to call before the SSE headers.
 	 */
@@ -1955,7 +1955,7 @@ Writing style — follow exactly:
 			// Cost/latency: bound the outgoing context to the configured token budget
 			// (no-op by default); the system message + latest turn + in-progress tool
 			// loop survive. The SSE products/comparison events below still carry FULL
-			// data — only the model copy in $api_msgs is trimmed (issue #23).
+			// data, only the model copy in $api_msgs is trimmed (issue #23).
 			[ $text, $tool_calls, $error ] = $this->stream_one_turn( $this->apply_token_budget( $api_msgs ), $provider, $i );
 
 			if ( $error ) {
@@ -1966,7 +1966,7 @@ Writing style — follow exactly:
 				// widget shows a useful, honest handoff instead of a hard failure. The
 				// raw $error string (which may carry provider/exception detail) is never
 				// sent to the client. NOTE: mid-stream provider switching is out of
-				// scope for #58 — once bytes are flowing we cannot transparently swap
+				// scope for #58, once bytes are flowing we cannot transparently swap
 				// providers, so we degrade rather than fail over here.
 				$this->record_turn_analytics(
 					$messages,
@@ -1991,7 +1991,7 @@ Writing style — follow exactly:
 			$api_msgs[] = $assistant_msg;
 
 			if ( empty( $tool_calls ) ) {
-				// Final turn — signal completion. Record the resolved turn for owner
+				// Final turn, signal completion. Record the resolved turn for owner
 				// analytics (#49) before the connection closes.
 				$this->record_turn_analytics(
 					$messages,
@@ -2025,7 +2025,7 @@ Writing style — follow exactly:
 				// Comparison table (issue #13): surfaced as its own SSE event,
 				// mirroring the `products` event above. A comparison-shaped result
 				// emits no cards (see tool_result_cards), so the two are mutually
-				// exclusive — the widget renders the comparison table here.
+				// exclusive, the widget renders the comparison table here.
 				$comparison = $this->tool_result_comparison( $tc['name'], $result );
 				if ( ! empty( $comparison ) ) {
 					$this->sse_send( 'comparison', $comparison );
@@ -2041,7 +2041,7 @@ Writing style — follow exactly:
 
 		// Graceful exhaustion (finding #28): stream a friendly message + done instead of
 		// a raw error event, keeping any product cards already streamed above. The loop
-		// never produced a final answer within the budget — record it as a no-tool-match
+		// never produced a final answer within the budget, record it as a no-tool-match
 		// "couldn't complete" turn for owner analytics (#49).
 		$this->record_turn_analytics(
 			$messages,
@@ -2092,7 +2092,7 @@ Writing style — follow exactly:
 		}
 
 		// Surface the assistant text (buffered) so the widget renders it. Humanize it
-		// (strip em/en dashes, #130) before streaming — the full text is buffered here,
+		// (strip em/en dashes, #130) before streaming, the full text is buffered here,
 		// so there is no split-dash risk. The returned $text (used for the agent loop /
 		// history) is left as the model wrote it.
 		if ( '' !== $text ) {

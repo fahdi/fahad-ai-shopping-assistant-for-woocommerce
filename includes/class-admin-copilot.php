@@ -1,17 +1,17 @@
 <?php
 /**
- * Merchant AI copilot — admin-side REST surface (Epic B).
+ * Merchant AI copilot, admin-side REST surface (Epic B).
  *
  * A read-only / draft-only set of endpoints under fahad-ai/v1/admin, ALL gated by the
  * manage_woocommerce capability (NOT the storefront nonce). Each returns GROUNDED data
  * straight from WooCommerce so the admin copilot can reason over real numbers and never
  * invent them:
- *   - B1 /admin/insights        — orders / revenue / refunds for a window.
- *   - B2 /admin/sale-candidates — products to consider discounting (low velocity, healthy
+ *   - B1 /admin/insights       , orders / revenue / refunds for a window.
+ *   - B2 /admin/sale-candidates, products to consider discounting (low velocity, healthy
  *                                 margin), with a suggested discount. Proposes only.
- *   - B3 /admin/product-context — a product's REAL attributes, the grounding for any
+ *   - B3 /admin/product-context, a product's REAL attributes, the grounding for any
  *                                 generated description / meta / alt text (no fabrication).
- *   - B4 /admin/review-drafts   — unanswered product reviews needing a reply, with the
+ *   - B4 /admin/review-drafts  , unanswered product reviews needing a reply, with the
  *                                 real review text/rating the draft must address.
  *
  * Nothing here writes store data; the copilot proposes and the merchant applies.
@@ -118,7 +118,7 @@ final class Fahad_AI_Admin_Copilot {
 	/**
 	 * Products worth considering for a sale: in stock, NOT already on sale, ranked by
 	 * LOWEST recent units sold (slow movers surface first). Each candidate carries a
-	 * suggested, bounded discount so the copilot proposes a concrete deal — never below a
+	 * suggested, bounded discount so the copilot proposes a concrete deal, never below a
 	 * floor that would erase the margin. Read-only; the merchant decides.
 	 *
 	 * @return array<int,array{id:int,name:string,price:float,units_sold:int,suggested_discount_percent:int}>
@@ -157,7 +157,7 @@ final class Fahad_AI_Admin_Copilot {
 	}
 
 	/**
-	 * A product's REAL attributes — the grounding any generated description / SEO meta /
+	 * A product's REAL attributes, the grounding any generated description / SEO meta /
 	 * alt text must stick to, so the copilot can rewrite the wording without inventing
 	 * specs. Returns trusted WooCommerce fields only.
 	 *
@@ -191,7 +191,7 @@ final class Fahad_AI_Admin_Copilot {
 	}
 
 	/**
-	 * Product reviews that have no store reply yet — the real review text and rating the
+	 * Product reviews that have no store reply yet, the real review text and rating the
 	 * copilot's drafted reply must address. A review is "answered" when it already has a
 	 * child comment (a reply). Grounded: returns the actual review content, never a
 	 * fabricated one.

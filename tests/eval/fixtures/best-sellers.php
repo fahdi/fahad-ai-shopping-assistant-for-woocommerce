@@ -4,7 +4,7 @@
  *
  * The user asks for the store's best sellers; the model calls get_top_products
  * (a filter-registered catalog tool, not a built-in), then replies with a short
- * grounded intro — no inline prices, because the product cards render those.
+ * grounded intro, no inline prices, because the product cards render those.
  *
  * Asserts get_top_products ran, that the loop surfaced product cards (best-sellers
  * reuse the existing product-card rendering, via the convention-based emitter),
@@ -12,8 +12,8 @@
  *
  * get_top_products comes from the catalog feature pack (Fahad_AI_Catalog_Tools),
  * which self-registers via Fahad_AI_Tool_Registry::register_pack() when the test
- * bootstrap glob-loads includes/tools/*.php — exactly as the plugin bootstrap does
- * in production — so the real catalog tool executes in the loop with no per-fixture
+ * bootstrap glob-loads includes/tools/*.php, exactly as the plugin bootstrap does
+ * in production, so the real catalog tool executes in the loop with no per-fixture
  * wiring.
  */
 
@@ -37,7 +37,7 @@ return [
 			[ 'name' => 'get_top_products', 'input' => [ 'limit' => 3 ] ],
 		] ),
 		// Turn 2: short grounded intro; cards render the details below it.
-		EvalHarness::anthropic_text_turn( 'These are our most popular picks right now — take a look below!' ),
+		EvalHarness::anthropic_text_turn( 'These are our most popular picks right now, take a look below!' ),
 	],
 	'expect'   => [
 		'tool_calls'       => [ 'get_top_products' ],

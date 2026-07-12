@@ -1,11 +1,11 @@
 <?php
 /**
  * Unit tests for Fahad_AI_Proactive (issue #65: proactive, consented, value-gated
- * assist — the SERVER-SIDE decision helper behind the widget's proactive nudge).
+ * assist, the SERVER-SIDE decision helper behind the widget's proactive nudge).
  *
  * Red → Green → Refactor. Conventions mirror FeedbackTest / StockAlertsTest: WP
  * functions mocked via Brain\Monkey; the singleton reset via reflection between cases
- * (NEVER ReflectionMethod::setAccessible — host runs PHP 8.5); get_option stubbed via
+ * (NEVER ReflectionMethod::setAccessible, host runs PHP 8.5); get_option stubbed via
  * an in-memory $this->options map.
  *
  * ─── THE ANTI-DARK-PATTERN BAR IS THE WHOLE POINT (ROADMAP §6) ─────────────────────
@@ -105,7 +105,7 @@ class ProactiveTest extends TestCase {
 	}
 
 	public function test_no_real_value_signal_is_never_eligible(): void {
-		// VALUE-GATE: the trigger alone (idle/exit/return) is not enough — a nudge must
+		// VALUE-GATE: the trigger alone (idle/exit/return) is not enough, a nudge must
 		// carry a grounded benefit or it never fires.
 		$this->assertFalse(
 			$this->proactive()->is_eligible( $this->decision( [ 'has_value' => false ] ) )
@@ -199,7 +199,7 @@ class ProactiveTest extends TestCase {
 
 	public function test_store_credit_winback_message_has_no_fake_urgency(): void {
 		// A5 win-back contract: the store-credit nudge (the grounded abandoned-cart
-		// incentive) must stay calm and factual — never manufactured urgency/scarcity
+		// incentive) must stay calm and factual, never manufactured urgency/scarcity
 		// (ROADMAP §6). This pins the trust property for the win-back message.
 		$balance = [ 'amount' => 500.0, 'currency' => 'PKR', 'formatted' => '₨500' ];
 		$signal  = $this->proactive()->value_signal( [ 'found' => 0, 'coupons' => [] ], $balance );
@@ -211,7 +211,7 @@ class ProactiveTest extends TestCase {
 	}
 
 	public function test_zero_store_credit_is_not_a_value_signal(): void {
-		// A zero/empty balance is NOT a benefit — never nudge "you have 0 credit".
+		// A zero/empty balance is NOT a benefit, never nudge "you have 0 credit".
 		$balance = [ 'amount' => 0.0, 'currency' => 'PKR', 'formatted' => '₨0' ];
 		$signal  = $this->proactive()->value_signal( [ 'found' => 0, 'coupons' => [] ], $balance );
 		$this->assertNull( $signal );
@@ -219,7 +219,7 @@ class ProactiveTest extends TestCase {
 
 	public function test_a_coupon_entry_with_no_code_is_ignored(): void {
 		// Defensive grounding: a malformed coupon row (no usable code) is NOT a deal, so
-		// it must never become a nudge — fall through to credit (here, none → null).
+		// it must never become a nudge, fall through to credit (here, none → null).
 		$coupons = [ 'found' => 1, 'coupons' => [ [ 'description' => '10% off' ] ] ];
 		$this->assertNull( $this->proactive()->value_signal( $coupons, null ) );
 	}
@@ -238,7 +238,7 @@ class ProactiveTest extends TestCase {
 
 	public function test_a_produced_nudge_message_carries_no_urgency_or_scarcity(): void {
 		// Build messages from BOTH grounded signal types and assert none of them smuggle
-		// scarcity/urgency vocabulary. This is the deterministic anti-dark-pattern check —
+		// scarcity/urgency vocabulary. This is the deterministic anti-dark-pattern check , 
 		// the analogue of the eval suite's scarcity_violations checker.
 		$messages = [];
 

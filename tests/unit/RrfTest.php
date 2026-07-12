@@ -20,7 +20,7 @@ class RrfTest extends TestCase {
 
 	public function test_an_id_in_multiple_lists_outranks_a_single_list_top_hit(): void {
 		// 5 is only rank 3 in BOTH lists; 1 and 3 are rank 1 in one list each.
-		// 5: 1/63 + 1/63 = 0.03175 beats 1: 1/61 = 0.01639 — the fusion reward.
+		// 5: 1/63 + 1/63 = 0.03175 beats 1: 1/61 = 0.01639, the fusion reward.
 		$fused = Fahad_AI_Rrf::fuse( [ [ 1, 2, 5 ], [ 3, 4, 5 ] ] );
 		$this->assertSame( 5, $fused[0], 'shared id outranks any single-list rank-1 hit' );
 		// Ties resolve deterministically by id ascending: 1 before 3, then 2 before 4.

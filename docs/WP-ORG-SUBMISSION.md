@@ -1,4 +1,4 @@
-# WordPress.org submission — prep & runbook (issue #67)
+# WordPress.org submission, prep & runbook (issue #67)
 
 > **Status: BLOCKED on an owner action.** The directory slug
 > `fahad-ai-shopping-assistant-for-woocommerce` is still in WordPress.org review, and
@@ -8,7 +8,7 @@
 
 ## What's already compliant (verified)
 - **Text domain == slug:** `fahad-ai-shopping-assistant-for-woocommerce` (header + every `__()`).
-- **Prefixes:** `FAHAD_AI_` / `fahad_ai_` (≥4 chars, distinct) — passes the unique-prefix rule.
+- **Prefixes:** `FAHAD_AI_` / `fahad_ai_` (≥4 chars, distinct), passes the unique-prefix rule.
 - **`readme.txt`:** valid header (Contributors, Tags, Requires at least, Tested up to 7.0, Requires PHP, Stable tag matches the release), Description / Installation / FAQ / Changelog / Upgrade Notice sections, and the **External services** disclosure (Anthropic + Moonshot endpoints + privacy links).
 - **Direct cURL** (the Moonshot SSE handle in `class-api-handler.php`) is wrapped in `phpcs:disable/enable` with the justification comment the reviewer asked for.
 - **No inline `<script>`** (admin JS is enqueued); `Requires Plugins: woocommerce` header present.
@@ -44,7 +44,7 @@ svn status
 svn commit -m "Release $VER"
 ```
 
-## Reviewer reply template (brief — no AI fluff; reviewers flag that)
+## Reviewer reply template (brief, no AI fluff; reviewers flag that)
 > Thanks for the review. Addressed:
 > - Slug/prefix: final slug `fahad-ai-shopping-assistant-for-woocommerce`; all code uses the `fahad_ai_`/`FAHAD_AI_` prefix and the text domain matches the slug.
 > - cURL: the only direct cURL is the Moonshot SSE streaming handle; it's documented inline (phpcs justification) because `wp_remote_post()` buffers the full body and the `http_api_curl` override proved unreliable for SSE.

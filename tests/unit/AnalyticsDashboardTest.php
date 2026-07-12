@@ -5,7 +5,7 @@
  * The dashboard rendering and the export/delete admin-post handlers need a browser
  * (output + redirects/headers), but the DATE-RANGE parsing and the order-attribution
  * callback are pure functions the dashboard depends on, and the "selectable date
- * range" is an acceptance criterion — so they are unit-tested here directly.
+ * range" is an acceptance criterion, so they are unit-tested here directly.
  *
  * Conventions mirror MerchantConfigTest: the admin settings file is a plain function
  * file (guarded by ABSPATH, which the WC stubs define) loaded once; Brain\Monkey stubs

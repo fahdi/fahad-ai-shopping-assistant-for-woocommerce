@@ -7,11 +7,11 @@
  * singleton + its static pack list snapshotted and restored so a case here neither
  * inherits another suite's packs nor leaks the order pack we register.
  *
- * The two order tools (get_my_orders, get_order_status) are NOT built-ins — they
+ * The two order tools (get_my_orders, get_order_status) are NOT built-ins, they
  * ship as a drop-in feature pack that self-registers a provider via
  * Fahad_AI_Tool_Registry::register_pack() at file load. Every test registers the
  * order pack's REAL provider through register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch() — so the production registration +
+ * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration +
  * merge + dispatch path (INCLUDING the central login gate for `personal` tools) is
  * what is under test.
  *
@@ -21,7 +21,7 @@
  *     the registry's login gate BEFORE the callback runs (the callback spy must
  *     never flip).
  *   - OWNERSHIP-BYPASS: a logged-in user (id 5) asking for an order owned by user 9
- *     gets a "not found" result — never the other user's order.
+ *     gets a "not found" result, never the other user's order.
  */
 
 use Brain\Monkey;
@@ -37,7 +37,7 @@ class OrderToolsTest extends TestCase {
      * Snapshot of the registry's static pack providers, restored in tearDown so a
      * test here neither inherits another suite's packs nor leaks the order pack we
      * register for our own cases. (Pack providers are static so they survive a
-     * singleton instance reset — see Fahad_AI_Tool_Registry::register_pack.)
+     * singleton instance reset, see Fahad_AI_Tool_Registry::register_pack.)
      *
      * @var array<int, callable>
      */
@@ -56,7 +56,7 @@ class OrderToolsTest extends TestCase {
             // default (no disabled tools) so dispatch()/specs() are unaffected.
             'get_option'          => fn( $key, $default = '' ) => $default,
             // The order tools format the WC date through wc_format_datetime( $dt,
-            // 'Y-m-d' ). Our date mock is a real DateTime, so format it directly —
+            // 'Y-m-d' ). Our date mock is a real DateTime, so format it directly , 
             // exactly the shape WooCommerce returns ('Y-m-d' here).
             'wc_format_datetime'  => fn( $dt, $format = 'Y-m-d' ) => $dt instanceof \DateTimeInterface ? $dt->format( $format ) : '',
         ] );
@@ -77,7 +77,7 @@ class OrderToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the order tools.
      *
      * Resets the Tools + registry singletons, then registers the order pack's REAL
-     * provider via register_pack() — exactly what the pack's file-scope
+     * provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production. Registering it explicitly (after
      * clearing the static list) keeps the test hermetic and order-independent.
      */
@@ -108,7 +108,7 @@ class OrderToolsTest extends TestCase {
         $o->shouldReceive( 'get_customer_id' )->andReturn( (int) ( $spec['customer_id'] ?? 5 ) );
 
         // get_date_created(): WooCommerce returns a WC_DateTime (a DateTime subclass).
-        // A real DateTime stands in faithfully — wc_format_datetime() formats it — and
+        // A real DateTime stands in faithfully, wc_format_datetime() formats it, and
         // sidesteps mocking DateTime internals. null models "no date on the order".
         if ( array_key_exists( 'date', $spec ) && null !== $spec['date'] ) {
             $o->shouldReceive( 'get_date_created' )->andReturn( new \DateTime( (string) $spec['date'] ) );
@@ -185,7 +185,7 @@ class OrderToolsTest extends TestCase {
 
     public function test_get_my_orders_scopes_the_query_to_the_current_user(): void {
         // The query MUST be scoped to the current user id so it can only ever return
-        // that user's own orders — the first line of defence against data leakage.
+        // that user's own orders, the first line of defence against data leakage.
         Functions\expect( 'wc_get_orders' )
             ->once()
             ->andReturnUsing( function ( array $args ): array {
@@ -315,8 +315,8 @@ class OrderToolsTest extends TestCase {
 
     /**
      * THE headline security test. Current user is 5. They request order #100, which
-     * is owned by user 9. get_order_status must return a "not found"-style result —
-     * NEVER the other user's order — and must not even confirm the order exists.
+     * is owned by user 9. get_order_status must return a "not found"-style result , 
+     * NEVER the other user's order, and must not even confirm the order exists.
      *
      * Without the in-callback Fahad_AI_Auth::user_owns() guard this fails: the order
      * loads fine (wc_get_order returns it) and its real status would leak.
@@ -335,7 +335,7 @@ class OrderToolsTest extends TestCase {
         // Current user is 5 (from setUp); the order belongs to 9.
         $result = $this->registry()->dispatch( 'get_order_status', [ 'order_id' => 100 ] );
 
-        // Must be a not-found error — never the order.
+        // Must be a not-found error, never the order.
         $this->assertArrayHasKey( 'error', $result );
         $this->assertStringContainsString( 'not found', strtolower( $result['error'] ) );
         // None of the other user's order data leaked, anywhere.
@@ -356,7 +356,7 @@ class OrderToolsTest extends TestCase {
     /**
      * A guest dispatching either personal tool must be stopped CENTRALLY by the
      * registry's login gate, before the tool callback runs. We assert the standard
-     * login-required error AND — critically — that the underlying WC data accessors
+     * login-required error AND, critically, that the underlying WC data accessors
      * are NEVER invoked, proving the callback was never reached (the gate is central,
      * not something each tool re-implements). is_user_logged_in() is stubbed false.
      *
@@ -366,7 +366,7 @@ class OrderToolsTest extends TestCase {
         Functions\when( 'is_user_logged_in' )->justReturn( false );
         Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
-        // If the callback were reached, it would call one of these — they must NOT
+        // If the callback were reached, it would call one of these, they must NOT
         // be hit. expect(...)->never() turns any call into a hard failure.
         Functions\expect( 'wc_get_orders' )->never();
         Functions\expect( 'wc_get_order' )->never();

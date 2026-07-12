@@ -7,7 +7,7 @@
  * (the '' === $blob branch) stays uncovered. This file pins that branch with a
  * meaningful assertion: an empty BLOB must decode to an empty 0-indexed vector.
  *
- * Pure static helpers — no WordPress / WooCommerce, so no Brain\Monkey here.
+ * Pure static helpers, no WordPress / WooCommerce, so no Brain\Monkey here.
  */
 
 use PHPUnit\Framework\TestCase;

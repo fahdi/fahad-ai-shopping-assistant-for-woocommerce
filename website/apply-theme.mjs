@@ -1,5 +1,5 @@
 // Add a warm-daylight light mode + theme toggle across every marketing page.
-// Idempotent — safe to re-run. Run: node website/apply-theme.mjs
+// Idempotent, safe to re-run. Run: node website/apply-theme.mjs
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

@@ -8,10 +8,10 @@
  * tearDown so this suite neither inherits another suite's packs nor leaks its own.
  *
  * The two recommendation tools (get_recommendations, get_cross_sells) are NOT
- * built-ins — they ship as a drop-in feature pack that self-registers a provider
+ * built-ins, they ship as a drop-in feature pack that self-registers a provider
  * via Fahad_AI_Tool_Registry::register_pack() at file load. Every test registers
  * the pack's REAL provider through register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch() — so the production registration +
+ * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration +
  * merge + dispatch path is what is under test.
  */
 
@@ -68,7 +68,7 @@ class RecommendationToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the recommendation tools.
      *
      * Resets the Tools + registry singletons, then registers the recommendation
-     * pack's REAL provider via register_pack() — exactly what the pack's file-scope
+     * pack's REAL provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production. Registered explicitly (after clearing
      * the static list) so the test is hermetic and order-independent.
      */
@@ -117,7 +117,7 @@ class RecommendationToolsTest extends TestCase {
 
         $this->assertContains( 'get_recommendations', $names );
         $this->assertContains( 'get_cross_sells', $names );
-        // They are additive — the five built-ins remain.
+        // They are additive, the five built-ins remain.
         $this->assertContains( 'search_products', $names );
         $this->assertCount( 7, $names );
     }
@@ -136,8 +136,8 @@ class RecommendationToolsTest extends TestCase {
 
     public function test_recommendation_tools_are_not_personal(): void {
         // They operate on the shared catalog/session cart, so they must NOT be
-        // login-gated — a guest can ask for suggestions. (Private members are
-        // reflection-accessible by default since PHP 8.1, so no setAccessible() —
+        // login-gated, a guest can ask for suggestions. (Private members are
+        // reflection-accessible by default since PHP 8.1, so no setAccessible() , 
         // which is a deprecated no-op on 8.5; mirrors CouponToolsTest.)
         $map = ( new ReflectionMethod( Fahad_AI_Tool_Registry::class, 'get_tools' ) )->invoke( $this->registry() );
 

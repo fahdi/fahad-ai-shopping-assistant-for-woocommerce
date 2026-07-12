@@ -4,14 +4,14 @@
  *
  * Red → Green → Refactor cycle. Conventions mirror ToolsTest / CatalogToolsTest:
  * WP/WC functions mocked via Brain\Monkey; WC objects via Mockery; the Tools
- * singleton reset via reflection. NO setAccessible on private methods — every
+ * singleton reset via reflection. NO setAccessible on private methods, every
  * assertion drives the public search_products tool (via Fahad_AI_Tools::execute)
  * so the production seam → fall-back path is what is under test.
  *
  * The seam: search_products consults a pluggable retriever registered on the
  * `fahad_ai_semantic_retriever` filter BEFORE the keyword search. A retriever is
  * given the query (+ filters) and returns ranked product IDs; those IDs are
- * resolved LIVE via wc_get_product() so price/stock are never cached — they are
+ * resolved LIVE via wc_get_product() so price/stock are never cached, they are
  * read from the live WC_Product at call time by format_product_summary(). With no
  * retriever registered (default), or one that returns nothing, search_products
  * falls back to the existing keyword search (+ relaxation) unchanged.
@@ -68,7 +68,7 @@ class SemanticSearchTest extends TestCase {
 	/**
 	 * Register a stub semantic retriever on the seam filter for one test. The
 	 * retriever receives ( $passthrough, $query, $filters ) and returns ranked
-	 * product IDs — exactly the contract a real embeddings provider implements.
+	 * product IDs, exactly the contract a real embeddings provider implements.
 	 *
 	 * @param callable $retriever fn( $value, string $query, array $filters ): mixed
 	 */
@@ -130,7 +130,7 @@ class SemanticSearchTest extends TestCase {
 	// ── seam present: retriever drives the results ──────────────────────────────
 
 	public function test_registered_retriever_ranked_ids_drive_the_results(): void {
-		// "shoes for flat feet" — the keyword search would miss it; the retriever
+		// "shoes for flat feet", the keyword search would miss it; the retriever
 		// returns the semantically-relevant ids, in rank order. search_products must
 		// resolve those ids (live) and return them in that order, NOT run keyword.
 		$byId = [
@@ -182,7 +182,7 @@ class SemanticSearchTest extends TestCase {
 
 	public function test_retriever_results_carry_live_price_and_stock_not_cached(): void {
 		// The retriever returns only an id. Price and stock MUST come from the live
-		// WC_Product resolved via wc_get_product at call time — never embedded/cached.
+		// WC_Product resolved via wc_get_product at call time, never embedded/cached.
 		// We prove this by making the live product report a specific price + OUT of
 		// stock; the card must reflect the live values, not anything the seam stored.
 		$live = $this->mockProduct( 50, 'Wool Coat', '199.99', /* inStock */ false );
@@ -205,8 +205,8 @@ class SemanticSearchTest extends TestCase {
 
 	public function test_retriever_ids_resolving_to_invisible_products_are_dropped(): void {
 		// An id the retriever ranks may be unpublished/hidden by the time we resolve
-		// it (the index can lag live truth). Such products are filtered out — never
-		// surfaced — and a missing id (wc_get_product false) is skipped, not fatal.
+		// it (the index can lag live truth). Such products are filtered out, never
+		// surfaced, and a missing id (wc_get_product false) is skipped, not fatal.
 		$visible = $this->mockProduct( 1, 'Visible Boot', '70.00' );
 		$hidden  = $this->mockProduct( 2, 'Hidden Boot', '70.00' );
 		$hidden->shouldReceive( 'is_visible' )->andReturn( false );
@@ -228,7 +228,7 @@ class SemanticSearchTest extends TestCase {
 
 	public function test_no_retriever_falls_back_to_keyword_search_unchanged(): void {
 		// Default state: no provider registered. search_products must behave exactly
-		// as today — the keyword search drives the results.
+		// as today, the keyword search drives the results.
 		$product = $this->mockProduct( 1, 'Blue Jeans', '59.99' );
 		Functions\when( 'wc_get_products' )->justReturn( [ $product ] );
 
@@ -240,7 +240,7 @@ class SemanticSearchTest extends TestCase {
 
 	public function test_no_retriever_still_relaxes_plural_query(): void {
 		// The existing relaxation (plurals/adjectives) must remain intact when no
-		// retriever is registered — the seam adds a layer, it does not replace this.
+		// retriever is registered, the seam adds a layer, it does not replace this.
 		$this->aliasCatalogSearch( [ 38 => 'Premium Pullover Hoodie', 14 => 'Running Sneakers' ] );
 
 		$result = $this->tools()->execute( 'search_products', [ 'query' => 'hoodies' ] );
@@ -298,7 +298,7 @@ class SemanticSearchTest extends TestCase {
 
 	public function test_empty_query_with_filters_does_not_invoke_retriever(): void {
 		// A pure category/price browse (no free-text query) has no semantic intent to
-		// embed — the seam is skipped and the keyword/filter path runs as before.
+		// embed, the seam is skipped and the keyword/filter path runs as before.
 		Monkey\Filters\expectApplied( 'fahad_ai_semantic_retriever' )->never(); // seam not consulted
 		$product = $this->mockProduct( 21, 'Filtered Item', '15.00' );
 		Functions\when( 'wc_get_products' )->justReturn( [ $product ] );

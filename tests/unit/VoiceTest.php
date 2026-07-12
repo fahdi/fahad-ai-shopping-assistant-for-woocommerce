@@ -4,7 +4,7 @@
  *
  * Red → Green → Refactor. Conventions mirror ProactiveTest / FeedbackTest: WP functions
  * mocked via Brain\Monkey; the singleton reset via reflection between cases (NEVER
- * ReflectionMethod::setAccessible — host runs PHP 8.5); get_option stubbed via an
+ * ReflectionMethod::setAccessible, host runs PHP 8.5); get_option stubbed via an
  * in-memory $this->options map.
  *
  * ─── WHAT IS ACTUALLY TESTABLE HERE ─────────────────────────────────────────────────
@@ -14,7 +14,7 @@
  * be exercised in a real browser. The one piece of load-bearing PHP is the CONFIG GATE:
  * the widget gets a voice config ONLY when the merchant turned voice on, so a store that
  * has not opted in can never render the mic/speaker controls. These tests pin that gate,
- * plus the TTS sub-toggle and the conservative OFF-by-default behaviour — the same
+ * plus the TTS sub-toggle and the conservative OFF-by-default behaviour, the same
  * pattern proven for the proactive nudge (#65).
  */
 
@@ -135,7 +135,7 @@ class VoiceTest extends TestCase {
 
 	public function test_config_lang_falls_back_to_empty_when_site_language_blank(): void {
 		// A blank site language yields '' (the widget then lets the browser pick its
-		// default locale) — never a crash, never a bogus tag.
+		// default locale), never a crash, never a bogus tag.
 		$this->options['fahad_ai_voice_enabled'] = 1;
 		Functions\when( 'get_bloginfo' )->alias( fn( $show = '' ) => '' );
 
@@ -146,7 +146,7 @@ class VoiceTest extends TestCase {
 
 	public function test_config_is_filterable(): void {
 		// A site can force-disable voice (return []) or adjust the config via the filter,
-		// without code edits — mirrors fahad_ai_proactive_config.
+		// without code edits, mirrors fahad_ai_proactive_config.
 		$this->options['fahad_ai_voice_enabled'] = 1;
 		Functions\when( 'apply_filters' )->alias(
 			fn( $hook, $value = null ) => 'fahad_ai_voice_config' === $hook ? [] : $value
@@ -157,7 +157,7 @@ class VoiceTest extends TestCase {
 
 	public function test_config_survives_a_non_array_filter_return(): void {
 		// Defensive: a misbehaving filter that returns a non-array must not corrupt the
-		// localized config — it collapses to [] (no voice) rather than a fatal later.
+		// localized config, it collapses to [] (no voice) rather than a fatal later.
 		$this->options['fahad_ai_voice_enabled'] = 1;
 		Functions\when( 'apply_filters' )->alias(
 			fn( $hook, $value = null ) => 'fahad_ai_voice_config' === $hook ? 'nonsense' : $value

@@ -5,18 +5,18 @@
  * The user asks for a shipping cost to a destination; the model calls
  * estimate_delivery (the shipping feature pack tool, not a built-in), which runs
  * for REAL against the WooCommerce shipping stubs (a WC_Shipping_Zones stub that
- * returns one flat_rate method at 5.00 — see tests/stubs/wc-stubs.php). The model
+ * returns one flat_rate method at 5.00, see tests/stubs/wc-stubs.php). The model
  * then states that cost back.
  *
- * Asserts estimate_delivery ran with the destination the user gave, and — the
- * whole point of the feature — that the answer is GROUNDED: the only price it
+ * Asserts estimate_delivery ran with the destination the user gave, and, the
+ * whole point of the feature, that the answer is GROUNDED: the only price it
  * states ($5.00) is the real method cost the tool returned, never an invented
  * number or a made-up delivery date.
  *
  * estimate_delivery comes from the shipping feature pack (Fahad_AI_Shipping_Tools),
  * which self-registers via Fahad_AI_Tool_Registry::register_pack() when the test
- * bootstrap glob-loads includes/tools/*.php — exactly as the plugin bootstrap does
- * in production — so the real tool executes in the loop with no per-fixture wiring.
+ * bootstrap glob-loads includes/tools/*.php, exactly as the plugin bootstrap does
+ * in production, so the real tool executes in the loop with no per-fixture wiring.
  */
 
 return [
@@ -36,7 +36,7 @@ return [
 		// Turn 2: a grounded answer. The cost ($5.00) is exactly what the tool
 		// returned; no delivery date is promised (the tool derived none).
 		EvalHarness::anthropic_text_turn(
-			'Standard shipping to the US is $5.00. I don\'t have a guaranteed delivery date — that depends on the carrier.'
+			'Standard shipping to the US is $5.00. I don\'t have a guaranteed delivery date, that depends on the carrier.'
 		),
 	],
 	'expect'   => [

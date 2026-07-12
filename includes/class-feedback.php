@@ -11,13 +11,13 @@ defined( 'ABSPATH' ) || exit;
  * expose it so a future review pass can surface low-rated replies and convert them
  * into eval golden cases.
  *
- * ─── TELEMETRY ONLY — NO PII (issue #50 hardening) ───────────────────────────────
+ * ─── TELEMETRY ONLY, NO PII (issue #50 hardening) ───────────────────────────────
  *
  * A stored row carries ONLY: the rating ('up'|'down'), a sanitized + length-capped
- * free-text reason, two OPAQUE client-supplied refs (conversation + message — these
+ * free-text reason, two OPAQUE client-supplied refs (conversation + message, these
  * are widget-generated tokens, never an email/name), a created timestamp, and a
  * guardrail `flagged` boolean. It NEVER stores an email, a name, an IP, or a user
- * id — there is deliberately no such field, so the option cannot become a PII sink.
+ * id, there is deliberately no such field, so the option cannot become a PII sink.
  * Nothing in here is ever fed back to the model (it is review/telemetry data, read
  * only by the store's own aggregates).
  *
@@ -42,7 +42,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Storage: a single autoload=no option holding an id => row map. This keeps the
  * feature self-contained and trivially testable (no custom table, no migration) at
- * the scale a bounded, rolling feedback window realistically reaches — the same
+ * the scale a bounded, rolling feedback window realistically reaches, the same
  * approach as Fahad_AI_Stock_Alerts.
  */
 final class Fahad_AI_Feedback {
@@ -54,7 +54,7 @@ final class Fahad_AI_Feedback {
 	public const RATING_UP   = 'up';
 	public const RATING_DOWN = 'down';
 
-	/** Hard cap on stored rows (retention — bound the option, FIFO eviction). */
+	/** Hard cap on stored rows (retention, bound the option, FIFO eviction). */
 	public const MAX_ENTRIES = 1000;
 
 	/** Max characters kept of a free-text reason (bounds an attacker-controlled blob). */
@@ -190,7 +190,7 @@ final class Fahad_AI_Feedback {
 
 	/**
 	 * The most recent flagged rows (newest first), capped at $limit. Surfaces every
-	 * entry a review pass should look at — both auto-flagged 👎s and entries an
+	 * entry a review pass should look at, both auto-flagged 👎s and entries an
 	 * explicit guardrail flagger marked.
 	 *
 	 * @return array<int, array>
@@ -282,7 +282,7 @@ final class Fahad_AI_Feedback {
 		return is_array( $rows ) ? $rows : [];
 	}
 
-	/** Persist the id => row map (autoload off — this is a rolling window). */
+	/** Persist the id => row map (autoload off, this is a rolling window). */
 	private function save( array $rows ): void {
 		update_option( self::OPTION, $rows, false );
 	}

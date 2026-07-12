@@ -1,6 +1,6 @@
 <?php
 /**
- * Fixture: multi-turn, multi-tool conversation — tool-use id uniqueness (issue #66).
+ * Fixture: multi-turn, multi-tool conversation, tool-use id uniqueness (issue #66).
  *
  * The user wants to buy the Trail Runner. The model calls search_products in turn 1,
  * then add_to_cart in turn 2, then gives a one-line confirmation with the required
@@ -13,7 +13,7 @@
  * The two tools return unmistakably different shapes (search → `products`,
  * add_to_cart → `cart_url`/`checkout_url`), so test_multi_turn_tool_calls_do_not_
  * collide_ids() can assert the first call resolves to the SEARCH result and the
- * second to the ADD result — a collision would surface the add result on call #0.
+ * second to the ADD result, a collision would surface the add result on call #0.
  *
  * Distinct from add-to-cart.php (same flow, asserts tool order + the link pattern):
  * this fixture exists specifically to prove the per-call tool RESULT mapping survives
@@ -49,7 +49,7 @@ return [
 		] ),
 		// Turn 3: one-line confirmation with the mandated cart/checkout links.
 		EvalHarness::anthropic_text_turn(
-			'Done — the Trail Runner is in your cart. [View Cart](http://example.com/cart) · [Checkout](http://example.com/checkout)'
+			'Done, the Trail Runner is in your cart. [View Cart](http://example.com/cart) · [Checkout](http://example.com/checkout)'
 		),
 	],
 	'expect'   => [

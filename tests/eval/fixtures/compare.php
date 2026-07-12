@@ -4,7 +4,7 @@
  *
  * The user asks for the difference between two specific products; the model calls
  * compare_products (a feature-pack tool, not a built-in) with their ids, then
- * replies with a short grounded recommendation — no inline spec/price dump, because
+ * replies with a short grounded recommendation, no inline spec/price dump, because
  * the comparison TABLE renders the aligned attributes.
  *
  * Asserts compare_products ran with the two ids, that the loop surfaced a comparison
@@ -16,8 +16,8 @@
  *
  * compare_products comes from the comparison feature pack (Fahad_AI_Comparison_Tools),
  * which self-registers via Fahad_AI_Tool_Registry::register_pack() when the test
- * bootstrap glob-loads includes/tools/*.php — exactly as the plugin bootstrap does in
- * production — so the real comparison tool executes in the loop with no per-fixture
+ * bootstrap glob-loads includes/tools/*.php, exactly as the plugin bootstrap does in
+ * production, so the real comparison tool executes in the loop with no per-fixture
  * wiring.
  */
 
@@ -51,7 +51,7 @@ return [
 			[ 'name' => 'compare_products', 'input' => [ 'ids' => [ 401, 402 ] ] ],
 		] ),
 		// Turn 2: short grounded recommendation; the comparison table shows the specs.
-		EvalHarness::anthropic_text_turn( 'The Summit Pro is the more rugged, waterproof option, while the Trail Runner is lighter for faster trail outings — see the side-by-side below.' ),
+		EvalHarness::anthropic_text_turn( 'The Summit Pro is the more rugged, waterproof option, while the Trail Runner is lighter for faster trail outings, see the side-by-side below.' ),
 	],
 	'expect'   => [
 		'tool_calls'             => [ 'compare_products' ],

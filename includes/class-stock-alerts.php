@@ -2,7 +2,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Back-in-stock & price-drop alert subscriptions — store + notifier (issue #51).
+ * Back-in-stock & price-drop alert subscriptions, store + notifier (issue #51).
  *
  * The persistence + email engine behind the `subscribe_stock_alert` agent tool
  * (Fahad_AI_Stock_Alert_Tools). The tool decides WHETHER an alert is legitimate
@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
  * ─── ANTI-SPAM: DOUBLE OPT-IN ───────────────────────────────────────────────────
  *
  * subscribe() records a PENDING row only. NOTHING is ever emailed to a pending
- * subscriber except — by the tool/UI — a single confirm link. A notification can
+ * subscriber except, by the tool/UI, a single confirm link. A notification can
  * fire only after confirm() flips the row to `confirmed` via a signed token the
  * shopper clicked. This is the anti-spam guarantee: a third party cannot weaponise
  * the store to mail an address that never opted in.
@@ -33,7 +33,7 @@ defined( 'ABSPATH' ) || exit;
  * Emails are validated with is_email() and sanitized with sanitize_email() before
  * storage; an invalid address is refused and stores nothing. The dedupe key is
  * email|product_id|variation_id|type, so the same shopper watching the same item
- * for the same reason subscribes ONCE — a second subscribe is idempotent.
+ * for the same reason subscribes ONCE, a second subscribe is idempotent.
  *
  * ─── NOTIFY ON A REAL CHANGE, MARK SENT ──────────────────────────────────────────
  *
@@ -52,7 +52,7 @@ defined( 'ABSPATH' ) || exit;
  * ─── PRIVACY BOUNDARY ────────────────────────────────────────────────────────────
  *
  * Subscriber emails are PII: they live ONLY in this option and in the wp_mail
- * envelope. They are never returned to the model — the tool echoes back at most a
+ * envelope. They are never returned to the model, the tool echoes back at most a
  * masked address (Fahad_AI_Auth::mask_email).
  *
  * Storage: a single autoload=no option holding an id => row map. This keeps the
@@ -71,7 +71,7 @@ final class Fahad_AI_Stock_Alerts {
 	public const TYPE_BACK_IN_STOCK = 'back_in_stock';
 	public const TYPE_PRICE_DROP     = 'price_drop';
 
-	/** Hard cap on stored subscriptions (storage hygiene — bound the option). */
+	/** Hard cap on stored subscriptions (storage hygiene, bound the option). */
 	public const MAX_SUBSCRIPTIONS = 5000;
 
 	private static ?Fahad_AI_Stock_Alerts $instance = null;
@@ -110,7 +110,7 @@ final class Fahad_AI_Stock_Alerts {
 		add_action( 'woocommerce_update_product',             [ $self, 'on_product_price_change' ], 20, 1 );
 		add_action( 'woocommerce_update_product_variation',   [ $self, 'on_product_price_change' ], 20, 1 );
 
-		// One-click confirm / unsubscribe links resolve here (front-end GET, no auth —
+		// One-click confirm / unsubscribe links resolve here (front-end GET, no auth , 
 		// the signed token IS the authorization).
 		add_action( 'init', [ $self, 'maybe_handle_request' ] );
 
@@ -128,7 +128,7 @@ final class Fahad_AI_Stock_Alerts {
 	 *
 	 * Validates + sanitizes the email, normalises the type, dedupes on
 	 * email|product|variation|type, and stores a pending row. Returns the row id and
-	 * a confirm token so the caller can email a confirm link — it does NOT email
+	 * a confirm token so the caller can email a confirm link, it does NOT email
 	 * anything itself (the tool/UI owns the confirm message), and it does NOT
 	 * activate the alert (status stays `pending` until confirm()).
 	 *
@@ -213,7 +213,7 @@ final class Fahad_AI_Stock_Alerts {
 
 	/**
 	 * One-click unsubscribe. The signed `unsubscribe` token must validate for this
-	 * id (a confirm token will NOT — tokens are bound to their action). Removes the
+	 * id (a confirm token will NOT, tokens are bound to their action). Removes the
 	 * row entirely. A bad token removes nothing.
 	 */
 	public function unsubscribe( string $id, string $token ): bool {
@@ -265,7 +265,7 @@ final class Fahad_AI_Stock_Alerts {
 	/**
 	 * Notify every CONFIRMED, not-yet-sent back-in-stock subscriber for a product /
 	 * variation that is now available, then stamp each `sent` so they are emailed
-	 * once per restock — never speculatively, never twice for the same event.
+	 * once per restock, never speculatively, never twice for the same event.
 	 *
 	 * @return int Number of subscribers notified.
 	 */
@@ -279,7 +279,7 @@ final class Fahad_AI_Stock_Alerts {
 	}
 
 	/**
-	 * Notify CONFIRMED price-drop subscribers — but ONLY when the new price is
+	 * Notify CONFIRMED price-drop subscribers, but ONLY when the new price is
 	 * genuinely lower than the old (no fabricated "drop"). Marks each sent.
 	 *
 	 * @return int Number of subscribers notified.
@@ -520,7 +520,7 @@ final class Fahad_AI_Stock_Alerts {
 	 * Personal-data eraser callback: delete every alert for the email.
 	 *
 	 * @param string $email The address being erased.
-	 * @param int    $page  Pagination (single page — we erase all at once).
+	 * @param int    $page  Pagination (single page, we erase all at once).
 	 * @return array WordPress eraser response shape.
 	 */
 	public function gdpr_erase( string $email, int $page = 1 ): array {
@@ -561,7 +561,7 @@ final class Fahad_AI_Stock_Alerts {
 	}
 
 	// -------------------------------------------------------------------------
-	// Email composition (no PII to the model — these are real emails to the user)
+	// Email composition (no PII to the model, these are real emails to the user)
 	// -------------------------------------------------------------------------
 
 	/** @return array{0:string,1:string} [ subject, body ] for a back-in-stock email. */
@@ -572,7 +572,7 @@ final class Fahad_AI_Stock_Alerts {
 			__( 'Back in stock at %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			$site
 		);
-		$intro = __( 'Good news — an item you wanted is back in stock.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+		$intro = __( 'Good news, an item you wanted is back in stock.', 'fahad-ai-shopping-assistant-for-woocommerce' );
 
 		return [ $subject, $this->wrap_email( $intro, $row ) ];
 	}
@@ -585,7 +585,7 @@ final class Fahad_AI_Stock_Alerts {
 			__( 'Price drop at %s', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			$site
 		);
-		$intro = __( 'Good news — the price dropped on an item you were watching.', 'fahad-ai-shopping-assistant-for-woocommerce' );
+		$intro = __( 'Good news, the price dropped on an item you were watching.', 'fahad-ai-shopping-assistant-for-woocommerce' );
 
 		return [ $subject, $this->wrap_email( $intro, $row ) ];
 	}
@@ -620,7 +620,7 @@ final class Fahad_AI_Stock_Alerts {
 		return is_array( $subs ) ? $subs : [];
 	}
 
-	/** Persist the id => row map (autoload off — this can grow). */
+	/** Persist the id => row map (autoload off, this can grow). */
 	private function save( array $subs ): void {
 		update_option( self::OPTION, $subs, false );
 	}

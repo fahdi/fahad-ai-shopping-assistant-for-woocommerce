@@ -2,16 +2,16 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Semantic / vector product retrieval — the pluggable RETRIEVER SEAM (issue #60).
+ * Semantic / vector product retrieval, the pluggable RETRIEVER SEAM (issue #60).
  *
  * WHAT THIS IS (and is not). This class is the boundary that lets a semantic
  * (embeddings/vector) backend plug into product discovery WITHOUT coupling it to
- * core. It does NOT itself embed text or talk to any embeddings API — real
+ * core. It does NOT itself embed text or talk to any embeddings API, real
  * semantic ranking needs an external embeddings provider (see docs/RAG-DESIGN.md),
  * which is a separate dependency and key and is NOT bundled. Until a provider
  * registers a retriever on the filter below, this seam returns nothing and product
  * search degrades to the existing WooCommerce keyword search (+ relaxation) in
- * Fahad_AI_Tools::search_products — i.e. ZERO behaviour change out of the box.
+ * Fahad_AI_Tools::search_products, i.e. ZERO behaviour change out of the box.
  *
  * This mirrors the wallet-decoupling pattern (`fahad_ai_wallet_provider`): the
  * capability stays dormant and is activated cleanly by an add-on, so "AI + vector
@@ -36,8 +36,8 @@ defined( 'ABSPATH' ) || exit;
  *
  *          add_filter( 'fahad_ai_semantic_retriever', fn() => [ $backend, 'rank' ] );
  *
- * `$filters` carries the structured constraints the tool already parsed —
- * `category` (string), `min_price`/`max_price` (float), `limit` (int) — so a
+ * `$filters` carries the structured constraints the tool already parsed , 
+ * `category` (string), `min_price`/`max_price` (float), `limit` (int), so a
  * provider can pre-filter its scan (the design doc's live filters, §4.4) and bound
  * its result count. The retriever returns IDs ONLY; it must never return
  * price/stock.
@@ -46,7 +46,7 @@ defined( 'ABSPATH' ) || exit;
  * wc_get_product() at call time and shaped by Fahad_AI_Tools::format_product_summary(),
  * which reads price / sale / stock / rating straight from the live WC_Product. So
  * even though retrieval used a (potentially stale) vector index, the price and
- * stock the model and the cards see are always current — never embedded or cached
+ * stock the model and the cards see are always current, never embedded or cached
  * (design doc §5.4, an explicit invariant). Products that no longer resolve, or are
  * not visible/published, are dropped so the index can lag live truth safely.
  *
@@ -62,7 +62,7 @@ final class Fahad_AI_Semantic_Search {
 	 * Resolve a query through the registered semantic retriever, if any.
 	 *
 	 * Returns the card-shaped product summaries (the same shape search_products
-	 * emits) for the retriever's ranked, still-resolvable, visible products — in
+	 * emits) for the retriever's ranked, still-resolvable, visible products, in
 	 * rank order. Returns an EMPTY array when there is no retriever, the retriever
 	 * returns nothing usable, or it throws: the caller treats an empty array as
 	 * "fall back to keyword search", so this method is always safe to consult first.
@@ -86,12 +86,12 @@ final class Fahad_AI_Semantic_Search {
 			$product = wc_get_product( $id );
 
 			// The index can lag live truth: an id may no longer resolve, or may be
-			// unpublished/hidden now. Skip those — never surface an unbuyable product.
+			// unpublished/hidden now. Skip those, never surface an unbuyable product.
 			if ( ! $product instanceof WC_Product || ! $product->is_visible() ) {
 				continue;
 			}
 
-			// format_product_summary reads price/stock LIVE from this product — the
+			// format_product_summary reads price/stock LIVE from this product, the
 			// retriever supplied only the id, never any cached price/stock.
 			$summaries[] = $tools->format_product_summary( $product );
 
@@ -107,7 +107,7 @@ final class Fahad_AI_Semantic_Search {
 	 * Ask the registered retriever for ranked product IDs, normalised to a clean
 	 * list of unique positive ints in rank order.
 	 *
-	 * Accepts either registration shape (direct IDs, or a callable retriever — see
+	 * Accepts either registration shape (direct IDs, or a callable retriever, see
 	 * the class docblock) and is defensive about everything a third-party provider
 	 * might return: a non-array, a callable that throws, duplicate or non-numeric
 	 * entries. Anything unusable collapses to [] so the caller falls back to
@@ -138,7 +138,7 @@ final class Fahad_AI_Semantic_Search {
 		}
 
 		// Shape 2: a callable retriever resolved per query. Isolated like the tool
-		// registry isolates tool callbacks — a throwing provider degrades to keyword.
+		// registry isolates tool callbacks, a throwing provider degrades to keyword.
 		if ( is_callable( $retriever ) ) {
 			try {
 				$retriever = $retriever( $query, $filters );

@@ -3,7 +3,7 @@
  * Supplemental line-coverage tests for Fahad_AI_Coupon_Tools.
  *
  * Companion to CouponToolsTest: it drives the remaining guard clauses, fallbacks
- * and branch paths the primary suite does not reach — non-coupon enumeration
+ * and branch paths the primary suite does not reach, non-coupon enumeration
  * items, a missing/unavailable cart, an id-0 coupon, the guest per-user path, the
  * WC_Discounts-absent fallback, free-text notes, product-scoped discount wording,
  * the get_posts()-absent and WP_Post enumeration branches, and the money/decimal
@@ -127,7 +127,7 @@ class CoverageCouponToolsTest extends TestCase {
 
     public function test_per_user_limited_coupon_passes_for_guest(): void {
         // The coupon sets a per-user cap, but a guest (user id 0) is not determinable
-        // here — the tool must NOT exclude it (WC re-checks at apply time).
+        // here, the tool must NOT exclude it (WC re-checks at apply time).
         Functions\when( 'get_current_user_id' )->justReturn( 0 );
         Functions\when( 'is_user_logged_in' )->justReturn( false );
 
@@ -238,7 +238,7 @@ class CoverageCouponToolsTest extends TestCase {
     }
 
     public function test_describe_percent_trims_insignificant_decimal_zeros(): void {
-        // A percent amount of "10.00" should read as "10%" — exercises trim_decimal's
+        // A percent amount of "10.00" should read as "10%", exercises trim_decimal's
         // rtrim path on a value containing a decimal point.
         $this->stubCoupons( [
             $this->mockCoupon( [ 'code' => 'TENPCT', 'type' => 'percent', 'amount' => '10.00' ] ),
@@ -279,7 +279,7 @@ class CoverageCouponToolsTest extends TestCase {
     public function test_get_coupon_objects_constructs_coupon_from_wp_post_title(): void {
         // get_posts() returns WP_Post-like objects: each post_title is treated as a
         // coupon code and loaded via `new WC_Coupon( $code )`. The stub WC_Coupon's
-        // get_id() returns 0, so the resulting coupon is then excluded as "unknown" —
+        // get_id() returns 0, so the resulting coupon is then excluded as "unknown" , 
         // proving the post→coupon construction path ran without error.
         $this->stubCoupons( [
             (object) [ 'post_title' => 'FROMPOST' ],
@@ -301,7 +301,7 @@ class CoverageCouponToolsTest extends TestCase {
      *
      * When WC() itself is undefined, cart() returns null; apply_coupon then surfaces
      * "cart not available" without ever touching a cart. WC() is a real WooCommerce
-     * function, so the function_exists() guard only fires when it is absent — done in
+     * function, so the function_exists() guard only fires when it is absent, done in
      * a SEPARATE process so the missing definition cannot leak.
      */
     public function test_apply_coupon_errors_when_wc_function_unavailable(): void {

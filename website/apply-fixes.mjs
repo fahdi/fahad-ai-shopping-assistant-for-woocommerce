@@ -1,5 +1,5 @@
 // One-off: apply the SEO + UI/UX audit fixes uniformly across the marketing site.
-// Idempotent — safe to re-run. Run: node website/apply-fixes.mjs
+// Idempotent, safe to re-run. Run: node website/apply-fixes.mjs
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';

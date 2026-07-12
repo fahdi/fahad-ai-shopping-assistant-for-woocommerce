@@ -2,7 +2,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Proactive, consented, value-gated assist — the SERVER-SIDE decision helper (issue #65).
+ * Proactive, consented, value-gated assist, the SERVER-SIDE decision helper (issue #65).
  *
  * The brains behind the widget's proactive nudge. A proactive nudge is the single
  * easiest feature in this plugin to turn into spam or a dark pattern, so the bar is
@@ -13,13 +13,13 @@ defined( 'ABSPATH' ) || exit;
  * ─── STRICTLY VALUE-GATED (ROADMAP §6, the whole point) ─────────────────────────────
  *
  * A nudge is eligible ONLY when BOTH hold:
- *   1. The merchant turned it on (kill-switch, default OFF — opt-in).
- *   2. A REAL value signal exists right now — a genuinely-applicable coupon (from
+ *   1. The merchant turned it on (kill-switch, default OFF, opt-in).
+ *   2. A REAL value signal exists right now, a genuinely-applicable coupon (from
  *      list_active_coupons, which only ever returns codes WooCommerce itself accepts)
  *      OR unused store credit (a positive wallet balance for a logged-in shopper).
  *
  * The trigger (idle / exit-intent / returning with a cart) is owned by the widget, but
- * the trigger ALONE never fires a nudge — it must carry grounded value or there is
+ * the trigger ALONE never fires a nudge, it must carry grounded value or there is
  * nothing to show. With no signal, config() returns [] and the widget gets nothing.
  *
  * ─── NO FABRICATED URGENCY / SCARCITY, EVER ─────────────────────────────────────────
@@ -27,7 +27,7 @@ defined( 'ABSPATH' ) || exit;
  * The nudge text is built ONLY from the grounded signal (the real coupon code/
  * description, or the real formatted balance). It states a fact and offers help. It
  * never says "hurry", "limited time", "only N left", "selling fast", etc. ProactiveTest
- * pins this with a banned-vocabulary check — the deterministic analogue of the eval
+ * pins this with a banned-vocabulary check, the deterministic analogue of the eval
  * suite's scarcity_violations checker.
  *
  * ─── FREQUENCY CAP + DISMISSAL (consent / opt-out) ──────────────────────────────────
@@ -36,7 +36,7 @@ defined( 'ABSPATH' ) || exit;
  * outright if the shopper has dismissed. The cap is configurable (default 1 = once per
  * session); a non-positive cap means "never proactively nudge". The widget persists the
  * show count + dismissal under config()['storageKey'] (sessionStorage/localStorage), so
- * a dismissed nudge does not reappear — the shopper's own opt-out.
+ * a dismissed nudge does not reappear, the shopper's own opt-out.
  *
  * ─── NO PII ──────────────────────────────────────────────────────────────────────────
  *
@@ -49,7 +49,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Fahad_AI_Proactive {
 
-	/** Merchant kill-switch (default OFF — proactive nudges are opt-in). */
+	/** Merchant kill-switch (default OFF, proactive nudges are opt-in). */
 	public const OPTION_ENABLED = 'fahad_ai_proactive_enabled';
 
 	/** Per-visitor frequency cap (default 1 = once per session). */
@@ -77,7 +77,7 @@ final class Fahad_AI_Proactive {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Is the proactive nudge enabled by the merchant? Default OFF — the feature is
+	 * Is the proactive nudge enabled by the merchant? Default OFF, the feature is
 	 * opt-in, the conservative choice for anything that interrupts the shopper.
 	 */
 	public function enabled(): bool {
@@ -99,14 +99,14 @@ final class Fahad_AI_Proactive {
 
 	/**
 	 * Decide whether a proactive nudge may be shown, given a fully-resolved decision
-	 * input. Pure and deterministic — no WordPress, no I/O — so every gate is unit
+	 * input. Pure and deterministic, no WordPress, no I/O, so every gate is unit
 	 * testable in isolation. ALL of the following must hold:
 	 *
-	 *   - enabled        — the merchant kill-switch is on.
-	 *   - has_value      — a REAL value signal is present (coupon or store credit).
-	 *   - frequency_cap  — strictly positive (a non-positive cap means never nudge).
-	 *   - shown_count    — strictly below the cap (the cap bounds repeats).
-	 *   - !dismissed     — the shopper has not dismissed (consent / opt-out honored).
+	 *   - enabled       , the merchant kill-switch is on.
+	 *   - has_value     , a REAL value signal is present (coupon or store credit).
+	 *   - frequency_cap , strictly positive (a non-positive cap means never nudge).
+	 *   - shown_count   , strictly below the cap (the cap bounds repeats).
+	 *   - !dismissed    , the shopper has not dismissed (consent / opt-out honored).
 	 *
 	 * @param array{enabled?:bool,has_value?:bool,frequency_cap?:int,shown_count?:int,dismissed?:bool} $d
 	 */
@@ -131,7 +131,7 @@ final class Fahad_AI_Proactive {
 	}
 
 	// -------------------------------------------------------------------------
-	// Value signal — grounded in REAL store data, never invented
+	// Value signal, grounded in REAL store data, never invented
 	// -------------------------------------------------------------------------
 
 	/**
@@ -140,7 +140,7 @@ final class Fahad_AI_Proactive {
 	 *
 	 * A coupon is preferred over store credit when both exist: a store-wide,
 	 * currently-applicable coupon benefits any shopper, whereas credit is per-account.
-	 * This is a deterministic choice of ONE signal — never two stacked nudges.
+	 * This is a deterministic choice of ONE signal, never two stacked nudges.
 	 *
 	 *   - $coupons: the list_active_coupons() result shape { found:int, coupons:array }.
 	 *     Those codes already passed every WooCommerce validity gate (published, not
@@ -202,7 +202,7 @@ final class Fahad_AI_Proactive {
 
 	/**
 	 * Honest, urgency-free nudge text for a real coupon. References the grounded code
-	 * (and its plain description when present) and offers help — no scarcity language.
+	 * (and its plain description when present) and offers help, no scarcity language.
 	 *
 	 * @param array{code:string,description?:string} $coupon
 	 */
@@ -212,7 +212,7 @@ final class Fahad_AI_Proactive {
 
 		if ( '' !== $description ) {
 			return sprintf(
-				/* translators: 1: coupon code, e.g. SAVE10; 2: plain discount description, e.g. "10% off". A calm, factual nudge — no urgency. */
+				/* translators: 1: coupon code, e.g. SAVE10; 2: plain discount description, e.g. "10% off". A calm, factual nudge, no urgency. */
 				__( 'You can use code %1$s (%2$s) on this order. Want help applying it?', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				$code,
 				$description
@@ -220,7 +220,7 @@ final class Fahad_AI_Proactive {
 		}
 
 		return sprintf(
-			/* translators: %s: coupon code, e.g. SAVE10. A calm, factual nudge — no urgency. */
+			/* translators: %s: coupon code, e.g. SAVE10. A calm, factual nudge, no urgency. */
 			__( 'You can use code %s on this order. Want help applying it?', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			$code
 		);
@@ -228,7 +228,7 @@ final class Fahad_AI_Proactive {
 
 	/**
 	 * Honest, urgency-free nudge text for unused store credit. References the real
-	 * formatted balance and offers help — no scarcity language.
+	 * formatted balance and offers help, no scarcity language.
 	 *
 	 * @param array{formatted?:string,amount?:float} $balance
 	 */
@@ -239,7 +239,7 @@ final class Fahad_AI_Proactive {
 		}
 
 		return sprintf(
-			/* translators: %s: the shopper's formatted store-credit balance, e.g. ₨500. A calm, factual nudge — no urgency. */
+			/* translators: %s: the shopper's formatted store-credit balance, e.g. ₨500. A calm, factual nudge, no urgency. */
 			__( 'You have %s in store credit. Want to use it on this order?', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			$formatted
 		);

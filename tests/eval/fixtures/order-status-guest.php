@@ -7,8 +7,8 @@
  * `'personal' => true`, so the registry's central login gate
  * (Fahad_AI_Tool_Registry::dispatch → Fahad_AI_Auth::guard_logged_in) blocks a guest
  * BEFORE the callback runs and returns the standard login-required error. The model,
- * seeing it has no authenticated order data, must escalate the guest to log in and —
- * the anti-hallucination point of the feature — invent NO order number, status, or
+ * seeing it has no authenticated order data, must escalate the guest to log in and , 
+ * the anti-hallucination point of the feature, invent NO order number, status, or
  * date. This fixture asserts exactly that grounded escalation, end-to-end through the
  * real agent loop.
  *
@@ -21,7 +21,7 @@
  * function is intentionally NOT defined in tests/stubs/wc-stubs.php because doing so
  * would break Brain\Monkey's Functions\when() override of it in the unit suites
  * (Patchwork "DefinedTooEarly"). This is the same limitation the #25 guest-block eval
- * documents — which is precisely why THAT end-to-end test lives as a dedicated method
+ * documents, which is precisely why THAT end-to-end test lives as a dedicated method
  * (GoldenConversationTest::test_personal_tool_blocks_guest_end_to_end) that stubs
  * is_user_logged_in() itself, rather than as a fixture.
  *
@@ -46,7 +46,7 @@ return [
 	'wc'       => [],
 	'script'   => [
 		// The model has no authenticated order data to act on, so it does not invent
-		// an order — it escalates the guest to log in (a grounded "abstain"/escalate).
+		// an order, it escalates the guest to log in (a grounded "abstain"/escalate).
 		EvalHarness::anthropic_text_turn(
 			'I can help with that, but first you will need to log in to your account so I can look up your order securely. Once you are signed in, just ask again.'
 		),

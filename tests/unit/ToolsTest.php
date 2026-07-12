@@ -261,7 +261,7 @@ class ToolsTest extends TestCase {
     }
 
     public function test_get_product_details_returns_error_for_invisible_product(): void {
-        // Build a minimal mock — do NOT use mockProduct() to avoid is_visible conflict.
+        // Build a minimal mock, do NOT use mockProduct() to avoid is_visible conflict.
         $product = Mockery::mock( WC_Product::class );
         $product->shouldReceive( 'is_visible' )->andReturn( false );
         Functions\when( 'wc_get_product' )->justReturn( $product );
@@ -364,7 +364,7 @@ class ToolsTest extends TestCase {
 
     public function test_get_product_details_variation_label_falls_back_to_custom_attribute_values(): void {
         // Custom (non-taxonomy) product attributes: the value is already a display
-        // value, not a slug — taxonomy_exists is false, so no term lookup happens.
+        // value, not a slug, taxonomy_exists is false, so no term lookup happens.
         Functions\when( 'wc_attribute_label' )->alias( fn( $name ) => ucfirst( str_replace( '-', ' ', $name ) ) );
         Functions\when( 'taxonomy_exists' )->justReturn( false );
 
@@ -430,7 +430,7 @@ class ToolsTest extends TestCase {
     }
 
     public function test_add_to_cart_fails_for_out_of_stock_product(): void {
-        // Build mock directly — avoid double-stub conflict from mockProduct().
+        // Build mock directly, avoid double-stub conflict from mockProduct().
         $product = Mockery::mock( WC_Product::class );
         $product->shouldReceive( 'is_visible' )->andReturn( true );
         $product->shouldReceive( 'is_in_stock' )->andReturn( false );

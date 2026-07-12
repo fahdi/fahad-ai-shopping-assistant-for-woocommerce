@@ -5,7 +5,7 @@
  * Fahad_AI_Embedding_Provider (interface) + Fahad_AI_OpenAI_Embedding_Provider
  * (text-embedding-3-small @ 512 dims) + Fahad_AI_Embeddings (factory + filter).
  * Off / keyword-only until a key is configured; failures are typed and tagged
- * retryable so the indexer can back off and the retriever can degrade — they
+ * retryable so the indexer can back off and the retriever can degrade, they
  * never reach the shopper.
  */
 
@@ -59,7 +59,7 @@ class EmbeddingsTest extends TestCase {
 	public function test_embed_returns_vectors_in_input_order(): void {
 		Functions\when( 'wp_remote_post' )->justReturn( [ 'ok' => true ] );
 		Functions\when( 'wp_remote_retrieve_response_code' )->justReturn( 200 );
-		// Deliberately out of order — must be re-sorted by index.
+		// Deliberately out of order, must be re-sorted by index.
 		Functions\when( 'wp_remote_retrieve_body' )->justReturn(
 			json_encode( [ 'data' => [ [ 'index' => 1, 'embedding' => [ 9.0 ] ], [ 'index' => 0, 'embedding' => [ 1.0 ] ] ] ] )
 		);

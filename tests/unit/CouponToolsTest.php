@@ -7,11 +7,11 @@
  * singleton + its static pack list snapshotted and restored so a case here neither
  * inherits another suite's packs nor leaks the coupon pack we register.
  *
- * The two coupon tools (list_active_coupons, apply_coupon) are NOT built-ins —
+ * The two coupon tools (list_active_coupons, apply_coupon) are NOT built-ins , 
  * they ship as a drop-in feature pack that self-registers a provider via
  * Fahad_AI_Tool_Registry::register_pack() at file load. Every test registers the
  * coupon pack's REAL provider through register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch() — so the production registration
+ * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration
  * + merge + dispatch path is what is under test.
  *
  * Coupon objects are sourced through get_posts() (the production enumeration of
@@ -69,7 +69,7 @@ class CouponToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the coupon tools.
      *
      * Resets the Tools + registry singletons, then registers the coupon pack's
-     * REAL provider via register_pack() — exactly what the pack's file-scope
+     * REAL provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production.
      */
     private function registry(): Fahad_AI_Tool_Registry {
@@ -132,7 +132,7 @@ class CouponToolsTest extends TestCase {
 
         $this->assertContains( 'list_active_coupons', $names );
         $this->assertContains( 'apply_coupon', $names );
-        // Additive — the five built-ins remain.
+        // Additive, the five built-ins remain.
         $this->assertContains( 'search_products', $names );
         $this->assertContains( 'add_to_cart', $names );
     }
@@ -152,7 +152,7 @@ class CouponToolsTest extends TestCase {
     public function test_coupon_tools_are_not_personal(): void {
         // They operate on the shared session cart, so they must NOT be login-gated.
         // (Private members are reflection-accessible by default since PHP 8.1, so
-        // no setAccessible() — which is a deprecated no-op on 8.5.)
+        // no setAccessible(), which is a deprecated no-op on 8.5.)
         $map = ( new ReflectionMethod( Fahad_AI_Tool_Registry::class, 'get_tools' ) )->invoke( $this->registry() );
 
         $this->assertArrayHasKey( 'list_active_coupons', $map );
@@ -185,7 +185,7 @@ class CouponToolsTest extends TestCase {
         // Minimum-spend note present and references the amount.
         $this->assertArrayHasKey( 'minimum_spend', $result['coupons'][0] );
         $this->assertStringContainsString( '50', (string) $result['coupons'][0]['minimum_spend'] );
-        // A coupon list is NOT a product list — no cards.
+        // A coupon list is NOT a product list, no cards.
         $this->assertArrayNotHasKey( 'products', $result );
     }
 

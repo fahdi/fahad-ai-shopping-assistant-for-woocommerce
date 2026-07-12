@@ -4,7 +4,7 @@
  *
  * Runs the golden set (RagGoldenSet) through the three retrieval legs and
  * asserts the regression gate from RAG-DESIGN.md §6.1: hybrid (RRF) must never
- * do worse than either leg alone, and must beat keyword-only overall — otherwise
+ * do worse than either leg alone, and must beat keyword-only overall, otherwise
  * the added complexity is not earning its place. Deterministic and offline
  * (canned embeddings); proves the measurement is meaningful before a live
  * provider is wired in Phase 1.

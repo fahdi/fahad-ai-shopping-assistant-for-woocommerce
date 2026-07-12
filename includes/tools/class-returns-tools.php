@@ -2,28 +2,28 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Returns & exchange / RMA tools (issue #53) — guide ELIGIBLE returns and RECORD a
+ * Returns & exchange / RMA tools (issue #53), guide ELIGIBLE returns and RECORD a
  * return request, for LOGGED-IN customers only. Returns/refunds are money-sensitive, so
  * this pack is deliberately conservative: it checks a data-driven policy and records a
  * request; it NEVER issues a refund, credit, or any money/status mutation. Refunds stay a
- * human action — edge and ineligible cases escalate to support, never block it.
+ * human action, edge and ineligible cases escalate to support, never block it.
  *
  * A drop-in feature pack (same pattern as Fahad_AI_Order_Tools / Fahad_AI_Reorder_Tools):
  * a self-contained class in its own file under includes/tools/ that self-registers a
  * provider at the bottom via Fahad_AI_Tool_Registry::register_pack(). The bootstrap (and
  * the test bootstrap) glob-require everything here, so adding this pack is a SINGLE new
- * file — no edits to the bootstrap, the test bootstrap, or the eval harness.
+ * file, no edits to the bootstrap, the test bootstrap, or the eval harness.
  *
  * Tools provided:
- *   - check_return_eligibility — is an order (or one item on it) returnable, judged
+ *   - check_return_eligibility, is an order (or one item on it) returnable, judged
  *                                against a CONFIGURABLE return window (default 30 days;
  *                                filter `fahad_ai_return_window_days`), the order's status
  *                                and date, AND ownership. Returns a plain, honest reason
  *                                when ineligible plus the human-support path.
- *   - request_return           — RECORD a return/exchange request (an RMA) as order meta
+ *   - request_return          , RECORD a return/exchange request (an RMA) as order meta
  *                                and a best-effort order note. Idempotent (the same items
  *                                requested again do NOT create a duplicate). NEVER refunds
- *                                or changes the order — only records the request.
+ *                                or changes the order, only records the request.
  *
  * SECURITY + MONEY-SAFETY ARE THE WHOLE POINT (issue #53 hardening). These tools use the
  * issue-#25 authorization boundary (Fahad_AI_Auth) in BOTH of its layers (defence in
@@ -32,14 +32,14 @@ defined( 'ABSPATH' ) || exit;
  *   1. CENTRAL LOGIN GATE. Both tools declare `'personal' => true`, so
  *      Fahad_AI_Tool_Registry::dispatch() runs Fahad_AI_Auth::guard_logged_in() BEFORE the
  *      callback. A guest is blocked centrally with the standard login-required error and
- *      the callback is never reached — these tools never re-implement the guest check, so
+ *      the callback is never reached, these tools never re-implement the guest check, so
  *      they cannot leak by forgetting it.
  *
  *   2. PER-RECORD OWNERSHIP. The registry cannot know which customer a given order belongs
  *      to, so each tool loads the order and then calls
  *      Fahad_AI_Auth::user_owns( $order->get_customer_id() ); a mismatch returns a "not
  *      found"-style error (NOT "forbidden"), so we never even confirm an order exists for
- *      another user — and we bail BEFORE reading items or recording anything.
+ *      another user, and we bail BEFORE reading items or recording anything.
  *
  * POLICY IS DATA-DRIVEN, NOT INVENTED. Eligibility is judged only against real signals:
  * the order's status (`fahad_ai_return_eligible_statuses`, default completed/processing),
@@ -58,7 +58,7 @@ final class Fahad_AI_Returns_Tools {
 	 * Append the returns tools to the registry's tool list.
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope). Static
-	 * because the pack holds no per-instance state — its tools call WooCommerce order
+	 * because the pack holds no per-instance state, its tools call WooCommerce order
 	 * functions and the shared Fahad_AI_Auth boundary directly.
 	 *
 	 * Both tools carry `'personal' => true` so the registry login-gates them centrally
@@ -70,7 +70,7 @@ final class Fahad_AI_Returns_Tools {
 	public static function register( array $tools ): array {
 		$tools[] = [
 			'name'        => 'check_return_eligibility',
-			'description' => 'Check whether one of the logged-in customer\'s orders — or a specific item on it — can be returned, judged against the store\'s return window and the order\'s status and date. Use this when the customer asks "can I return this?", about a refund, an exchange, or sending an item back. Returns whether it is eligible and, when it is NOT, a plain honest reason plus how to reach human support. Only works for an order that belongs to the signed-in customer; otherwise it reports the order was not found. This does NOT issue any refund. Requires the customer to be logged in.',
+			'description' => 'Check whether one of the logged-in customer\'s orders, or a specific item on it, can be returned, judged against the store\'s return window and the order\'s status and date. Use this when the customer asks "can I return this?", about a refund, an exchange, or sending an item back. Returns whether it is eligible and, when it is NOT, a plain honest reason plus how to reach human support. Only works for an order that belongs to the signed-in customer; otherwise it reports the order was not found. This does NOT issue any refund. Requires the customer to be logged in.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -85,7 +85,7 @@ final class Fahad_AI_Returns_Tools {
 
 		$tools[] = [
 			'name'        => 'request_return',
-			'description' => 'Record a return or exchange request (an RMA) for eligible items on one of the logged-in customer\'s own orders. Use this AFTER check_return_eligibility confirms the items are returnable and the customer has chosen to proceed. This ONLY records the request for the store team to process — it does NOT issue a refund, credit, or change the order; refunds remain a human decision. Recording is idempotent: requesting the same items again will not create a duplicate. Only works for an order that belongs to the signed-in customer. Requires the customer to be logged in.',
+			'description' => 'Record a return or exchange request (an RMA) for eligible items on one of the logged-in customer\'s own orders. Use this AFTER check_return_eligibility confirms the items are returnable and the customer has chosen to proceed. This ONLY records the request for the store team to process, it does NOT issue a refund, credit, or change the order; refunds remain a human decision. Recording is idempotent: requesting the same items again will not create a duplicate. Only works for an order that belongs to the signed-in customer. Requires the customer to be logged in.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -114,13 +114,13 @@ final class Fahad_AI_Returns_Tools {
 	 * Is an order (or one item on it) returnable?
 	 *
 	 * Loads the order, enforces per-record ownership, then judges it against the
-	 * data-driven policy (status + window) and — when an `item` is named — that the item is
+	 * data-driven policy (status + window) and, when an `item` is named, that the item is
 	 * actually on the order. Eligible → { eligible:true, … }. Ineligible → an honest
 	 * { eligible:false, reason, contact_support:true, support } so the assistant can give a
 	 * truthful "no" and still route to a human (never blocking support).
 	 *
 	 * A missing or not-owned order collapses to the SAME "not found" error (never
-	 * "forbidden"), so ownership is never disclosed — but even that answer carries the
+	 * "forbidden"), so ownership is never disclosed, but even that answer carries the
 	 * support path, because we must never block the route to a human.
 	 *
 	 * @return array
@@ -137,14 +137,14 @@ final class Fahad_AI_Returns_Tools {
 	}
 
 	/**
-	 * Record a return/exchange request (an RMA) for eligible items — and NOTHING that
+	 * Record a return/exchange request (an RMA) for eligible items, and NOTHING that
 	 * touches money or the order's lifecycle.
 	 *
 	 * Flow: load + ownership → require at least one item → RE-CHECK eligibility (never
 	 * record against an ineligible order) → idempotently append an RMA record to the order
 	 * meta + a best-effort order note. The result reports the request was `recorded` with
 	 * its `rma_id`; on a repeat of the same items it returns the EXISTING record with
-	 * `already_requested:true`. It deliberately exposes no refund/credit field — there is
+	 * `already_requested:true`. It deliberately exposes no refund/credit field, there is
 	 * none.
 	 *
 	 * @return array
@@ -201,7 +201,7 @@ final class Fahad_AI_Returns_Tools {
 			'signature' => $signature,
 			'items'     => $items,
 			'reason'    => $reason,
-			'status'    => 'requested', // a REQUEST only — never an approval/refund.
+			'status'    => 'requested', // a REQUEST only, never an approval/refund.
 			'requested_by' => Fahad_AI_Auth::current_user_id(),
 			'requested_at' => self::now(),
 		];
@@ -228,7 +228,7 @@ final class Fahad_AI_Returns_Tools {
 			'rma_id'          => $rma_id,
 			'order_id'        => $order->get_id(),
 			'items'           => $items,
-			'message'         => __( 'Your return request has been recorded. Our team will review it and follow up — no refund is issued automatically.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			'message'         => __( 'Your return request has been recorded. Our team will review it and follow up, no refund is issued automatically.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			// Always keep the human path open for anything beyond recording the request.
 			'contact_support' => true,
 			'support'         => self::support_message(),
@@ -243,11 +243,11 @@ final class Fahad_AI_Returns_Tools {
 	 * Judge an owned order (optionally a single named item) against the policy.
 	 *
 	 * Order of checks, each producing an honest reason on failure:
-	 *   1. status — must be one of `fahad_ai_return_eligible_statuses` (default
+	 *   1. status, must be one of `fahad_ai_return_eligible_statuses` (default
 	 *      completed/processing). Cancelled/refunded/failed/pending are not returnable.
-	 *   2. window — order date + `fahad_ai_return_window_days` (default 30) must not be in
+	 *   2. window, order date + `fahad_ai_return_window_days` (default 30) must not be in
 	 *      the past relative to now.
-	 *   3. item   — when an item name is given it must be on the order.
+	 *   3. item  , when an item name is given it must be on the order.
 	 *
 	 * @param WC_Order $order
 	 * @param string   $item Optional item name to narrow to.
@@ -274,7 +274,7 @@ final class Fahad_AI_Returns_Tools {
 		// 2. Window gate.
 		$ordered_at = self::order_timestamp( $order );
 		if ( null === $ordered_at ) {
-			// No usable order date — don't guess eligibility; route to a human.
+			// No usable order date, don't guess eligibility; route to a human.
 			return $base + self::ineligible(
 				__( 'I can\'t confirm this order\'s date to check the return window, so our support team should take a look.', 'fahad-ai-shopping-assistant-for-woocommerce' )
 			);
@@ -323,7 +323,7 @@ final class Fahad_AI_Returns_Tools {
 	 * Load an order ONLY if it belongs to the current user.
 	 *
 	 * Returns the WC_Order on success, or null for a missing order OR one owned by a
-	 * different user — the caller maps null to the SAME "not found" error so ownership is
+	 * different user, the caller maps null to the SAME "not found" error so ownership is
 	 * never disclosed and nothing is read/written for a foreign order. The central login
 	 * gate has already ensured the caller is logged in by the time this runs.
 	 */
@@ -483,7 +483,7 @@ final class Fahad_AI_Returns_Tools {
 		return sprintf( 'RMA-%d-%d', $order->get_id(), $seq );
 	}
 
-	/** The standard "reach a human" message — support is always available, never blocked. */
+	/** The standard "reach a human" message, support is always available, never blocked. */
 	private static function support_message(): string {
 		return __( 'If you need more help, our support team can assist with your return or refund.', 'fahad-ai-shopping-assistant-for-woocommerce' );
 	}
@@ -491,7 +491,7 @@ final class Fahad_AI_Returns_Tools {
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap (and the
 // test bootstrap) glob-require includes/tools/*.php, so dropping this file in is the ONLY
-// wiring needed — no bootstrap or harness edits.
+// wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before pcov's per-test window opens; its effect is asserted in ReturnsToolsTest::test_returns_tools_are_registered_via_register_pack.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Returns_Tools', 'register' ] );

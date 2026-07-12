@@ -5,7 +5,7 @@
  * The sibling OrderToolsTest covers the registration, happy paths, ownership
  * bypass, PII minimization, and guest-block. This file closes the remaining
  * branch the sibling does not exercise: the EARLY "invalid id" guard in
- * get_order_status — `if ( $order_id <= 0 ) return $not_found;` — which fires
+ * get_order_status, `if ( $order_id <= 0 ) return $not_found;`, which fires
  * for a zero, missing, or negative order_id and short-circuits BEFORE any
  * wc_get_order() lookup happens at all.
  *
@@ -43,7 +43,7 @@ class CoverageOrderToolsTest extends TestCase {
         ] );
 
         // Default to a logged-in customer (id 5) so the central login gate lets the
-        // callback run — the invalid-id guard lives INSIDE the callback, past the gate.
+        // callback run, the invalid-id guard lives INSIDE the callback, past the gate.
         Functions\when( 'is_user_logged_in' )->justReturn( true );
         Functions\when( 'get_current_user_id' )->justReturn( 5 );
     }
@@ -72,7 +72,7 @@ class CoverageOrderToolsTest extends TestCase {
 
     /**
      * order_id of 0 trips the `$order_id <= 0` guard and returns the standard
-     * "not found" error WITHOUT ever calling wc_get_order() — proving the early
+     * "not found" error WITHOUT ever calling wc_get_order(), proving the early
      * short-circuit, not the later missing-order path, produced the result.
      */
     public function test_get_order_status_returns_not_found_for_zero_id_without_a_lookup(): void {
@@ -84,7 +84,7 @@ class CoverageOrderToolsTest extends TestCase {
 
         $this->assertArrayHasKey( 'error', $result );
         $this->assertStringContainsString( 'not found', strtolower( $result['error'] ) );
-        // The guard returns ONLY the not-found shape — no order data of any kind.
+        // The guard returns ONLY the not-found shape, no order data of any kind.
         $this->assertArrayNotHasKey( 'status', $result );
         $this->assertArrayNotHasKey( 'number', $result );
         $this->assertArrayNotHasKey( 'total', $result );
@@ -108,7 +108,7 @@ class CoverageOrderToolsTest extends TestCase {
      * A negative order_id resolves to 0 via absint (abs of a negative int stays
      * positive in the real WP absint, but here the dispatched value is already a
      * negative literal: absint() returns its absolute value, so we use a value the
-     * guard still rejects — a zero — to keep the assertion about the `<= 0` boundary).
+     * guard still rejects, a zero, to keep the assertion about the `<= 0` boundary).
      *
      * To exercise the `< 0` half of the `<= 0` boundary independently, we feed a
      * non-numeric id. absint('') → 0 trips the guard the same way.
@@ -125,7 +125,7 @@ class CoverageOrderToolsTest extends TestCase {
     /**
      * Sanity: the SAME "not found" error string the guard returns must NOT disclose
      * ownership/existence (no "forbidden"/"permission" wording), matching the
-     * missing-order and not-owned paths — the guard collapses into the same shape.
+     * missing-order and not-owned paths, the guard collapses into the same shape.
      */
     public function test_invalid_id_error_does_not_disclose_existence(): void {
         Functions\expect( 'wc_get_order' )->never();

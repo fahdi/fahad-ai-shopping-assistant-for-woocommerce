@@ -4,10 +4,10 @@
  *
  * Deliberately small and pure so the same code drives the offline golden-set
  * eval (canned embeddings) and the spike CLI (real embeddings):
- *  - keyword_rank: token-overlap baseline — a stand-in for the existing keyword
+ *  - keyword_rank: token-overlap baseline, a stand-in for the existing keyword
  *    search leg, good at literal tokens (SKUs, exact words).
  *  - vector_rank:  cosine over embeddings (Fahad_AI_Vector_Math), candidates above
- *    a similarity threshold — good at intent/synonyms.
+ *    a similarity threshold, good at intent/synonyms.
  *  - hybrid_rank:  RRF fusion of the two legs (Fahad_AI_Rrf).
  *
  * Each leg returns only its CANDIDATES (no overlap / cos ≤ threshold are dropped),

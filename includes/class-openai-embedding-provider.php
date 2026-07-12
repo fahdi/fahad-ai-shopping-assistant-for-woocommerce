@@ -2,7 +2,7 @@
 /**
  * OpenAI embeddings provider (RAG Phase 1, S1.1, #104).
  *
- * text-embedding-3-small with Matryoshka dimension shortening (512) — the
+ * text-embedding-3-small with Matryoshka dimension shortening (512), the
  * cheapest scan-friendly default (RAG-DESIGN.md §3). Uses the existing WP HTTP
  * layer. Failures are typed (Fahad_AI_Embedding_Exception) and tagged retryable
  * for transient errors (429/5xx/transport) so callers back off; they are never

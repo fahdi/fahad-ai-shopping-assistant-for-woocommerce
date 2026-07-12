@@ -3,7 +3,7 @@
  * Unit tests for the embeddings admin (RAG Phase 1, S1.5, #108).
  *
  * Settings save/sanitize, the "build index" action (enqueues a backfill +
- * records the index model), index status, and the central enabled() gate — a
+ * records the index model), index status, and the central enabled() gate, a
  * chat-only OpenAI key must NOT silently incur embedding costs; semantic search
  * is opt-in.
  */

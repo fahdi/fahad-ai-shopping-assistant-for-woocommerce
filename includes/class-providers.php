@@ -2,18 +2,18 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Multi-provider catalog — the single source of truth for which AI services the
+ * Multi-provider catalog, the single source of truth for which AI services the
  * assistant can dispatch to.
  *
  * The assistant speaks two wire protocols: Anthropic's native Messages API and the
  * widely-adopted OpenAI Chat Completions shape. Every provider here is therefore one
  * of two `type`s:
- *   - 'anthropic' — the native path (run_anthropic_agent / call_anthropic). Only
+ *   - 'anthropic', the native path (run_anthropic_agent / call_anthropic). Only
  *     Anthropic (Claude) itself uses it.
- *   - 'openai'    — the OpenAI-compatible path (run_openai_agent / call_openai /
+ *   - 'openai'   , the OpenAI-compatible path (run_openai_agent / call_openai /
  *     stream_one_turn). Moonshot, OpenAI, Gemini, Groq, Mistral, DeepSeek, xAI,
  *     Together, OpenRouter, Perplexity, Ollama and a merchant-defined `custom`
- *     endpoint all ride this single, parameterised path — differing ONLY in their
+ *     endpoint all ride this single, parameterised path, differing ONLY in their
  *     base URL, API key and model. Adding a provider is therefore DATA, not code.
  *
  * Each preset declares:
@@ -35,7 +35,7 @@ defined( 'ABSPATH' ) || exit;
  * happen to already match).
  *
  * EXTENSIBILITY: the catalog runs through apply_filters( 'fahad_ai_providers', … )
- * so an add-on can register an entirely new provider at the DATA level — no
+ * so an add-on can register an entirely new provider at the DATA level, no
  * provider-class plumbing. Malformed entries (non-array, or missing required keys)
  * are dropped so a broken add-on can never poison dispatch.
  */
@@ -60,7 +60,7 @@ final class Fahad_AI_Providers {
 	 * Built once and memoised within a request (the filter result included). Tests
 	 * reset Brain\Monkey between cases, so the static cache is keyed on whether the
 	 * filter machinery is live; we deliberately do NOT cache across resolve() calls
-	 * because get_option values (keys/models) change per turn — only the catalog
+	 * because get_option values (keys/models) change per turn, only the catalog
 	 * SHAPE is stable, and rebuilding it is cheap.
 	 *
 	 * @return array<string, array<string, mixed>>
@@ -201,7 +201,7 @@ final class Fahad_AI_Providers {
 				'model_option'  => 'fahad_ai_ollama_model',
 			],
 
-			// Custom — any OpenAI-compatible endpoint, base URL set by the merchant.
+			// Custom, any OpenAI-compatible endpoint, base URL set by the merchant.
 			'custom' => [
 				'label'         => __( 'Custom (OpenAI-compatible)', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				'type'          => 'openai',
@@ -308,8 +308,8 @@ final class Fahad_AI_Providers {
 
 	/**
 	 * Resolve a provider to the concrete values a turn needs: its transport type,
-	 * the live API key, the chosen model (falling back to the preset default), and —
-	 * for OpenAI-type providers — the base URL.
+	 * the live API key, the chosen model (falling back to the preset default), and , 
+	 * for OpenAI-type providers, the base URL.
 	 *
 	 * Two providers compute their base URL dynamically rather than from a static
 	 * catalog value:
@@ -354,7 +354,7 @@ final class Fahad_AI_Providers {
 	 * Validate a merchant-supplied OpenAI-compatible base URL (the `custom` provider).
 	 *
 	 * Security: the base URL is concatenated into the outbound request target, so it
-	 * must be a real http(s) URL — never a `javascript:`/`data:` scheme or junk. HTTPS
+	 * must be a real http(s) URL, never a `javascript:`/`data:` scheme or junk. HTTPS
 	 * is required for any remote host (the API key travels in the Authorization
 	 * header), with ONE exception: a localhost/127.0.0.1/::1 host may use plain http,
 	 * because a self-hosted endpoint (a local proxy, an Ollama-style server) on the

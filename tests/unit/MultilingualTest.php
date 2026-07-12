@@ -5,7 +5,7 @@
  * The store may be deployed for an audience that converses in Urdu / Roman Urdu as
  * well as English. The DELIVERABLE, testable parts are:
  *   1. A language DIRECTIVE in the system prompt that tells the assistant to detect
- *      the shopper's language and reply in it — WITHOUT translating product facts
+ *      the shopper's language and reply in it, WITHOUT translating product facts
  *      (grounding is preserved across languages: no invented / translated specs).
  *   2. A merchant option (fahad_ai_languages, default 'auto') that, when set to a
  *      specific list, is folded into the directive.
@@ -21,7 +21,7 @@
  *
  * Conventions mirror ApiHandlerTest / MerchantConfigTest: Brain\Monkey + Mockery,
  * singletons reset via reflection, private methods exercised via ReflectionMethod
- * (NO setAccessible — PHP 8.5 makes them accessible by default).
+ * (NO setAccessible, PHP 8.5 makes them accessible by default).
  */
 
 use Brain\Monkey;
@@ -46,7 +46,7 @@ class MultilingualTest extends TestCase {
 			// WooCommerce locale-formatting helpers, stubbed with WC's own defaults.
 			// They MUST be defined in every test: once Brain\Monkey has seen them
 			// defined in one test, function_exists() returns true for the rest of the
-			// process, so the formatter calls them — an unstubbed call would error.
+			// process, so the formatter calls them, an unstubbed call would error.
 			'wc_get_price_decimals'           => fn() => 2,
 			'wc_get_price_decimal_separator'  => fn() => '.',
 			'wc_get_price_thousand_separator' => fn() => ',',
@@ -155,7 +155,7 @@ class MultilingualTest extends TestCase {
 
 	public function test_auto_languages_does_not_pin_a_specific_set(): void {
 		// The default 'auto' value means detect-and-match freely across the supported
-		// set — so the directive names the full supported set, and the literal config
+		// set, so the directive names the full supported set, and the literal config
 		// token 'auto' is never surfaced as a standalone instruction word. (A substring
 		// match on "auto" would false-positive on "automatically" elsewhere in the body,
 		// so assert on the token boundary instead.)
@@ -234,7 +234,7 @@ class MultilingualTest extends TestCase {
 	}
 
 	public function test_formatter_uses_currency_symbol_from_woocommerce(): void {
-		// The symbol always comes from get_woocommerce_currency_symbol() — the formatter
+		// The symbol always comes from get_woocommerce_currency_symbol(), the formatter
 		// never hard-codes one, so it tracks the store's configured currency.
 		$this->passthrough_filters();
 		Functions\when( 'get_woocommerce_currency_symbol' )->justReturn( '€' );

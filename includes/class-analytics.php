@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
  * over a date range for the dashboard. This is the #1 adoption/commercial gap the
  * roadmap calls out, made measurable without spying on shoppers.
  *
- * ─── PRIVACY-SAFE — NO PII (issue #49 hardening) ─────────────────────────────────
+ * ─── PRIVACY-SAFE, NO PII (issue #49 hardening) ─────────────────────────────────
  *
  * A stored row carries ONLY: a TRIMMED, EMAIL-MASKED snippet of the shopper's
  * question (so a top-questions list is possible WITHOUT retaining raw message text),
@@ -20,11 +20,11 @@ defined( 'ABSPATH' ) || exit;
  * (product_surfaced / added_to_cart, plus order attribution computed at aggregate
  * time), token/cost numbers, an OPAQUE conversation ref (a model-supplied token,
  * never an email/name), and a created timestamp. It NEVER stores an email, a name,
- * an IP, or a user id — there is deliberately no such field, so the option cannot
+ * an IP, or a user id, there is deliberately no such field, so the option cannot
  * become a PII sink. The question snippet is run through Fahad_AI_Auth::mask_email()
  * for EVERY email-shaped token in it, so a shopper who types their address into the
  * chat does not leave it here verbatim. Nothing in here is EVER fed back to the
- * model (it is owner telemetry, read only by this store's own aggregates) — that is
+ * model (it is owner telemetry, read only by this store's own aggregates), that is
  * the hard rule from the issue.
  *
  * ─── BOUNDED INPUT ───────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Two bounds, enforced lazily on every record() (and exposed for a scheduled cron):
  *   - AGE: rows older than MAX_AGE_DAYS are purged (purge_expired()). This is the
- *     "no PII-bearing content beyond a configurable retention" promise — even the
+ *     "no PII-bearing content beyond a configurable retention" promise, even the
  *     masked snippet ages out.
  *   - COUNT: the store is capped at MAX_ENTRIES rows, evicting the OLDEST first
  *     (FIFO), so the option stays a rolling, finite window.
@@ -51,7 +51,7 @@ defined( 'ABSPATH' ) || exit;
  * a no-op with negligible overhead). The agent loop calls record() unconditionally;
  * the enabled() short-circuit lives here so there is a single gate.
  *
- * Storage: a single autoload=no option holding an id => row map — the same
+ * Storage: a single autoload=no option holding an id => row map, the same
  * option-backed, no-migration approach as Fahad_AI_Feedback / Fahad_AI_Stock_Alerts,
  * at the scale a bounded, rolling analytics window realistically reaches.
  */
@@ -63,7 +63,7 @@ final class Fahad_AI_Analytics {
 	/** Option name for the merchant opt-out flag (default ON). */
 	public const OPTION_ENABLED = 'fahad_ai_analytics_enabled';
 
-	// Outcome enum — the coarse classification of an assistant turn. The three
+	// Outcome enum, the coarse classification of an assistant turn. The three
 	// "couldn't answer" outcomes (abstain / escalate / no-tool-match) are what the
 	// dashboard's failure list surfaces.
 	public const OUTCOME_ANSWERED      = 'answered';
@@ -72,10 +72,10 @@ final class Fahad_AI_Analytics {
 	public const OUTCOME_NO_TOOL_MATCH = 'no_tool_match';
 	public const OUTCOME_ERROR         = 'error';
 
-	/** Hard cap on stored rows (retention — bound the option, FIFO eviction). */
+	/** Hard cap on stored rows (retention, bound the option, FIFO eviction). */
 	public const MAX_ENTRIES = 2000;
 
-	/** Rows older than this many days are purged (retention — even the masked snippet ages out). */
+	/** Rows older than this many days are purged (retention, even the masked snippet ages out). */
 	public const MAX_AGE_DAYS = 90;
 
 	/** Max characters kept of the (email-masked) question snippet. */
@@ -235,8 +235,8 @@ final class Fahad_AI_Analytics {
 	}
 
 	/**
-	 * The "questions we couldn't answer" list — turns whose outcome was abstain,
-	 * escalate or no-tool-match — newest first, capped at $limit, over an optional
+	 * The "questions we couldn't answer" list, turns whose outcome was abstain,
+	 * escalate or no-tool-match, newest first, capped at $limit, over an optional
 	 * date range. This is the merchant's content/coverage backlog.
 	 *
 	 * @param int   $limit Max rows to return.
@@ -370,7 +370,7 @@ final class Fahad_AI_Analytics {
 
 	/**
 	 * All stored rows as a flat list (newest first), for the export control. Already
-	 * privacy-safe — every row is the masked/bounded shape record() persisted — so it
+	 * privacy-safe, every row is the masked/bounded shape record() persisted, so it
 	 * is safe to hand to the merchant as a download.
 	 *
 	 * @param array $range { from?: int, to?: int } inclusive window; omit for all time.
@@ -408,12 +408,12 @@ final class Fahad_AI_Analytics {
 	}
 
 	// -------------------------------------------------------------------------
-	// Internals — PII minimization
+	// Internals, PII minimization
 	// -------------------------------------------------------------------------
 
 	/**
 	 * Turn a raw shopper question into a stored snippet: collapse whitespace,
-	 * EMAIL-MASK every email-shaped token (PII minimization — a shopper who types
+	 * EMAIL-MASK every email-shaped token (PII minimization, a shopper who types
 	 * their address into the chat must not leave it here), then length-cap. Returns
 	 * '' for an empty/whitespace-only question.
 	 */
@@ -478,12 +478,12 @@ final class Fahad_AI_Analytics {
 	}
 
 	// -------------------------------------------------------------------------
-	// Internals — retention
+	// Internals, retention
 	// -------------------------------------------------------------------------
 
 	/**
 	 * Drop rows whose `created` timestamp is older than MAX_AGE_DAYS. A row with no
-	 * usable timestamp is treated as fresh (kept) — we never silently delete on a
+	 * usable timestamp is treated as fresh (kept), we never silently delete on a
 	 * missing field; the count cap is the backstop for those.
 	 *
 	 * @param array<string, array> $rows
@@ -516,7 +516,7 @@ final class Fahad_AI_Analytics {
 	}
 
 	// -------------------------------------------------------------------------
-	// Internals — storage
+	// Internals, storage
 	// -------------------------------------------------------------------------
 
 	/**
@@ -587,7 +587,7 @@ final class Fahad_AI_Analytics {
 		return is_array( $rows ) ? $rows : [];
 	}
 
-	/** Persist the id => row map (autoload off — this is a rolling window). */
+	/** Persist the id => row map (autoload off, this is a rolling window). */
 	private function save( array $rows ): void {
 		update_option( self::OPTION, $rows, false );
 	}

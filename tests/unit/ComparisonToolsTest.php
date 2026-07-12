@@ -7,12 +7,12 @@
  * reflection; the registry's static pack-provider list snapshotted in setUp and
  * restored in tearDown.
  *
- * compare_products is NOT a built-in — it ships as a drop-in feature pack that
+ * compare_products is NOT a built-in, it ships as a drop-in feature pack that
  * self-registers a provider via Fahad_AI_Tool_Registry::register_pack() at file
  * load. To exercise that registration genuinely (rather than inlining tool entries
  * by hand) every test registers the comparison pack's real provider through
  * register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch() — so the production registration
+ * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration
  * + merge + dispatch path is what is under test.
  */
 
@@ -68,7 +68,7 @@ class ComparisonToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the comparison tools.
      *
      * Resets the Tools + registry singletons, then registers the comparison pack's
-     * REAL provider via register_pack() — exactly what the pack's file-scope
+     * REAL provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production.
      */
     private function registry(): Fahad_AI_Tool_Registry {
@@ -85,7 +85,7 @@ class ComparisonToolsTest extends TestCase {
      * Product mock with attributes. $attributes is a name => display-value map; the
      * mock exposes the attribute NAMES via get_attributes() (the keys, mirroring the
      * WC_Product_Attribute[] map keyed by name) and each value via
-     * get_attribute( $name ) — the same two-call shape the comparison tool reads.
+     * get_attribute( $name ), the same two-call shape the comparison tool reads.
      *
      * @param array<string,string> $attributes
      */
@@ -125,7 +125,7 @@ class ComparisonToolsTest extends TestCase {
         $names = array_column( $this->registry()->specs(), 'name' );
 
         $this->assertContains( 'compare_products', $names );
-        // Additive — the five built-ins remain.
+        // Additive, the five built-ins remain.
         $this->assertContains( 'search_products', $names );
     }
 

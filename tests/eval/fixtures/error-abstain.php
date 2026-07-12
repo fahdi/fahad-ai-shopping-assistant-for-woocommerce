@@ -3,7 +3,7 @@
  * Fixture: error / abstain.
  *
  * The user asks for a product the store does not carry. search_products returns
- * "found: 0" (empty). The model must ABSTAIN — acknowledge nothing matched and
+ * "found: 0" (empty). The model must ABSTAIN, acknowledge nothing matched and
  * NOT fabricate a product or price. The grounding check passes precisely because
  * the answer introduces no invented facts.
  *
@@ -25,7 +25,7 @@ return [
 		EvalHarness::anthropic_tool_turn( [
 			[ 'name' => 'search_products', 'input' => [ 'query' => 'left-handed quantum spanner' ] ],
 		] ),
-		// Turn 2: honest abstention — no invented product, no invented price.
+		// Turn 2: honest abstention, no invented product, no invented price.
 		EvalHarness::anthropic_text_turn(
 			"I couldn't find anything matching that in our store right now. Is there something else I can help you look for?"
 		),

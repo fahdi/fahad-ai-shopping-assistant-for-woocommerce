@@ -5,10 +5,10 @@
  * Renders the "Semantic Search" section on the settings page (enable, model,
  * dimensions, per-day cap), a nonce-gated "Build index" action that backfills
  * the catalog via Action Scheduler, and an index-status readout. The OpenAI key
- * itself is the existing provider key — semantic search reuses it but is opt-in
+ * itself is the existing provider key, semantic search reuses it but is opt-in
  * (Fahad_AI_Embeddings::enabled()) so a chat-only key never incurs embedding cost.
  *
- * Privacy: building the index sends product TEXT (title/description/attributes —
+ * Privacy: building the index sends product TEXT (title/description/attributes , 
  * never price/stock/PII) to the configured embeddings provider. This is disclosed
  * in readme.txt (external services) and in the admin copy below.
  */
@@ -54,7 +54,7 @@ final class Fahad_AI_Embeddings_Admin {
 		update_option( self::OPT_API_KEY, sanitize_text_field( (string) ( $post['embedding_api_key'] ?? '' ) ) );
 		update_option( self::OPT_COHERE_KEY, sanitize_text_field( (string) ( $post['cohere_api_key'] ?? '' ) ) );
 
-		// External vector backend (Qdrant, #113) — opt-in scale tier.
+		// External vector backend (Qdrant, #113), opt-in scale tier.
 		update_option( 'fahad_ai_qdrant_url', sanitize_text_field( (string) ( $post['qdrant_url'] ?? '' ) ) );
 		update_option( 'fahad_ai_qdrant_key', sanitize_text_field( (string) ( $post['qdrant_key'] ?? '' ) ) );
 		$collection = sanitize_text_field( (string) ( $post['qdrant_collection'] ?? '' ) );
@@ -95,7 +95,7 @@ final class Fahad_AI_Embeddings_Admin {
 			return 0;
 		}
 
-		Fahad_AI_Index_Health::clear(); // fresh build — reset the failure tally
+		Fahad_AI_Index_Health::clear(); // fresh build, reset the failure tally
 
 		$store = Fahad_AI_Vector_Stores::resolve( $provider->model(), $provider->dimensions() );
 		$count = ( new Fahad_AI_Indexer( $provider, $store ) )->backfill();
@@ -165,7 +165,7 @@ final class Fahad_AI_Embeddings_Admin {
 		?>
 		<h2 class="title"><?php esc_html_e( 'Semantic Search (beta)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 		<p class="description" style="max-width:50em;">
-			<?php esc_html_e( 'Find products by meaning, not just keywords ("something warm for winter" finds the fleece). Uses your OpenAI key to build a vector index of product text. Product titles, descriptions and attributes are sent to OpenAI when the index is built or a product changes — never prices, stock, or customer data. Off by default; search stays keyword-only until you enable it.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+			<?php esc_html_e( 'Find products by meaning, not just keywords ("something warm for winter" finds the fleece). Uses your OpenAI key to build a vector index of product text. Product titles, descriptions and attributes are sent to OpenAI when the index is built or a product changes, never prices, stock, or customer data. Off by default; search stays keyword-only until you enable it.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 		</p>
 		<table class="form-table" role="presentation">
 			<tr>
@@ -184,7 +184,7 @@ final class Fahad_AI_Embeddings_Admin {
 						<option value="openai" <?php selected( $type, 'openai' ); ?>><?php esc_html_e( 'OpenAI-compatible (OpenAI, Moonshot, Together, self-hosted…)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
 						<option value="cohere" <?php selected( $type, 'cohere' ); ?>><?php esc_html_e( 'Cohere (best for Urdu / non-Latin scripts)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
 					</select>
-					<p class="description"><?php esc_html_e( 'The OpenAI-compatible option works with any provider that exposes an /embeddings endpoint — set the base URL and key below to reuse, e.g., your Moonshot or Together key.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+					<p class="description"><?php esc_html_e( 'The OpenAI-compatible option works with any provider that exposes an /embeddings endpoint, set the base URL and key below to reuse, e.g., your Moonshot or Together key.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
 				</td>
 			</tr>
 			<tr>
@@ -222,7 +222,7 @@ final class Fahad_AI_Embeddings_Admin {
 				<th scope="row"><label for="embedding_dims"><?php esc_html_e( 'Dimensions', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 				<td>
 					<input type="number" id="embedding_dims" name="embedding_dims" min="1" step="1" value="<?php echo esc_attr( (string) $dims ); ?>" class="small-text">
-					<p class="description"><?php esc_html_e( '512 is recommended — a lighter index with negligible quality loss.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+					<p class="description"><?php esc_html_e( '512 is recommended, a lighter index with negligible quality loss.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
 				</td>
 			</tr>
 			<tr>
@@ -260,7 +260,7 @@ final class Fahad_AI_Embeddings_Admin {
 					<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', self::ACTION_BUILD, $build_url ), self::ACTION_BUILD ) ); ?>" class="button">
 						<?php esc_html_e( 'Build / rebuild index', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 					</a>
-					<p class="description"><?php esc_html_e( 'Queues a background job to embed every published product. Safe to run repeatedly — unchanged products are skipped.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Queues a background job to embed every published product. Safe to run repeatedly, unchanged products are skipped.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
 				</td>
 			</tr>
 		</table>

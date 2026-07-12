@@ -5,7 +5,7 @@
  * Decouples the vector pipeline from any one vendor. The default implementation
  * is OpenAI (Fahad_AI_OpenAI_Embedding_Provider); an add-on can swap in
  * Cohere/Voyage/self-hosted via the `fahad_ai_embedding_provider` filter without
- * touching core. Embeddings are OPTIONAL — until a provider is available the
+ * touching core. Embeddings are OPTIONAL, until a provider is available the
  * assistant runs keyword-only, exactly as today (RAG-DESIGN.md §3, §4.3).
  */
 

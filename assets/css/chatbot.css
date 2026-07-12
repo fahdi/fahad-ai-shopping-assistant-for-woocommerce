@@ -171,8 +171,8 @@
 	#chatbot-messages { scroll-behavior: smooth; }
 }
 
-/* Column layout so anything appended after the bubble — the reply-feedback 👍/👎
-   toolbar (#50), in particular — stacks BELOW it instead of being squeezed into a
+/* Column layout so anything appended after the bubble, the reply-feedback 👍/👎
+   toolbar (#50), in particular, stacks BELOW it instead of being squeezed into a
    flex row to the right of the bubble. align-items keeps each message's content on
    its own side (bot left, user right). (#127) */
 .chatbot-msg {
@@ -317,7 +317,7 @@
 		width:         100%;
 		/* dvh tracks the dynamic mobile URL bar so the input is never pushed below
 		   the visible area; vh is the fallback. max-height:none overrides the
-		   floating-panel cap — fullscreen owns the full height here. (#129) */
+		   floating-panel cap, fullscreen owns the full height here. (#129) */
 		height:        100vh;
 		height:        100dvh;
 		max-height:    none;
@@ -533,7 +533,7 @@ a.chatbot-card-title:hover {
 	line-height:     1.4;
 }
 
-/* Shared visible focus indicator for the card controls — accent-independent dark
+/* Shared visible focus indicator for the card controls, accent-independent dark
    ring on a white spacer so it is perceivable on any accent (WCAG 2.4.7). */
 .chatbot-card-view:focus-visible,
 .chatbot-card-add:focus-visible {
@@ -618,7 +618,7 @@ a.chatbot-card-title:hover {
 	min-width:     84px;
 }
 
-/* Column headers (the products) — emphasised, with a subtle fill. The row headers
+/* Column headers (the products), emphasised, with a subtle fill. The row headers
    (attribute names) sit in the first column, also emphasised. */
 .chatbot-compare thead th,
 .chatbot-compare-corner {
@@ -669,7 +669,7 @@ a.chatbot-compare-name:hover {
 /* ── Reply feedback / thumbs (#50) ────────────────────────────────────────────
    A small toolbar appended under a finalized bot reply: a muted prompt + two real
    toggle buttons (👍/👎). The selected state is conveyed by border weight + a
-   background tint AND the aria-pressed state AND which glyph was chosen — never by
+   background tint AND the aria-pressed state AND which glyph was chosen, never by
    colour alone (WCAG 1.4.1). The muted prompt uses --chatbot-muted (>=4.5:1). */
 .chatbot-feedback {
 	display:     flex;
@@ -704,7 +704,7 @@ a.chatbot-compare-name:hover {
 	border-color: var(--chatbot-accent);
 }
 
-/* Accent-independent dark focus ring on a white spacer — perceivable on any accent
+/* Accent-independent dark focus ring on a white spacer, perceivable on any accent
    (matches the card controls, WCAG 2.4.7). */
 .chatbot-feedback-btn:focus-visible {
 	outline:        2px solid #1a1a1a;
@@ -712,7 +712,7 @@ a.chatbot-compare-name:hover {
 	box-shadow:     0 0 0 4px #ffffff;
 }
 
-/* Chosen rating: heavier accent border + tint. Not colour-alone — the disabled
+/* Chosen rating: heavier accent border + tint. Not colour-alone, the disabled
    state, the aria-pressed value, and the picked glyph also signal the selection. */
 .chatbot-feedback-btn.is-selected {
 	border-color: var(--chatbot-accent);
@@ -722,7 +722,7 @@ a.chatbot-compare-name:hover {
 
 .chatbot-feedback-btn[disabled] {
 	cursor:  default;
-	opacity: 1; /* keep contrast — don't grey out the chosen toggle */
+	opacity: 1; /* keep contrast, don't grey out the chosen toggle */
 }
 
 /* The unpicked button fades once a choice is made so the selection reads clearly. */
@@ -820,10 +820,10 @@ a.chatbot-compare-name:hover {
 /* ── Voice input/output (issue #64) ───────────────────────────────────────────
    The mic (speech-to-text) and speaker (text-to-speech) controls sit in the input
    row, next to Send. Built by JS only when the merchant enabled voice AND the
-   browser supports the relevant Web Speech API — so an unsupported browser simply
+   browser supports the relevant Web Speech API, so an unsupported browser simply
    never renders them and text works unchanged. Styled to match Send: same size and
    the same accent-independent dark focus ring (WCAG 2.4.7). The active/recording
-   state is conveyed by the accent fill AND the aria-pressed state (set in JS) — never
+   state is conveyed by the accent fill AND the aria-pressed state (set in JS), never
    by colour alone (WCAG 1.4.1). */
 #chatbot-mic,
 #chatbot-speak {
@@ -868,7 +868,7 @@ a.chatbot-compare-name:hover {
 	border-color: var(--chatbot-accent);
 }
 
-/* A gentle pulse while recording — purely decorative reinforcement of the on-state,
+/* A gentle pulse while recording, purely decorative reinforcement of the on-state,
    and opt-in so it never plays for a reduced-motion user (the reduced-motion catch-all
    below also neutralises it for elements inside the widget root). */
 @media (prefers-reduced-motion: no-preference) {

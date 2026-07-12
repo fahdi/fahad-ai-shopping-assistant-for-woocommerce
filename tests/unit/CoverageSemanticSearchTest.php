@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage tests for Fahad_AI_Semantic_Search — drives the seam's defensive
+ * Coverage tests for Fahad_AI_Semantic_Search, drives the seam's defensive
  * branches the sibling SemanticSearchTest does not reach: the per-query limit
  * break, the callable (Shape 2) retriever path (including a throwing provider),
  * a callable that resolves to a non-array, and non-numeric candidate skipping.
@@ -107,7 +107,7 @@ class CoverageSemanticSearchTest extends TestCase {
 
 	public function test_limit_floor_of_one_caps_a_single_card(): void {
 		// limit is coerced through max( 1, … ), so a zero/negative limit still
-		// yields at least one — the floor protects the break from a 0/negative cap.
+		// yields at least one, the floor protects the break from a 0/negative cap.
 		$byId = [
 			5 => $this->mockProduct( 5, 'First', '10.00' ),
 			6 => $this->mockProduct( 6, 'Second', '20.00' ),
@@ -125,7 +125,7 @@ class CoverageSemanticSearchTest extends TestCase {
 
 	public function test_no_limit_key_returns_all_resolved_cards(): void {
 		// When filters carries no limit, $limit is 0 (the ?:0 branch) and the break
-		// is skipped — every resolvable, visible card is returned.
+		// is skipped, every resolvable, visible card is returned.
 		$byId = [
 			5 => $this->mockProduct( 5, 'First', '10.00' ),
 			6 => $this->mockProduct( 6, 'Second', '20.00' ),
@@ -145,7 +145,7 @@ class CoverageSemanticSearchTest extends TestCase {
 	public function test_callable_retriever_shape_two_is_invoked_with_query_and_filters(): void {
 		// A provider may register a callable fn( $query, $filters ): int[] rather
 		// than ids directly. retrieve() must call it with the query+filters and use
-		// its return — proving the is_callable branch and the invocation (line 144).
+		// its return, proving the is_callable branch and the invocation (line 144).
 		$seen = [];
 		$byId = [ 7 => $this->mockProduct( 7, 'Rain Jacket', '60.00' ) ];
 		Functions\when( 'wc_get_product' )->alias( fn( $id ) => $byId[ (int) $id ] ?? false );
@@ -170,7 +170,7 @@ class CoverageSemanticSearchTest extends TestCase {
 	public function test_callable_retriever_that_throws_degrades_to_empty(): void {
 		// A throwing callable provider must be isolated: ranked_ids catches the
 		// Throwable and returns [] (lines 145-146), so retrieve() yields [] and the
-		// caller falls back to keyword search — the shopper never sees the error.
+		// caller falls back to keyword search, the shopper never sees the error.
 		Functions\expect( 'wc_get_product' )->never(); // no ids ⇒ no resolution
 
 		$boom = function ( $query, $filters ) {

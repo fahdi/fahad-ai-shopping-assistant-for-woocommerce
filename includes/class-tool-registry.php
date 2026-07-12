@@ -33,8 +33,8 @@ defined( 'ABSPATH' ) || exit;
  * Invalid entries are silently skipped, and a throwing callback is isolated so a
  * misbehaving add-on cannot fatal the request.
  *
- * FIRST-PARTY FEATURE PACKS — drop-in tool modules shipped with the plugin
- * (catalog, shipping, …) — use a deterministic, WordPress-filter-free path:
+ * FIRST-PARTY FEATURE PACKS, drop-in tool modules shipped with the plugin
+ * (catalog, shipping, …), use a deterministic, WordPress-filter-free path:
  * register_pack(). A pack lives in its own file under includes/tools/ and
  * self-registers a provider at file scope:
  *
@@ -43,7 +43,7 @@ defined( 'ABSPATH' ) || exit;
  * where the provider is a callable `fn( array $tools ): array` that appends its
  * definitions. The bootstrap (and the test bootstrap) glob-require every file in
  * includes/tools/, so a NEW pack drops in with NO edits to the bootstrap, the
- * test bootstrap, or any shared registry wiring — just a new file. get_tools()
+ * test bootstrap, or any shared registry wiring, just a new file. get_tools()
  * layers the sources in order: built-ins → first-party packs → the third-party
  * filter. Pack providers are stored STATICALLY so they survive a singleton
  * instance reset (only the built/validated tool LIST is cached per instance).
@@ -105,7 +105,7 @@ final class Fahad_AI_Tool_Registry {
 	}
 
 	/**
-	 * Tool SPECS for the LLM — name/description/parameters only, never the
+	 * Tool SPECS for the LLM, name/description/parameters only, never the
 	 * callback. This is what Fahad_AI_API_Handler::tool_specs() returns.
 	 *
 	 * @return array<int, array{name: string, description: string, parameters: array}>
@@ -132,7 +132,7 @@ final class Fahad_AI_Tool_Registry {
 	 * Personal-data tools (those declaring `'personal' => true`) are login-gated
 	 * here, BEFORE their callback runs: a guest gets the standard login-required
 	 * error and the callback is never reached. This is the central half of the
-	 * authorization boundary (defence in depth) — per-RECORD ownership still lives
+	 * authorization boundary (defence in depth), per-RECORD ownership still lives
 	 * inside each personal tool's callback (see Fahad_AI_Auth::user_owns), because
 	 * the registry cannot know who a given order/wallet/memory row belongs to.
 	 *
@@ -154,7 +154,7 @@ final class Fahad_AI_Tool_Registry {
 		}
 
 		// Central login gate for tools that expose personal data. A personal tool
-		// cannot leak by forgetting to check login — the registry blocks guests
+		// cannot leak by forgetting to check login, the registry blocks guests
 		// before the callback is ever invoked.
 		if ( ! empty( $tools[ $name ]['personal'] ) ) {
 			$gate = Fahad_AI_Auth::guard_logged_in();
@@ -224,7 +224,7 @@ final class Fahad_AI_Tool_Registry {
 		// Merchant tool gating (issue #56): drop any tool the merchant disabled from
 		// admin, keyed by name. Applied AFTER every source is layered and validated, so
 		// it gates built-ins, packs and third-party tools uniformly WITHOUT editing any
-		// pack. The five built-in WooCommerce tools are a protected floor — they keep
+		// pack. The five built-in WooCommerce tools are a protected floor, they keep
 		// the assistant functional (search / cart) and the support paths intact, so they
 		// can never be disabled, even by a tampered option. builtin_definitions() is a
 		// numerically-indexed list, so pull the protected names from each entry's 'name'.
@@ -318,7 +318,7 @@ final class Fahad_AI_Tool_Registry {
 	 *
 	 * Test support only: lets a test that asserts on the bare built-in set + the
 	 * third-party filter run against a registry with no feature packs, then
-	 * restore the original providers afterwards. Production never calls this —
+	 * restore the original providers afterwards. Production never calls this , 
 	 * packs self-register once at file load and stay for the request lifetime.
 	 */
 	public static function reset_packs(): void {

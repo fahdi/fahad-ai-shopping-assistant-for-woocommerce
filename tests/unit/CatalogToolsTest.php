@@ -6,12 +6,12 @@
  * WP/WC functions mocked via Brain\Monkey; WC objects via Mockery; singletons
  * reset via reflection.
  *
- * The two catalog tools (get_top_products, list_categories) are NOT built-ins —
+ * The two catalog tools (get_top_products, list_categories) are NOT built-ins , 
  * they ship as a drop-in feature pack that self-registers a provider via
  * Fahad_AI_Tool_Registry::register_pack() at file load. To exercise that
  * registration genuinely (rather than inlining tool entries by hand) every test
  * registers the catalog pack's real provider through register_pack(), then
- * dispatches through Fahad_AI_Tool_Registry::instance()->dispatch() — so the
+ * dispatches through Fahad_AI_Tool_Registry::instance()->dispatch(), so the
  * production registration + merge + dispatch path is what is under test.
  */
 
@@ -28,7 +28,7 @@ class CatalogToolsTest extends TestCase {
      * Snapshot of the registry's static pack providers, restored in tearDown so a
      * test here neither inherits another suite's packs nor leaks the catalog pack
      * we register for our own cases. (Pack providers are static so they survive a
-     * singleton instance reset — see Fahad_AI_Tool_Registry::register_pack.)
+     * singleton instance reset, see Fahad_AI_Tool_Registry::register_pack.)
      *
      * @var array<int, callable>
      */
@@ -71,7 +71,7 @@ class CatalogToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the catalog tools.
      *
      * Resets the Tools + registry singletons, then registers the catalog pack's
-     * REAL provider via register_pack() — exactly what the pack's file-scope
+     * REAL provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production. We register it explicitly (after
      * clearing the static list) so the test is hermetic and order-independent
      * regardless of what other suites do to the shared provider list.
@@ -111,7 +111,7 @@ class CatalogToolsTest extends TestCase {
 
         $this->assertContains( 'get_top_products', $names );
         $this->assertContains( 'list_categories', $names );
-        // They are additive — the five built-ins remain.
+        // They are additive, the five built-ins remain.
         $this->assertContains( 'search_products', $names );
         $this->assertCount( 7, $names );
     }
@@ -147,7 +147,7 @@ class CatalogToolsTest extends TestCase {
     }
 
     public function test_get_top_products_orders_by_total_sales_descending(): void {
-        // "Best seller" is defined as highest total_sales — assert the query asks
+        // "Best seller" is defined as highest total_sales, assert the query asks
         // for that ordering so the definition is enforced, not just documented.
         Functions\expect( 'wc_get_products' )
             ->once()
@@ -233,7 +233,7 @@ class CatalogToolsTest extends TestCase {
             $result['categories'][0]
         );
         $this->assertSame( 4, $result['categories'][1]['count'] );
-        // A category list is NOT a product list — no products[] key to render cards.
+        // A category list is NOT a product list, no products[] key to render cards.
         $this->assertArrayNotHasKey( 'products', $result );
     }
 

@@ -2,21 +2,21 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Visual / image search — "shop the look" (issue #63), the pluggable VISION RETRIEVER
+ * Visual / image search, "shop the look" (issue #63), the pluggable VISION RETRIEVER
  * SEAM plus upload validation and live product resolution.
  *
  * WHAT THIS IS (and is not). This class is the boundary that lets a VISION-embeddings
  * backend plug into product discovery from an IMAGE, WITHOUT coupling it to core. It is
  * the exact same shape as the semantic (text) retriever seam (issue #60,
- * Fahad_AI_Semantic_Search) — a filter returning ranked product IDs that are resolved
- * LIVE — but the input is an uploaded image instead of a free-text query. It does NOT
+ * Fahad_AI_Semantic_Search), a filter returning ranked product IDs that are resolved
+ * LIVE, but the input is an uploaded image instead of a free-text query. It does NOT
  * itself embed images or talk to ANY vision API: real "find visually-similar products"
  * needs an external vision-embeddings provider (CLIP-style image embeddings + a vector
  * index over the catalog), which is a separate dependency and key and is NOT bundled.
  * NO live vision-API call is made anywhere in this plugin.
  *
  * Until a provider registers a retriever on the filter below, this seam returns a graceful
- * "visual search isn't available" result — never an error spew, never a fatal. So the
+ * "visual search isn't available" result, never an error spew, never a fatal. So the
  * capability stays dormant and is activated cleanly by an add-on, mirroring the
  * wallet-decoupling pattern (`fahad_ai_wallet_provider`) and the semantic seam
  * (`fahad_ai_semantic_retriever`): "AI + vision search" is a swappable bundle, not hard
@@ -26,7 +26,7 @@ defined( 'ABSPATH' ) || exit;
  *
  *     apply_filters( 'fahad_ai_visual_retriever', null, array $image, array $filters )
  *
- * Two registration shapes are accepted (mirroring the #60 seam — use whichever fits):
+ * Two registration shapes are accepted (mirroring the #60 seam, use whichever fits):
  *
  *   1. Return the ranked product IDs directly. The filter is applied per request, so the
  *      provider can embed `$image`, run its vector lookup (pre-filtered by `$filters`),
@@ -42,16 +42,16 @@ defined( 'ABSPATH' ) || exit;
  *          add_filter( 'fahad_ai_visual_retriever', fn() => [ $backend, 'rank' ] );
  *
  * `$image` is the VALIDATED upload descriptor (`tmp_name`/`url`/`data`, `type`, `size`,
- * `name`) — the provider decides how to read the bytes (it never gets unvalidated input).
- * `$filters` carries structured constraints — `category` (string), `min_price`/`max_price`
- * (float), `limit` (int) — so a provider can pre-filter its scan and bound its result
+ * `name`), the provider decides how to read the bytes (it never gets unvalidated input).
+ * `$filters` carries structured constraints, `category` (string), `min_price`/`max_price`
+ * (float), `limit` (int), so a provider can pre-filter its scan and bound its result
  * count. The retriever returns IDs ONLY; it must never return price/stock.
  *
  * UPLOAD VALIDATION (security, before anything else). Every image is validated BEFORE the
  * seam is consulted: a present, non-empty, size-bounded payload with an allowed image MIME
  * type. An oversized image is a 413, an invalid/unsafe MIME a 415, a missing/zero-byte
  * payload a 400. The size ceiling defaults to 5 MB (`fahad_ai_visual_max_bytes`) and the
- * MIME allowlist to jpeg/png/webp/gif (`fahad_ai_visual_allowed_mimes`) — a COST CEILING
+ * MIME allowlist to jpeg/png/webp/gif (`fahad_ai_visual_allowed_mimes`), a COST CEILING
  * and a content-safety guard. Validation failing short-circuits: no retrieval, no
  * resolution.
  *
@@ -64,7 +64,7 @@ defined( 'ABSPATH' ) || exit;
  * at call time and shaped by Fahad_AI_Tools::format_product_summary(), which reads price /
  * sale / stock / rating straight from the live WC_Product. So even though retrieval used a
  * (potentially stale) vector index, the price and stock the shopper sees are always
- * current — never embedded or cached. Products that no longer resolve, or are not
+ * current, never embedded or cached. Products that no longer resolve, or are not
  * visible/published, are dropped so the index can lag live truth safely (the #60
  * invariant, applied identically here).
  *
@@ -88,8 +88,8 @@ final class Fahad_AI_Visual_Search {
 	/**
 	 * Register the visual-search REST route.
 	 *
-	 * The route is gated by the SAME boundary as the chat endpoints — the nonce +
-	 * rate-limit `authorize_request` permission callback supplied by the bootstrap — so a
+	 * The route is gated by the SAME boundary as the chat endpoints, the nonce +
+	 * rate-limit `authorize_request` permission callback supplied by the bootstrap, so a
 	 * billable vision lookup is CSRF-protected and rate-capped exactly like a chat turn.
 	 * The route is wired by the plugin bootstrap (mirroring how the WhatsApp channel
 	 * self-registers), so this class owns its own endpoint.
@@ -171,7 +171,7 @@ final class Fahad_AI_Visual_Search {
 	 * @return array|WP_Error The result shape above, or a validation WP_Error.
 	 */
 	public function search( array $image, array $filters = [] ) {
-		// 1. Validate FIRST — security and cost guard. A bad upload never reaches the seam.
+		// 1. Validate FIRST, security and cost guard. A bad upload never reaches the seam.
 		$valid = $this->validate_image( $image );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
@@ -218,8 +218,8 @@ final class Fahad_AI_Visual_Search {
 	 * Normalise structured constraints into clean types before they reach the seam.
 	 *
 	 * Keeps only the recognised keys and coerces each to the type the contract promises a
-	 * provider — category (non-empty string), min_price/max_price (float), limit (positive
-	 * int) — dropping anything malformed. So whether the caller passed strings (from a REST
+	 * provider, category (non-empty string), min_price/max_price (float), limit (positive
+	 * int), dropping anything malformed. So whether the caller passed strings (from a REST
 	 * form) or ints, the retriever always sees the documented shape.
 	 *
 	 * @param array $filters Raw caller-supplied constraints.
@@ -253,7 +253,7 @@ final class Fahad_AI_Visual_Search {
 	 * Order is fail-closed: a missing payload is a 400, a zero-byte or unreadable payload a
 	 * 400, an oversized payload a 413, and a disallowed/unsafe MIME a 415. The size ceiling
 	 * and the MIME allowlist are filterable so a merchant can tighten/loosen them, but the
-	 * defaults are conservative (5 MB; jpeg/png/webp/gif) — a cost ceiling AND a
+	 * defaults are conservative (5 MB; jpeg/png/webp/gif), a cost ceiling AND a
 	 * content-safety guard against disguised non-image uploads.
 	 *
 	 * @param array $image The uploaded-image descriptor.
@@ -274,7 +274,7 @@ final class Fahad_AI_Visual_Search {
 			);
 		}
 
-		// A declared size is required and must be positive — a zero-byte / truncated upload
+		// A declared size is required and must be positive, a zero-byte / truncated upload
 		// is rejected before any provider sees it.
 		$size = isset( $image['size'] ) ? (int) $image['size'] : 0;
 		if ( $size <= 0 ) {
@@ -325,7 +325,7 @@ final class Fahad_AI_Visual_Search {
 	 * Apply the retriever filter and return its RAW value (null/false/array/callable).
 	 *
 	 * Kept separate from normalization so the caller can distinguish "no provider"
-	 * (null/false) from "provider present, no match" (empty array) — the two map to the
+	 * (null/false) from "provider present, no match" (empty array), the two map to the
 	 * "not available" vs "no match" graceful states.
 	 *
 	 * @param array $image   The validated image descriptor handed to the provider.
@@ -353,7 +353,7 @@ final class Fahad_AI_Visual_Search {
 	 * Normalise a retriever's return into a clean list of unique positive product IDs in
 	 * rank order.
 	 *
-	 * Accepts either registration shape (direct IDs, or a callable retriever — see the class
+	 * Accepts either registration shape (direct IDs, or a callable retriever, see the class
 	 * docblock) and is defensive about everything a third-party provider might return: a
 	 * non-array, a callable that throws, duplicate or non-numeric entries. Anything unusable
 	 * collapses to [] so the caller renders a graceful no-match instead of erroring.
@@ -365,7 +365,7 @@ final class Fahad_AI_Visual_Search {
 	 */
 	private function normalize_ids( $retriever, array $image, array $filters ): array {
 		// Shape 2: a callable retriever resolved per request. Isolated like the semantic
-		// seam isolates its callable — a throwing provider degrades to a graceful no-match.
+		// seam isolates its callable, a throwing provider degrades to a graceful no-match.
 		if ( is_callable( $retriever ) ) {
 			try {
 				$retriever = $retriever( $image, $filters );
@@ -397,7 +397,7 @@ final class Fahad_AI_Visual_Search {
 	 *
 	 * Each id is resolved through wc_get_product() at call time and shaped by
 	 * Fahad_AI_Tools::format_product_summary(), which reads price/stock straight from the
-	 * live WC_Product — the retriever supplied ONLY the id, never any cached price/stock.
+	 * live WC_Product, the retriever supplied ONLY the id, never any cached price/stock.
 	 * An id that no longer resolves, or resolves to a non-visible/unpublished product, is
 	 * skipped (the index can lag live truth). The optional `limit` bounds the result count.
 	 *
@@ -418,7 +418,7 @@ final class Fahad_AI_Visual_Search {
 			$product = wc_get_product( $id );
 
 			// The index can lag live truth: an id may no longer resolve, or be
-			// unpublished/hidden now. Skip those — never surface an unbuyable product.
+			// unpublished/hidden now. Skip those, never surface an unbuyable product.
 			if ( ! $product instanceof WC_Product || ! $product->is_visible() ) {
 				continue;
 			}

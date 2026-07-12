@@ -10,7 +10,7 @@
  * exact tokens and pure keyword misses intent; hybrid recovers both.
  *
  * It plugs into the EXISTING `fahad_ai_semantic_retriever` seam (#60), returning
- * ranked product IDs only — Fahad_AI_Semantic_Search resolves them to LIVE
+ * ranked product IDs only, Fahad_AI_Semantic_Search resolves them to LIVE
  * price/stock summaries (§5.4). So search_products becomes hybrid with no new
  * tool and no api-handler change. With no provider or an empty vector index the
  * retriever returns [], and search_products runs its full keyword path
@@ -42,7 +42,7 @@ final class Fahad_AI_Retriever {
 	 */
 	public static function resolve_seam( $ids, string $query, array $filters ) {
 		if ( ! Fahad_AI_Embeddings::enabled() ) {
-			return $ids; // semantic search is opt-in — keyword search runs until switched on
+			return $ids; // semantic search is opt-in, keyword search runs until switched on
 		}
 		$provider = Fahad_AI_Embeddings::provider();
 		if ( ! $provider || ! $provider->is_available() ) {
@@ -82,7 +82,7 @@ final class Fahad_AI_Retriever {
 		$fused       = Fahad_AI_Rrf::fuse( [ $keyword_ids, $vector_ids ] );
 
 		/**
-		 * Optional cross-encoder rerank seam (#113). Off by default — a Cohere/Voyage
+		 * Optional cross-encoder rerank seam (#113). Off by default, a Cohere/Voyage
 		 * reranker can register here to reorder the fused candidates for extra
 		 * precision; with nothing registered the fused order passes through unchanged.
 		 *
@@ -112,12 +112,12 @@ final class Fahad_AI_Retriever {
 		$vectors = $this->provider->embed( [ $query ] );
 		$vector  = $vectors[0] ?? [];
 		if ( $vector ) {
-			set_transient( $key, $vector, 300 ); // 5 min — long enough to coalesce a burst of identical queries
+			set_transient( $key, $vector, 300 ); // 5 min, long enough to coalesce a burst of identical queries
 		}
 		return $vector;
 	}
 
-	/** Product IDs matching the live filters (category/price/stock) — the vector scan set. */
+	/** Product IDs matching the live filters (category/price/stock), the vector scan set. */
 	private function candidate_ids( array $filters ): array {
 		return $this->product_ids( $this->filter_args( $filters, [ 'limit' => -1 ] ) );
 	}

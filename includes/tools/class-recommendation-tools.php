@@ -8,19 +8,19 @@ defined( 'ABSPATH' ) || exit;
  * a self-contained class in its own file under includes/tools/ that self-registers
  * a provider at the bottom via Fahad_AI_Tool_Registry::register_pack(). The bootstrap
  * (and the test bootstrap) glob-require everything here, so adding this pack is a
- * SINGLE new file — no edits to the bootstrap, the test bootstrap, or the eval harness.
+ * SINGLE new file, no edits to the bootstrap, the test bootstrap, or the eval harness.
  *
  * Tools provided:
- *   - get_recommendations — need-based "what goes well with this?" suggestions.
- *   - get_cross_sells     — the clearly-OPTIONAL post-add-to-cart cross-sell offer.
+ *   - get_recommendations, need-based "what goes well with this?" suggestions.
+ *   - get_cross_sells    , the clearly-OPTIONAL post-add-to-cart cross-sell offer.
  *
- * RELEVANCE IS DERIVED FROM REAL WOOCOMMERCE RELATIONS — nothing is invented:
+ * RELEVANCE IS DERIVED FROM REAL WOOCOMMERCE RELATIONS, nothing is invented:
  *
  *   • get_recommendations, given a product_id, layers the store's OWN relation data,
  *     most-relevant first:
- *       1. Up-sells   ($product->get_upsell_ids()) — merchant-curated "better/premium
+ *       1. Up-sells   ($product->get_upsell_ids()), merchant-curated "better/premium
  *          alternative" picks, the strongest signal because a human chose them.
- *       2. Related    (wc_get_related_products()) — WooCommerce's own algorithm over
+ *       2. Related    (wc_get_related_products()), WooCommerce's own algorithm over
  *          shared category + tag, the standard "you might also like" set.
  *     The two are merged in that order, de-duplicated, and the source product itself
  *     is never echoed back. Each surfaced product carries a short `reason` string the
@@ -29,14 +29,14 @@ defined( 'ABSPATH' ) || exit;
  *     hiking", "a gift"), it falls back to a catalog search (wc_get_products with the
  *     need as the search term) so a need-based ask still returns real products.
  *   • BUDGET RESPECT: when the customer states a `max_price`, any candidate whose
- *     price exceeds it is filtered out — the assistant honours a stated budget rather
+ *     price exceeds it is filtered out, the assistant honours a stated budget rather
  *     than upselling past it.
  *
  *   • get_cross_sells returns the cross-sell products WooCommerce associates with the
  *     CURRENT cart (WC()->cart->get_cross_sells(), the IDs aggregated from the cart
  *     items' cross_sell_ids). This is the "offered post-add-to-cart, clearly optional"
  *     flow: the result is flagged `optional => true` and the tool description tells the
- *     model these are OPTIONAL add-ons to offer without pressure — so the upsell stays
+ *     model these are OPTIONAL add-ons to offer without pressure, so the upsell stays
  *     transparent (the disclosure/anti-dark-pattern policy itself is issue #24; here we
  *     simply never present cross-sells as required).
  *
@@ -54,7 +54,7 @@ final class Fahad_AI_Recommendation_Tools {
 	 * Append the recommendation tools to the registry's tool list.
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope).
-	 * Static because the pack holds no per-instance state — its tools call
+	 * Static because the pack holds no per-instance state, its tools call
 	 * WooCommerce and the shared session cart directly and reuse the shared
 	 * formatter singleton.
 	 *
@@ -64,13 +64,13 @@ final class Fahad_AI_Recommendation_Tools {
 	public static function register( array $tools ): array {
 		$tools[] = [
 			'name'        => 'get_recommendations',
-			'description' => 'Suggest products that go well with a given product, or that fit a stated need or budget. Pass product_id for "what goes well with this / what should I get with it" (uses the store\'s real up-sell and related-product relations), and/or a free-text need/context like "something for hiking" or "a birthday gift". Pass max_price to respect a budget — items above it are excluded. Returns real, in-stock products that render as visual cards, each with a short reason. Only ever recommend products this tool returns.',
+			'description' => 'Suggest products that go well with a given product, or that fit a stated need or budget. Pass product_id for "what goes well with this / what should I get with it" (uses the store\'s real up-sell and related-product relations), and/or a free-text need/context like "something for hiking" or "a birthday gift". Pass max_price to respect a budget, items above it are excluded. Returns real, in-stock products that render as visual cards, each with a short reason. Only ever recommend products this tool returns.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
 					'product_id' => [ 'type' => 'integer', 'description' => 'A product to base suggestions on (uses its up-sells and related products).' ],
 					'need'       => [ 'type' => 'string',  'description' => 'Free-text need or context, e.g. "something for hiking" or "a gift". Used to search the catalog when no product_id is given.' ],
-					'max_price'  => [ 'type' => 'number',  'description' => 'Optional budget cap — exclude any suggestion priced above this.' ],
+					'max_price'  => [ 'type' => 'number',  'description' => 'Optional budget cap, exclude any suggestion priced above this.' ],
 					'limit'      => [ 'type' => 'integer', 'description' => 'How many suggestions to return (default 4, max 10).' ],
 				],
 			],
@@ -79,11 +79,11 @@ final class Fahad_AI_Recommendation_Tools {
 
 		$tools[] = [
 			'name'        => 'get_cross_sells',
-			'description' => 'List OPTIONAL add-on products that pair with what is already in the customer\'s cart (the store\'s cross-sell relations). Use this AFTER something has been added to the cart, to offer extras the customer may also want. These are entirely optional — present them as suggestions, never as required, and never pressure the customer. Returns real, in-stock products that render as visual cards. Returns an empty list when the cart is empty or has no cross-sells.',
+			'description' => 'List OPTIONAL add-on products that pair with what is already in the customer\'s cart (the store\'s cross-sell relations). Use this AFTER something has been added to the cart, to offer extras the customer may also want. These are entirely optional, present them as suggestions, never as required, and never pressure the customer. Returns real, in-stock products that render as visual cards. Returns an empty list when the cart is empty or has no cross-sells.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
-					'max_price' => [ 'type' => 'number',  'description' => 'Optional budget cap — exclude any add-on priced above this.' ],
+					'max_price' => [ 'type' => 'number',  'description' => 'Optional budget cap, exclude any add-on priced above this.' ],
 					'limit'     => [ 'type' => 'integer', 'description' => 'How many add-ons to return (default 4, max 10).' ],
 				],
 			],
@@ -103,8 +103,8 @@ final class Fahad_AI_Recommendation_Tools {
 	 * Relevance is layered from the store's OWN relation data (up-sells first, then
 	 * related products), falling back to a catalog search for a free-text need when no
 	 * product_id is given. A stated max_price filters out anything above budget. Returns
-	 * the canonical { found, products[] } card shape — each product augmented with a
-	 * short `reason` — so it renders as product cards.
+	 * the canonical { found, products[] } card shape, each product augmented with a
+	 * short `reason`, so it renders as product cards.
 	 */
 	private static function get_recommendations( array $input ): array {
 		$limit     = min( max( 1, (int) ( $input['limit'] ?? 4 ) ), 10 );
@@ -160,7 +160,7 @@ final class Fahad_AI_Recommendation_Tools {
 	}
 
 	/**
-	 * Cross-sell add-ons for the current cart — the clearly-OPTIONAL post-add offer.
+	 * Cross-sell add-ons for the current cart, the clearly-OPTIONAL post-add offer.
 	 *
 	 * Reads WC()->cart->get_cross_sells() (the cross-sell IDs WooCommerce aggregates
 	 * from the cart items) and returns them as cards, flagged `optional => true` so the
@@ -197,7 +197,7 @@ final class Fahad_AI_Recommendation_Tools {
 		return [
 			'found'    => count( $products ),
 			'products' => $products,
-			// These are optional extras, never required — see the tool description.
+			// These are optional extras, never required, see the tool description.
 			'optional' => true,
 		];
 	}
@@ -327,7 +327,7 @@ final class Fahad_AI_Recommendation_Tools {
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this
-// file in is the ONLY wiring needed — no bootstrap or harness edits.
+// file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before pcov's per-test window opens; its effect is asserted in CoverageRecommendationToolsTest via the registry() helper's register_pack() + live dispatch.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Recommendation_Tools', 'register' ] );

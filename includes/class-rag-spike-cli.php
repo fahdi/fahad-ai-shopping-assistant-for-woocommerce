@@ -1,6 +1,6 @@
 <?php
 /**
- * `wp fahad-ai rag-spike` — the RAG Phase 0 decision-gate runner (S0.5).
+ * `wp fahad-ai rag-spike`, the RAG Phase 0 decision-gate runner (S0.5).
  *
  * Registered only under WP-CLI; ships no shopper-facing surface. It scores
  * keyword/vector/hybrid recall@k and projects brute-force scan latency, then
@@ -47,7 +47,7 @@ final class Fahad_AI_Rag_Spike_CLI {
 		$k     = max( 1, (int) ( $assoc['k'] ?? 3 ) );
 		$sizes = array_values( array_filter( array_map( 'intval', explode( ',', (string) ( $assoc['sizes'] ?? '1000,5000,20000' ) ) ) ) );
 
-		// Reports may only ever land in uploads/<plugin-slug>/ — --report is reduced
+		// Reports may only ever land in uploads/<plugin-slug>/, --report is reduced
 		// to a sanitized basename so neither absolute paths nor ../ traversal can
 		// write anywhere else on the filesystem.
 		$upload = wp_upload_dir();
@@ -59,7 +59,7 @@ final class Fahad_AI_Rag_Spike_CLI {
 
 		[ $texts, $vecs, $queries, $mode ] = $this->build_dataset();
 
-		\WP_CLI::log( "RAG spike — relevance ({$mode}) at recall@{$k}:" );
+		\WP_CLI::log( "RAG spike, relevance ({$mode}) at recall@{$k}:" );
 		$cmp = Fahad_AI_Rag_Spike::compare( $texts, $vecs, $queries, $k );
 		foreach ( $cmp['queries'] as $row ) {
 			\WP_CLI::log( sprintf( '  %-34s kw=%.2f vec=%.2f hybrid=%.2f', $row['name'], $row['keyword'], $row['vector'], $row['hybrid'] ) );
@@ -166,7 +166,7 @@ final class Fahad_AI_Rag_Spike_CLI {
 
 	/**
 	 * Minimal OpenAI embeddings call (text-embedding-3-small, 512 dims). Spike-only
-	 * inline call — the production abstraction is S1.1. Returns float[][] or null.
+	 * inline call, the production abstraction is S1.1. Returns float[][] or null.
 	 */
 	private function embed( array $texts, string $key ): ?array {
 		$res = wp_remote_post(
@@ -223,8 +223,8 @@ final class Fahad_AI_Rag_Spike_CLI {
 			$worst_p95 = max( $worst_p95, $row['p95_ms'] );
 		}
 		$verdict = $hybrid_wins
-			? ( 'live embeddings' === $mode ? '**GO** — hybrid beats keyword on real embeddings at acceptable latency.' : '**GO (provisional)** — hybrid beats keyword on the canned golden set; re-run keyed for the real-embedding confirmation.' )
-			: '**NO-GO** — hybrid did not beat keyword; revisit the design before Phase 1.';
+			? ( 'live embeddings' === $mode ? '**GO**, hybrid beats keyword on real embeddings at acceptable latency.' : '**GO (provisional)**, hybrid beats keyword on the canned golden set; re-run keyed for the real-embedding confirmation.' )
+			: '**NO-GO**, hybrid did not beat keyword; revisit the design before Phase 1.';
 
 		$rows = '';
 		foreach ( $cmp['queries'] as $r ) {
@@ -244,7 +244,7 @@ final class Fahad_AI_Rag_Spike_CLI {
 			. "Hybrid (RRF of keyword + vector) is the gate: it must be >= each leg per query and beat keyword overall (RAG-DESIGN.md §6.1).\n\n"
 			. "## Brute-force scan latency (512-dim float32 BLOBs, unpack + cosine per row)\n\n"
 			. "| Catalog size | p50 (ms) | p95 (ms) |\n|---|---|---|\n{$lat}\n"
-			. sprintf( "Worst-case p95 across projected sizes: **%.1f ms**. Latency measured on the runner's hardware; commodity shared hosts run slower — pre-filter by category/stock/price shrinks the scanned set (RAG-DESIGN.md §4.4).\n\n", $worst_p95 )
+			. sprintf( "Worst-case p95 across projected sizes: **%.1f ms**. Latency measured on the runner's hardware; commodity shared hosts run slower, pre-filter by category/stock/price shrinks the scanned set (RAG-DESIGN.md §4.4).\n\n", $worst_p95 )
 			. "## Notes\n\n"
 			. "- Offline/canned mode validates the harness and the keyword/vector/hybrid logic deterministically. Run with an OpenAI key configured (`fahad_ai_openai_api_key`) for the real-embedding confirmation on the live catalog.\n"
 			. "- This is a Phase 0 spike: no shipped tool, UI, or release. The primitives exercised here (`Fahad_AI_Vector_Math`, `Fahad_AI_Rrf`, `Fahad_AI_Embedding_Document`, `Fahad_AI_Relevance_Metrics`, `Fahad_AI_Rag_Spike_Retriever`) are what Phase 1 (S1.x) composes.\n";

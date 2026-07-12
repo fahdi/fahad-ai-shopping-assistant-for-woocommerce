@@ -2,27 +2,27 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Curated bundles — "complete the look" (issue #57).
+ * Curated bundles, "complete the look" (issue #57).
  *
  * A drop-in feature pack (same pattern as Fahad_AI_Recommendation_Tools /
  * Fahad_AI_Comparison_Tools): a self-contained class in its own file under
  * includes/tools/ that self-registers a provider at the bottom via
  * Fahad_AI_Tool_Registry::register_pack(). The bootstrap (and the test bootstrap)
- * glob-require everything here, so adding this pack is a SINGLE new file — no edits
+ * glob-require everything here, so adding this pack is a SINGLE new file, no edits
  * to the bootstrap, the test bootstrap, or the eval harness. Do NOT edit the
  * existing packs.
  *
  * Tool provided:
- *   - get_bundle — given a product, propose a complementary multi-item bundle with
+ *   - get_bundle, given a product, propose a complementary multi-item bundle with
  *     a single, HONEST combined price ("complete the look" / "frequently bought
  *     together as a set"). A clean AOV lever done honestly: it is a DISCLOSED,
  *     OPTIONAL suggestion, never required, never auto-added.
  *
- * EVERYTHING IS GROUNDED IN REAL WOOCOMMERCE DATA — nothing is invented:
+ * EVERYTHING IS GROUNDED IN REAL WOOCOMMERCE DATA, nothing is invented:
  *
  *   • Bundle membership comes from the store's OWN relations:
  *       - If the anchor product is a GROUPED product, its children
- *         ($product->get_children()) ARE the bundle — a grouped product is a
+ *         ($product->get_children()) ARE the bundle, a grouped product is a
  *         merchant-defined container, so the children are exactly the items the
  *         merchant grouped. The grouped container itself is not a sellable line and
  *         is never listed as an item.
@@ -35,11 +35,11 @@ defined( 'ABSPATH' ) || exit;
  *   • PRICING IS GROUNDED, NEVER FABRICATED. The combined price is the EXACT sum of
  *     the in-stock items' real active prices ($product->get_price(), which already
  *     reflects each item's own sale price when it is on sale). A bundle "saving" is
- *     surfaced ONLY when it genuinely exists — i.e. the items' regular-price sum is
+ *     surfaced ONLY when it genuinely exists, i.e. the items' regular-price sum is
  *     higher than the combined active-price sum because items are individually on
  *     sale. There is no synthetic "bundle discount": if nothing is on sale the
  *     combined price equals the regular total and `has_discount` is false with zero
- *     savings. (This deliberately avoids inventing a discount — see the absolute
+ *     savings. (This deliberately avoids inventing a discount, see the absolute
  *     guardrails in docs/ai-assistant.md §"System prompt & trust guardrails".)
  *
  *   • PER-ITEM STOCK is respected: an out-of-stock (or non-visible) complementary
@@ -51,7 +51,7 @@ defined( 'ABSPATH' ) || exit;
  *     exceeds it, the lowest-priority complementary items are trimmed (dropped from
  *     the end of the priority order) until the combined price fits, and the result
  *     discloses that it trimmed. If even the base item alone exceeds the budget
- *     there is no bundle that fits — the tool refuses to propose one over budget
+ *     there is no bundle that fits, the tool refuses to propose one over budget
  *     (`fits_budget => false`) rather than push past the stated limit.
  *
  * Each item is rendered through the shared Fahad_AI_Tools::format_product_summary()
@@ -59,14 +59,14 @@ defined( 'ABSPATH' ) || exit;
  * numeric `price_raw` / `regular_price_raw` so the combined total is verifiably the
  * sum of the parts. The items are returned under the canonical `products` key so the
  * convention-based card emission in Fahad_AI_API_Handler::tool_result_cards() renders
- * them as ordinary product cards automatically (no shared-file edits) — a bundle is a
+ * them as ordinary product cards automatically (no shared-file edits), a bundle is a
  * priced SET of normal products, not a new card type, and it carries no `attributes`
  * key so it is never mistaken for a comparison table. The bundle-level pricing
  * (combined_price / regular_price / savings) and the `optional => true` disclosure
  * ride alongside as top-level scalars, which the cost-control trim preserves verbatim
  * so the model always sees the grounded combined price and never invents one.
  *
- * This is NOT a personal-data tool — it reads the shared catalog only — so it
+ * This is NOT a personal-data tool, it reads the shared catalog only, so it
  * carries no `personal` flag and is not login-gated.
  */
 final class Fahad_AI_Bundle_Tools {
@@ -83,7 +83,7 @@ final class Fahad_AI_Bundle_Tools {
 	 * Append the bundle tool to the registry's tool list.
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope).
-	 * Static because the pack holds no per-instance state — its tool calls
+	 * Static because the pack holds no per-instance state, its tool calls
 	 * WooCommerce directly and reuses the shared formatter singleton.
 	 *
 	 * @param array $tools Existing tool definitions.
@@ -92,7 +92,7 @@ final class Fahad_AI_Bundle_Tools {
 	public static function register( array $tools ): array {
 		$tools[] = [
 			'name'        => 'get_bundle',
-			'description' => 'Suggest an OPTIONAL "complete the look" / "frequently bought together" bundle for a product: the product plus complementary items, with a single combined price. Pass product_id (find it with search_products first if needed); optionally pass max_price to respect the customer\'s budget. The bundle is built only from the store\'s real grouped-product children and cross-sell relations — never invent items. The combined price is the exact sum of the items\' real prices, and any saving is shown ONLY when the items are genuinely on sale (never fabricate a discount). Out-of-stock items are left out and reported. If a budget is given the bundle is trimmed to fit or declined — never proposed over budget. Always present the bundle as an optional suggestion the customer can take or leave, never as required.',
+			'description' => 'Suggest an OPTIONAL "complete the look" / "frequently bought together" bundle for a product: the product plus complementary items, with a single combined price. Pass product_id (find it with search_products first if needed); optionally pass max_price to respect the customer\'s budget. The bundle is built only from the store\'s real grouped-product children and cross-sell relations, never invent items. The combined price is the exact sum of the items\' real prices, and any saving is shown ONLY when the items are genuinely on sale (never fabricate a discount). Out-of-stock items are left out and reported. If a budget is given the bundle is trimmed to fit or declined, never proposed over budget. Always present the bundle as an optional suggestion the customer can take or leave, never as required.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -162,7 +162,7 @@ final class Fahad_AI_Bundle_Tools {
 			}
 
 			if ( ! $product->is_in_stock() ) {
-				// The anchor of a non-grouped bundle is the base item — if it cannot
+				// The anchor of a non-grouped bundle is the base item, if it cannot
 				// be bought there is no honest bundle to build at all.
 				if ( $anchor_is_item && $id === $product_id ) {
 					return self::empty_state( __( 'That product is out of stock, so there is no bundle to suggest right now.', 'fahad-ai-shopping-assistant-for-woocommerce' ), $max_price );
@@ -180,7 +180,7 @@ final class Fahad_AI_Bundle_Tools {
 			$products[]                   = $summary;
 		}
 
-		// A one-item "bundle" is not a bundle — need at least two real items to make
+		// A one-item "bundle" is not a bundle, need at least two real items to make
 		// a "complete the look" set.
 		if ( count( $products ) < 2 ) {
 			return self::empty_state( __( 'There are no complementary items to bundle with this product right now.', 'fahad-ai-shopping-assistant-for-woocommerce' ), $max_price, $unavailable );
@@ -217,7 +217,7 @@ final class Fahad_AI_Bundle_Tools {
 
 		$result = [
 			'found'                  => count( $products ),
-			'optional'               => true, // disclosed upsell — never required.
+			'optional'               => true, // disclosed upsell, never required.
 			// Canonical `products` key so the items render as ordinary product cards
 			// via the convention-based emitter (no shared-file edits); no `attributes`
 			// key, so this is never mistaken for a comparison table.
@@ -357,7 +357,7 @@ final class Fahad_AI_Bundle_Tools {
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this
-// file in is the ONLY wiring needed — no bootstrap or harness edits.
+// file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test pcov window opens, so it can never be measured.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Bundle_Tools', 'register' ] );

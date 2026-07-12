@@ -7,7 +7,7 @@
  * Action Scheduler handlers (handle_embed_action / handle_delete_action), the
  * WooCommerce-resolving paths (reindex_product / product_fields / term_names),
  * and the index_fields guard/branch arms (empty document, empty vectors) that
- * the primary suite does not exercise. Every assertion checks real behaviour —
+ * the primary suite does not exercise. Every assertion checks real behaviour , 
  * no bare smoke calls.
  */
 
@@ -143,7 +143,7 @@ class CoverageIndexerTest extends TestCase {
 		$product->allows( 'get_description' )->andReturn( '' );
 		Functions\when( 'wc_get_product' )->justReturn( $product );
 
-		// With no categories/tags the composed doc is just the title — confirming
+		// With no categories/tags the composed doc is just the title, confirming
 		// term_names() dropped to [] for both taxonomies rather than erroring.
 		$expected_hash = Fahad_AI_Embedding_Document::content_hash(
 			Fahad_AI_Embedding_Document::compose( [ 'title' => 'Plain Tee' ] )
@@ -168,7 +168,7 @@ class CoverageIndexerTest extends TestCase {
 		// backfill(null) resolves the product set itself: in a clean process
 		// wc_get_products() is undefined, so the null branch falls to [] (no products).
 		// When a sibling coverage test has stubbed wc_get_products via Patchwork, the
-		// definition lingers after tearDown and function_exists() then reports true — so
+		// definition lingers after tearDown and function_exists() then reports true, so
 		// we re-stub it to an empty set here. Either path yields the SAME behaviour under
 		// test: no resolvable products -> nothing enqueued -> a zero count.
 		if ( function_exists( 'wc_get_products' ) ) {
@@ -250,7 +250,7 @@ class CoverageIndexerTest extends TestCase {
 		Functions\when( 'get_option' )->alias(
 			static fn( $k, $d = '' ) => 'fahad_ai_embeddings_enabled' === $k ? 0 : $d
 		);
-		// No provider/store work should happen — apply_filters must never be reached.
+		// No provider/store work should happen, apply_filters must never be reached.
 		Functions\expect( 'apply_filters' )->never();
 
 		Fahad_AI_Indexer::handle_embed_action( 5 ); // returns void; absence of error == pass

@@ -3,8 +3,8 @@
  * Unit tests for Fahad_AI_API_Handler.
  *
  * Covers:
- *  - sanitize_messages()  — input validation & sanitization
- *  - tool_specs()         — contract/structure of tool definitions
+ *  - sanitize_messages() , input validation & sanitization
+ *  - tool_specs()        , contract/structure of tool definitions
  */
 
 use Brain\Monkey;
@@ -21,7 +21,7 @@ class ApiHandlerTest extends TestCase {
      * tearDown. The tool_specs() contract tests below assert on the BARE built-in
      * set (exactly five tools). Feature packs (the catalog pack, …) self-register
      * into that static list at file load, so we clear it for the duration of each
-     * test — proving the built-in contract independent of however many packs ship —
+     * test, proving the built-in contract independent of however many packs ship , 
      * and restore it afterwards so other suites keep their packs.
      *
      * @var array<int, callable>
@@ -110,12 +110,12 @@ class ApiHandlerTest extends TestCase {
 
         $sent = [];
 
-        // First tool call this turn: two distinct products — both are fresh.
+        // First tool call this turn: two distinct products, both are fresh.
         $args1  = [ [ [ 'id' => 14, 'name' => 'Running Sneakers' ], [ 'id' => 10, 'name' => 'White T-Shirt' ] ], &$sent ];
         $fresh1 = $m->invokeArgs( $h, $args1 );
         $this->assertSame( [ 14, 10 ], array_column( $fresh1, 'id' ) );
 
-        // Second tool call in the SAME turn re-surfaces product 14 — it must be dropped.
+        // Second tool call in the SAME turn re-surfaces product 14, it must be dropped.
         $args2  = [ [ [ 'id' => 14, 'name' => 'Running Sneakers' ] ], &$sent ];
         $fresh2 = $m->invokeArgs( $h, $args2 );
         $this->assertSame( [], $fresh2, 'A product already streamed this turn must not be re-emitted.' );
@@ -184,7 +184,7 @@ class ApiHandlerTest extends TestCase {
     // numeric currency entity the model still occasionally emits can never reach the
     // browser as a stray glyph. A well-formed entity is decoded to its symbol; a
     // MALFORMED one (e.g. a dropped digit: &#836;, which would decode to the U+0344
-    // combining mark) is repaired to the configured currency symbol — never a
+    // combining mark) is repaired to the configured currency symbol, never a
     // combining/control character. A raw symbol passes through untouched.
 
     private function normalize_currency_entities( string $text ): string {
@@ -201,7 +201,7 @@ class ApiHandlerTest extends TestCase {
     }
 
     public function test_currency_normalizer_decodes_a_valid_numeric_entity(): void {
-        // &#8360; is the rupee sign (U+20A8) — a well-formed currency entity must be
+        // &#8360; is the rupee sign (U+20A8), a well-formed currency entity must be
         // decoded to the plain symbol so the customer never sees the raw entity text.
         $rupee = "\xE2\x82\xA8"; // U+20A8
         $this->assertSame(
@@ -212,7 +212,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_currency_normalizer_repairs_a_malformed_entity_to_the_symbol(): void {
         // &#836; is a dropped-digit corruption of &#8360;. Decoded naively it becomes
-        // U+0344 (COMBINING GREEK DIALYTIKA TONOS) — a combining mark that renders as a
+        // U+0344 (COMBINING GREEK DIALYTIKA TONOS), a combining mark that renders as a
         // stray glyph on the digits after it. The normalizer must repair it to the
         // configured currency symbol ($ in these stubs), NEVER emit U+0344.
         $out = $this->normalize_currency_entities( 'It costs &#836;1,299.' );
@@ -224,7 +224,7 @@ class ApiHandlerTest extends TestCase {
 
     // ── humanized replies, no em-dashes (#130) ──────────────────────────────────
     // Replies must read like a person, not a machine, and must never contain an
-    // em-dash (—, U+2014) or en-dash (–, U+2013). humanize_text() is a deterministic
+    // em-dash (, , U+2014) or en-dash (–, U+2013). humanize_text() is a deterministic
     // server-side guard applied to the assistant TEXT on BOTH the non-stream return
     // and the buffered streaming chunk, so a dash the model still emits despite the
     // prompt can never reach the shopper. The em-dash glyph below is U+2014; en-dash
@@ -347,7 +347,7 @@ class ApiHandlerTest extends TestCase {
     }
 
     public function test_currency_normalizer_repairs_hex_malformed_entity(): void {
-        // The hex spelling of the same malformed value (&#x344;) must be repaired too —
+        // The hex spelling of the same malformed value (&#x344;) must be repaired too , 
         // the guard keys off the resulting codepoint, not the decimal/hex notation.
         $out = $this->normalize_currency_entities( 'Total: &#x344;500.' );
 
@@ -358,7 +358,7 @@ class ApiHandlerTest extends TestCase {
     public function test_currency_normalizer_leaves_unrelated_text_untouched(): void {
         // No currency entity present → the text is returned verbatim (the guard is
         // narrow: it only touches numeric character references, not ordinary prose).
-        $text = 'We have 3 left in stock — a great deal at $49.99.';
+        $text = 'We have 3 left in stock, a great deal at $49.99.';
         $this->assertSame( $text, $this->normalize_currency_entities( $text ) );
     }
 
@@ -530,7 +530,7 @@ class ApiHandlerTest extends TestCase {
     }
 
     public function test_array_content_passes_through_unchanged(): void {
-        // Tool-call content blocks come from our own server — must not be mangled.
+        // Tool-call content blocks come from our own server, must not be mangled.
         // Array content never goes through sanitize_textarea_field, so no stub needed.
         $blocks = [
             [ 'type' => 'tool_use', 'id' => 'abc', 'name' => 'search_products', 'input' => [] ],
@@ -624,9 +624,9 @@ class ApiHandlerTest extends TestCase {
         }
     }
 
-    // ── get_system_prompt() — passes through the fahad_ai_system_prompt filter ──
+    // ── get_system_prompt(), passes through the fahad_ai_system_prompt filter ──
     // (issue #20: cross-session memory injects a compact preferences block here,
-    // WITHOUT editing the agent-loop methods — the only change to the handler is the
+    // WITHOUT editing the agent-loop methods, the only change to the handler is the
     // apply_filters() wrap. These tests prove the filter is applied and that the
     // default prompt is unchanged when no filter modifies it.)
 
@@ -637,7 +637,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_system_prompt_passes_through_the_filter(): void {
         // A hooked modification on `fahad_ai_system_prompt` must be reflected in the
-        // returned prompt — this is the seam the memory pack uses to append prefs.
+        // returned prompt, this is the seam the memory pack uses to append prefs.
         Functions\when( 'apply_filters' )->alias(
             static fn( $hook, $value = null ) =>
                 'fahad_ai_system_prompt' === $hook ? $value . "\n\n[INJECTED BLOCK]" : $value
@@ -646,7 +646,7 @@ class ApiHandlerTest extends TestCase {
         $prompt = $this->get_system_prompt();
 
         $this->assertStringContainsString( '[INJECTED BLOCK]', $prompt );
-        // The base prompt is still present — the filter APPENDS, it does not replace.
+        // The base prompt is still present, the filter APPENDS, it does not replace.
         $this->assertStringContainsString( 'shopping assistant', $prompt );
     }
 
@@ -680,7 +680,7 @@ class ApiHandlerTest extends TestCase {
     public function test_default_prompt_states_the_trust_guardrail_policy(): void {
         // issue #24: the trust / anti-dark-pattern policy lives INLINE in the default
         // prompt (its source of truth). This pins the consolidated guardrail section so
-        // a future prompt edit cannot silently drop the policy — the deterministic eval
+        // a future prompt edit cannot silently drop the policy, the deterministic eval
         // checkers (scarcity_violations / budget_violations / escalation_present /
         // abstains) enforce the BEHAVIOUR; this asserts the POLICY text is present.
         Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
@@ -758,7 +758,7 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( 'https://api.moonshot.ai', $this->moonshot_base_url() );
     }
 
-    // ── tool_result_cards() — product card payload for the widget ─────────────
+    // ── tool_result_cards(), product card payload for the widget ─────────────
 
     private function tool_result_cards( string $tool, array $result ): array {
         $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'tool_result_cards' );
@@ -954,7 +954,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_variable_product_with_no_variations_is_not_marked_variable(): void {
         // A "variable" type that yields an empty variations list (all options gone)
-        // should not advertise a selector — is_variable false, no variations key.
+        // should not advertise a selector, is_variable false, no variations key.
         $cards = $this->tool_result_cards( 'get_product_details', [
             'id'         => 42,
             'name'       => 'Cotton Tee',
@@ -1018,7 +1018,7 @@ class ApiHandlerTest extends TestCase {
         ] ) );
     }
 
-    // ── tool_result_comparison() — comparison-table payload (issue #13) ────────
+    // ── tool_result_comparison(), comparison-table payload (issue #13) ────────
     // A comparison is a DIFFERENT shape from the flat card list (aligned columns +
     // attribute rows). It is surfaced as its OWN `comparison` payload, mirroring how
     // cards are surfaced, and a comparison-shaped result deliberately emits NO cards
@@ -1123,7 +1123,7 @@ class ApiHandlerTest extends TestCase {
 
     /**
      * Existing card emission is unchanged: a plain products[] result (no aligned
-     * attributes[]) still maps to cards — the comparison detection must not steal
+     * attributes[]) still maps to cards, the comparison detection must not steal
      * the search/best-seller card path.
      */
     public function test_plain_products_result_still_maps_to_cards_after_comparison_added(): void {
@@ -1139,11 +1139,11 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( 10, $cards[0]['id'] );
     }
 
-    // ── trim_tool_result() — shrink the model copy, never the card copy (issue #23)
+    // ── trim_tool_result(), shrink the model copy, never the card copy (issue #23)
     // The FULL tool result is JSON-appended to the model's message history every
     // turn (expensive). trim_tool_result() returns a COPY reduced to the fields the
     // model needs to reason/answer. Cards are built from the FULL result BEFORE the
-    // trim (proven below), so the widget payload is unaffected — only the model copy
+    // trim (proven below), so the widget payload is unaffected, only the model copy
     // shrinks. Trimming is tool-aware and conservative (keep name + price so the
     // grounding eval, which reconstructs results from the trimmed transcript, still
     // passes).
@@ -1224,7 +1224,7 @@ class ApiHandlerTest extends TestCase {
         $full = $this->full_search_result( 2 );
         $this->trim_tool_result( 'search_products', $full );
 
-        // The original still has every heavy field — trimming did not mutate it.
+        // The original still has every heavy field, trimming did not mutate it.
         $this->assertArrayHasKey( 'image', $full['products'][0] );
         $this->assertArrayHasKey( 'short_description', $full['products'][0] );
         $this->assertSame( 'https://example.com/wp-content/uploads/2026/01/product-1-1024x1024.jpg', $full['products'][0]['image'] );
@@ -1236,7 +1236,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_trim_preserves_cart_link_fields_for_add_to_cart(): void {
         // The system prompt's link rules depend on cart_url/checkout_url/message and
-        // totals from add_to_cart — they MUST survive the trim.
+        // totals from add_to_cart, they MUST survive the trim.
         $full = [
             'success'       => true,
             'message'       => 'Added 1x Trail Runner to your cart.',
@@ -1382,7 +1382,7 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( $full, $seen['full'] );
     }
 
-    // ── apply_token_budget() — bound the outgoing context (issue #23) ───────────
+    // ── apply_token_budget(), bound the outgoing context (issue #23) ───────────
     // A configurable per-conversation budget (option + filter fahad_ai_token_budget,
     // default 0 = unlimited) caps the context. Token size is estimated with a
     // char/÷4 proxy. When over budget, the OLDEST non-essential history is dropped
@@ -1467,7 +1467,7 @@ class ApiHandlerTest extends TestCase {
     public function test_budget_preserves_in_progress_tool_loop(): void {
         // The latest user turn is followed by an assistant tool_use + a user
         // tool_result (an in-progress Anthropic loop). The budget must NOT split that
-        // pair off — everything from the latest user turn to the end is protected.
+        // pair off, everything from the latest user turn to the end is protected.
         $this->set_option_alias( [ 'fahad_ai_token_budget' => 80 ] );
 
         $messages = [
@@ -1507,7 +1507,7 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( 'newest', $last['content'] );
     }
 
-    // ── resolve_model() — configurable model routing (issue #23) ────────────────
+    // ── resolve_model(), configurable model routing (issue #23) ────────────────
     // Routing lets a hook pick a cheaper/faster model for simple turns and a more
     // capable one for reasoning. The DEFAULT must preserve today's behaviour: the
     // configured model is returned unchanged unless a fahad_ai_model filter overrides
@@ -1560,7 +1560,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_resolve_model_falls_back_when_filter_returns_non_string(): void {
         // Defence in depth: a misbehaving filter returning a non-string must not
-        // poison the payload — the configured default stands.
+        // poison the payload, the configured default stands.
         Functions\when( 'apply_filters' )->alias(
             static fn( $hook, $value = null ) => 'fahad_ai_model' === $hook ? null : $value
         );
@@ -1590,7 +1590,7 @@ class ApiHandlerTest extends TestCase {
         Functions\when( 'wp_remote_retrieve_response_code' )->justReturn( 200 );
         Functions\when( 'wp_remote_retrieve_body' )->justReturn( json_encode( [ 'stop_reason' => 'end_turn', 'content' => [] ] ) );
         // is_wp_error() is a real stub (instanceof WP_Error); the array returned by
-        // wp_remote_post above is not a WP_Error, so it correctly reports false —
+        // wp_remote_post above is not a WP_Error, so it correctly reports false , 
         // do NOT redefine it via Brain\Monkey (Patchwork "DefinedTooEarly").
 
         $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'call_anthropic' );
@@ -1599,7 +1599,7 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( 'claude-opus-4-8', $captured['model'] );
     }
 
-    // ── prime_cart_session() — guest cart persistence over SSE (live-QA finding #31)
+    // ── prime_cart_session(), guest cart persistence over SSE (live-QA finding #31)
     // The streaming endpoint flushes the event-stream headers and then holds the
     // connection open, so WooCommerce never gets its shutdown chance to send the
     // guest session Set-Cookie before output starts. handle_stream() therefore
@@ -1618,7 +1618,7 @@ class ApiHandlerTest extends TestCase {
         // a WC session id that survives to the next request. headers_sent() is a PHP
         // internal Patchwork can't redefine without extra config; under PHPUnit CLI it
         // genuinely returns false (nothing has been emitted), which is the path that
-        // matters here — so we exercise it for real rather than stubbing it.
+        // matters here, so we exercise it for real rather than stubbing it.
         Functions\expect( 'wc_load_cart' )->once();
 
         $session = Mockery::mock();
@@ -1633,9 +1633,9 @@ class ApiHandlerTest extends TestCase {
     // (reusing the configured order); with no provider available the shopper still
     // gets a graceful, non-error response (product search + support), never a dead
     // end. These pin the three small seams the dispatch wires together:
-    //   has_provider_key() — is a provider's key option non-empty?
-    //   provider_chain()   — ordered, key-filtered list to try (configured first).
-    //   degraded_response() — the friendly, NON-error fallback when all providers fail.
+    //   has_provider_key(), is a provider's key option non-empty?
+    //   provider_chain()  , ordered, key-filtered list to try (configured first).
+    //   degraded_response(), the friendly, NON-error fallback when all providers fail.
 
     private function has_provider_key( string $provider ): bool {
         $method = new ReflectionMethod( Fahad_AI_API_Handler::class, 'has_provider_key' );
@@ -1687,7 +1687,7 @@ class ApiHandlerTest extends TestCase {
         $this->assertFalse( $this->has_provider_key( 'anthropic' ) );
     }
 
-    // ── provider_chain() — configured provider first, key-filtered ──────────────
+    // ── provider_chain(), configured provider first, key-filtered ──────────────
 
     public function test_provider_chain_configured_moonshot_with_both_keys(): void {
         // configured = moonshot, both keys present → moonshot first, anthropic fallback.
@@ -1753,7 +1753,7 @@ class ApiHandlerTest extends TestCase {
     }
 
     public function test_provider_chain_has_no_duplicates(): void {
-        // Each provider appears at most once regardless of configuration — the
+        // Each provider appears at most once regardless of configuration, the
         // dispatch tries each provider a single time (bounded, no loop).
         $this->set_option_alias( [
             'fahad_ai_provider'          => 'moonshot',
@@ -1767,7 +1767,7 @@ class ApiHandlerTest extends TestCase {
         $this->assertLessThanOrEqual( 2, count( $chain ) );
     }
 
-    // ── degraded_response() — friendly, NON-error fallback ──────────────────────
+    // ── degraded_response(), friendly, NON-error fallback ──────────────────────
 
     public function test_degraded_response_shape_is_a_friendly_non_error(): void {
         $result = $this->degraded_response();
@@ -1783,7 +1783,7 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( [], $result['products'] );
         $this->assertSame( [], $result['comparison'] );
 
-        // It is NOT an error payload — no `error` key, never a dead end.
+        // It is NOT an error payload, no `error` key, never a dead end.
         $this->assertArrayNotHasKey( 'error', $result );
     }
 
@@ -1832,7 +1832,7 @@ class ApiHandlerTest extends TestCase {
         $this->assertSame( [], $result['messages'] );
     }
 
-    // ── handle_message() dispatch — failover + graceful degradation ─────────────
+    // ── handle_message() dispatch, failover + graceful degradation ─────────────
     // The non-streaming endpoint builds provider_chain() and tries each provider in
     // order: it returns the first non-WP_Error result, falls THROUGH to the next
     // provider on a WP_Error, and returns degraded_response() (NOT an error) only
@@ -1841,7 +1841,7 @@ class ApiHandlerTest extends TestCase {
     //
     // Fahad_AI_API_Handler is `final`, so we do NOT partial-mock it (Mockery cannot
     // replace methods on a final class). Instead we drive the REAL dispatch end to
-    // end — handle_message → run_*_agent → call_* → wp_remote_post — against a
+    // end, handle_message → run_*_agent → call_* → wp_remote_post, against a
     // SCRIPTED transport (the eval-harness pattern). wp_remote_post is routed BY URL
     // so we can make one provider's endpoint fail and the other succeed, exercising
     // the actual failover wiring rather than a mocked seam. Each canned turn is a
@@ -1906,7 +1906,7 @@ class ApiHandlerTest extends TestCase {
      * @param callable $moonshot  fn(): array  Response for the Moonshot endpoint.
      * @return ArrayObject Live call counter: $counts['anthropic'] / $counts['moonshot'].
      *                     An ArrayObject (not a plain array) so the closure and the
-     *                     test share ONE instance by reference — a returned array would
+     *                     test share ONE instance by reference, a returned array would
      *                     be a value copy taken before any request was made.
      */
     private function route_transport( callable $anthropic, callable $moonshot ): ArrayObject {
@@ -1916,7 +1916,7 @@ class ApiHandlerTest extends TestCase {
 
         // Owner analytics (#49): handle_message now records a privacy-safe turn event
         // via Fahad_AI_Analytics on every resolved (or degraded) turn. Analytics is ON
-        // by default, so these end-to-end dispatch tests exercise that path — give the
+        // by default, so these end-to-end dispatch tests exercise that path, give the
         // store a harmless option seam (it persists with update_option) and a stable id
         // so the recording neither fatals on an unstubbed function nor pollutes state.
         // The recording is fire-and-forget here; the store has its own unit tests.
@@ -2044,7 +2044,7 @@ class ApiHandlerTest extends TestCase {
         $this->assertStringNotContainsString( 'SECRET', $result['message'] );
         $this->assertArrayNotHasKey( 'error', $result );
 
-        // Bounded: at most one attempt per provider — no loop.
+        // Bounded: at most one attempt per provider, no loop.
         $this->assertSame( 1, $counter['moonshot'] );
         $this->assertSame( 1, $counter['anthropic'] );
     }
@@ -2079,7 +2079,7 @@ class ApiHandlerTest extends TestCase {
     // handle_message / the stream loop call the private record_turn_analytics() at
     // each terminal point. These cover the WIRING (outcome derivation, tool trace,
     // funnel flags, PII passthrough to the store, opt-out) by invoking the private
-    // method against the in-memory option seam — the eval-harness reflection pattern,
+    // method against the in-memory option seam, the eval-harness reflection pattern,
     // with NO setAccessible (host runs PHP 8.5). The store's own bounds/masking are
     // unit-tested in AnalyticsTest; here we prove the loop feeds it the right event.
 
@@ -2097,7 +2097,7 @@ class ApiHandlerTest extends TestCase {
         ( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
     }
 
-    /** Invoke the private record_turn_analytics() (no setAccessible — PHP 8.5 safe). */
+    /** Invoke the private record_turn_analytics() (no setAccessible, PHP 8.5 safe). */
     private function record_turn_analytics( array $input, array $result, string $hint = '', array $overrides = [] ): void {
         ( new ReflectionMethod( Fahad_AI_API_Handler::class, 'record_turn_analytics' ) )
             ->invoke( $this->handler(), $input, $result, $hint, $overrides );
@@ -2180,7 +2180,7 @@ class ApiHandlerTest extends TestCase {
         // The model answered with no tool call and surfaced no product.
         $input  = [ [ 'role' => 'user', 'content' => 'what is the meaning of life' ] ];
         $result = [
-            'message'  => 'I can help you shop — was there a product you had in mind?',
+            'message'  => 'I can help you shop, was there a product you had in mind?',
             'products' => [],
             'messages' => [ [ 'role' => 'user', 'content' => 'what is the meaning of life' ], [ 'role' => 'assistant', 'content' => [ [ 'type' => 'text', 'text' => '...' ] ] ] ],
         ];
@@ -2238,7 +2238,7 @@ class ApiHandlerTest extends TestCase {
     // base URL / key / model the catalog resolves. These pin:
     //   - an 'openai'-type preset resolves the right base_url/key/model and hits the
     //     OpenAI /chat/completions endpoint with a Bearer header (asserted via the
-    //     captured wp_remote_post URL/headers/body — the harness pattern);
+    //     captured wp_remote_post URL/headers/body, the harness pattern);
     //   - the native 'anthropic' path is unchanged (api.anthropic.com + x-api-key);
     //   - BACKWARD COMPAT: fahad_ai_provider=moonshot still hits api.moonshot.ai;
     //   - failover generalises across the whole catalog (configured first, then any
@@ -2337,7 +2337,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_call_openai_moonshot_preset_still_targets_moonshot(): void {
         // BACKWARD COMPAT: the moonshot preset resolves to the region base URL and its
-        // existing key/model — the exact request the pre-multi-provider code sent.
+        // existing key/model, the exact request the pre-multi-provider code sent.
         $this->set_option_alias( [
             'fahad_ai_provider'         => 'moonshot',
             'fahad_ai_moonshot_api_key' => 'sk-moon',
@@ -2557,7 +2557,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_custom_base_url_allows_localhost_http_for_self_hosted(): void {
         // A self-hosted/local endpoint (e.g. a proxy on the same box) is the one
-        // permitted non-TLS case — localhost never leaves the machine.
+        // permitted non-TLS case, localhost never leaves the machine.
         Functions\when( 'esc_url_raw' )->returnArg();
         $this->assertSame( 'http://localhost:8080/v1', $this->valid_custom_base_url( 'http://localhost:8080/v1' ) );
     }
@@ -2568,7 +2568,7 @@ class ApiHandlerTest extends TestCase {
         // An install configured BEFORE multi-provider: fahad_ai_provider=moonshot with
         // the legacy key/model/region options. The turn must still dispatch to
         // api.moonshot.ai/v1/chat/completions with a Bearer header and the legacy model,
-        // returning the moonshot reply — exactly as the pre-change code did. Anthropic
+        // returning the moonshot reply, exactly as the pre-change code did. Anthropic
         // is never called (only the moonshot key is set).
         $this->set_option_alias( [
             'fahad_ai_provider'         => 'moonshot',
@@ -2610,7 +2610,7 @@ class ApiHandlerTest extends TestCase {
 
     public function test_provider_chain_is_bounded_with_many_keys(): void {
         // Even with a key for EVERY catalog provider, the chain lists each provider at
-        // most once (bounded failover — no loop, no duplicate attempts). Its length
+        // most once (bounded failover, no loop, no duplicate attempts). Its length
         // never exceeds the catalog size.
         $map = [ 'fahad_ai_provider' => 'openai' ];
         foreach ( Fahad_AI_Providers::catalog() as $preset ) {

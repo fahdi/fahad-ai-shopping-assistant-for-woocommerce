@@ -5,12 +5,12 @@
  * Lets external AI agents (ChatGPT, Claude, Perplexity, …) discover and shop the store
  * through grounded, read-only endpoints that reuse the SAME tool layer as the chat
  * widget, so an agent sees exactly the data a shopper would:
- *   - C1 GET /agent/llms     — a text usage policy (llms.txt-style) pointing agents at
+ *   - C1 GET /agent/llms    , a text usage policy (llms.txt-style) pointing agents at
  *                              the feed and stating what is allowed.
- *        GET /agent/catalog  — a structured, cacheable product feed (trusted WC fields).
- *   - C2 GET /agent/search   — reuse search_products (grounded card data).
- *        GET /agent/product  — reuse get_product_details.
- *   - C3 GET /agent/checkout-handoff — build a HUMAN add-to-cart + checkout URL for the
+ *        GET /agent/catalog , a structured, cacheable product feed (trusted WC fields).
+ *   - C2 GET /agent/search  , reuse search_products (grounded card data).
+ *        GET /agent/product , reuse get_product_details.
+ *   - C3 GET /agent/checkout-handoff, build a HUMAN add-to-cart + checkout URL for the
  *                              chosen products. No payment runs agent-side, and no PII
  *                              ever leaves: the agent gets a link a person opens and
  *                              completes themselves.
@@ -57,11 +57,11 @@ final class Fahad_AI_Agent_Gateway {
 		$catalog = rest_url( 'fahad-ai/v1/agent/catalog' );
 		$search  = rest_url( 'fahad-ai/v1/agent/search' );
 
-		$body = "# {$store} — AI agent guide\n"
+		$body = "# {$store}, AI agent guide\n"
 			. "\n"
 			. "This store welcomes AI shopping agents. Use the read-only endpoints below; all\n"
 			. "data is grounded in the live catalogue. Do not fabricate prices, stock, or\n"
-			. "availability — read them here.\n"
+			. "availability, read them here.\n"
 			. "\n"
 			. "Catalogue feed: {$catalog}\n"
 			. "Search:         {$search}?q=QUERY\n"

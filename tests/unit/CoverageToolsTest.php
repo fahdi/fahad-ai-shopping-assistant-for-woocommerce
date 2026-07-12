@@ -52,7 +52,7 @@ class CoverageToolsTest extends TestCase {
 		return Fahad_AI_Tools::instance();
 	}
 
-	/** Minimal product mock — only what format_product_summary reads. */
+	/** Minimal product mock, only what format_product_summary reads. */
 	private function mockProduct( int $id, string $name, string $price = '45' ): WC_Product {
 		$p = Mockery::mock( WC_Product::class );
 		$p->shouldReceive( 'get_id' )->andReturn( $id );
@@ -119,7 +119,7 @@ class CoverageToolsTest extends TestCase {
 
 	/**
 	 * "sneakers jacket" matches no single product under AND search (no name holds
-	 * both stems), and the relaxed AND query ("sneaker jacket") misses too — so the
+	 * both stems), and the relaxed AND query ("sneaker jacket") misses too, so the
 	 * OR token_search runs: it queries each stem separately, scores by hit count,
 	 * sorts, and returns the slice. This drives lines 277-294.
 	 */
@@ -160,7 +160,7 @@ class CoverageToolsTest extends TestCase {
 
 	/**
 	 * When a single product matches multiple stems it must score higher and sort
-	 * ahead of a product matching only one — exercising the usort comparator (289)
+	 * ahead of a product matching only one, exercising the usort comparator (289)
 	 * and the scored-entry increment (281).
 	 */
 	public function test_token_search_ranks_products_by_term_hit_count(): void {
@@ -252,7 +252,7 @@ class CoverageToolsTest extends TestCase {
 
 	/**
 	 * A variation id in get_available_variations() that no longer resolves through
-	 * wc_get_product() (deleted/hidden) must be skipped, not surfaced — exercising
+	 * wc_get_product() (deleted/hidden) must be skipped, not surfaced, exercising
 	 * the `if ( ! $v ) continue;` guard. A second, resolvable variation confirms the
 	 * loop continues past the skip.
 	 */
@@ -306,7 +306,7 @@ class CoverageToolsTest extends TestCase {
 
 	/**
 	 * A variation that leaves one attribute as "Any" (empty value) must omit that
-	 * attribute from the label while still listing the specified one — driving the
+	 * attribute from the label while still listing the specified one, driving the
 	 * `if ( '' === $value ) continue;` skip.
 	 */
 	public function test_variation_label_skips_empty_any_attribute(): void {
@@ -362,7 +362,7 @@ class CoverageToolsTest extends TestCase {
 	/**
 	 * The item exists in the cart but WC()->cart->remove_cart_item() returns false
 	 * (removal failed). The tool must report success=false with an error, hitting
-	 * the final failure return — the path ToolsTest never exercises (its remove
+	 * the final failure return, the path ToolsTest never exercises (its remove
 	 * tests cover the success and unknown-key branches only).
 	 */
 	public function test_remove_from_cart_reports_failure_when_removal_rejected(): void {
@@ -387,7 +387,7 @@ class CoverageToolsTest extends TestCase {
 
 	/**
 	 * A product with no price ('' from get_price) must surface an empty price
-	 * string rather than a formatted "$" — exercising plain_price's
+	 * string rather than a formatted "$", exercising plain_price's
 	 * `if ( '' === $price || null === $price ) return '';` guard via the public
 	 * format_product_summary entry point.
 	 */

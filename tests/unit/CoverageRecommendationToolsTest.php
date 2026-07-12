@@ -75,8 +75,8 @@ class CoverageRecommendationToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the recommendation tools.
      *
      * Resets the Tools + registry singletons, then registers the recommendation
-     * pack's REAL provider via register_pack() — exactly the pack's file-scope
-     * self-registration — so the test is hermetic and order-independent.
+     * pack's REAL provider via register_pack(), exactly the pack's file-scope
+     * self-registration, so the test is hermetic and order-independent.
      */
     private function registry(): Fahad_AI_Tool_Registry {
         ( new ReflectionProperty( Fahad_AI_Tools::class, 'instance' ) )->setValue( null, null );
@@ -112,7 +112,7 @@ class CoverageRecommendationToolsTest extends TestCase {
 
     public function test_free_text_search_caps_results_at_limit_breaking_mid_loop(): void {
         // The catalog search returns MORE buyable products than the requested limit.
-        // from_search must stop appending once it has $limit products — exercising the
+        // from_search must stop appending once it has $limit products, exercising the
         // inner `break` rather than running the whole result set.
         $hits = [
             $this->mockProduct( 21, 'Boot A', '50.00' ),
@@ -137,7 +137,7 @@ class CoverageRecommendationToolsTest extends TestCase {
         $this->assertCount( 3, $result['products'] );
         $ids = array_column( $result['products'], 'id' );
         $this->assertSame( [ 21, 22, 23 ], $ids );
-        // The fourth hit was past the cap — the break stopped iteration before it.
+        // The fourth hit was past the cap, the break stopped iteration before it.
         $this->assertNotContains( 24, $ids );
     }
 
@@ -225,7 +225,7 @@ class CoverageRecommendationToolsTest extends TestCase {
     public function test_free_text_search_keeps_product_with_empty_price_under_budget(): void {
         // A product whose price is '' cannot be meaningfully gated by a budget, so
         // within_budget must return true (keep it) EVEN THOUGH a max_price was stated.
-        // This drives the non-null max_price path into the empty-price early return —
+        // This drives the non-null max_price path into the empty-price early return , 
         // the branch the relation/numeric-price happy paths never reach.
         $priceless = $this->mockProduct( 51, 'No Price Boot', '' );
 

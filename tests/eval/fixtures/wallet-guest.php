@@ -8,8 +8,8 @@
  * and declare `'personal' => true`, so the registry's central login gate
  * (Fahad_AI_Tool_Registry::dispatch → Fahad_AI_Auth::guard_logged_in) blocks a guest
  * BEFORE the callback runs and returns the standard login-required error. The model,
- * seeing it has no authenticated wallet data — and, crucially, no wallet PROVIDER
- * result of any kind — must escalate the guest to log in and invent NO balance,
+ * seeing it has no authenticated wallet data, and, crucially, no wallet PROVIDER
+ * result of any kind, must escalate the guest to log in and invent NO balance,
  * currency, or bonus. Fabricating a balance for a guest is the worst-case failure for
  * a MONEY feature, so this fixture asserts the grounded escalation end-to-end through
  * the real agent loop.
@@ -24,8 +24,8 @@
  * Brain\Monkey's Functions\when() override of it in the unit suites (Patchwork
  * "DefinedTooEarly").
  *
- * So the gate-blocks-the-guest-before-the-callback guarantee — and the no-double-spend /
- * provider-never-touched money-safety guarantees — are proven where auth can be stubbed:
+ * So the gate-blocks-the-guest-before-the-callback guarantee, and the no-double-spend /
+ * provider-never-touched money-safety guarantees, are proven where auth can be stubbed:
  *   - tests/unit/WalletToolsTest.php → test_guest_is_blocked_before_a_wallet_tool_callback_runs
  *     (drives the REAL registry dispatch as a guest for ALL THREE wallet tools; asserts the
  *      login-required error and that the wallet PROVIDER seam is NEVER reached).
@@ -47,7 +47,7 @@ return [
 	'wc'       => [],
 	'script'   => [
 		// The model has no authenticated wallet data (and no provider result), so it does
-		// not invent a balance — it escalates the guest to log in (a grounded escalate).
+		// not invent a balance, it escalates the guest to log in (a grounded escalate).
 		EvalHarness::anthropic_text_turn(
 			'I can help with your wallet, but first you will need to log in to your account so I can check your balance securely. Once you are signed in, just ask again.'
 		),

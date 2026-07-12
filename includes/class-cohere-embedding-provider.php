@@ -2,13 +2,13 @@
 /**
  * Cohere embeddings provider (RAG Phase 2, S2.3, #111).
  *
- * embed-multilingual-v3.0 — materially stronger on non-Latin scripts (Urdu,
+ * embed-multilingual-v3.0, materially stronger on non-Latin scripts (Urdu,
  * Arabic, Hindi) than the OpenAI default, which matters for this store's
  * Urdu/English audience (RAG-DESIGN.md §3). Implements the same provider
  * interface, so the indexer/retriever are unchanged.
  *
  * NOTE: the interface embeds query and document text the same way, so we use
- * Cohere's `search_document` input type for both — slightly suboptimal vs.
+ * Cohere's `search_document` input type for both, slightly suboptimal vs.
  * `search_query` for queries, but acceptable for the MVP and avoids widening
  * the interface.
  */

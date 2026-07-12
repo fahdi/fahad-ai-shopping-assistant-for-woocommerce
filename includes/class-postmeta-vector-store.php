@@ -6,7 +6,7 @@
  * implementation deliberately uses POST META instead, because the plugin keeps a
  * zero-custom-table convention (even analytics stores to an option) and has no
  * activation/migration machinery. Post meta is still MySQL-backed, needs no
- * schema or uninstall drop, and is auto-deleted with the product — so the
+ * schema or uninstall drop, and is auto-deleted with the product, so the
  * "remove embedding on product delete" requirement (§5.3) comes for free.
  *
  * The brute-force cosine scan (§2.1) runs over a caller-supplied candidate set
@@ -55,7 +55,7 @@ final class Fahad_AI_Postmeta_Vector_Store implements Fahad_AI_Vector_Store {
 
 		foreach ( $candidate_ids as $id ) {
 			$id = (int) $id;
-			// Never compare across models — a vector from another model is meaningless here.
+			// Never compare across models, a vector from another model is meaningless here.
 			if ( (string) get_post_meta( $id, self::META_MODEL, true ) !== $this->model ) {
 				continue;
 			}

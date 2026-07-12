@@ -5,12 +5,12 @@
  * The user asks for a specific product the store does not carry. search_products
  * returns "found: 0". Rather than invent a plausible product, price, or stock
  * status, the assistant says it couldn't find it and offers honest next steps
- * (look for something else / reach support) — inventing nothing.
+ * (look for something else / reach support), inventing nothing.
  *
  * This complements the existing `error-abstain` fixture (which asserts grounding on
  * an empty result) by adding the explicit `must_abstain` guardrail: abstains() must
  * confirm the answer took the "couldn't find it" path. So the case proves BOTH that
- * the answer abstains (must_abstain) AND that it fabricates nothing (grounded) —
+ * the answer abstains (must_abstain) AND that it fabricates nothing (grounded) , 
  * "abstain over guessing" from the trust policy. abstains()'s teeth are proven by
  * its NEGATIVE self-test (a confident product pitch does NOT abstain).
  */
@@ -29,7 +29,7 @@ return [
 		EvalHarness::anthropic_tool_turn( [
 			[ 'name' => 'search_products', 'input' => [ 'query' => 'AcmeTron 5000 espresso machine' ] ],
 		] ),
-		// Turn 2: honest abstention — no invented product/price/stock — plus a real
+		// Turn 2: honest abstention, no invented product/price/stock, plus a real
 		// next step (search differently, or reach the team). Worded without paired
 		// apostrophes so the grounding checker does not read an apostrophe-delimited
 		// span as a fabricated "quoted name" (same reason as the escalate-refund and

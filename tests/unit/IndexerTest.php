@@ -5,7 +5,7 @@
  * Embeds products into the vector store, skipping re-embeds when the composed
  * text is unchanged (so a price-only edit is a no-op), honouring a per-day token
  * cap, and coalescing rapid saves via Action Scheduler. Embedding is always
- * async — never inline on a product save.
+ * async, never inline on a product save.
  */
 
 use Brain\Monkey;

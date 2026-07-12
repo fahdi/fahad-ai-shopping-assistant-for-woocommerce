@@ -3,7 +3,7 @@
  * Unit tests for the default vector store (RAG Phase 1, S1.2, #105).
  *
  * The default backend stores each product's embedding as POST META (packed
- * float32 + model + dim + content_hash), not a custom table — consistent with
+ * float32 + model + dim + content_hash), not a custom table, consistent with
  * the plugin's zero-custom-table convention (even analytics uses options) and
  * auto-cleaned when a product is deleted. query() runs the brute-force cosine
  * scan over a caller-supplied candidate set, skipping vectors built under a

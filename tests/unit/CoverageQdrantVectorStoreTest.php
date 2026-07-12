@@ -193,7 +193,7 @@ class CoverageQdrantVectorStoreTest extends TestCase {
 
 	public function test_register_callback_returns_fallback_when_store_unavailable(): void {
 		// URL non-blank so register() proceeds, but collection blank so the built
-		// store is NOT available — the callback must hand back the fallback.
+		// store is NOT available, the callback must hand back the fallback.
 		Functions\when( 'get_option' )->alias(
 			static function ( $name, $default = false ) {
 				return match ( $name ) {

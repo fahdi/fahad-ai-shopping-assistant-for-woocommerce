@@ -1,11 +1,11 @@
 <?php
 /**
- * Qdrant external vector store — opt-in scale tier (RAG Phase 3, S3.2, #113).
+ * Qdrant external vector store, opt-in scale tier (RAG Phase 3, S3.2, #113).
  *
  * For very large catalogs that outgrow the MySQL/MariaDB backends, point the
  * index at a managed/self-hosted Qdrant. Registered via the fahad_ai_vector_store
  * filter only when configured (URL + key); otherwise the default backend is used,
- * so a typical install is unaffected. A transport failure throws — the retriever
+ * so a typical install is unaffected. A transport failure throws, the retriever
  * catches it and falls back to keyword search (RAG-DESIGN.md §2.4, §6.2).
  *
  * INTEGRATION NOTE: the HTTP request/response shapes are unit-tested; an

@@ -8,11 +8,11 @@
  * singleton + its static pack list snapshotted and restored so a case here neither
  * inherits another suite's packs nor leaks the returns pack we register.
  *
- * The two returns tools (check_return_eligibility, request_return) are NOT built-ins —
+ * The two returns tools (check_return_eligibility, request_return) are NOT built-ins , 
  * they ship as a drop-in feature pack that self-registers a provider via
  * Fahad_AI_Tool_Registry::register_pack() at file load. Every test registers the
  * returns pack's REAL provider through register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch() — so the production registration +
+ * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration +
  * merge + dispatch path (INCLUDING the central login gate for `personal` tools) is
  * what is under test.
  *
@@ -20,9 +20,9 @@
  *   - GUEST-BLOCK: a guest dispatching either personal tool is stopped centrally by the
  *     registry's login gate BEFORE the callback runs (the WC accessors must never be hit).
  *   - OWNERSHIP-BYPASS: a logged-in user (id 5) acting on an order owned by user 9 gets a
- *     "not found" result — never the other user's order, never an RMA against it.
+ *     "not found" result, never the other user's order, never an RMA against it.
  *   - NO MONEY MUTATION: request_return only RECORDS a request. It must NEVER issue a
- *     refund or change the order's status — asserted with ->never() on the money seams.
+ *     refund or change the order's status, asserted with ->never() on the money seams.
  *   - IDEMPOTENT: requesting a return for the same items twice records ONE RMA, not two.
  *   - HONEST ESCALATION: ineligible / edge cases return a plain reason AND a human-support
  *     path, and never block support.
@@ -44,7 +44,7 @@ class ReturnsToolsTest extends TestCase {
      * Snapshot of the registry's static pack providers, restored in tearDown so a test
      * here neither inherits another suite's packs nor leaks the returns pack we register
      * for our own cases. (Pack providers are static so they survive a singleton instance
-     * reset — see Fahad_AI_Tool_Registry::register_pack.)
+     * reset, see Fahad_AI_Tool_Registry::register_pack.)
      *
      * @var array<int, callable>
      */
@@ -67,7 +67,7 @@ class ReturnsToolsTest extends TestCase {
             // The window math measures the order age against "now". current_time( 'timestamp', true )
             // returns a unix timestamp in WordPress; we pin it so age is deterministic.
             'current_time'        => fn( $type = 'timestamp', $gmt = 0 ) => self::NOW,
-            // Filters are pass-through unless a test overrides — so the DEFAULT policy
+            // Filters are pass-through unless a test overrides, so the DEFAULT policy
             // (30-day window, the default eligible statuses) is what runs by default.
             'apply_filters'       => fn( $hook, $value = null ) => $value,
         ] );
@@ -88,7 +88,7 @@ class ReturnsToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the returns tools.
      *
      * Resets the Tools + registry singletons, then registers the returns pack's REAL
-     * provider via register_pack() — exactly what the pack's file-scope self-registration
+     * provider via register_pack(), exactly what the pack's file-scope self-registration
      * does in production. Registering it explicitly (after clearing the static list) keeps
      * the test hermetic and order-independent.
      */
@@ -330,7 +330,7 @@ class ReturnsToolsTest extends TestCase {
 
     /**
      * Current user is 5. They check eligibility for order #100, owned by user 9. The tool
-     * must return a "not found"-style result — NEVER the other user's order — and must not
+     * must return a "not found"-style result, NEVER the other user's order, and must not
      * even confirm the order exists (no "forbidden"/"permission" disclosure).
      */
     public function test_eligibility_blocks_access_to_another_users_order(): void {
@@ -367,7 +367,7 @@ class ReturnsToolsTest extends TestCase {
             'created_days_ago' => 1,
             'items'            => [ [ 'product_id' => 77, 'name' => 'Secret Gift' ] ],
         ] );
-        // If the write path were reached it would call update_meta_data — make that a
+        // If the write path were reached it would call update_meta_data, make that a
         // hard failure for a non-owner.
         $someone_elses->shouldReceive( 'update_meta_data' )->never();
         Functions\when( 'wc_get_order' )->justReturn( $someone_elses );
@@ -394,7 +394,7 @@ class ReturnsToolsTest extends TestCase {
             'items'            => [ [ 'product_id' => 10, 'name' => 'Blue Hoodie' ] ],
         ] );
         // MONEY-SAFETY: the assistant only records a request. It must NEVER refund or
-        // mutate order status — turn any such call into a hard failure.
+        // mutate order status, turn any such call into a hard failure.
         Functions\expect( 'wc_create_refund' )->never();
         $order->shouldReceive( 'set_status' )->never();
         $order->shouldReceive( 'update_status' )->never();
@@ -411,7 +411,7 @@ class ReturnsToolsTest extends TestCase {
         $this->assertTrue( $result['recorded'] );
         $this->assertArrayHasKey( 'rma_id', $result );
         $this->assertNotEmpty( $result['rma_id'] );
-        // Explicitly NOT a refund/credit — only a request.
+        // Explicitly NOT a refund/credit, only a request.
         $this->assertArrayNotHasKey( 'refund', $result );
         $this->assertArrayNotHasKey( 'refunded', $result );
         // The requested item is echoed back.
@@ -527,7 +527,7 @@ class ReturnsToolsTest extends TestCase {
     /**
      * A guest dispatching either personal tool must be stopped CENTRALLY by the registry's
      * login gate, before the tool callback runs. We assert the standard login-required
-     * error AND — critically — that wc_get_order is NEVER invoked, proving the callback was
+     * error AND, critically, that wc_get_order is NEVER invoked, proving the callback was
      * never reached. is_user_logged_in() is stubbed false.
      *
      * @dataProvider personalToolProvider
@@ -536,7 +536,7 @@ class ReturnsToolsTest extends TestCase {
         Functions\when( 'is_user_logged_in' )->justReturn( false );
         Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
-        // If the callback were reached, it would load the order — it must NOT be hit.
+        // If the callback were reached, it would load the order, it must NOT be hit.
         Functions\expect( 'wc_get_order' )->never();
 
         $result = $this->registry()->dispatch( $tool, $input );

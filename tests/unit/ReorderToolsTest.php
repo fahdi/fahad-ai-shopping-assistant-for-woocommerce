@@ -7,11 +7,11 @@
  * singleton + its static pack list snapshotted and restored so a case here neither
  * inherits another suite's packs nor leaks the reorder pack we register.
  *
- * The two reorder tools (get_past_purchases, reorder) are NOT built-ins — they ship
+ * The two reorder tools (get_past_purchases, reorder) are NOT built-ins, they ship
  * as a drop-in feature pack that self-registers a provider via
  * Fahad_AI_Tool_Registry::register_pack() at file load. Every test registers the
  * reorder pack's REAL provider through register_pack(), then dispatches through
- * Fahad_AI_Tool_Registry::instance()->dispatch() — so the production registration +
+ * Fahad_AI_Tool_Registry::instance()->dispatch(), so the production registration +
  * merge + dispatch path (INCLUDING the central login gate for `personal` tools) is
  * what is under test.
  *
@@ -21,7 +21,7 @@
  *     the registry's login gate BEFORE the callback runs (the WC accessors must never
  *     be hit).
  *   - OWNERSHIP-BYPASS: a logged-in user (id 5) reordering an order owned by user 9
- *     gets a "not found" result — the other user's items are NEVER added to the cart.
+ *     gets a "not found" result, the other user's items are NEVER added to the cart.
  *
  * GUARDRAILS. reorder must revalidate the LIVE catalog: missing / hidden / out-of-stock
  * / changed-variation items are REPORTED (in `unavailable`), not silently dropped, and
@@ -41,7 +41,7 @@ class ReorderToolsTest extends TestCase {
      * Snapshot of the registry's static pack providers, restored in tearDown so a
      * test here neither inherits another suite's packs nor leaks the reorder pack we
      * register for our own cases. (Pack providers are static so they survive a
-     * singleton instance reset — see Fahad_AI_Tool_Registry::register_pack.)
+     * singleton instance reset, see Fahad_AI_Tool_Registry::register_pack.)
      *
      * @var array<int, callable>
      */
@@ -81,7 +81,7 @@ class ReorderToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the reorder tools.
      *
      * Resets the Tools + registry singletons, then registers the reorder pack's REAL
-     * provider via register_pack() — exactly what the pack's file-scope
+     * provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production. Registering it explicitly (after clearing
      * the static list) keeps the test hermetic and order-independent.
      */
@@ -225,7 +225,7 @@ class ReorderToolsTest extends TestCase {
 
     public function test_get_past_purchases_scopes_the_query_to_the_current_user(): void {
         // The query MUST be scoped to the current user id so it can only ever return
-        // that user's own purchase history — the first line of defence against leakage.
+        // that user's own purchase history, the first line of defence against leakage.
         Functions\expect( 'wc_get_orders' )
             ->once()
             ->andReturnUsing( function ( array $args ): array {
@@ -273,7 +273,7 @@ class ReorderToolsTest extends TestCase {
 
         $this->registry()->dispatch( 'get_past_purchases', [ 'limit' => 999 ] );
 
-        // Bounded — never an unbounded history scan.
+        // Bounded, never an unbounded history scan.
         $this->assertLessThanOrEqual( 50, $captured );
         $this->assertGreaterThan( 0, $captured );
     }
@@ -307,7 +307,7 @@ class ReorderToolsTest extends TestCase {
         $this->assertSame( 10, $result['added'][0]['product_id'] );
         $this->assertSame( '$39.99', $result['added'][0]['price'] );
 
-        // 30 reported as unavailable — NOT silently dropped.
+        // 30 reported as unavailable, NOT silently dropped.
         $this->assertCount( 1, $result['unavailable'] );
         $this->assertSame( 30, $result['unavailable'][0]['product_id'] );
         $this->assertArrayHasKey( 'reason', $result['unavailable'][0] );
@@ -434,10 +434,10 @@ class ReorderToolsTest extends TestCase {
         ] );
         Functions\when( 'wc_get_order' )->justReturn( $someone_elses_order );
 
-        // The cart must never be touched — the foreign order's items must not be added.
+        // The cart must never be touched, the foreign order's items must not be added.
         $cart = $this->stubCart();
         $cart->shouldNotReceive( 'add_to_cart' );
-        // wc_get_product must never run either — we must bail before touching the catalog.
+        // wc_get_product must never run either, we must bail before touching the catalog.
         Functions\expect( 'wc_get_product' )->never();
 
         $result = $this->registry()->dispatch( 'reorder', [ 'order_id' => 100 ] );
@@ -446,7 +446,7 @@ class ReorderToolsTest extends TestCase {
         $this->assertStringContainsString( 'not found', strtolower( $result['error'] ) );
         // Nothing was added.
         $this->assertArrayNotHasKey( 'added', $result );
-        // "Not found" must not leak existence — no forbidden/permission disclosure.
+        // "Not found" must not leak existence, no forbidden/permission disclosure.
         $this->assertStringNotContainsString( 'forbidden', strtolower( $result['error'] ) );
         $this->assertStringNotContainsString( 'permission', strtolower( $result['error'] ) );
         // None of the foreign order's data leaked.
@@ -470,7 +470,7 @@ class ReorderToolsTest extends TestCase {
     /**
      * A guest dispatching either personal tool must be stopped CENTRALLY by the
      * registry's login gate, before the tool callback runs. We assert the standard
-     * login-required error AND — critically — that the underlying WC data accessors
+     * login-required error AND, critically, that the underlying WC data accessors
      * are NEVER invoked, proving the callback was never reached. is_user_logged_in()
      * is stubbed false.
      *
@@ -480,7 +480,7 @@ class ReorderToolsTest extends TestCase {
         Functions\when( 'is_user_logged_in' )->justReturn( false );
         Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
-        // If the callback were reached, it would call one of these — they must NOT be
+        // If the callback were reached, it would call one of these, they must NOT be
         // hit. expect(...)->never() turns any call into a hard failure.
         Functions\expect( 'wc_get_orders' )->never();
         Functions\expect( 'wc_get_order' )->never();

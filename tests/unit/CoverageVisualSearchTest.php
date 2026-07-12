@@ -5,18 +5,18 @@
  * The primary behaviour is pinned by VisualSearchTest. This file targets the residual
  * uncovered lines that the primary suite does not exercise:
  *
- *   - register_routes(): the REST route registration (lines 100-104) — never invoked by
+ *   - register_routes(): the REST route registration (lines 100-104), never invoked by
  *     the primary suite, which drives handle_search()/search() directly.
  *   - handle_search() with NO 'image' file part → the `: []` fallback (line 122), proving a
  *     fileless request degrades to the 400 "no image" validation error, never a fatal.
- *   - normalize_ids() skipping a NON-NUMERIC candidate (line 384 `continue`) — a provider
+ *   - normalize_ids() skipping a NON-NUMERIC candidate (line 384 `continue`), a provider
  *     that returns mixed garbage among real ids must have the garbage dropped, ids kept.
- *   - format_bytes() KB and B branches (lines 445/446/448) — driven through validate_image's
+ *   - format_bytes() KB and B branches (lines 445/446/448), driven through validate_image's
  *     "too large" message by filtering the max-byte ceiling into the KB and B ranges.
  *
  * Conventions mirror VisualSearchTest exactly: WP/WC functions via Brain\Monkey; WC objects
  * via Mockery; the singletons reset via ReflectionProperty between cases (NEVER
- * setAccessible — host runs PHP 8.5); additive stubs only.
+ * setAccessible, host runs PHP 8.5); additive stubs only.
  */
 
 use Brain\Monkey;
@@ -34,7 +34,7 @@ class CoverageVisualSearchTest extends TestCase {
 
 		// Same tool-layer + WP stubs the primary suite uses so the shared formatter and the
 		// filter seam resolve. get_option defaults to a no-op; __ is a real pass-through from
-		// wc-stubs.php (loaded before Patchwork) — NOT re-stubbed here.
+		// wc-stubs.php (loaded before Patchwork), NOT re-stubbed here.
 		Functions\stubs( [
 			'absint'                      => fn( $n ) => abs( (int) $n ),
 			'sanitize_text_field'         => fn( $s ) => is_string( $s ) ? trim( $s ) : $s,
@@ -101,7 +101,7 @@ class CoverageVisualSearchTest extends TestCase {
 	public function test_register_routes_wires_the_visual_search_post_endpoint(): void {
 		// The class owns its own REST endpoint (mirroring the WhatsApp channel). register_routes
 		// must register POST fahad-ai/v1/visual-search with handle_search as the callback and the
-		// shared authorize_request gate as the permission callback — proving the billable lookup
+		// shared authorize_request gate as the permission callback, proving the billable lookup
 		// is CSRF-protected and rate-capped exactly like a chat turn.
 		$captured = null;
 		Functions\expect( 'register_rest_route' )
@@ -129,7 +129,7 @@ class CoverageVisualSearchTest extends TestCase {
 	public function test_handle_search_with_no_image_part_falls_back_to_empty_and_400s(): void {
 		// A multipart request that carries NO 'image' file part hits the `: []` fallback, so
 		// search() receives an empty descriptor and returns the 400 "no image" validation
-		// WP_Error straight to the client — never a fatal, never a stray retrieval.
+		// WP_Error straight to the client, never a fatal, never a stray retrieval.
 		Monkey\Filters\expectApplied( 'fahad_ai_visual_retriever' )->never();
 		Functions\expect( 'wc_get_product' )->never();
 
@@ -166,7 +166,7 @@ class CoverageVisualSearchTest extends TestCase {
 	public function test_non_numeric_candidates_are_skipped_numeric_ids_kept(): void {
 		// A provider may return mixed garbage (strings, nulls, nested arrays) alongside real
 		// ids. Each non-numeric entry is skipped (line 384), each numeric one coerced to a
-		// positive int — so the live resolution sees only the clean ids, in first-seen order.
+		// positive int, so the live resolution sees only the clean ids, in first-seen order.
 		$byId = [
 			11 => $this->mockProduct( 11, 'Cable Knit Sweater', '55.00' ),
 			22 => $this->mockProduct( 22, 'Ribbed Beanie', '18.00' ),

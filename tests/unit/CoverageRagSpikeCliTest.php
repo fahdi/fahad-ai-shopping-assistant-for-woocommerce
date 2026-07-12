@@ -5,7 +5,7 @@
  * The CLI file is NOT loaded by tests/bootstrap.php: it guards itself with a
  * file-scope `return;` unless `WP_CLI` is defined, and ends with a
  * `\WP_CLI::add_command()` call. So this test stands up a minimal `WP_CLI`
- * stub (constant + class) and `FAHAD_AI_PATH`, then require_once's the file —
+ * stub (constant + class) and `FAHAD_AI_PATH`, then require_once's the file , 
  * which is what exercises the file-scope guards and the add_command line.
  *
  * Every WordPress/WooCommerce dependency the command touches is stubbed via
@@ -450,7 +450,7 @@ class CoverageRagSpikeCliTest extends TestCase {
 			'live embeddings'
 		);
 
-		$this->assertStringContainsString( '**GO** —', $report );
+		$this->assertStringContainsString( '**GO**, ', $report );
 		$this->assertStringNotContainsString( 'provisional', $report );
 		$this->assertStringContainsString( '| q1 | 0.50 | 0.60 | 0.90 |', $report );
 		$this->assertStringContainsString( '| 1000 | 1.2 | 3.4 |', $report );

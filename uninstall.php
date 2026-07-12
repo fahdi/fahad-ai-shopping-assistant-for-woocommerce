@@ -55,7 +55,7 @@ $fahad_ai_options = [
 	'fahad_ai_feedback',
 	// Owner analytics & "unanswered questions" telemetry (issue #49). A bounded,
 	// rolling window of privacy-safe per-turn events (masked question snippet, outcome,
-	// tools, funnel flags — never PII) plus the opt-out flag. Both removed on uninstall.
+	// tools, funnel flags, never PII) plus the opt-out flag. Both removed on uninstall.
 	'fahad_ai_analytics',
 	'fahad_ai_analytics_enabled',
 	// Merchant scope / tone / business-rules config (issue #56): tone/persona,
@@ -77,7 +77,7 @@ $fahad_ai_options = [
 	'fahad_ai_proactive_enabled',
 	'fahad_ai_proactive_frequency',
 	// Voice input/output (issue #64): the merchant kill-switch (default OFF) and the
-	// voice-output (speak replies) sub-toggle. No PII — voice uses the browser's
+	// voice-output (speak replies) sub-toggle. No PII, voice uses the browser's
 	// in-browser Web Speech API and nothing about a shopper is persisted here.
 	'fahad_ai_voice_enabled',
 	'fahad_ai_voice_tts',

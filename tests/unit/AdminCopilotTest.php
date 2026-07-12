@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Admin_Copilot (Epic B — merchant copilot).
+ * Unit tests for Fahad_AI_Admin_Copilot (Epic B, merchant copilot).
  *
  * Covers the capability gate, route registration, and every grounded data method /
  * branch, so the admin endpoints can never fabricate store numbers.

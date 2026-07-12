@@ -8,31 +8,31 @@ defined( 'ABSPATH' ) || exit;
  * Fahad_AI_Recommendation_Tools): a self-contained class in its own file under
  * includes/tools/ that self-registers a provider at the bottom via
  * Fahad_AI_Tool_Registry::register_pack(). The bootstrap (and the test bootstrap)
- * glob-require everything here, so adding this pack is a SINGLE new file — no edits
+ * glob-require everything here, so adding this pack is a SINGLE new file, no edits
  * to the bootstrap, the test bootstrap, or the eval harness.
  *
  * Tool provided:
- *   - compare_products — "what's the difference between A and B?". Given 2–4 product
+ *   - compare_products, "what's the difference between A and B?". Given 2–4 product
  *     ids, returns each product's NORMALIZED base summary (reusing the shared
  *     Fahad_AI_Tools::format_product_summary so the fields match every other product
  *     surface) PLUS an ALIGNED attribute table: one row per attribute, each row
  *     carrying every compared product's value for that attribute (blank where a
  *     product lacks it), so the widget can render a side-by-side comparison.
  *
- * Everything comes from real WooCommerce data — names, prices, ratings, stock, and
- * the products' OWN attributes (get_attributes() / get_attribute()) — nothing is
+ * Everything comes from real WooCommerce data, names, prices, ratings, stock, and
+ * the products' OWN attributes (get_attributes() / get_attribute()), nothing is
  * invented. Non-visible / not-found ids are skipped; fewer than two comparable
  * products yields a graceful error rather than a degenerate one-column "comparison".
  * The id list is de-duplicated and capped (MAX_PRODUCTS) so the table stays readable
  * and the work is bounded.
  *
- * This is NOT a personal-data tool — it reads the shared catalog only — so it carries
+ * This is NOT a personal-data tool, it reads the shared catalog only, so it carries
  * no `personal` flag and is not login-gated.
  *
  * The comparison result is a DIFFERENT shape from the product-card path (aligned
  * columns, not a flat card list). It is surfaced to the widget as a separate
  * `comparison` payload by Fahad_AI_API_Handler::tool_result_comparison(), mirroring
- * how product cards are surfaced — the agent loop is untouched.
+ * how product cards are surfaced, the agent loop is untouched.
  */
 final class Fahad_AI_Comparison_Tools {
 
@@ -47,7 +47,7 @@ final class Fahad_AI_Comparison_Tools {
 	 * Append the comparison tool to the registry's tool list.
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope).
-	 * Static because the pack holds no per-instance state — its tool calls
+	 * Static because the pack holds no per-instance state, its tool calls
 	 * WooCommerce directly and reuses the shared formatter singleton.
 	 *
 	 * @param array $tools Existing tool definitions.
@@ -56,7 +56,7 @@ final class Fahad_AI_Comparison_Tools {
 	public static function register( array $tools ): array {
 		$tools[] = [
 			'name'        => 'compare_products',
-			'description' => 'Compare two to four products side by side. Use this when the customer asks for the difference between specific products, or which of a few products to pick. Pass the product ids (find them first with search_products if needed). Returns each product\'s real name, price, rating, stock and image, plus an aligned table of their attributes (each attribute lined up across the products). The storefront renders this as a side-by-side comparison table, so do NOT repeat the full spec list in your text — give a short, grounded recommendation instead. Only ever compare products this store actually has; never invent specs or prices.',
+			'description' => 'Compare two to four products side by side. Use this when the customer asks for the difference between specific products, or which of a few products to pick. Pass the product ids (find them first with search_products if needed). Returns each product\'s real name, price, rating, stock and image, plus an aligned table of their attributes (each attribute lined up across the products). The storefront renders this as a side-by-side comparison table, so do NOT repeat the full spec list in your text, give a short, grounded recommendation instead. Only ever compare products this store actually has; never invent specs or prices.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -103,7 +103,7 @@ final class Fahad_AI_Comparison_Tools {
 		foreach ( $ids as $id ) {
 			$product = wc_get_product( $id );
 
-			// Skip not-found / non-product / non-visible ids — a shopper cannot act on
+			// Skip not-found / non-product / non-visible ids, a shopper cannot act on
 			// them, and a missing id must not abort the whole comparison.
 			if ( ! $product instanceof WC_Product || ! $product->is_visible() ) {
 				continue;
@@ -180,7 +180,7 @@ final class Fahad_AI_Comparison_Tools {
 			}
 			$label = wc_attribute_label( $name );
 			// First label wins if two raw attribute names map to the same display
-			// label (defensive — keeps the per-product map deterministic).
+			// label (defensive, keeps the per-product map deterministic).
 			if ( ! isset( $out[ $label ] ) ) {
 				$out[ $label ] = $value;
 			}
@@ -232,7 +232,7 @@ final class Fahad_AI_Comparison_Tools {
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this
-// file in is the ONLY wiring needed — no bootstrap or harness edits.
+// file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require_once time, before PHPUnit's per-test pcov window opens; it can never be re-executed in-process.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Comparison_Tools', 'register' ] );

@@ -181,7 +181,7 @@ class CoverageFitToolsTest extends TestCase {
         // not among the offered options, so there is no index to step from. adjust_size
         // returns the usual size unchanged (no fabricated step), and since XXL is not
         // offered the recommendation is unavailable. Exercises the `false === $index`
-        // guard (line 407) — distinct from line 412's off-the-end guard.
+        // guard (line 407), distinct from line 412's off-the-end guard.
         $parent = Mockery::mock( WC_Product::class );
         $parent->shouldReceive( 'get_id' )->andReturn( 14 );
         $parent->shouldReceive( 'get_name' )->andReturn( 'Cotton Tee' );
@@ -372,7 +372,7 @@ class CoverageFitToolsTest extends TestCase {
         $parent->shouldReceive( 'get_attributes' )->andReturn( [ 'pa_size' => 'pa_size' ] );
         $parent->shouldReceive( 'get_attribute' )->andReturnUsing( static fn( $name ) => 'pa_size' === $name ? 'small, medium' : '' );
         $parent->shouldReceive( 'get_meta' )->andReturn( '' );
-        // The variation's raw attribute map has only a colour key — no size key.
+        // The variation's raw attribute map has only a colour key, no size key.
         $parent->shouldReceive( 'get_available_variations' )->andReturn( [
             [ 'variation_id' => 181, 'attributes' => [ 'attribute_pa_colour' => 'small' ] ],
         ] );
@@ -396,7 +396,7 @@ class CoverageFitToolsTest extends TestCase {
     public function test_variation_with_empty_size_attribute_value_does_not_match(): void {
         // The variation DOES carry a size-named attribute, but its value is blank, so
         // variation_size() returns a value that trims to '' and the `'' === $var_size`
-        // arm of the match guard skips it — again no phantom match.
+        // arm of the match guard skips it, again no phantom match.
         $parent = Mockery::mock( WC_Product::class );
         $parent->shouldReceive( 'get_id' )->andReturn( 19 );
         $parent->shouldReceive( 'get_name' )->andReturn( 'Cotton Tee' );

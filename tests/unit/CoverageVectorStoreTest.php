@@ -7,7 +7,7 @@
  * the WC stubs, so the guard short-circuits and the file loads cleanly.
  *
  * Coverage note (the guard line). The interface is loaded once by tests/bootstrap.php,
- * BEFORE any test runs — i.e. outside the per-test pcov collection window — so the
+ * BEFORE any test runs, i.e. outside the per-test pcov collection window, so the
  * guard line never registers as covered. The conventional re-execution trick (a
  * `@runInSeparateProcess` test that re-`require`s the file so pcov attributes line 12 to a
  * running test) does NOT work here: the isolated child still runs the configured
@@ -18,7 +18,7 @@
  * interface-embedding-provider.php seam).
  *
  * What this suite asserts, faithfully, is the substance of the file: the vector-store
- * contract — the exact method names, return types and parameter shapes the indexer /
+ * contract, the exact method names, return types and parameter shapes the indexer /
  * retriever depend on, that the guard short-circuited (the interface is declared rather
  * than the process having exited), and that the contract is implementable and type-checks.
  *
@@ -55,9 +55,9 @@ class CoverageVectorStoreTest extends TestCase {
 	 * The guard short-circuits cleanly: ABSPATH is defined (by the WC stubs / bootstrap),
 	 * so `defined( 'ABSPATH' ) || exit;` never reaches `exit` and the interface is declared.
 	 * Had the guard hit `exit` at load time the bootstrap would have aborted and this whole
-	 * suite could not run — so reaching these assertions is itself proof of the short-circuit.
+	 * suite could not run, so reaching these assertions is itself proof of the short-circuit.
 	 * (The guard line cannot be attributed to a running test under this harness; see the
-	 * class docblock — it is `@codeCoverageIgnore` in source.)
+	 * class docblock, it is `@codeCoverageIgnore` in source.)
 	 */
 	public function test_guard_short_circuits_when_abspath_defined(): void {
 		// ABSPATH is defined (by the WC stubs) so the file-scope guard short-circuits

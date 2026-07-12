@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for Fahad_AI_Providers — the multi-provider catalog.
+ * Unit tests for Fahad_AI_Providers, the multi-provider catalog.
  *
  * The catalog is the single source of truth for which AI services the assistant
  * can dispatch to. It is keyed by a stable provider id and, per provider, declares
@@ -15,7 +15,7 @@
  *   - BACKWARD COMPAT: anthropic/moonshot keep their existing option names.
  *
  * Brain\Monkey + Mockery; get_option/apply_filters are stubbed additively. No
- * setAccessible (host runs PHP 8.5) — the catalog API is public/static.
+ * setAccessible (host runs PHP 8.5), the catalog API is public/static.
  */
 
 use Brain\Monkey;
@@ -126,7 +126,7 @@ class ProvidersTest extends TestCase {
 	public function test_known_base_urls_match_the_provider_apis(): void {
 		$catalog = Fahad_AI_Providers::catalog();
 
-		// Each base URL is the FULL prefix up to (not including) /chat/completions —
+		// Each base URL is the FULL prefix up to (not including) /chat/completions , 
 		// i.e. it carries each provider's version segment. The OpenAI path appends only
 		// '/chat/completions', so a single rule is correct for every provider.
 		$this->assertSame( 'https://api.openai.com/v1', $catalog['openai']['base_url'] );
@@ -266,7 +266,7 @@ class ProvidersTest extends TestCase {
 		$this->assertSame( array_keys( Fahad_AI_Providers::catalog() ), $ids );
 	}
 
-	// ── resolve() — per-provider key/model/base_url from options ─────────────────
+	// ── resolve(), per-provider key/model/base_url from options ─────────────────
 
 	public function test_resolve_reads_key_and_model_for_an_openai_provider(): void {
 		$this->set_options( [
@@ -354,7 +354,7 @@ class ProvidersTest extends TestCase {
 	}
 
 	public function test_resolve_a_filter_registered_provider(): void {
-		// resolve() works for an add-on provider too — it reads that provider's
+		// resolve() works for an add-on provider too, it reads that provider's
 		// declared key/model option names.
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $hook, $value = null ) {
@@ -384,7 +384,7 @@ class ProvidersTest extends TestCase {
 		$this->assertSame( 'https://api.acme.example/v1', $resolved['base_url'] );
 	}
 
-	// ── sanitize_base_url() — custom endpoint validation (shared with admin) ─────
+	// ── sanitize_base_url(), custom endpoint validation (shared with admin) ─────
 
 	public function test_sanitize_base_url_accepts_https(): void {
 		Functions\when( 'wp_parse_url' )->alias( static fn( $u, $c = -1 ) => parse_url( $u ) );

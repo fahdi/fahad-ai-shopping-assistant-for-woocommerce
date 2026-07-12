@@ -2,7 +2,7 @@
 /**
  * Unit tests for the memory pack's GDPR privacy hooks (issue #59).
  *
- * The opt-in cross-session memory (issue #20) stores two per-user meta rows — the
+ * The opt-in cross-session memory (issue #20) stores two per-user meta rows, the
  * consent flag (fahad_ai_memory_optin) and the bounded preferences map
  * (fahad_ai_preferences). This suite proves those rows participate in WordPress'
  * core privacy tools:
@@ -25,7 +25,7 @@
  *
  * PRIVACY IS THE POINT. The highest-severity assertions are first-class:
  *   - COMPLETE PURGE: after erase, neither the consent flag nor the preferences row
- *     exists for the subject — verified against the raw meta map, not a return value.
+ *     exists for the subject, verified against the raw meta map, not a return value.
  *   - NO CROSS-USER LEAK: export/erase only ever touch the meta of the user the email
  *     resolves to; an unknown email is a safe no-op that touches nothing.
  */
@@ -56,7 +56,7 @@ class MemoryPrivacyTest extends TestCase {
 
     /**
      * email => user id, consulted by the get_user_by('email', …) stub. An email
-     * absent from this map resolves to false (no such user) — the no-op path.
+     * absent from this map resolves to false (no such user), the no-op path.
      *
      * @var array<string, int>
      */
@@ -231,7 +231,7 @@ class MemoryPrivacyTest extends TestCase {
         $this->assertArrayNotHasKey( 'theirs', $pairs );
     }
 
-    // ── ERASE (complete purge — the headline #59 requirement) ──────────────────────
+    // ── ERASE (complete purge, the headline #59 requirement) ──────────────────────
 
     public function test_eraser_removes_both_prefs_and_consent_leaving_no_residue(): void {
         $this->seedUser( 'jane@example.com', 7 );
@@ -246,7 +246,7 @@ class MemoryPrivacyTest extends TestCase {
         $this->assertTrue( $result['done'] );
         $this->assertSame( [], $result['messages'] );
 
-        // CRITICAL: nothing remains for this user — no orphan meta of any kind.
+        // CRITICAL: nothing remains for this user, no orphan meta of any kind.
         $this->assertArrayNotHasKey( '7:' . self::PREFS_META, $this->meta );
         $this->assertArrayNotHasKey( '7:' . self::OPTIN_META, $this->meta );
     }
@@ -294,7 +294,7 @@ class MemoryPrivacyTest extends TestCase {
     /**
      * The eval-style acceptance check from #59, expressed deterministically: drive a
      * full lifecycle through the SAME seams production uses (consent + a stored pref),
-     * then run the GDPR eraser and assert the user's meta map is completely empty —
+     * then run the GDPR eraser and assert the user's meta map is completely empty , 
      * no orphan rows, nothing for the privacy tool to leave behind.
      */
     public function test_consent_store_erase_cycle_leaves_no_residue(): void {

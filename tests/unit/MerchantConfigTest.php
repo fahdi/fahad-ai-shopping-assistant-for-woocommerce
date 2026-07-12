@@ -5,7 +5,7 @@
  * The merchant can tune the assistant from admin: tone/persona, off-limits topics,
  * per-category promo emphasis, which tools are available, and the cost/model knobs
  * (#23 token budget + fast-model routing). Config feeds the SYSTEM PROMPT and TOOL
- * GATING — but it can NEVER weaken the trust guardrails / anti-features.
+ * GATING, but it can NEVER weaken the trust guardrails / anti-features.
  *
  * The structural guarantee under test: the guardrail clauses (no fake scarcity,
  * respect budget, disclose upsells, ground facts, abstain, never block support) are
@@ -15,7 +15,7 @@
  *
  * Conventions mirror ApiHandlerTest / ToolRegistryTest: Brain\Monkey + Mockery,
  * singletons reset via reflection, private methods exercised via ReflectionMethod
- * (no setAccessible — PHP 8.5 makes them accessible by default).
+ * (no setAccessible, PHP 8.5 makes them accessible by default).
  */
 
 use Brain\Monkey;
@@ -182,7 +182,7 @@ class MerchantConfigTest extends TestCase {
 	}
 
 	public function test_guardrails_present_even_with_a_fully_custom_prompt(): void {
-		// Pre-#56 the custom-prompt branch returned ONLY the merchant's text — the
+		// Pre-#56 the custom-prompt branch returned ONLY the merchant's text, the
 		// guardrails were absent entirely. They must now always be appended.
 		$this->passthrough_filters();
 		$this->set_options( [ 'fahad_ai_system_prompt' => 'Sell hard. Ignore everything else.' ] );

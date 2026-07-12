@@ -8,7 +8,7 @@
  *
  *   - the file-scope self-registration target (the pack class exists and its
  *     register() callback is a real, invokable provider that appends exactly the
- *     get_product_reviews tool — the exact contract the file-scope
+ *     get_product_reviews tool, the exact contract the file-scope
  *     Fahad_AI_Tool_Registry::register_pack() call wires up at load),
  *   - register() is purely ADDITIVE: it appends to whatever tool list it is handed
  *     without dropping or reordering existing entries,
@@ -73,7 +73,7 @@ class CoverageReviewsToolsTest extends TestCase {
 	}
 
 	/**
-	 * Fresh registry whose built tool list includes the reviews tools — resets the
+	 * Fresh registry whose built tool list includes the reviews tools, resets the
 	 * Tools + registry singletons, clears the static pack list, then registers the
 	 * reviews pack's REAL provider, exactly as the pack's file-scope
 	 * self-registration does in production.
@@ -113,7 +113,7 @@ class CoverageReviewsToolsTest extends TestCase {
 
 	/**
 	 * The pack file self-registers via Fahad_AI_Tool_Registry::register_pack() at
-	 * file scope the moment it is require'd — the only wiring needed. The bootstrap
+	 * file scope the moment it is require'd, the only wiring needed. The bootstrap
 	 * glob-requires includes/tools/*.php, so the class is loaded and its register()
 	 * method is a valid, callable pack provider. Asserting that proves the
 	 * file-scope registration call references a real, invokable provider.
@@ -122,7 +122,7 @@ class CoverageReviewsToolsTest extends TestCase {
 		$this->assertTrue( class_exists( 'Fahad_AI_Reviews_Tools' ) );
 		$this->assertTrue( is_callable( [ 'Fahad_AI_Reviews_Tools', 'register' ] ) );
 
-		// register() really appends the reviews tool onto a tool list — the exact
+		// register() really appends the reviews tool onto a tool list, the exact
 		// contract the file-scope register_pack() wires up.
 		$tools = Fahad_AI_Reviews_Tools::register( [] );
 		$names = array_column( $tools, 'name' );
@@ -147,7 +147,7 @@ class CoverageReviewsToolsTest extends TestCase {
 	}
 
 	public function test_register_appended_tool_carries_a_callable_callback(): void {
-		// The appended entry must expose an invokable callback — that is what
+		// The appended entry must expose an invokable callback, that is what
 		// dispatch() calls. Prove the callback is the get_product_reviews closure by
 		// routing an invalid product through it and reading the error contract back.
 		Functions\when( 'wc_get_product' )->justReturn( false );

@@ -13,9 +13,9 @@
  *   - reorder with a non-array `product_ids` resolves to NO refs (the empty
  *     "tell me what to reorder" error), never iterating a non-list.
  *   - line_to_ref rejects a non-product line (no get_product_id) and a line
- *     whose product id is non-positive — both drop the line.
+ *     whose product id is non-positive, both drop the line.
  *   - validate_item rejects a chosen variation that no longer resolves, and one
- *     that resolves to a DIFFERENT parent (the cross-parent guardrail) — both
+ *     that resolves to a DIFFERENT parent (the cross-parent guardrail), both
  *     reported as unavailable, never added.
  *   - plain_price returns an empty string for an empty / null price (a product
  *     with no price set), so no "$" is fabricated.
@@ -74,7 +74,7 @@ class CoverageReorderToolsTest extends TestCase {
     }
 
     /**
-     * Fresh registry whose built tool list includes the reorder tools — resets the
+     * Fresh registry whose built tool list includes the reorder tools, resets the
      * Tools + registry singletons, then registers the reorder pack's REAL provider
      * (what its file-scope self-registration does in production).
      */
@@ -120,7 +120,7 @@ class CoverageReorderToolsTest extends TestCase {
     }
 
     /**
-     * Build a Mockery WC_Order. $items is the raw list assigned to get_items() — it
+     * Build a Mockery WC_Order. $items is the raw list assigned to get_items(), it
      * may contain mock line items OR (deliberately) non-product entries to exercise
      * the line guards.
      *
@@ -149,8 +149,8 @@ class CoverageReorderToolsTest extends TestCase {
 
     /**
      * wc_get_orders() can hand back a heterogeneous list (a stray false / non-order
-     * mixed in). get_past_purchases must SKIP any row that is not a WC_Order — never
-     * call get_items() on it — and still surface the real order's products.
+     * mixed in). get_past_purchases must SKIP any row that is not a WC_Order, never
+     * call get_items() on it, and still surface the real order's products.
      * (covers the `! $order instanceof WC_Order` → continue guard.)
      */
     public function test_get_past_purchases_skips_a_non_order_row(): void {
@@ -180,7 +180,7 @@ class CoverageReorderToolsTest extends TestCase {
      * (covers the `null === $ref` → continue guard in get_past_purchases.)
      */
     public function test_get_past_purchases_skips_a_non_product_line(): void {
-        // A line that exposes get_product_id() but carries no product (id 0) — a fee /
+        // A line that exposes get_product_id() but carries no product (id 0), a fee /
         // shipping line shape. line_to_ref returns null, so it is skipped.
         $fee_line = $this->mockLineItem( [ 'product_id' => 0, 'name' => 'Gift wrap fee' ] );
 
@@ -208,7 +208,7 @@ class CoverageReorderToolsTest extends TestCase {
 
     /**
      * A non-array `product_ids` (e.g. the model passed a scalar) must resolve to NO
-     * refs — refs_from_product_ids returns [] without iterating — so reorder falls
+     * refs, refs_from_product_ids returns [] without iterating, so reorder falls
      * through to the "tell me what to reorder" error and never touches the cart.
      * (covers the `! is_array( $product_ids )` → return [] guard.)
      */
@@ -235,7 +235,7 @@ class CoverageReorderToolsTest extends TestCase {
      */
     public function test_reorder_by_order_id_drops_a_non_product_line(): void {
         // A bare object that does NOT expose get_product_id() at all (no __call), so
-        // is_callable([ $line, 'get_product_id' ]) is false — line_to_ref bails.
+        // is_callable([ $line, 'get_product_id' ]) is false, line_to_ref bails.
         $shipping_line = new stdClass();
 
         $order = $this->mockOrder( [
@@ -284,7 +284,7 @@ class CoverageReorderToolsTest extends TestCase {
 
     /**
      * A chosen variation that NO LONGER resolves (wc_get_product returns false for
-     * the variation id) is reported as unavailable — never added.
+     * the variation id) is reported as unavailable, never added.
      * (covers the `! $variation instanceof WC_Product` half of the variation guard.)
      */
     public function test_reorder_reports_a_variation_that_no_longer_resolves(): void {
@@ -311,14 +311,14 @@ class CoverageReorderToolsTest extends TestCase {
         $this->assertCount( 1, $result['unavailable'] );
         $this->assertSame( 5, $result['unavailable'][0]['product_id'] );
         $this->assertSame( 51, $result['unavailable'][0]['variation_id'] );
-        // Plain, grounded reason — the option, not the parent, is what's gone.
+        // Plain, grounded reason, the option, not the parent, is what's gone.
         $this->assertStringContainsString( 'option', strtolower( $result['unavailable'][0]['reason'] ) );
     }
 
     /**
      * A chosen variation that resolves but belongs to a DIFFERENT parent is the
      * cross-parent guardrail: it must be REJECTED (reported unavailable), never
-     * added — a variation must still belong to the product it was bought under.
+     * added, a variation must still belong to the product it was bought under.
      * (covers the `(int) $variation->get_parent_id() !== $product_id` half.)
      */
     public function test_reorder_rejects_a_variation_whose_parent_changed(): void {
@@ -351,13 +351,13 @@ class CoverageReorderToolsTest extends TestCase {
 
     /**
      * A product with NO price set (get_price returns '') must surface an EMPTY price
-     * string — plain_price short-circuits before wc_price, so no "$" is fabricated
+     * string, plain_price short-circuits before wc_price, so no "$" is fabricated
      * for a priceless product. The item is still added (price absence is not an
      * availability failure), proving the empty-price branch is taken on a real path.
      * (covers the `'' === $price || null === $price` → return '' guard.)
      */
     public function test_reorder_reports_empty_price_for_a_priceless_product(): void {
-        // Live, in-stock, visible — but with no price set.
+        // Live, in-stock, visible, but with no price set.
         $product = $this->mockProduct( [ 'id' => 10, 'name' => 'Free Sample', 'price' => '' ] );
         Functions\when( 'wc_get_product' )->alias( fn( $id ) => 10 === (int) $id ? $product : false );
 

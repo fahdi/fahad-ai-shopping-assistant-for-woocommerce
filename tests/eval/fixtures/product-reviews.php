@@ -5,10 +5,10 @@
  * The user asks whether a product is any good. The model calls get_product_reviews
  * (the reviews feature pack tool, not a built-in), which returns the average
  * rating, review count, and a few recent APPROVED review snippets. The model then
- * replies with a short, grounded one-line sentiment read — summarising the real
+ * replies with a short, grounded one-line sentiment read, summarising the real
  * returned reviews and inventing NOTHING.
  *
- * Asserts get_product_reviews ran with the product_id, and — crucially — that the
+ * Asserts get_product_reviews ran with the product_id, and, crucially, that the
  * final answer is grounded: the grounding checker (anti-hallucination) must find
  * no fabricated price token or fabricated quoted review/product reference. The
  * quoted phrase in the scripted answer ("great quality and so comfortable") is a
@@ -17,8 +17,8 @@
  *
  * get_product_reviews comes from the reviews feature pack (Fahad_AI_Reviews_Tools),
  * which self-registers via Fahad_AI_Tool_Registry::register_pack() when the test
- * bootstrap glob-loads includes/tools/*.php — exactly as the plugin bootstrap does
- * in production — so the real reviews tool executes in the loop with no per-fixture
+ * bootstrap glob-loads includes/tools/*.php, exactly as the plugin bootstrap does
+ * in production, so the real reviews tool executes in the loop with no per-fixture
  * wiring. The declarative `wc.reviews` block drives the approved-review comments
  * the tool reads.
  */
@@ -52,7 +52,7 @@ return [
 		// verbatim slice of Dana's returned review, so it grounds; no price is
 		// stated (the card shows that) and no review content is invented.
 		EvalHarness::anthropic_text_turn(
-			'Reviewers really like it — it averages 4.5 stars across 24 reviews, with shoppers calling it "great quality and so comfortable" for long runs.'
+			'Reviewers really like it, it averages 4.5 stars across 24 reviews, with shoppers calling it "great quality and so comfortable" for long runs.'
 		),
 	],
 	'expect'   => [

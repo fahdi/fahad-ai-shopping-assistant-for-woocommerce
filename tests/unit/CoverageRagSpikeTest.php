@@ -1,6 +1,6 @@
 <?php
 /**
- * Coverage tests for Fahad_AI_Rag_Spike — the private percentile() helper.
+ * Coverage tests for Fahad_AI_Rag_Spike, the private percentile() helper.
  *
  * scan_latency() never feeds percentile() an empty list (it forces
  * $trials = max(1, $trials), so at least one timing always exists), so the

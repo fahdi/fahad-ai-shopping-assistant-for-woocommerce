@@ -23,7 +23,7 @@ final class Fahad_AI_Vector_Math {
 	 * @return string 4 bytes per element.
 	 */
 	public static function pack_vector( array $vector ): string {
-		// 'g' = float, machine size, little-endian byte order — stable across hosts.
+		// 'g' = float, machine size, little-endian byte order, stable across hosts.
 		return pack( 'g*', ...array_map( 'floatval', array_values( $vector ) ) );
 	}
 

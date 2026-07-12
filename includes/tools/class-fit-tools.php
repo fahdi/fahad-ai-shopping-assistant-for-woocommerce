@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
  * Apparel buyers need fit confidence and the assistant already owns the two data
  * sources that can give it HONESTLY: the product's own size attribute / size-chart
  * meta, and its approved customer reviews. This pack adds one tool, get_fit_advice,
- * that surfaces those facts and — crucially — only ever asserts a "runs small / true
+ * that surfaces those facts and, crucially, only ever asserts a "runs small / true
  * to size / runs large" hint when REAL data backs it.
  *
  * GROUNDING is the entire point of this tool (ROADMAP §1: be a trustworthy advisor;
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  *   2. a corroborated majority of APPROVED reviews that actually mention sizing.
  * If neither exists the tool ABSTAINS: fit_hint is null, fit_available is false, and
  * it returns a message saying fit information is not available. It NEVER fabricates a
- * fit claim, a measurement, or a sizing — there is no path that invents data. There
+ * fit claim, a measurement, or a sizing, there is no path that invents data. There
  * is likewise no body-shaming or medical language anywhere in this tool; it speaks
  * only in terms of the garment ("runs small"), never the body.
  *
@@ -30,7 +30,7 @@ defined( 'ABSPATH' ) || exit;
  * pattern: a self-contained class in its own file that self-registers a provider at
  * file scope via Fahad_AI_Tool_Registry::register_pack(). The plugin bootstrap (and
  * the test bootstrap) glob-require includes/tools/*.php, so adding this file is the
- * ONLY wiring needed — no edits to the bootstrap, the test bootstrap, or the eval
+ * ONLY wiring needed, no edits to the bootstrap, the test bootstrap, or the eval
  * harness. It reads only shared catalog/review data, so it is NOT a personal-data
  * tool and is not login-gated.
  */
@@ -45,7 +45,7 @@ final class Fahad_AI_Fit_Tools {
 
 	/**
 	 * Minimum number of fit-mentioning APPROVED reviews required before a review-based
-	 * hint may be asserted. One lone "runs small" is not a store-wide signal — the
+	 * hint may be asserted. One lone "runs small" is not a store-wide signal, the
 	 * evidence must be corroborated, otherwise the tool abstains.
 	 */
 	private const MIN_FIT_REVIEWS = 2;
@@ -80,7 +80,7 @@ final class Fahad_AI_Fit_Tools {
 	public static function register( array $tools ): array {
 		$tools[] = [
 			'name'        => 'get_fit_advice',
-			'description' => 'Get size and fit guidance for a product. Returns the product\'s real size options, any size chart the store has, and — ONLY when its own customer reviews or an explicit fit attribute support it — a grounded "runs small", "true to size", or "runs large" hint with the evidence behind it. If there is no supporting data, it abstains and says fit information is not available; never claim a fit, measurement, or size that is not in this result. If the shopper tells you their usual size (pass it as usual_size), it recommends a size and maps it to an in-stock variation, or says that size is unavailable. Speak only about how the garment fits, never about the shopper\'s body, and use no medical language.',
+			'description' => 'Get size and fit guidance for a product. Returns the product\'s real size options, any size chart the store has, and, ONLY when its own customer reviews or an explicit fit attribute support it, a grounded "runs small", "true to size", or "runs large" hint with the evidence behind it. If there is no supporting data, it abstains and says fit information is not available; never claim a fit, measurement, or size that is not in this result. If the shopper tells you their usual size (pass it as usual_size), it recommends a size and maps it to an in-stock variation, or says that size is unavailable. Speak only about how the garment fits, never about the shopper\'s body, and use no medical language.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -103,8 +103,8 @@ final class Fahad_AI_Fit_Tools {
 	 * Grounded size/fit advice for a product.
 	 *
 	 * Surfaces size options + any size-chart meta, derives a fit hint ONLY from an
-	 * explicit fit attribute or corroborated reviews (abstaining otherwise), and — when
-	 * a usual size is supplied — maps a recommended size to an in-stock variation.
+	 * explicit fit attribute or corroborated reviews (abstaining otherwise), and, when
+	 * a usual size is supplied, maps a recommended size to an in-stock variation.
 	 *
 	 * @param array $input { product_id:int, usual_size?:string }
 	 * @return array
@@ -134,7 +134,7 @@ final class Fahad_AI_Fit_Tools {
 		];
 
 		if ( null !== $hint ) {
-			// Only attach a rationale when there is a real one — never a fabricated one.
+			// Only attach a rationale when there is a real one, never a fabricated one.
 			$result['fit_basis'] = $basis;
 		} else {
 			$result['message'] = __( 'Fit information is not available for this product yet, so I can\'t say whether it runs small or large.', 'fahad-ai-shopping-assistant-for-woocommerce' );
@@ -160,7 +160,7 @@ final class Fahad_AI_Fit_Tools {
 	 * one whose human label is "Size" (or whose raw name is size/pa_size). Its display
 	 * value (get_attribute()) is a comma-separated string of the option labels, which
 	 * we split back into a list. Empty when the product has no size attribute (e.g. a
-	 * mug) — never invented.
+	 * mug), never invented.
 	 *
 	 * @return string[]
 	 */
@@ -224,7 +224,7 @@ final class Fahad_AI_Fit_Tools {
 	 *
 	 * Order of trust: an explicit merchant-set "Fit" attribute is authoritative real
 	 * data and wins outright; otherwise we look for a corroborated review majority.
-	 * Nothing else can produce a hint — when both come up empty the tool abstains.
+	 * Nothing else can produce a hint, when both come up empty the tool abstains.
 	 *
 	 * @return array{0: ?string, 1: string}
 	 */
@@ -294,7 +294,7 @@ final class Fahad_AI_Fit_Tools {
 
 		$total = array_sum( $votes );
 		if ( $total < self::MIN_FIT_REVIEWS ) {
-			return [ null, '' ]; // Not enough corroboration — abstain.
+			return [ null, '' ]; // Not enough corroboration, abstain.
 		}
 
 		arsort( $votes );
@@ -304,7 +304,7 @@ final class Fahad_AI_Fit_Tools {
 		$top     = $counts[0];
 		$runner  = $counts[1] ?? 0;
 
-		// Require a strict majority over the runner-up — an even split is not a signal.
+		// Require a strict majority over the runner-up, an even split is not a signal.
 		if ( $top <= $runner ) {
 			return [ null, '' ];
 		}
@@ -324,7 +324,7 @@ final class Fahad_AI_Fit_Tools {
 	 * single signal.
 	 *
 	 * Counts phrase hits per direction; the direction with the most hits wins. A tie
-	 * (including zero hits) returns null so ambiguous or fit-silent text never votes —
+	 * (including zero hits) returns null so ambiguous or fit-silent text never votes , 
 	 * this is what keeps a conflicted review from manufacturing a signal.
 	 */
 	private static function classify_text( string $text ): ?string {
@@ -348,7 +348,7 @@ final class Fahad_AI_Fit_Tools {
 		$counts = array_values( $scores );
 
 		if ( 0 === $counts[0] || $counts[0] === ( $counts[1] ?? 0 ) ) {
-			return null; // No signal, or a tie — not a vote.
+			return null; // No signal, or a tie, not a vote.
 		}
 
 		return $hints[0];
@@ -363,7 +363,7 @@ final class Fahad_AI_Fit_Tools {
 	 *
 	 * The recommended size starts as the shopper's usual size and steps ONE size in
 	 * the size list only when a GROUNDED hint says the garment runs small (step up) or
-	 * large (step down) — the step is never taken on a guess. The chosen size is then
+	 * large (step down), the step is never taken on a guess. The chosen size is then
 	 * matched to a variation: an in-stock match returns the variation; a sold-out or
 	 * not-offered size returns size_available=false and recommended_variation=null so
 	 * the assistant tells the shopper rather than pointing them at something unbuyable.
@@ -404,7 +404,7 @@ final class Fahad_AI_Fit_Tools {
 		$lower = array_map( 'strtolower', $size_options );
 		$index = array_search( strtolower( $usual_size ), $lower, true );
 		if ( false === $index ) {
-			return $usual_size; // Usual size isn't on the scale — don't fabricate a step.
+			return $usual_size; // Usual size isn't on the scale, don't fabricate a step.
 		}
 
 		$target = 'runs_small' === $hint ? $index + 1 : $index - 1;
@@ -461,7 +461,7 @@ final class Fahad_AI_Fit_Tools {
 	 *
 	 * The map keys are "attribute_" + the attribute name (e.g. attribute_pa_size); we
 	 * read the size-named one. Values are term slugs for taxonomy attributes and the
-	 * literal value for custom attributes — either way the slug/value is enough to
+	 * literal value for custom attributes, either way the slug/value is enough to
 	 * match against the offered size labels case-insensitively.
 	 *
 	 * @param array<string,string> $attributes
@@ -480,7 +480,7 @@ final class Fahad_AI_Fit_Tools {
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this
-// file in is the ONLY wiring needed — no bootstrap or harness edits.
+// file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before pcov's per-test window opens; its effect is asserted in FitToolsTest::test_fit_tool_is_registered_via_register_pack.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Fit_Tools', 'register' ] );

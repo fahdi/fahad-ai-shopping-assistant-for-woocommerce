@@ -1,11 +1,11 @@
 <?php
 /**
  * Unit tests for Fahad_AI_Feedback (issue #50: reply feedback / thumbs +
- * production guardrail telemetry — the STORE behind the 👍/👎 controls).
+ * production guardrail telemetry, the STORE behind the 👍/👎 controls).
  *
  * Red → Green → Refactor. Conventions mirror StockAlertsTest / MemoryToolsTest: WP
  * functions mocked via Brain\Monkey; the singleton reset via reflection between
- * cases (NEVER ReflectionMethod::setAccessible — host runs PHP 8.5). The store is
+ * cases (NEVER ReflectionMethod::setAccessible, host runs PHP 8.5). The store is
  * option-backed, so a single in-memory $this->options map stands in for the WP
  * options table and a test asserts exactly what was persisted.
  *
@@ -14,7 +14,7 @@
  *   - RATING VALIDATION: only 'up' / 'down' are accepted; junk is refused and
  *     stores nothing.
  *   - NO PII: a stored row carries the rating + opaque conversation/message refs
- *     ONLY — never an email, name, IP, or user id. A free-text reason is sanitized
+ *     ONLY, never an email, name, IP, or user id. A free-text reason is sanitized
  *     and length-capped (it can't smuggle an unbounded blob).
  *   - AGGREGATES: counts of up/down are reported correctly.
  *   - GUARDRAIL FLAG: a down-rating is flagged (and flag-queryable) so a future
@@ -181,7 +181,7 @@ class FeedbackTest extends TestCase {
 	}
 
 	public function test_refs_are_length_bounded(): void {
-		// Opaque refs are still attacker-controlled strings — they must be bounded so
+		// Opaque refs are still attacker-controlled strings, they must be bounded so
 		// the option can't be bloated by a giant "conversation id".
 		$store = $this->store();
 		$store->record( 'up', '', str_repeat( 'c', 1000 ), str_repeat( 'm', 1000 ) );
@@ -325,7 +325,7 @@ class FeedbackTest extends TestCase {
 	// ── corrupted option resilience ─────────────────────────────────────────────
 
 	public function test_a_corrupted_option_is_treated_as_empty(): void {
-		// A non-array option value must not fatal — the store reads it as empty.
+		// A non-array option value must not fatal, the store reads it as empty.
 		$this->options[ Fahad_AI_Feedback::OPTION ] = 'corrupted-not-an-array';
 
 		$res = $this->store()->record( 'up', '', 'c1', 'm1' );

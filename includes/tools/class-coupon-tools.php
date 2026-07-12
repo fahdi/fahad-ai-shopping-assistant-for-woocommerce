@@ -8,11 +8,11 @@ defined( 'ABSPATH' ) || exit;
  * class in its own file under includes/tools/ that self-registers a provider at the
  * bottom via Fahad_AI_Tool_Registry::register_pack(). The bootstrap (and the test
  * bootstrap) glob-require everything here, so adding this pack is a SINGLE new file
- * — no edits to the bootstrap, the test bootstrap, or the eval harness.
+ *, no edits to the bootstrap, the test bootstrap, or the eval harness.
  *
  * Tools provided:
- *   - list_active_coupons — store coupons that are genuinely usable RIGHT NOW.
- *   - apply_coupon        — apply a real code to the session cart, honestly.
+ *   - list_active_coupons, store coupons that are genuinely usable RIGHT NOW.
+ *   - apply_coupon       , apply a real code to the session cart, honestly.
  *
  * HONESTY IS THE WHOLE POINT. The assistant must never invent a discount code or
  * claim a coupon works when it does not:
@@ -23,14 +23,14 @@ defined( 'ABSPATH' ) || exit;
  *   • A coupon is included only if it is published, not expired (`date_expires`),
  *     under its total usage limit (`usage_limit` vs `usage_count`), under the
  *     current user's per-user limit where that is determinable (logged in, with a
- *     `usage_limit_per_user`), AND — when a non-empty session cart is present so
- *     applicability is determinable — accepted by WooCommerce's OWN validator
+ *     `usage_limit_per_user`), AND, when a non-empty session cart is present so
+ *     applicability is determinable, accepted by WooCommerce's OWN validator
  *     (WC_Discounts::is_coupon_valid), which enforces product/category/min-spend
  *     restrictions against the actual cart. We never re-implement WC's restriction
  *     logic; we defer to it.
  *   • apply_coupon defers entirely to WC()->cart->apply_coupon(): success is
  *     reported only when WooCommerce itself accepts the code. A false/!valid result
- *     becomes a plain error — never a fabricated success.
+ *     becomes a plain error, never a fabricated success.
  *
  * These tools are NOT personal-data tools: they operate on the SHARED session cart
  * and the store-wide coupon list, so they carry no `personal` flag and are not
@@ -43,7 +43,7 @@ final class Fahad_AI_Coupon_Tools {
 	 * Append the coupon tools to the registry's tool list.
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope).
-	 * Static because the pack holds no per-instance state — its tools call
+	 * Static because the pack holds no per-instance state, its tools call
 	 * WooCommerce and the shared session cart directly.
 	 *
 	 * @param array $tools Existing tool definitions.
@@ -52,7 +52,7 @@ final class Fahad_AI_Coupon_Tools {
 	public static function register( array $tools ): array {
 		$tools[] = [
 			'name'        => 'list_active_coupons',
-			'description' => 'List the discount codes that are currently valid and usable in this store right now. Only returns REAL coupons that exist in the store and pass every check (published, not expired, within usage limits, and — when there is a cart — applicable to it). Use this when the customer asks about discounts, coupons, promo codes, or deals. NEVER make up a code: only ever mention codes returned by this tool.',
+			'description' => 'List the discount codes that are currently valid and usable in this store right now. Only returns REAL coupons that exist in the store and pass every check (published, not expired, within usage limits, and, when there is a cart, applicable to it). Use this when the customer asks about discounts, coupons, promo codes, or deals. NEVER make up a code: only ever mention codes returned by this tool.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => new stdClass(),
@@ -62,7 +62,7 @@ final class Fahad_AI_Coupon_Tools {
 
 		$tools[] = [
 			'name'        => 'apply_coupon',
-			'description' => "Apply a discount code to the customer's cart. Pass the exact code (ideally one returned by list_active_coupons). Returns the updated cart total on success, or a clear error if WooCommerce rejects the code as invalid or inapplicable. Only report success if this tool returns success — never claim a code worked otherwise.",
+			'description' => "Apply a discount code to the customer's cart. Pass the exact code (ideally one returned by list_active_coupons). Returns the updated cart total on success, or a clear error if WooCommerce rejects the code as invalid or inapplicable. Only report success if this tool returns success, never claim a code worked otherwise.",
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -85,7 +85,7 @@ final class Fahad_AI_Coupon_Tools {
 	 *
 	 * Enumerates published `shop_coupon` posts, loads each as a WC_Coupon, keeps
 	 * only the ones that pass every validity gate (see is_coupon_currently_valid),
-	 * and returns a coupon LIST — deliberately NOT a products[] array — so it does
+	 * and returns a coupon LIST, deliberately NOT a products[] array, so it does
 	 * not render as product cards.
 	 *
 	 * @param array $input Unused (no parameters).
@@ -98,7 +98,7 @@ final class Fahad_AI_Coupon_Tools {
 		foreach ( self::get_coupon_objects() as $coupon ) {
 			if ( ! $coupon instanceof WC_Coupon ) {
 				// @codeCoverageIgnoreStart
-				// Reason: defensive guard with no injection seam — get_coupon_objects()
+				// Reason: defensive guard with no injection seam, get_coupon_objects()
 				// only ever yields WC_Coupon instances (pass-through or `new WC_Coupon`),
 				// so a non-coupon can never enter this loop, in tests or production.
 				continue;
@@ -130,7 +130,7 @@ final class Fahad_AI_Coupon_Tools {
 	 * Defers entirely to WC()->cart->apply_coupon(): WooCommerce runs its own full
 	 * validation (existence, expiry, usage, restrictions) and returns true only when
 	 * the code is genuinely applied. We report success ONLY in that case; otherwise
-	 * we surface a plain error — never a fabricated success.
+	 * we surface a plain error, never a fabricated success.
 	 *
 	 * @param array $input { code: string }
 	 * @return array { success: bool, message?: string, cart_total?: string, error?: string }
@@ -186,15 +186,15 @@ final class Fahad_AI_Coupon_Tools {
 	 * Is this coupon genuinely usable right now?
 	 *
 	 * Layered, honest checks (cheapest/most-deterministic first):
-	 *   1. Exists & published — guards drafts/pending/trash (a code in those states
+	 *   1. Exists & published, guards drafts/pending/trash (a code in those states
 	 *      is not offered to customers).
-	 *   2. Not expired — `date_expires` is null (no expiry) or strictly in the future.
-	 *   3. Total usage limit — `usage_limit` of 0 means unlimited; otherwise the
+	 *   2. Not expired, `date_expires` is null (no expiry) or strictly in the future.
+	 *   3. Total usage limit, `usage_limit` of 0 means unlimited; otherwise the
 	 *      coupon is exhausted once `usage_count` reaches it.
-	 *   4. Per-user usage limit — only when we can determine the user (logged in) and
+	 *   4. Per-user usage limit, only when we can determine the user (logged in) and
 	 *      the coupon sets `usage_limit_per_user`: exclude if this user already used
 	 *      it that many times. Guests, or coupons with no per-user cap, skip this.
-	 *   5. Cart applicability — ONLY when a non-empty session cart exists (so it is
+	 *   5. Cart applicability, ONLY when a non-empty session cart exists (so it is
 	 *      determinable): defer to WooCommerce's own validator, which enforces
 	 *      product/category/min-spend/exclude-sale rules against the actual cart.
 	 *
@@ -230,7 +230,7 @@ final class Fahad_AI_Coupon_Tools {
 			return false;
 		}
 
-		// 5. Cart applicability — defer to WooCommerce's own validator when a
+		// 5. Cart applicability, defer to WooCommerce's own validator when a
 		//    non-empty cart makes restrictions (product/category/min-spend) checkable.
 		if ( $cart && ! $cart->is_empty() && ! self::is_valid_for_cart( $coupon, $cart ) ) {
 			return false;
@@ -246,7 +246,7 @@ final class Fahad_AI_Coupon_Tools {
 	 * `get_used_by()` holds a mix of user IDs (as strings) and billing emails from
 	 * past uses; counting this user's ID occurrences is the same signal WooCommerce
 	 * uses for the per-user limit. For a guest (user id 0) the limit is not
-	 * determinable here, so we do not exclude — WC enforces it again at apply time.
+	 * determinable here, so we do not exclude, WC enforces it again at apply time.
 	 */
 	private static function passes_per_user_limit( WC_Coupon $coupon ): bool {
 		$per_user = (int) $coupon->get_usage_limit_per_user();
@@ -276,7 +276,7 @@ final class Fahad_AI_Coupon_Tools {
 	 * WC_Discounts::is_coupon_valid() enforces product/category restrictions,
 	 * minimum/maximum spend, exclude-sale-items, etc. against the supplied cart and
 	 * returns true or a WP_Error. We never re-implement that logic. If the validator
-	 * is unavailable (e.g. a stripped environment), we do not exclude — the coupon
+	 * is unavailable (e.g. a stripped environment), we do not exclude, the coupon
 	 * still passed the deterministic checks above, and apply_coupon validates again.
 	 */
 	private static function is_valid_for_cart( WC_Coupon $coupon, WC_Cart $cart ): bool {
@@ -361,13 +361,13 @@ final class Fahad_AI_Coupon_Tools {
 	 * Published `shop_coupon` posts as WC_Coupon objects.
 	 *
 	 * Enumerates the coupon post type and loads each code via `new WC_Coupon`.
-	 * Items that are already WC_Coupon instances are passed through unchanged — a
+	 * Items that are already WC_Coupon instances are passed through unchanged, a
 	 * small seam that keeps the enumeration source mockable in unit tests (the test
 	 * stubs get_posts() to return coupon mocks directly) without a process-global
 	 * constructor overload.
 	 *
 	 * Degrades to an empty list (rather than fataling) if the WP query function is
-	 * unavailable — so the tool stays honest: it reports "no codes" instead of
+	 * unavailable, so the tool stays honest: it reports "no codes" instead of
 	 * erroring, and never invents one.
 	 *
 	 * @return array<int, WC_Coupon>
@@ -452,9 +452,9 @@ final class Fahad_AI_Coupon_Tools {
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this file
-// in is the ONLY wiring needed — no bootstrap or harness edits.
+// in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at require time (test bootstrap
-// glob-requires this file) — before PHPUnit opens its per-test pcov window.
+// glob-requires this file), before PHPUnit opens its per-test pcov window.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Coupon_Tools', 'register' ] );
 // @codeCoverageIgnoreEnd

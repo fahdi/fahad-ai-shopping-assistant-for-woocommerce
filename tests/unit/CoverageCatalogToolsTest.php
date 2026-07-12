@@ -15,7 +15,7 @@
  * at the bottom of the source file): that statement is a load-time side effect
  * that runs exactly ONCE when the bootstrap require_once's the file, BEFORE
  * pcov's per-test collection window opens, so it is never attributed to a test.
- * It cannot be re-executed from a test either — re-`include`ing the file is a
+ * It cannot be re-executed from a test either, re-`include`ing the file is a
  * fatal `final class` redeclaration, and calling register_pack() directly only
  * exercises the registry class, not this call-site line. This suite instead
  * asserts the OBSERVABLE RESULT of that registration (the catalog provider is
@@ -72,7 +72,7 @@ class CoverageCatalogToolsTest extends TestCase {
 
 	/**
 	 * Fresh registry whose built tool list includes the catalog tools, registered
-	 * through the pack's REAL provider — the same path the file-scope
+	 * through the pack's REAL provider, the same path the file-scope
 	 * self-registration uses in production.
 	 */
 	private function registry(): Fahad_AI_Tool_Registry {
@@ -103,7 +103,7 @@ class CoverageCatalogToolsTest extends TestCase {
 		return $p;
 	}
 
-	// ── register() — the provider that the file-scope register_pack wires up ──────
+	// ── register(), the provider that the file-scope register_pack wires up ──────
 
 	public function test_register_appends_both_catalog_tools_in_order(): void {
 		// register() is the callable the file-scope register_pack() hands to the
@@ -178,7 +178,7 @@ class CoverageCatalogToolsTest extends TestCase {
 	// ── get_top_products: limit clamping ──────────────────────────────────────────
 
 	public function test_get_top_products_clamps_zero_limit_up_to_1(): void {
-		// max( 1, (int) 0 ) === 1 — the lower bound of the clamp.
+		// max( 1, (int) 0 ) === 1, the lower bound of the clamp.
 		Functions\expect( 'wc_get_products' )
 			->once()
 			->andReturnUsing( function ( array $args ): array {
@@ -213,7 +213,7 @@ class CoverageCatalogToolsTest extends TestCase {
 	}
 
 	public function test_get_top_products_casts_numeric_string_limit(): void {
-		// (int) '3' === 3 — the input arrives from the model as loosely-typed JSON.
+		// (int) '3' === 3, the input arrives from the model as loosely-typed JSON.
 		Functions\expect( 'wc_get_products' )
 			->once()
 			->andReturnUsing( function ( array $args ): array {
@@ -257,7 +257,7 @@ class CoverageCatalogToolsTest extends TestCase {
 	}
 
 	public function test_get_top_products_treats_empty_string_category_as_absent(): void {
-		// empty( '' ) is true, so the category branch is skipped — no category arg.
+		// empty( '' ) is true, so the category branch is skipped, no category arg.
 		Functions\expect( 'wc_get_products' )
 			->once()
 			->andReturnUsing( function ( array $args ): array {

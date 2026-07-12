@@ -3,7 +3,7 @@
  * Coverage gap test for Fahad_AI_Postmeta_Vector_Store::query() (#105).
  *
  * VectorStoreTest already exercises the happy path and most guards. The one
- * uncovered branch is the `continue;` at line 64 — the guard that skips a
+ * uncovered branch is the `continue;` at line 64, the guard that skips a
  * candidate whose MODEL meta matches the active model (so it passes the line-59
  * cross-model check) but whose stored VECTOR blob is missing/empty or not a
  * string. The sibling suite's "missing vector" case never reaches that branch:

@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Fahad AI Shopping Assistant for WooCommerce
  * Plugin URI:  https://github.com/fahdi/fahad-ai-shopping-assistant-for-woocommerce
- * Description: AI-powered shopping assistant for WooCommerce — answers questions and manages the cart using OpenAI, Claude, Gemini, Moonshot, and other major AI providers.
- * Version:           2.14.3
+ * Description: AI-powered shopping assistant for WooCommerce, answers questions and manages the cart using OpenAI, Claude, Gemini, Moonshot, and other major AI providers.
+ * Version:           2.14.4
  * Author:      Fahdi Murtaza
  * Author URI:  https://github.com/fahdi
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FAHAD_AI_VERSION', '2.14.3' );
+define( 'FAHAD_AI_VERSION', '2.14.4' );
 define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -135,12 +135,12 @@ final class Fahad_AI_Chatbot {
 
 		// WhatsApp omnichannel webhook (#62): Meta's verify handshake (GET) + signed
 		// inbound deliveries (POST) on /whatsapp. Its security boundary is NOT the chat
-		// nonce (Meta cannot send one) — it is the verify-token check (GET) and the
+		// nonce (Meta cannot send one), it is the verify-token check (GET) and the
 		// X-Hub-Signature-256 HMAC (POST), enforced inside the handlers. The outbound send
 		// is a pluggable seam (fahad_ai_whatsapp_send); no live Meta call ships in core.
 		Fahad_AI_WhatsApp::instance()->register_routes();
 
-		// Visual / image search — "shop the look" (#63): POST an image to /visual-search and
+		// Visual / image search, "shop the look" (#63): POST an image to /visual-search and
 		// get visually-similar in-stock products. Same gate as the chat endpoints (nonce +
 		// rate limit), since a vision lookup is billable. The actual image ranking is a
 		// pluggable seam (fahad_ai_visual_retriever); NO live vision API ships in core, so
@@ -154,7 +154,7 @@ final class Fahad_AI_Chatbot {
 
 		// Store-as-an-agent gateway (Epic C): read-only, grounded endpoints under /agent so
 		// external AI agents can discover (llms.txt + catalog feed), search/inspect (reusing
-		// the chat tools), and get a HUMAN checkout-handoff link — no agent-side payment.
+		// the chat tools), and get a HUMAN checkout-handoff link, no agent-side payment.
 		Fahad_AI_Agent_Gateway::instance()->register_routes();
 	}
 
@@ -224,7 +224,7 @@ final class Fahad_AI_Chatbot {
 	}
 
 	/**
-	 * Best-effort client IP. Uses REMOTE_ADDR only — proxy headers such as
+	 * Best-effort client IP. Uses REMOTE_ADDR only, proxy headers such as
 	 * X-Forwarded-For are spoofable and must not be trusted for a security
 	 * control. Unresolvable addresses share one bucket.
 	 */
@@ -286,11 +286,11 @@ final class Fahad_AI_Chatbot {
 			'accentColor' => get_option( 'fahad_ai_accent_color', '#2563eb' ),
 			// Proactive, consented, value-gated nudge (issue #65). Empty array unless the
 			// merchant enabled it AND a REAL value signal (an applicable coupon, or unused
-			// store credit) exists right now — so the widget can never invent a nudge.
+			// store credit) exists right now, so the widget can never invent a nudge.
 			'proactive'   => $this->proactive_config(),
 			// Voice input/output (issue #64). Empty array unless the merchant enabled voice;
 			// when present the widget builds the mic (and, if tts is true, speaker) controls
-			// using the browser's Web Speech API — subject to browser support, with text
+			// using the browser's Web Speech API, subject to browser support, with text
 			// always working as the fallback. No audio is ever stored and no external
 			// service is added (the API is in-browser).
 			'voice'       => Fahad_AI_Voice::instance()->config(),
@@ -369,7 +369,7 @@ final class Fahad_AI_Chatbot {
 	 * Build the proactive-nudge config for the widget (issue #65), or [] when no nudge
 	 * may be shown.
 	 *
-	 * Short-circuits to [] the instant the merchant kill-switch is off (default) — so a
+	 * Short-circuits to [] the instant the merchant kill-switch is off (default), so a
 	 * store that has not opted in pays NOTHING: no cart load, no coupon query, no wallet
 	 * call. Only when enabled does it resolve a REAL value signal from the store's OWN
 	 * grounded tools (so the nudge can never be fabricated):
@@ -442,7 +442,7 @@ final class Fahad_AI_Chatbot {
 	}
 
 	public function add_admin_menu(): void {
-		// Shop managers (manage_woocommerce) as well as admins can tune the assistant —
+		// Shop managers (manage_woocommerce) as well as admins can tune the assistant , 
 		// the natural cap for a WooCommerce extension; falls back to manage_options where
 		// the WooCommerce cap is not granted. Each page callback re-checks the same
 		// capability (defence in depth).
@@ -486,7 +486,7 @@ add_action( 'plugins_loaded', function () {
 
 	// Load every drop-in feature tool pack. Each pack lives in its own file under
 	// includes/tools/ and self-registers a provider via
-	// Fahad_AI_Tool_Registry::register_pack() at file scope — see
+	// Fahad_AI_Tool_Registry::register_pack() at file scope, see
 	// Fahad_AI_Catalog_Tools. Adding a feature pack is therefore just adding a
 	// file here; no edits to this bootstrap are needed. Sorted for deterministic
 	// load (hence tool) order across platforms.
@@ -502,12 +502,12 @@ add_action( 'plugins_loaded', function () {
 	Fahad_AI_Indexer::init();
 
 	// Make product search hybrid (keyword + vector) via the semantic-search seam.
-	// No-op without an embeddings provider — search stays keyword-only.
+	// No-op without an embeddings provider, search stays keyword-only.
 	Fahad_AI_Retriever::register();
 
 	// Semantic-search admin: settings save/render + the build-index action.
 	Fahad_AI_Embeddings_Admin::register();
 
-	// Opt-in external vector backend (Qdrant) — no-op unless a URL is configured.
+	// Opt-in external vector backend (Qdrant), no-op unless a URL is configured.
 	Fahad_AI_Qdrant_Vector_Store::register();
 } );

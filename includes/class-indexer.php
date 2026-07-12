@@ -3,7 +3,7 @@
  * Embedding indexer + Action Scheduler sync (RAG Phase 1, S1.3, #106).
  *
  * Keeps the vector store in step with the catalog. Embedding is a network call,
- * so it is ALWAYS async (Action Scheduler) — never inline on a product save.
+ * so it is ALWAYS async (Action Scheduler), never inline on a product save.
  * A content-hash check means a save that did not change the embedded text (e.g.
  * a price-only edit) is a no-op, and a per-day cap protects the merchant's bill
  * during a bulk import (RAG-DESIGN.md §5.2, §5.3, §5.6).
@@ -46,7 +46,7 @@ final class Fahad_AI_Indexer {
 
 		$hash = Fahad_AI_Embedding_Document::content_hash( $doc );
 		if ( $hash === $this->store->content_hash( $product_id ) ) {
-			return false; // embedded text unchanged — a price/stock-only edit never re-embeds
+			return false; // embedded text unchanged, a price/stock-only edit never re-embeds
 		}
 
 		if ( ! $this->within_daily_cap() ) {
@@ -100,7 +100,7 @@ final class Fahad_AI_Indexer {
 			$product_ids = function_exists( 'wc_get_products' )
 				? (array) wc_get_products( [ 'return' => 'ids', 'status' => 'publish', 'limit' => -1 ] )
 				// @codeCoverageIgnoreStart
-				// Reason: the `: []` arm runs only when wc_get_products() is undefined; once any sibling test stubs it via Patchwork the definition lingers (PHP cannot undefine a function) so function_exists() reports true for the rest of the process — unreachable in the full suite.
+				// Reason: the `: []` arm runs only when wc_get_products() is undefined; once any sibling test stubs it via Patchwork the definition lingers (PHP cannot undefine a function) so function_exists() reports true for the rest of the process, unreachable in the full suite.
 				: [];
 				// @codeCoverageIgnoreEnd
 		}
@@ -145,7 +145,7 @@ final class Fahad_AI_Indexer {
 	/** Action Scheduler handler: embed one product (no-op without a provider). */
 	public static function handle_embed_action( $product_id ): void {
 		if ( ! Fahad_AI_Embeddings::enabled() ) {
-			return; // semantic search off — don't embed
+			return; // semantic search off, don't embed
 		}
 		$provider = Fahad_AI_Embeddings::provider();
 		if ( ! $provider || ! $provider->is_available() ) {

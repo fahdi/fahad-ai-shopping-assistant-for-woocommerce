@@ -6,7 +6,7 @@
  *  - compare():      keyword/vector/hybrid recall@k over a catalog + golden queries
  *                    (the relevance gate, reusing the tested primitives).
  *  - scan_latency():  a synthetic brute-force cosine scan over packed float32 BLOBs
- *                    — the exact per-row work the MySQL default backend does — to
+ *                   , the exact per-row work the MySQL default backend does, to
  *                    project latency at catalog sizes the demo store can't reach.
  *
  * Spike-only: no shipped tool or UI (RAG-DESIGN.md §7.5 Phase 0 is a gated decision).
@@ -57,8 +57,8 @@ final class Fahad_AI_Rag_Spike {
 	 * Project brute-force scan latency at a given catalog size.
 	 *
 	 * Builds $size deterministic float32 BLOBs (the real storage form, ~2 KB each
-	 * at 512 dims) and times unpack + cosine across the whole set — the exact work
-	 * a query does in the MySQL default backend — for $trials query vectors.
+	 * at 512 dims) and times unpack + cosine across the whole set, the exact work
+	 * a query does in the MySQL default backend, for $trials query vectors.
 	 *
 	 * @return array{size:int,dim:int,trials:int,p50_ms:float,p95_ms:float}
 	 */

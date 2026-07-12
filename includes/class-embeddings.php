@@ -13,7 +13,7 @@ final class Fahad_AI_Embeddings {
 
 	/**
 	 * Whether semantic search is switched on. Embeddings cost money, so a chat-only
-	 * OpenAI key must not silently incur them — semantic search is opt-in (S1.5).
+	 * OpenAI key must not silently incur them, semantic search is opt-in (S1.5).
 	 */
 	public static function enabled(): bool {
 		return (bool) get_option( 'fahad_ai_embeddings_enabled', 0 );

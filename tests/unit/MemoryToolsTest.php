@@ -1,7 +1,7 @@
 <?php
 /**
  * Unit tests for Fahad_AI_Memory_Tools (issue #20: personalization & cross-session
- * memory — strictly OPT-IN).
+ * memory, strictly OPT-IN).
  *
  * Red → Green → Refactor. Conventions mirror OrderToolsTest / WalletToolsTest (the
  * other personal packs): WP functions mocked via Brain\Monkey; the registry
@@ -9,19 +9,19 @@
  * inherits another suite's packs nor leaks the memory pack we register.
  *
  * The memory tools (set_memory_consent, remember_preference, get_preferences,
- * forget_preferences) are NOT built-ins — they ship as a drop-in feature pack that
+ * forget_preferences) are NOT built-ins, they ship as a drop-in feature pack that
  * self-registers via Fahad_AI_Tool_Registry::register_pack() at file load and declare
  * `'personal' => true`. Every test registers the pack's REAL provider, then dispatches
- * through Fahad_AI_Tool_Registry::instance()->dispatch() — so the production
+ * through Fahad_AI_Tool_Registry::instance()->dispatch(), so the production
  * registration + merge + dispatch path (INCLUDING the central login gate for
  * `personal` tools) is what is under test.
  *
  * PRIVACY/CONSENT IS THE POINT. The highest-severity tests are first-class:
  *   - NO CONSENT → NO STORAGE: remember_preference WITHOUT opt-in stores nothing and
- *     returns a needs-consent message — update_user_meta for the preferences key is
+ *     returns a needs-consent message, update_user_meta for the preferences key is
  *     NEVER called.
  *   - GUEST-BLOCK: a guest dispatching any memory tool is stopped centrally by the
- *     registry's login gate BEFORE the callback runs — user meta is NEVER touched.
+ *     registry's login gate BEFORE the callback runs, user meta is NEVER touched.
  *   - CURRENT-USER-ONLY: every read/write targets the current user id; a user id
  *     supplied in the model input is ignored.
  *   - VIEW + ERASURE: with consent a preference is stored, get_preferences returns it,
@@ -41,7 +41,7 @@ class MemoryToolsTest extends TestCase {
      * Snapshot of the registry's static pack providers, restored in tearDown so a
      * test here neither inherits another suite's packs nor leaks the memory pack we
      * register. (Pack providers are static so they survive a singleton instance
-     * reset — see Fahad_AI_Tool_Registry::register_pack.)
+     * reset, see Fahad_AI_Tool_Registry::register_pack.)
      *
      * @var array<int, callable>
      */
@@ -50,7 +50,7 @@ class MemoryToolsTest extends TestCase {
     /**
      * In-memory stand-in for WordPress user meta, keyed by "{$user_id}:{$key}".
      * get_user_meta / update_user_meta / delete_user_meta are stubbed to read/write
-     * this array so a test can assert exactly what the tools persisted — and, for the
+     * this array so a test can assert exactly what the tools persisted, and, for the
      * no-consent test, that nothing was persisted at all.
      *
      * @var array<string, mixed>
@@ -105,7 +105,7 @@ class MemoryToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the memory tools.
      *
      * Resets the Tools + registry singletons, then registers the memory pack's REAL
-     * provider via register_pack() — exactly what the pack's file-scope
+     * provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production.
      */
     private function registry(): Fahad_AI_Tool_Registry {
@@ -173,7 +173,7 @@ class MemoryToolsTest extends TestCase {
     }
 
     public function test_set_memory_consent_uses_current_user_not_model_supplied_id(): void {
-        // A confused/malicious model passes someone else's user_id. It MUST be ignored —
+        // A confused/malicious model passes someone else's user_id. It MUST be ignored , 
         // consent is written only for the authenticated current user (5).
         $this->registry()->dispatch( 'set_memory_consent', [ 'enabled' => true, 'user_id' => 9999 ] );
 
@@ -181,13 +181,13 @@ class MemoryToolsTest extends TestCase {
         $this->assertArrayNotHasKey( '9999:fahad_ai_memory_optin', $this->meta );
     }
 
-    // ── remember_preference — THE consent gate (no consent → no storage) ────────
+    // ── remember_preference, THE consent gate (no consent → no storage) ────────
 
     /**
      * THE headline privacy test: NO CONSENT → NO STORAGE.
      *
      * The current user has NOT opted in. remember_preference must refuse, return a
-     * clear needs-consent message, and write NOTHING — update_user_meta for the
+     * clear needs-consent message, and write NOTHING, update_user_meta for the
      * preferences key is never called. Without the consent gate this fails: the tool
      * would persist a preference the user never agreed to store.
      */
@@ -269,7 +269,7 @@ class MemoryToolsTest extends TestCase {
         }
         $this->meta['5:fahad_ai_preferences'] = $full;
 
-        // One more NEW key must be refused (the map is full) — never grow unbounded.
+        // One more NEW key must be refused (the map is full), never grow unbounded.
         $result = $this->registry()->dispatch( 'remember_preference', [ 'key' => 'overflow', 'value' => 'x' ] );
 
         $this->assertArrayHasKey( 'error', $result );
@@ -342,7 +342,7 @@ class MemoryToolsTest extends TestCase {
 
         $result = $this->registry()->dispatch( 'get_preferences', [ 'user_id' => 9999 ] );
 
-        // Only the current user's (5) prefs come back — never user 9999's.
+        // Only the current user's (5) prefs come back, never user 9999's.
         $this->assertSame( [ 'mine' => 'yes' ], $result['preferences'] );
         $this->assertStringNotContainsString( 'secret', json_encode( $result ) );
     }
@@ -402,7 +402,7 @@ class MemoryToolsTest extends TestCase {
     /**
      * A guest dispatching ANY memory tool must be stopped CENTRALLY by the registry's
      * login gate, before the tool callback runs. We assert the standard login-required
-     * error AND — critically — that user meta is NEVER read or written, proving the
+     * error AND, critically, that user meta is NEVER read or written, proving the
      * callback was never reached. Mirrors OrderToolsTest / WalletToolsTest guest-block.
      *
      * @dataProvider memoryToolProvider
@@ -411,7 +411,7 @@ class MemoryToolsTest extends TestCase {
         Functions\when( 'is_user_logged_in' )->justReturn( false );
         Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
-        // If the callback were reached it would touch user meta — these must NOT be hit.
+        // If the callback were reached it would touch user meta, these must NOT be hit.
         Functions\expect( 'get_user_meta' )->never();
         Functions\expect( 'update_user_meta' )->never();
         Functions\expect( 'delete_user_meta' )->never();
@@ -439,7 +439,7 @@ class MemoryToolsTest extends TestCase {
 
     // ── CONTEXT INJECTION via the fahad_ai_system_prompt filter ─────────────────
     // The pack hooks the `fahad_ai_system_prompt` filter (issue #20) to APPEND a
-    // compact preferences block — but ONLY for a logged-in, opted-in user with stored
+    // compact preferences block, but ONLY for a logged-in, opted-in user with stored
     // prefs. For a guest, an opted-out user, or empty prefs it must return the prompt
     // UNCHANGED. We exercise the pack's filter callback directly (the same callable it
     // registers via add_filter at file scope) so the injection contract is proven

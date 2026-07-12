@@ -4,7 +4,7 @@
  *
  *  - The OpenAI-compatible provider takes a configurable base URL, so embeddings
  *    can point at ANY OpenAI-compatible endpoint (OpenAI, Moonshot, Together, a
- *    self-hosted server) with that endpoint's key — not just OpenAI.
+ *    self-hosted server) with that endpoint's key, not just OpenAI.
  *  - A Cohere provider (embed-multilingual-v3.0) for stronger non-Latin scripts.
  *  - The factory selects the provider from settings.
  */

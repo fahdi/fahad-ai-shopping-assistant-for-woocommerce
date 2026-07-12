@@ -4,16 +4,16 @@
  *
  * Red → Green → Refactor. Conventions mirror RecommendationToolsTest /
  * ComparisonToolsTest: WP/WC functions mocked via Brain\Monkey; WC objects via
- * Mockery; singletons reset via reflection (never setAccessible() — a deprecated
+ * Mockery; singletons reset via reflection (never setAccessible(), a deprecated
  * no-op on PHP 8.5); the registry's static pack-provider list snapshotted in setUp
  * and restored in tearDown so this suite neither inherits another suite's packs nor
  * leaks its own.
  *
- * get_bundle is NOT a built-in — it ships as a drop-in feature pack that
+ * get_bundle is NOT a built-in, it ships as a drop-in feature pack that
  * self-registers a provider via Fahad_AI_Tool_Registry::register_pack() at file
  * load. Every test registers the bundle pack's REAL provider through
  * register_pack(), then dispatches through Fahad_AI_Tool_Registry::instance()->dispatch()
- * — so the production registration + merge + dispatch path is what is under test.
+ *, so the production registration + merge + dispatch path is what is under test.
  *
  * The honesty invariants the issue demands are asserted directly: the combined
  * price equals the REAL sum of item prices; a discount is surfaced ONLY when the
@@ -71,7 +71,7 @@ class BundleToolsTest extends TestCase {
      * Fresh registry whose built tool list includes the bundle tool.
      *
      * Resets the Tools + registry singletons, then registers the bundle pack's REAL
-     * provider via register_pack() — exactly what the pack's file-scope
+     * provider via register_pack(), exactly what the pack's file-scope
      * self-registration does in production. Registered explicitly (after clearing
      * the static list) so the test is hermetic and order-independent.
      */
@@ -136,7 +136,7 @@ class BundleToolsTest extends TestCase {
         $names = array_column( $this->registry()->specs(), 'name' );
 
         $this->assertContains( 'get_bundle', $names );
-        // Additive — the five built-ins remain.
+        // Additive, the five built-ins remain.
         $this->assertContains( 'search_products', $names );
     }
 
@@ -153,7 +153,7 @@ class BundleToolsTest extends TestCase {
     }
 
     public function test_bundle_tool_is_not_personal(): void {
-        // Operates on the shared catalog only, so it must NOT be login-gated — a
+        // Operates on the shared catalog only, so it must NOT be login-gated, a
         // guest can ask "what goes with this?". (Private members are
         // reflection-accessible by default since PHP 8.1, so no setAccessible().)
         $map = ( new ReflectionMethod( Fahad_AI_Tool_Registry::class, 'get_tools' ) )->invoke( $this->registry() );
@@ -166,7 +166,7 @@ class BundleToolsTest extends TestCase {
 
     public function test_combined_price_equals_the_real_sum_of_item_prices(): void {
         // Anchor + two cross-sell items; combined price must be the exact sum of the
-        // three real item prices — nothing rounded away or invented.
+        // three real item prices, nothing rounded away or invented.
         $anchor = $this->mockProduct( 1, 'Jacket', '100.00', [ 'cross_sell_ids' => [ 2, 3 ] ] );
         $shirt  = $this->mockProduct( 2, 'Shirt', '40.00' );
         $belt   = $this->mockProduct( 3, 'Belt', '25.50' );
@@ -215,7 +215,7 @@ class BundleToolsTest extends TestCase {
 
     public function test_no_savings_reported_when_nothing_is_on_sale(): void {
         // Honesty invariant: when every item is at its regular price there is NO
-        // bundle discount. The tool must not invent one — savings is zero/absent and
+        // bundle discount. The tool must not invent one, savings is zero/absent and
         // the combined price equals the regular total.
         $anchor = $this->mockProduct( 1, 'Jacket', '100.00', [ 'cross_sell_ids' => [ 2 ] ] );
         $shirt  = $this->mockProduct( 2, 'Shirt', '40.00' );
@@ -332,7 +332,7 @@ class BundleToolsTest extends TestCase {
 
     public function test_budget_too_small_for_even_the_anchor_refuses_the_bundle(): void {
         // If the base item alone already exceeds the budget, there is no bundle that
-        // fits — the tool must NOT propose one over budget.
+        // fits, the tool must NOT propose one over budget.
         $anchor = $this->mockProduct( 1, 'Jacket', '100.00', [ 'cross_sell_ids' => [ 2 ] ] );
         $shirt  = $this->mockProduct( 2, 'Shirt', '40.00' );
         $this->stubLookup( [ 1 => $anchor, 2 => $shirt ] );
@@ -363,7 +363,7 @@ class BundleToolsTest extends TestCase {
     public function test_bundle_items_render_as_cards_not_a_comparison(): void {
         // The items ride under the canonical `products` key so the API handler's
         // convention-based emitter renders them as ordinary product cards with no
-        // shared-file edits — and the result carries NO `attributes` key, so it is
+        // shared-file edits, and the result carries NO `attributes` key, so it is
         // never mistaken for a comparison table (which is products[] + attributes[]).
         $anchor = $this->mockProduct( 1, 'Jacket', '100.00', [ 'cross_sell_ids' => [ 2 ] ] );
         $shirt  = $this->mockProduct( 2, 'Shirt', '40.00' );
@@ -383,7 +383,7 @@ class BundleToolsTest extends TestCase {
 
     public function test_no_complementary_items_yields_empty_bundle(): void {
         // A product with no grouped children and no cross-sells has nothing to bundle
-        // with — a one-item "bundle" is not a bundle, so return a graceful empty state.
+        // with, a one-item "bundle" is not a bundle, so return a graceful empty state.
         $anchor = $this->mockProduct( 1, 'Lonely Jacket', '100.00' );
         $this->stubLookup( [ 1 => $anchor ] );
 

@@ -13,11 +13,11 @@
  * itself to fail AFTER the tool's own email/product guards pass. The realistic,
  * grounded way is the storage cap: with MAX_SUBSCRIPTIONS rows already stored, a
  * NEW (non-deduped) watch is refused by the store with { ok:false, error:... },
- * and the tool must report that error verbatim — never invent a success.
+ * and the tool must report that error verbatim, never invent a success.
  *
  * Conventions mirror the sibling: Brain\Monkey for WP/WC functions, Mockery for the
  * WC_Product, the registry static pack list snapshotted/restored, and the store
- * singleton reset by reflection (NEVER ReflectionMethod::setAccessible — PHP 8.5).
+ * singleton reset by reflection (NEVER ReflectionMethod::setAccessible, PHP 8.5).
  */
 
 use Brain\Monkey;
@@ -80,7 +80,7 @@ class CoverageStockAlertToolsTest extends TestCase {
 
 	/**
 	 * Fresh registry whose built tool list includes the stock-alert tool, plus a
-	 * fresh store singleton — exactly what the file-scope self-registration does in
+	 * fresh store singleton, exactly what the file-scope self-registration does in
 	 * production.
 	 */
 	private function registry(): Fahad_AI_Tool_Registry {
@@ -137,7 +137,7 @@ class CoverageStockAlertToolsTest extends TestCase {
 
 	/**
 	 * Lines 146-148. The email is valid and the product exists & is out of stock, so
-	 * every tool-level guard passes — but the store is at its hard subscription cap,
+	 * every tool-level guard passes, but the store is at its hard subscription cap,
 	 * so subscribe() returns { ok:false, error:... } for the NEW watch. The tool must
 	 * surface that store error verbatim, with NO `subscribed` flag and nothing new
 	 * stored.
@@ -153,7 +153,7 @@ class CoverageStockAlertToolsTest extends TestCase {
 		] );
 
 		// The store's own error message is passed through (the cap message), and the
-		// tool reports a failure — never a fabricated success.
+		// tool reports a failure, never a fabricated success.
 		$this->assertArrayHasKey( 'error', $res );
 		$this->assertSame(
 			'Alerts are temporarily unavailable. Please try again later.',
@@ -162,7 +162,7 @@ class CoverageStockAlertToolsTest extends TestCase {
 		$this->assertArrayNotHasKey( 'subscribed', $res );
 		$this->assertArrayNotHasKey( 'pending', $res );
 
-		// Nothing new was stored — the row count is still exactly the cap. Assert the
+		// Nothing new was stored, the row count is still exactly the cap. Assert the
 		// integer count (not assertCount on the 5000-row array), so PHPUnit's assertion
 		// event does not recursively export the whole array and exhaust memory under
 		// coverage collection.
@@ -174,7 +174,7 @@ class CoverageStockAlertToolsTest extends TestCase {
 	/**
 	 * The tool falls back to its OWN generic error message only when the store fails
 	 * WITHOUT supplying an `error` string. Reached by stubbing the store option to a
-	 * non-array via get_option so... no — the store always sets an error. Instead this
+	 * non-array via get_option so... no, the store always sets an error. Instead this
 	 * asserts the `??` fallback default is wired: when the store error is the cap
 	 * message it is used (covered above); here we assert the failure branch returns a
 	 * non-empty human error in every case, proving the tool never returns an empty

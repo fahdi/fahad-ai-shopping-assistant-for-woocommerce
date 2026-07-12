@@ -10,7 +10,7 @@
  * the standard login-required error. Personalization is strictly OPT-IN and per-user,
  * so there is nothing a guest (id 0) can consent to or have remembered. The model,
  * seeing it cannot store anything for an unauthenticated visitor, must escalate the
- * guest to log in and — the privacy point of the feature — persist NOTHING and invent
+ * guest to log in and, the privacy point of the feature, persist NOTHING and invent
  * no "saved" confirmation. This fixture asserts exactly that grounded escalation,
  * end-to-end through the real agent loop.
  *
@@ -24,8 +24,8 @@
  * tests/stubs/wc-stubs.php because doing so would break Brain\Monkey's Functions\when()
  * override of it in the unit suites (Patchwork "DefinedTooEarly").
  *
- * So the gate-blocks-the-guest-before-the-callback guarantee — and the no-consent →
- * no-storage privacy guarantee — are proven where auth can be stubbed:
+ * So the gate-blocks-the-guest-before-the-callback guarantee, and the no-consent →
+ * no-storage privacy guarantee, are proven where auth can be stubbed:
  *   - tests/unit/MemoryToolsTest.php → test_guest_is_blocked_before_a_memory_tool_callback_runs
  *     (drives the REAL registry dispatch as a guest for ALL FOUR memory tools; asserts the
  *      login-required error and that user meta is NEVER read or written).
@@ -47,7 +47,7 @@ return [
 	'wc'       => [],
 	'script'   => [
 		// The model cannot store anything for an unauthenticated visitor, so it does not
-		// claim to remember the preference — it escalates the guest to log in (a grounded
+		// claim to remember the preference, it escalates the guest to log in (a grounded
 		// escalate) and offers to save it once they are signed in.
 		EvalHarness::anthropic_text_turn(
 			'I would be happy to remember that for you, but first you will need to log in to your account so your preferences can be saved to it securely. Once you are signed in, just let me know and I can remember it (you can clear it anytime).'

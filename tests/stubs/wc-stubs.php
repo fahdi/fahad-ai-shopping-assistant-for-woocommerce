@@ -1,7 +1,7 @@
 <?php
 /**
  * Minimal WooCommerce class stubs for unit tests.
- * These exist only so PHP resolves type hints — real behaviour is mocked via Mockery.
+ * These exist only so PHP resolves type hints, real behaviour is mocked via Mockery.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // WordPress time constant. Defined here for the unit tests (which don't bootstrap WP);
-// the returns tools (issue #53) use it for return-window math. Additive — guarded so it
+// the returns tools (issue #53) use it for return-window math. Additive, guarded so it
 // never collides with a real WP define.
 if ( ! defined( 'DAY_IN_SECONDS' ) ) {
     define( 'DAY_IN_SECONDS', 86400 );
@@ -67,7 +67,7 @@ if ( ! class_exists( 'WP_REST_Response' ) ) {
     }
 }
 
-// Gettext stubs for tests — pass through the original string.
+// Gettext stubs for tests, pass through the original string.
 if ( ! function_exists( '__' ) ) {
     function __( string $text, string $domain = '' ): string { return $text; }
 }
@@ -137,7 +137,7 @@ if ( ! class_exists( 'WC_Product' ) ) {
         // Arbitrary product meta. Read by the size/fit advisor (issue #54) to
         // surface any size-chart meta a product stores, and by the eval harness's
         // makePartial() product mock so a fixture that sets no meta falls through to
-        // a safe empty default — the same pattern the rating getters above use. The
+        // a safe empty default, the same pattern the rating getters above use. The
         // WC_Order stub already declares an identical signature for the same reason.
         public function get_meta( string $key = '', bool $single = true ) { return ''; }
     }
@@ -163,7 +163,7 @@ if ( ! class_exists( 'WC_Cart' ) ) {
 // Coupon stub so the coupon tools (issue #14) can be unit tested with per-instance
 // Mockery mocks (Mockery::mock( WC_Coupon::class )). Only the getters the tools
 // read are declared; real behaviour is mocked. NOTE: WC_Discounts is intentionally
-// NOT stubbed here — the cart-applicability test overloads it (overload: requires
+// NOT stubbed here, the cart-applicability test overloads it (overload: requires
 // the class to be undefined), so leaving it absent is deliberate.
 if ( ! class_exists( 'WC_Coupon' ) ) {
     class WC_Coupon {
@@ -189,7 +189,7 @@ if ( ! class_exists( 'WC_Coupon' ) ) {
 // Order stub so the order-status tools (issue #17) can be unit tested with
 // per-instance Mockery mocks (Mockery::mock( WC_Order::class )). Only the getters
 // the tools read are declared; real behaviour is mocked per-test. NOTE: the lookup
-// FUNCTIONS wc_get_orders()/wc_get_order() are intentionally NOT defined here —
+// FUNCTIONS wc_get_orders()/wc_get_order() are intentionally NOT defined here , 
 // they are stubbed per-test via Brain\Monkey (Functions\when), exactly like
 // wc_get_products()/wc_get_product(). Defining them at global scope in this
 // bootstrap-loaded file would make Brain\Monkey throw "DefinedTooEarly" the moment a
@@ -209,11 +209,11 @@ if ( ! class_exists( 'WC_Order' ) ) {
         public function get_meta( string $key = '', bool $single = true ) { return ''; }
         public function get_billing_email(): string         { return ''; }
         // RMA recording (issue #53: returns/exchange). The returns tools persist a return
-        // REQUEST as order meta + a best-effort order note — and NEVER touch money. Declared
+        // REQUEST as order meta + a best-effort order note, and NEVER touch money. Declared
         // so a Mockery WC_Order mock can stub them (Mockery intercepts declared methods);
         // the methods that would mutate money/status (set_status, payment_complete, refunds)
         // are deliberately NOT declared here, so the suite's ->never() money-safety
-        // assertions hold and a stray call would surface loudly. Additive — every existing
+        // assertions hold and a stray call would surface loudly. Additive, every existing
         // getter above is untouched.
         public function update_meta_data( string $key, $value, $meta_id = 0 ): void {}
         public function save(): int { return 0; }
@@ -226,8 +226,8 @@ if ( ! class_exists( 'WC_Order' ) ) {
 // behind one overridable seam, so the UNIT tests stub it via a subclass and never
 // touch these classes. They exist for the EVAL fixture (tests/eval/fixtures/shipping.php),
 // which drives the REAL tool end-to-end: there is no harness hook to inject zones,
-// so the tool reads them from this static stub. The data is deliberately fixed —
-// one flat_rate method at 5.00 with NO delivery window — so the eval can assert a
+// so the tool reads them from this static stub. The data is deliberately fixed , 
+// one flat_rate method at 5.00 with NO delivery window, so the eval can assert a
 // GROUNDED cost ($5.00 appears in the tool result) and that no delivery date is
 // invented (WooCommerce core has none). Only Fahad_AI_Shipping_Tools reads these,
 // so a fixed return is safe for the rest of the suite.
@@ -281,7 +281,7 @@ if ( ! class_exists( 'WC_Shipping_Zones' ) ) {
     class WC_Shipping_Zones {
         /**
          * Match a package to a shipping zone. The stub returns a single zone
-         * offering one flat_rate method costing 5.00 with no delivery window — a
+         * offering one flat_rate method costing 5.00 with no delivery window, a
          * deterministic, grounded shape for the eval fixture.
          *
          * @param array $package WC shipping package (destination + contents).

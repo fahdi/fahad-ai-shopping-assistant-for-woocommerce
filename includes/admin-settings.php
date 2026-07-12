@@ -16,8 +16,8 @@ function fahad_ai_settings_capability(): string {
  * Sanitize the merchant tone/persona setting to the fixed allowlist (issue #56).
  *
  * The tone maps to a vetted instruction line in the system prompt, so only the known
- * keys (Fahad_AI_API_Handler::TONES) are accepted; anything else — including any
- * attempt to type a free-form instruction — collapses to '' (no tone line).
+ * keys (Fahad_AI_API_Handler::TONES) are accepted; anything else, including any
+ * attempt to type a free-form instruction, collapses to '' (no tone line).
  *
  * @param mixed $raw Raw POST value.
  * @return string A valid tone key, or ''.
@@ -31,8 +31,8 @@ function fahad_ai_sanitize_tone( $raw ): string {
  * Sanitize the selected AI provider to a known catalog id (issue: multi-provider).
  *
  * The provider <select> is built from Fahad_AI_Providers::catalog(), so only an id
- * the catalog actually declares is accepted; anything else — including a tampered
- * value — collapses to the safe default 'anthropic'. This keeps routing keyed on a
+ * the catalog actually declares is accepted; anything else, including a tampered
+ * value, collapses to the safe default 'anthropic'. This keeps routing keyed on a
  * real preset (handle_message looks the id up in the catalog).
  *
  * @param mixed $raw Raw POST value.
@@ -49,8 +49,8 @@ function fahad_ai_sanitize_provider( $raw ): string {
  * The value is either the token 'auto' (detect the shopper's language and match it
  * across the supported set) or a short, human-readable list of languages the merchant
  * wants the assistant to favour (e.g. "English, Urdu"). It is folded into the system
- * prompt as advisory text — it sits BEFORE the absolute guardrails, so it can never
- * weaken the trust policy — but it is still sanitized to a single plain-text line.
+ * prompt as advisory text, it sits BEFORE the absolute guardrails, so it can never
+ * weaken the trust policy, but it is still sanitized to a single plain-text line.
  * An empty value collapses to 'auto' (the safe default).
  *
  * @param mixed $raw Raw POST value.
@@ -141,7 +141,7 @@ function fahad_ai_analytics_parse_date( string $date, bool $end_of_day ): ?int {
  * Renders the privacy-safe aggregates from Fahad_AI_Analytics for a selectable date
  * range: top questions, the "questions we couldn't answer" list, the chat →
  * add-to-cart → order funnel, and cost per conversation. Also hosts the retention
- * controls — an opt-out toggle, an Export (download) and a Delete-all — each a
+ * controls, an opt-out toggle, an Export (download) and a Delete-all, each a
  * nonce-protected POST routed through admin-post.php. Gated by the same capability as
  * the settings page (manage_woocommerce, falling back to manage_options), re-checked
  * here as defence in depth.
@@ -250,7 +250,7 @@ function fahad_ai_analytics_page(): void {
 		<h2><?php esc_html_e( 'Questions we couldn\'t answer', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 		<p class="description" style="max-width:55em;"><?php esc_html_e( 'Turns where the assistant abstained, escalated to support, or had no matching action. These are your content and coverage opportunities.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
 		<?php if ( empty( $unanswered ) ) : ?>
-			<p class="description"><?php esc_html_e( 'Nothing here for this range — the assistant answered everything it was asked.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Nothing here for this range, the assistant answered everything it was asked.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
 		<?php else : ?>
 			<table class="widefat striped" style="max-width:55em;">
 				<thead><tr>
@@ -333,7 +333,7 @@ function fahad_ai_analytics_format_time( int $ts ): string {
  * Given the OPAQUE conversation refs whose conversations reached add-to-cart, returns
  * how many converted to a real WooCommerce order. The current build records no
  * order↔conversation link (the message endpoint carries no conversation token), so a
- * faithful, NON-fabricated answer is 0 attributable orders — we return 0 rather than
+ * faithful, NON-fabricated answer is 0 attributable orders, we return 0 rather than
  * inventing a number. A future change that stamps the conversation ref onto the order
  * (e.g. via order meta at checkout) can implement real attribution here without
  * touching the store or the dashboard. Filterable so an integration can supply it.
@@ -451,10 +451,10 @@ function fahad_ai_settings_page(): void {
 			update_option( $preset['model_option'], '' !== $model ? $model : (string) $preset['default_model'] );
 		}
 
-		// Moonshot region (global vs. china — separate platforms/keys/catalogues).
+		// Moonshot region (global vs. china, separate platforms/keys/catalogues).
 		update_option( 'fahad_ai_moonshot_region', 'china' === sanitize_text_field( wp_unslash( $_POST['moonshot_region'] ?? 'global' ) ) ? 'china' : 'global' );
 
-		// Custom provider base URL — validated to https (or a localhost http) and
+		// Custom provider base URL, validated to https (or a localhost http) and
 		// otherwise dropped to '' (Fahad_AI_Providers::sanitize_base_url). Never trusted
 		// as a raw string: it becomes part of the outbound request target.
 		update_option( 'fahad_ai_custom_base_url', Fahad_AI_Providers::sanitize_base_url( sanitize_text_field( wp_unslash( $_POST['custom_base_url'] ?? '' ) ) ) );
@@ -492,7 +492,7 @@ function fahad_ai_settings_page(): void {
 
 		// WhatsApp omnichannel channel (issue #62). Default OFF (opt-in). The verify token
 		// and app secret are SECRETS used only server-side (the webhook handshake + the
-		// inbound HMAC) — sanitized as plain text, never localized to the client or fed to
+		// inbound HMAC), sanitized as plain text, never localized to the client or fed to
 		// the model. Going live also needs a provider for the outbound send seam + Meta
 		// access tokens (held by that provider), which are intentionally out of core.
 		update_option( 'fahad_ai_whatsapp_enabled',      empty( $_POST['whatsapp_enabled'] ) ? 0 : 1 );
@@ -600,13 +600,13 @@ function fahad_ai_settings_page(): void {
 						<td>
 							<select id="anthropic_model" name="anthropic_model">
 								<option value="claude-haiku-4-5-20251001" <?php selected( $anthropic_model, 'claude-haiku-4-5-20251001' ); ?>>
-									<?php esc_html_e( 'Claude Haiku — Fast & affordable (recommended)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Claude Haiku, Fast & affordable (recommended)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 								</option>
 								<option value="claude-sonnet-4-6" <?php selected( $anthropic_model, 'claude-sonnet-4-6' ); ?>>
-									<?php esc_html_e( 'Claude Sonnet — Balanced performance', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Claude Sonnet, Balanced performance', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 								</option>
 								<option value="claude-opus-4-6" <?php selected( $anthropic_model, 'claude-opus-4-6' ); ?>>
-									<?php esc_html_e( 'Claude Opus — Most capable', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+									<?php esc_html_e( 'Claude Opus, Most capable', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 								</option>
 							</select>
 						</td>
@@ -619,8 +619,8 @@ function fahad_ai_settings_page(): void {
 						<th scope="row"><label for="moonshot_region"><?php esc_html_e( 'Moonshot Region', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
 						<td>
 							<select id="moonshot_region" name="moonshot_region">
-								<option value="global" <?php selected( $moonshot_region, 'global' ); ?>><?php esc_html_e( 'Global — api.moonshot.ai (rest of world)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-								<option value="china"  <?php selected( $moonshot_region, 'china' );  ?>><?php esc_html_e( 'China — api.moonshot.cn', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+								<option value="global" <?php selected( $moonshot_region, 'global' ); ?>><?php esc_html_e( 'Global, api.moonshot.ai (rest of world)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+								<option value="china"  <?php selected( $moonshot_region, 'china' );  ?>><?php esc_html_e( 'China, api.moonshot.cn', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
 							</select>
 							<p class="description">
 								<?php esc_html_e( 'Choose the platform your API key was issued on. Keys and available models are not shared between the global and China platforms.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
@@ -649,13 +649,13 @@ function fahad_ai_settings_page(): void {
 						<td>
 							<select id="moonshot_model" name="moonshot_model">
 								<optgroup label="<?php esc_attr_e( 'Kimi K2', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>">
-									<option value="kimi-k2.6"              <?php selected( $moonshot_model, 'kimi-k2.6' );              ?>><?php esc_html_e( 'kimi-k2.6 — Latest, general (recommended)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-									<option value="kimi-k2.5"              <?php selected( $moonshot_model, 'kimi-k2.5' );              ?>><?php esc_html_e( 'kimi-k2.5 — General', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-									<option value="kimi-k2-thinking-turbo" <?php selected( $moonshot_model, 'kimi-k2-thinking-turbo' ); ?>><?php esc_html_e( 'kimi-k2-thinking-turbo — Reasoning (availability varies by region)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
-									<option value="kimi-k2-thinking"       <?php selected( $moonshot_model, 'kimi-k2-thinking' );       ?>><?php esc_html_e( 'kimi-k2-thinking — Reasoning (availability varies by region)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="kimi-k2.6"              <?php selected( $moonshot_model, 'kimi-k2.6' );              ?>><?php esc_html_e( 'kimi-k2.6, Latest, general (recommended)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="kimi-k2.5"              <?php selected( $moonshot_model, 'kimi-k2.5' );              ?>><?php esc_html_e( 'kimi-k2.5, General', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="kimi-k2-thinking-turbo" <?php selected( $moonshot_model, 'kimi-k2-thinking-turbo' ); ?>><?php esc_html_e( 'kimi-k2-thinking-turbo, Reasoning (availability varies by region)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="kimi-k2-thinking"       <?php selected( $moonshot_model, 'kimi-k2-thinking' );       ?>><?php esc_html_e( 'kimi-k2-thinking, Reasoning (availability varies by region)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
 								</optgroup>
 								<optgroup label="<?php esc_attr_e( 'Moonshot V1', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>">
-									<option value="moonshot-v1-auto"  <?php selected( $moonshot_model, 'moonshot-v1-auto' );  ?>><?php esc_html_e( 'moonshot-v1-auto — Auto context', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
+									<option value="moonshot-v1-auto"  <?php selected( $moonshot_model, 'moonshot-v1-auto' );  ?>><?php esc_html_e( 'moonshot-v1-auto, Auto context', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></option>
 									<option value="moonshot-v1-8k"    <?php selected( $moonshot_model, 'moonshot-v1-8k' );    ?>>moonshot-v1-8k</option>
 									<option value="moonshot-v1-32k"   <?php selected( $moonshot_model, 'moonshot-v1-32k' );   ?>>moonshot-v1-32k</option>
 									<option value="moonshot-v1-128k"  <?php selected( $moonshot_model, 'moonshot-v1-128k' );  ?>>moonshot-v1-128k</option>
@@ -710,7 +710,7 @@ function fahad_ai_settings_page(): void {
 								<input type="password" id="<?php echo esc_attr( $pid_key ); ?>" name="<?php echo esc_attr( $pid_key ); ?>"
 									value="<?php echo esc_attr( $saved_key ); ?>" class="regular-text" autocomplete="new-password">
 								<?php if ( $is_local ) : ?>
-									<p class="description"><?php esc_html_e( 'A local Ollama server usually needs no key — leave blank unless your setup requires one.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+									<p class="description"><?php esc_html_e( 'A local Ollama server usually needs no key, leave blank unless your setup requires one.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
 								<?php endif; ?>
 							</td>
 						</tr>
@@ -847,7 +847,7 @@ function fahad_ai_settings_page(): void {
 										<input type="checkbox" name="disabled_tools[]" value="<?php echo esc_attr( $tool_name ); ?>"
 											<?php checked( in_array( $tool_name, $disabled_tools, true ) ); ?>>
 										<code><?php echo esc_html( $tool_name ); ?></code>
-										<span class="description"> — <?php echo esc_html( $tool_desc ); ?></span>
+										<span class="description">, <?php echo esc_html( $tool_desc ); ?></span>
 									</label>
 								<?php endforeach; ?>
 								<p class="description" style="margin-top:8px;">
@@ -895,7 +895,7 @@ function fahad_ai_settings_page(): void {
 
 			<h2 class="title"><?php esc_html_e( 'Proactive Assist', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 			<p class="description" style="max-width:50em;">
-				<?php esc_html_e( 'When enabled, the assistant may show a single, dismissible message offering genuine help — but ONLY when there is real value to surface (a discount code that actually applies, or store credit the shopper has not used). It never invents urgency or scarcity, is capped per visit, and stops the moment a shopper dismisses it. Leave it off if you would rather the assistant only ever speaks when spoken to.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+				<?php esc_html_e( 'When enabled, the assistant may show a single, dismissible message offering genuine help, but ONLY when there is real value to surface (a discount code that actually applies, or store credit the shopper has not used). It never invents urgency or scarcity, is capped per visit, and stops the moment a shopper dismisses it. Leave it off if you would rather the assistant only ever speaks when spoken to.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 			</p>
 			<table class="form-table" role="presentation">
 				<tr>
@@ -946,7 +946,7 @@ function fahad_ai_settings_page(): void {
 
 			<h2 class="title"><?php esc_html_e( 'WhatsApp (beta)', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
 			<p class="description" style="max-width:50em;">
-				<?php esc_html_e( 'Let shoppers reach the assistant over WhatsApp. This is the webhook + verification scaffolding only: going live needs a WhatsApp Business (Meta Cloud API) account, and an outbound message provider to actually send replies. Configure the webhook below in your Meta app, using this callback URL and verify token. Personal account data stays available only to verified, logged-in customers — a WhatsApp number is treated as a guest.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Let shoppers reach the assistant over WhatsApp. This is the webhook + verification scaffolding only: going live needs a WhatsApp Business (Meta Cloud API) account, and an outbound message provider to actually send replies. Configure the webhook below in your Meta app, using this callback URL and verify token. Personal account data stays available only to verified, logged-in customers, a WhatsApp number is treated as a guest.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 			</p>
 			<table class="form-table" role="presentation">
 				<tr>

@@ -39,7 +39,7 @@ final class Fahad_AI_Tools {
 						'category'  => [ 'type' => 'string',  'description' => 'Category slug or name' ],
 						'min_price' => [ 'type' => 'number',  'description' => 'Minimum price' ],
 						'max_price' => [ 'type' => 'number',  'description' => 'Maximum price' ],
-						'on_sale'   => [ 'type' => 'boolean', 'description' => 'When true, return ONLY products that are currently on sale (a reduced price). Use this whenever the customer asks what is on sale, about deals, discounts, or clearance — it composes with category and price.' ],
+						'on_sale'   => [ 'type' => 'boolean', 'description' => 'When true, return ONLY products that are currently on sale (a reduced price). Use this whenever the customer asks what is on sale, about deals, discounts, or clearance, it composes with category and price.' ],
 						'limit'     => [ 'type' => 'integer', 'description' => 'Max results (default 5, max 10)' ],
 					],
 				],
@@ -47,7 +47,7 @@ final class Fahad_AI_Tools {
 			],
 			[
 				'name'        => 'get_product_details',
-				'description' => 'Get full details for a product — description, price, stock, variations.',
+				'description' => 'Get full details for a product, description, price, stock, variations.',
 				'parameters'  => [
 					'type'       => 'object',
 					'properties' => [
@@ -142,18 +142,18 @@ final class Fahad_AI_Tools {
 		$query = ! empty( $input['query'] ) ? sanitize_text_field( $input['query'] ) : '';
 
 		// Semantic retrieval seam (issue #60). When the shopper supplied free text,
-		// consult any registered semantic (embeddings/vector) retriever FIRST — it
+		// consult any registered semantic (embeddings/vector) retriever FIRST, it
 		// understands intent/synonyms ("shoes for flat feet") that the literal
 		// keyword search below misses. The retriever returns ranked product IDs;
 		// Fahad_AI_Semantic_Search resolves them LIVE (so price/stock are never
 		// cached) into the same card-shaped summaries. With no provider registered
-		// it returns [] and we fall straight through to keyword search unchanged —
+		// it returns [] and we fall straight through to keyword search unchanged , 
 		// the keyword leg is always the safety net (graceful degradation). A pure
 		// category/price browse (empty query) has no intent to embed, so it skips
 		// the seam entirely. See docs/RAG-DESIGN.md §4.3 / §5.4.
 		// Skip the semantic seam for an on-sale browse: "on sale" is a structured catalog
 		// filter, not an intent to embed, and the semantic summaries are ranked by meaning,
-		// not sale status — so we always resolve sale queries through the deterministic
+		// not sale status, so we always resolve sale queries through the deterministic
 		// keyword/catalog path below and filter on the live WC_Product::is_on_sale().
 		if ( '' !== $query && ! $only_sale ) {
 			$semantic = Fahad_AI_Semantic_Search::retrieve( $query, $this->semantic_filters( $base ) );
@@ -229,8 +229,8 @@ final class Fahad_AI_Tools {
 	/**
 	 * Project the parsed wc_get_products args into the structured constraint set the
 	 * semantic retriever receives (issue #60). The retriever is handed only the
-	 * filters that make sense for a vector pre-filter — category, price range and
-	 * limit — NOT the WooCommerce-internal keys (status/orderby), so a provider can
+	 * filters that make sense for a vector pre-filter, category, price range and
+	 * limit, NOT the WooCommerce-internal keys (status/orderby), so a provider can
 	 * narrow its scan and bound its result count without depending on WC query shape.
 	 *
 	 * @param array $base Base wc_get_products args built in search_products.
@@ -418,14 +418,14 @@ final class Fahad_AI_Tools {
 		foreach ( $attributes as $key => $value ) {
 			$value = (string) $value;
 			if ( '' === $value ) {
-				continue; // "Any <attribute>" — nothing specific to show.
+				continue; // "Any <attribute>", nothing specific to show.
 			}
 
 			$taxonomy = preg_replace( '/^attribute_/', '', (string) $key );
 			$name     = wc_attribute_label( $taxonomy );
 			$display  = $value;
 
-			// Global (taxonomy) attributes store a term slug — resolve to its name.
+			// Global (taxonomy) attributes store a term slug, resolve to its name.
 			if ( taxonomy_exists( $taxonomy ) ) {
 				$term = get_term_by( 'slug', $value, $taxonomy );
 				if ( $term && ! empty( $term->name ) ) {
@@ -453,7 +453,7 @@ final class Fahad_AI_Tools {
 			];
 		}
 
-		// When a variation is chosen, the variation — not the parent — is the source
+		// When a variation is chosen, the variation, not the parent, is the source
 		// of truth for stock and price. Load and validate it, then gate on ITS stock
 		// so a sold-out size/colour is rejected even if the parent reports in-stock.
 		$item = $product;

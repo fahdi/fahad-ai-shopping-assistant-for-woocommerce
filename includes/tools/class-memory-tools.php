@@ -2,33 +2,33 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Personalization & cross-session memory tools (issue #20) — strictly OPT-IN.
+ * Personalization & cross-session memory tools (issue #20), strictly OPT-IN.
  *
  * Remembers a LOGGED-IN customer's stated preferences across sessions, so the
  * assistant can be more relevant ("you usually shop for size large", "you prefer
  * blue"). Privacy is the whole point: NOTHING is stored, and NOTHING is injected
- * into the model context, until the customer has EXPLICITLY consented — and they can
+ * into the model context, until the customer has EXPLICITLY consented, and they can
  * view and clear everything at any time.
  *
  * A drop-in feature pack (same pattern as Fahad_AI_Order_Tools / Fahad_AI_Wallet_Tools):
  * a self-contained class in its own file under includes/tools/ that self-registers a
  * provider at the bottom via Fahad_AI_Tool_Registry::register_pack(), AND hooks the
  * `fahad_ai_system_prompt` filter for context injection. The bootstrap (and the test
- * bootstrap) glob-require everything here, so adding this pack is a SINGLE new file —
+ * bootstrap) glob-require everything here, so adding this pack is a SINGLE new file , 
  * no edits to the bootstrap, the test bootstrap, the registry, or the agent loop.
  *
  * Tools provided (all `'personal' => true`):
- *   - set_memory_consent  — explicit opt-in / opt-out, stored in user meta.
- *   - remember_preference — store a stated preference. REFUSES without consent.
- *   - get_preferences     — view what is remembered + the consent state.
- *   - forget_preferences  — clear all stored preferences (and optionally consent).
+ *   - set_memory_consent , explicit opt-in / opt-out, stored in user meta.
+ *   - remember_preference, store a stated preference. REFUSES without consent.
+ *   - get_preferences    , view what is remembered + the consent state.
+ *   - forget_preferences , clear all stored preferences (and optionally consent).
  *
  * ─── CONSENT MODEL: opt-in GATES storage ───────────────────────────────────────────
  *
  * Consent is a boolean flag in the FAHAD_AI_OPTIN_META user-meta key, set ONLY by
  * set_memory_consent (which the model is instructed to call only when the customer
  * clearly agrees). remember_preference reads that flag FIRST and, when the user has not
- * opted in, returns a clear `needs_consent` message and writes NOTHING — there is no
+ * opted in, returns a clear `needs_consent` message and writes NOTHING, there is no
  * code path that persists a preference without a recorded opt-in. Erasure
  * (forget_preferences) is always available, even after opting out.
  *
@@ -36,7 +36,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * inject_preferences() is hooked to the `fahad_ai_system_prompt` filter (issue #20), so
  * a compact, clearly-labelled preferences block is APPENDED to the model context for a
- * logged-in, opted-in customer with stored prefs — WITHOUT editing the agent-loop
+ * logged-in, opted-in customer with stored prefs, WITHOUT editing the agent-loop
  * methods (run_anthropic_agent / run_openai_agent / run_stream_agent). For a guest, an
  * opted-out user, or an empty map it appends nothing (returns the prompt unchanged). The
  * block is BOUNDED by the same caps as storage (MAX_PREFERENCES lines, each value
@@ -46,7 +46,7 @@ defined( 'ABSPATH' ) || exit;
  *
  *   1. CENTRAL LOGIN GATE. All four tools declare `'personal' => true`, so
  *      Fahad_AI_Tool_Registry::dispatch() runs Fahad_AI_Auth::guard_logged_in() BEFORE
- *      the callback — a guest is blocked centrally and the callback (and user meta) is
+ *      the callback, a guest is blocked centrally and the callback (and user meta) is
  *      never reached.
  *   2. CURRENT-USER-ONLY. Every read/write targets Fahad_AI_Auth::current_user_id();
  *      a user id supplied in the model INPUT is ignored, so the model can never read or
@@ -58,13 +58,13 @@ defined( 'ABSPATH' ) || exit;
  * The preferences map is BOUNDED: at most MAX_PREFERENCES keys, each key ≤ MAX_KEY_LENGTH
  * and each value ≤ MAX_VALUE_LENGTH characters, all sanitized. A new key beyond the cap
  * is refused (overwriting an existing key is always allowed, since it does not grow the
- * map). This keeps the stored map — and the injected context — small and predictable.
+ * map). This keeps the stored map, and the injected context, small and predictable.
  *
  * ─── GDPR EXPORT / ERASE + RETENTION (issue #59) ───────────────────────────────────
  *
  * RETENTION STANCE. This pack stores exactly two per-user meta rows and NOTHING else:
  * the consent flag (OPTIN_META) and the bounded preferences map (PREFS_META). There is
- * no separate log, table, or transient — the user's "record" IS those two meta keys.
+ * no separate log, table, or transient, the user's "record" IS those two meta keys.
  * Data is kept only while the customer remains opted in and chooses to keep it; it is
  * NOT time-limited, because the customer controls its whole lifetime: forget_preferences
  * clears it on demand, opting out stops further use, and the data is removed entirely on
@@ -78,8 +78,8 @@ defined( 'ABSPATH' ) || exit;
  *     saved preference (the only data this pack holds).
  *   - register_eraser() hooks `wp_privacy_personal_data_erasers`; gdpr_erase() DELETES
  *     BOTH meta rows for that user, leaving NO residue (verified by MemoryPrivacyTest).
- * Both callbacks act ONLY on the user the (core-verified) request email resolves to — an
- * unknown email is a safe no-op — so they never expose or purge another customer's data.
+ * Both callbacks act ONLY on the user the (core-verified) request email resolves to, an
+ * unknown email is a safe no-op, so they never expose or purge another customer's data.
  * forget_preferences (the in-chat erasure tool) and WordPress account deletion (which
  * drops all of a user's meta) likewise leave nothing behind.
  */
@@ -104,7 +104,7 @@ final class Fahad_AI_Memory_Tools {
 	 * Append the memory tools to the registry's tool list.
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope).
-	 * Static because the pack holds no per-instance state — its tools read/write the
+	 * Static because the pack holds no per-instance state, its tools read/write the
 	 * current user's meta directly and use the shared Fahad_AI_Auth boundary.
 	 *
 	 * All four tools carry `'personal' => true` so the registry login-gates them
@@ -132,7 +132,7 @@ final class Fahad_AI_Memory_Tools {
 
 		$tools[] = [
 			'name'        => 'remember_preference',
-			'description' => 'Store ONE stated shopping preference for the logged-in customer (e.g. key "favorite_color" value "blue", or key "size" value "large") so it can improve future recommendations. Only call this for a preference the customer has actually stated, and only AFTER they have opted in via set_memory_consent — if they have not opted in this returns a needs-consent message and stores nothing, so ask for their consent first. Mention that they can see or clear their saved preferences anytime. Requires the customer to be logged in.',
+			'description' => 'Store ONE stated shopping preference for the logged-in customer (e.g. key "favorite_color" value "blue", or key "size" value "large") so it can improve future recommendations. Only call this for a preference the customer has actually stated, and only AFTER they have opted in via set_memory_consent, if they have not opted in this returns a needs-consent message and stores nothing, so ask for their consent first. Mention that they can see or clear their saved preferences anytime. Requires the customer to be logged in.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -173,13 +173,13 @@ final class Fahad_AI_Memory_Tools {
 	}
 
 	// -------------------------------------------------------------------------
-	// Tool implementations — all act on the CURRENT user only.
+	// Tool implementations, all act on the CURRENT user only.
 	// -------------------------------------------------------------------------
 
 	/**
 	 * Record the current customer's opt-in / opt-out for cross-session memory.
 	 *
-	 * Writes the boolean flag for Fahad_AI_Auth::current_user_id() ONLY — a model-supplied
+	 * Writes the boolean flag for Fahad_AI_Auth::current_user_id() ONLY, a model-supplied
 	 * user id is ignored. Opting out stores a falsey flag, which both blocks future
 	 * storage AND stops injection (inject_preferences re-reads it); it does NOT erase
 	 * already-stored prefs (use forget_preferences for that). The central login gate has
@@ -197,7 +197,7 @@ final class Fahad_AI_Memory_Tools {
 			return [
 				'consent' => true,
 				'message' => __(
-					'Got it — I will remember your preferences. You can ask to see or clear them anytime.',
+					'Got it, I will remember your preferences. You can ask to see or clear them anytime.',
 					'fahad-ai-shopping-assistant-for-woocommerce'
 				),
 			];
@@ -210,14 +210,14 @@ final class Fahad_AI_Memory_Tools {
 		return [
 			'consent' => false,
 			'message' => __(
-				'No problem — I will not remember your preferences. You can turn this back on anytime.',
+				'No problem, I will not remember your preferences. You can turn this back on anytime.',
 				'fahad-ai-shopping-assistant-for-woocommerce'
 			),
 		];
 	}
 
 	/**
-	 * Store ONE stated preference for the current customer — ONLY with consent.
+	 * Store ONE stated preference for the current customer, ONLY with consent.
 	 *
 	 * THE consent gate: if the user has not opted in, return a clear `needs_consent`
 	 * response and write NOTHING (no user-meta write happens on this path). With consent,
@@ -232,7 +232,7 @@ final class Fahad_AI_Memory_Tools {
 	private static function remember_preference( array $input ): array {
 		$user_id = Fahad_AI_Auth::current_user_id();
 
-		// Consent gate FIRST — never store without a recorded opt-in.
+		// Consent gate FIRST, never store without a recorded opt-in.
 		if ( ! self::has_consent( $user_id ) ) {
 			return [
 				'needs_consent' => true,
@@ -258,7 +258,7 @@ final class Fahad_AI_Memory_Tools {
 		$prefs = self::read_prefs( $user_id );
 
 		// Storage hygiene: a NEW key beyond the cap is refused. Overwriting an existing
-		// key is always fine — it does not grow the map.
+		// key is always fine, it does not grow the map.
 		if ( ! array_key_exists( $key, $prefs ) && count( $prefs ) >= self::MAX_PREFERENCES ) {
 			return [
 				'error' => sprintf(
@@ -285,7 +285,7 @@ final class Fahad_AI_Memory_Tools {
 
 	/**
 	 * Return the current customer's stored preferences + consent state, so they can see
-	 * exactly what is remembered. Reads ONLY Fahad_AI_Auth::current_user_id() — a
+	 * exactly what is remembered. Reads ONLY Fahad_AI_Auth::current_user_id(), a
 	 * model-supplied user id is ignored. The central login gate has already ensured the
 	 * caller is logged in.
 	 *
@@ -304,8 +304,8 @@ final class Fahad_AI_Memory_Tools {
 
 	/**
 	 * Clear ALL stored preferences for the current customer (easy erasure), and
-	 * optionally withdraw consent too. Acts on Fahad_AI_Auth::current_user_id() ONLY — a
-	 * model-supplied user id is ignored — so it can never erase another customer's data.
+	 * optionally withdraw consent too. Acts on Fahad_AI_Auth::current_user_id() ONLY, a
+	 * model-supplied user id is ignored, so it can never erase another customer's data.
 	 * The central login gate has already ensured the caller is logged in.
 	 *
 	 * @return array{ cleared: true, consent_cleared: bool, message: string }
@@ -324,7 +324,7 @@ final class Fahad_AI_Memory_Tools {
 			'cleared'         => true,
 			'consent_cleared' => $clear_consent,
 			'message'         => __(
-				'Done — I have cleared your saved preferences.',
+				'Done, I have cleared your saved preferences.',
 				'fahad-ai-shopping-assistant-for-woocommerce'
 			),
 		];
@@ -335,7 +335,7 @@ final class Fahad_AI_Memory_Tools {
 	//
 	// These wire the pack's two per-user meta rows (consent + preferences) into
 	// WordPress' core "Export personal data" / "Erase personal data" tools. They are
-	// NOT model tools — they are admin-side privacy callbacks invoked by WordPress
+	// NOT model tools, they are admin-side privacy callbacks invoked by WordPress
 	// after IT has verified the request, so they receive the subject's EMAIL (not a
 	// model-supplied id) and never touch the agent loop or send anything to a model.
 	// The exporter/eraser/group are all keyed by self::PRIVACY_KEY.
@@ -380,13 +380,13 @@ final class Fahad_AI_Memory_Tools {
 	 * EXPORTER callback: return the user's stored preferences + consent state.
 	 *
 	 * WordPress passes the (already-verified) subject EMAIL; we resolve it to a user and
-	 * read ONLY that user's two meta rows — an email with no matching user yields an empty
+	 * read ONLY that user's two meta rows, an email with no matching user yields an empty
 	 * export, so another customer's data is never surfaced. The exported items are the
 	 * user's own stated preferences plus a single "Memory consent" Yes/No row; no PII
 	 * (email/name/id) is added beyond what WordPress already associates with the request.
 	 *
 	 * @param string $email_address The subject email being exported.
-	 * @param int    $page          Pagination (single page — all data fits one response).
+	 * @param int    $page          Pagination (single page, all data fits one response).
 	 * @return array{ data: array<int, array<string,mixed>>, done: bool } WP exporter shape.
 	 */
 	public static function gdpr_export( string $email_address, int $page = 1 ): array {
@@ -436,7 +436,7 @@ final class Fahad_AI_Memory_Tools {
 	}
 
 	/**
-	 * ERASER callback: DELETE all of the user's assistant memory — complete purge.
+	 * ERASER callback: DELETE all of the user's assistant memory, complete purge.
 	 *
 	 * WordPress passes the (already-verified) subject EMAIL; we resolve it to a user and
 	 * delete BOTH meta rows (preferences AND the consent flag) for that user only, so no
@@ -445,7 +445,7 @@ final class Fahad_AI_Memory_Tools {
 	 * the WordPress eraser response shape used by the stock-alerts eraser.
 	 *
 	 * @param string $email_address The subject email being erased.
-	 * @param int    $page          Pagination (single page — we erase everything at once).
+	 * @param int    $page          Pagination (single page, we erase everything at once).
 	 * @return array{ items_removed: bool, items_retained: bool, messages: array, done: bool }
 	 */
 	public static function gdpr_erase( string $email_address, int $page = 1 ): array {
@@ -458,7 +458,7 @@ final class Fahad_AI_Memory_Tools {
 			$had_prefs   = '' !== get_user_meta( $user_id, self::PREFS_META, true );
 			$had_consent = '' !== get_user_meta( $user_id, self::OPTIN_META, true );
 
-			// Purge BOTH rows unconditionally — leaves NO orphan meta either way.
+			// Purge BOTH rows unconditionally, leaves NO orphan meta either way.
 			delete_user_meta( $user_id, self::PREFS_META );
 			delete_user_meta( $user_id, self::OPTIN_META );
 
@@ -474,7 +474,7 @@ final class Fahad_AI_Memory_Tools {
 	}
 
 	// -------------------------------------------------------------------------
-	// Context injection (fahad_ai_system_prompt filter) — loop-free.
+	// Context injection (fahad_ai_system_prompt filter), loop-free.
 	// -------------------------------------------------------------------------
 
 	/**
@@ -482,7 +482,7 @@ final class Fahad_AI_Memory_Tools {
 	 * customer with stored preferences. Hooked to the `fahad_ai_system_prompt` filter
 	 * (issue #20) so injection happens WITHOUT editing the agent-loop methods.
 	 *
-	 * Returns the prompt UNCHANGED for a guest, an opted-out user, or an empty map —
+	 * Returns the prompt UNCHANGED for a guest, an opted-out user, or an empty map , 
 	 * nothing is injected until the customer has explicitly consented AND has prefs. The
 	 * block is BOUNDED by the storage caps (at most MAX_PREFERENCES lines, each value
 	 * trimmed to MAX_VALUE_LENGTH) so the prompt stays small. Public so the unit test can
@@ -557,7 +557,7 @@ final class Fahad_AI_Memory_Tools {
 	 *
 	 * Used ONLY by the GDPR export/erase callbacks (which WordPress invokes with a
 	 * verified subject email). Centralising this keeps both callbacks acting strictly on
-	 * the resolved user's own meta — an unknown email returns 0, so they become no-ops
+	 * the resolved user's own meta, an unknown email returns 0, so they become no-ops
 	 * rather than touching anyone else's data.
 	 */
 	private static function user_id_for_email( string $email ): int {
@@ -604,7 +604,7 @@ final class Fahad_AI_Memory_Tools {
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap (and the
 // test bootstrap) glob-require includes/tools/*.php, so dropping this file in is the ONLY
-// wiring needed — no bootstrap, registry, or agent-loop edits.
+// wiring needed, no bootstrap, registry, or agent-loop edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at require time (test bootstrap glob-requires this file) before PHPUnit opens its per-test pcov window, so it can never be measured.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Memory_Tools', 'register' ] );
@@ -614,7 +614,7 @@ Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Memory_Tools', 'register' ] )
 // `fahad_ai_system_prompt` filter (issue #20). This is how memory is injected WITHOUT
 // touching the agent-loop methods. Guarded with function_exists so this file can be
 // glob-loaded by the unit-test bootstrap (which loads tool packs before Brain\Monkey
-// patches WordPress functions per-test) without fataling on a missing add_filter — the
+// patches WordPress functions per-test) without fataling on a missing add_filter, the
 // unit suites exercise inject_preferences() directly and stub apply_filters themselves,
 // and in WordPress add_filter is always defined so the hook is registered for real.
 // @codeCoverageIgnoreStart
@@ -623,7 +623,7 @@ if ( function_exists( 'add_filter' ) ) {
 	add_filter( 'fahad_ai_system_prompt', [ 'Fahad_AI_Memory_Tools', 'inject_preferences' ] );
 
 	// GDPR (issue #59): wire the pack's two per-user meta rows into WordPress' core
-	// privacy export/erase tools. Self-contained, same drop-in pattern as above — no
+	// privacy export/erase tools. Self-contained, same drop-in pattern as above, no
 	// bootstrap edit needed. Guarded by the same function_exists so the unit-test
 	// bootstrap can glob-load this file before Brain\Monkey patches WP functions (the
 	// privacy suite calls the callbacks directly and stubs WP itself per-test).

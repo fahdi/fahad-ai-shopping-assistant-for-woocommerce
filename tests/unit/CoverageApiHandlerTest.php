@@ -75,7 +75,7 @@ class CoverageApiHandlerTest extends TestCase {
 
 	/**
 	 * Capture everything a closure writes to the SSE stream. sse_send() echoes, then
-	 * ob_flush()es its own buffer down a level and flush()es — so a single ob_start()
+	 * ob_flush()es its own buffer down a level and flush()es, so a single ob_start()
 	 * would lose the bytes. We stack TWO buffers: the inner one is what sse_send sees
 	 * and flushes; the outer one catches those flushed bytes, which we then read.
 	 *
@@ -102,7 +102,7 @@ class CoverageApiHandlerTest extends TestCase {
 		Functions\when( 'sanitize_textarea_field' )->returnArg();
 		// run_text_turn()/handle_message() call wc_load_cart() behind function_exists().
 		// In isolation it is undefined (the guard skips it), but once another suite has
-		// mocked it via Brain\Monkey it becomes "known" and the guard runs it — stub it
+		// mocked it via Brain\Monkey it becomes "known" and the guard runs it, stub it
 		// as a harmless no-op so these tests are order-independent (sibling does the same).
 		Functions\when( 'wc_load_cart' )->justReturn( null );
 		( new ReflectionProperty( Fahad_AI_Analytics::class, 'instance' ) )->setValue( null, null );
@@ -212,7 +212,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// run_text_turn() — off-web channel (issue #62), lines 103-138
+	// run_text_turn(), off-web channel (issue #62), lines 103-138
 	// =========================================================================
 
 	public function test_run_text_turn_empty_sanitized_returns_degraded_message(): void {
@@ -264,7 +264,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// has_provider_key() — unknown provider (line 160)
+	// has_provider_key(), unknown provider (line 160)
 	// =========================================================================
 
 	public function test_has_provider_key_false_for_unknown_provider(): void {
@@ -290,7 +290,7 @@ class CoverageApiHandlerTest extends TestCase {
 	// =========================================================================
 
 	public function test_anthropic_agent_executes_tool_then_returns_final_answer(): void {
-		// First turn: the model requests an (unknown) tool — execute() returns an error
+		// First turn: the model requests an (unknown) tool, execute() returns an error
 		// array (no WC mocks needed). Second turn: a final end_turn answer. This drives
 		// the whole tool_use block (385-406) and the end_turn return.
 		$this->loop_seams( [
@@ -375,7 +375,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// call_anthropic / call_openai — wp_remote_post WP_Error (lines 459, 627)
+	// call_anthropic / call_openai, wp_remote_post WP_Error (lines 459, 627)
 	// =========================================================================
 
 	public function test_call_anthropic_returns_transport_wp_error(): void {
@@ -578,7 +578,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// language_directive() — specific (non-auto) value (line 918)
+	// language_directive(), specific (non-auto) value (line 918)
 	// =========================================================================
 
 	public function test_language_directive_pins_a_specific_set(): void {
@@ -623,7 +623,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// analytics_conversation_ref() — empty conversation (line 1175)
+	// analytics_conversation_ref(), empty conversation (line 1175)
 	// =========================================================================
 
 	public function test_analytics_conversation_ref_empty_for_no_user_turn(): void {
@@ -639,7 +639,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// analytics_tool_trace() — OpenAI tool_calls shape (lines 1204-1206)
+	// analytics_tool_trace(), OpenAI tool_calls shape (lines 1204-1206)
 	// =========================================================================
 
 	public function test_analytics_tool_trace_reads_openai_tool_calls(): void {
@@ -657,7 +657,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// transcript_requires_login() — Anthropic array-content tool_result (1255-1258)
+	// transcript_requires_login(), Anthropic array-content tool_result (1255-1258)
 	// =========================================================================
 
 	public function test_transcript_requires_login_detects_anthropic_tool_result(): void {
@@ -676,7 +676,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// trim_product_summary() — non-array entry (line 1370)
+	// trim_product_summary(), non-array entry (line 1370)
 	// =========================================================================
 
 	public function test_trim_product_summary_passes_non_array_through(): void {
@@ -684,11 +684,11 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// apply_token_budget() — no genuine user turn protects final message (1441)
+	// apply_token_budget(), no genuine user turn protects final message (1441)
 	// =========================================================================
 
 	public function test_apply_token_budget_no_user_turn_protects_final_message(): void {
-		// Over budget, and NOT a single genuine (string-content) user turn — only
+		// Over budget, and NOT a single genuine (string-content) user turn, only
 		// assistant/tool messages. tail_start falls back to the last message (line 1441).
 		$this->set_option_alias( [ 'fahad_ai_token_budget' => 30 ] );
 		Functions\when( 'apply_filters' )->alias( static fn( $hook, $value = null ) => $value );
@@ -708,7 +708,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// fast_model_route() — option-driven routing (lines 1525, 1527)
+	// fast_model_route(), option-driven routing (lines 1525, 1527)
 	// =========================================================================
 
 	public function test_fast_model_route_returns_fast_model_for_simple_turn(): void {
@@ -750,7 +750,7 @@ class CoverageApiHandlerTest extends TestCase {
 
 	public function test_comparison_with_under_two_valid_columns_yields_empty(): void {
 		// Two products but one is malformed (no id) so normalize_card drops it, leaving
-		// a single column — a degenerate "table" is suppressed (line 1649).
+		// a single column, a degenerate "table" is suppressed (line 1649).
 		$result = (array) $this->invoke( 'tool_result_comparison', [ 'compare', [
 			'products'   => [
 				[ 'id' => 10, 'name' => 'Valid' ],
@@ -781,7 +781,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// normalize_card_variations() — non-array input + malformed entry (1764, 1770)
+	// normalize_card_variations(), non-array input + malformed entry (1764, 1770)
 	// =========================================================================
 
 	public function test_normalize_card_variations_non_array_returns_empty(): void {
@@ -864,10 +864,10 @@ class CoverageApiHandlerTest extends TestCase {
 		// The happy path past the guards: handle_stream() clears buffers, primes the
 		// cart, writes the SSE headers, closes the session lock, runs the stream agent,
 		// then exits. Driven in a forked child (it ends with exit). Under output
-		// buffering headers_sent() is false, so header() is silent — we assert the SSE
+		// buffering headers_sent() is false, so header() is silent, we assert the SSE
 		// frames the agent streamed reached the client. (pcov does not attribute lines
 		// executed in a forked child back to the parent's collector, so handle_stream's
-		// body shows as uncovered even though this exercises it end to end — see the
+		// body shows as uncovered even though this exercises it end to end, see the
 		// uncoverableNotes; the exit()+full-buffer-teardown shape makes in-process pcov
 		// attribution impossible without breaking the PHPUnit result protocol.)
 		$out = $this->run_in_child( function () {
@@ -892,7 +892,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// run_stream_agent() — the streaming agent loop (lines 1919-2036)
+	// run_stream_agent(), the streaming agent loop (lines 1919-2036)
 	// =========================================================================
 
 	public function test_run_stream_agent_streams_text_then_done(): void {
@@ -912,7 +912,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	public function test_run_stream_agent_executes_tool_then_completes(): void {
-		// Turn 1 streams a tool call (emits a `tool` frame, executes the unknown tool —
+		// Turn 1 streams a tool call (emits a `tool` frame, executes the unknown tool , 
 		// an error result, so no `products` frame), turn 2 is the final stop. Exercises
 		// the tool-execution block (1990-2022) and the final terminal point.
 		$this->loop_seams( [
@@ -1047,7 +1047,7 @@ class CoverageApiHandlerTest extends TestCase {
 	}
 
 	// =========================================================================
-	// stream_one_turn() — error path + no-text path
+	// stream_one_turn(), error path + no-text path
 	// =========================================================================
 
 	public function test_stream_one_turn_returns_error_on_wp_error(): void {

@@ -99,19 +99,19 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 	 *
 	 * handle_build() calls current_user_can( fahad_ai_settings_capability() ); the
 	 * test controls the guard via the current_user_can stub, so the capability
-	 * string itself is immaterial — it is only the (ignored) argument. We therefore
+	 * string itself is immaterial, it is only the (ignored) argument. We therefore
 	 * only need fahad_ai_settings_capability() to RESOLVE.
 	 *
 	 * Run alone, that function is undefined (admin-settings.php is not loaded), so we
 	 * stub it. Run in the full suite, CoverageAdminSettingsTest's top-level
 	 * require_once of admin-settings.php has already defined the REAL function before
-	 * Patchwork was initialised — re-stubbing it then throws Patchwork's
+	 * Patchwork was initialised, re-stubbing it then throws Patchwork's
 	 * "DefinedTooEarly". We swallow that one case and let the real (pure) function
 	 * run; it returns a valid capability string that current_user_can ignores anyway.
 	 *
 	 * A plain function_exists() guard is NOT enough: Brain\Monkey/Patchwork leave a
 	 * once-stubbed function "defined" after tearDown, so a sibling test in THIS class
-	 * would then skip stubbing yet have no live expectation — hence the try/catch on
+	 * would then skip stubbing yet have no live expectation, hence the try/catch on
 	 * the Patchwork-specific exception rather than a pre-check.
 	 */
 	private function stub_settings_capability( string $cap ): void {
@@ -127,7 +127,7 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 	public function test_index_status_count_is_zero_when_woocommerce_absent(): void {
 		// In a clean process wc_get_products() is undefined, so embedded_count() takes
 		// the guard return (line 130). When this file is run alongside the sibling (which
-		// defines wc_get_products via Patchwork — the definition lingers after tearDown),
+		// defines wc_get_products via Patchwork, the definition lingers after tearDown),
 		// the guard can no longer be re-entered: a leftover-but-unmocked function would
 		// throw, so it must be re-stubbed. Either way the *behaviour* under no products
 		// is the same: a zero count.
@@ -165,7 +165,7 @@ class CoverageEmbeddingsAdminTest extends TestCase {
 				throw new Fahad_AI_CoverageHalt( 'wp_die', [ $message, $title, $args ] );
 			}
 		);
-		// If the guard fails to stop, these would run — assert they never do.
+		// If the guard fails to stop, these would run, assert they never do.
 		Functions\expect( 'check_admin_referer' )->never();
 		Functions\expect( 'wp_safe_redirect' )->never();
 

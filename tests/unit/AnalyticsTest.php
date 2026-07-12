@@ -1,18 +1,18 @@
 <?php
 /**
  * Unit tests for Fahad_AI_Analytics (issue #49: owner analytics &
- * "unanswered questions" dashboard — the privacy-safe event STORE behind it).
+ * "unanswered questions" dashboard, the privacy-safe event STORE behind it).
  *
  * Red → Green → Refactor. Conventions mirror FeedbackTest / StockAlertsTest: WP
  * functions mocked via Brain\Monkey; the singleton reset via reflection between
- * cases (NEVER ReflectionMethod::setAccessible — host runs PHP 8.5). The store is
+ * cases (NEVER ReflectionMethod::setAccessible, host runs PHP 8.5). The store is
  * option-backed, so a single in-memory $this->options map stands in for the WP
  * options table and a test asserts exactly what was persisted.
  *
  * PRIVACY-SAFE + TELEMETRY-ONLY IS THE POINT (issue #49 hardening). The headline
  * tests are first-class:
  *   - NO PII: a recorded row stores a coarse intent label OR a TRIMMED,
- *     EMAIL-MASKED question snippet — never a raw email, name, IP, or user id. An
+ *     EMAIL-MASKED question snippet, never a raw email, name, IP, or user id. An
  *     email in the question is masked; the snippet is length-capped.
  *   - AGGREGATES: top questions, the "couldn't answer" list (abstain / escalate /
  *     no-tool-match), the chat → add-to-cart → order funnel, and cost per

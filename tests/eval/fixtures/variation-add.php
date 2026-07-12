@@ -20,7 +20,7 @@ return [
 	'name'     => 'variation-add',
 	'provider' => 'anthropic',
 	'messages' => [
-		[ 'role' => 'user', 'content' => 'I want the Cotton Tee — add the Large blue one to my cart' ],
+		[ 'role' => 'user', 'content' => 'I want the Cotton Tee, add the Large blue one to my cart' ],
 	],
 	'wc'       => [
 		// The variable parent. Its variation children are declared inline and the
@@ -66,7 +66,7 @@ return [
 		// Turn 3: final answer with the mandated links (URLs from the tool result).
 		// The variation's own price ($25.00) is grounded in the add_to_cart result.
 		EvalHarness::anthropic_text_turn(
-			'Done — I added the Large / Blue Cotton Tee ($25.00) to your cart. [View Cart](http://example.com/cart) · [Checkout](http://example.com/checkout)'
+			'Done, I added the Large / Blue Cotton Tee ($25.00) to your cart. [View Cart](http://example.com/cart) · [Checkout](http://example.com/checkout)'
 		),
 	],
 	'expect'   => [

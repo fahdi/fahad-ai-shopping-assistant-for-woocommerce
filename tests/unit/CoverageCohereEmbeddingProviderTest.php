@@ -182,7 +182,7 @@ class CoverageCohereEmbeddingProviderTest extends TestCase {
 			$this->fail( 'Expected a malformed-response exception.' );
 		} catch ( Fahad_AI_Embedding_Exception $e ) {
 			$this->assertSame( 'Malformed Cohere response.', $e->getMessage() );
-			// A bad shape from a 200 is not worth retrying — it is terminal.
+			// A bad shape from a 200 is not worth retrying, it is terminal.
 			$this->assertFalse( $e->is_retryable() );
 		}
 	}

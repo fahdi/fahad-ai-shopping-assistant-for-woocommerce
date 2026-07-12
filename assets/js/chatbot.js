@@ -1,4 +1,4 @@
-/* Fahad AI Shopping Assistant — vanilla JS, no dependencies */
+/* Fahad AI Shopping Assistant, vanilla JS, no dependencies */
 (function () {
 	'use strict';
 
@@ -73,7 +73,7 @@
 	// (via for/id) for an accessible, unambiguous name even with many cards.
 	let uid     = 0;
 	// Reply feedback (#50): an OPAQUE, per-page conversation token plus a per-reply
-	// counter. These are random/sequential client tokens — never PII — sent with a
+	// counter. These are random/sequential client tokens, never PII, sent with a
 	// 👍/👎 so a rating can be correlated to a reply server-side (telemetry only).
 	const conversationRef = 'c-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
 	let   replyIndex      = 0;
@@ -157,10 +157,10 @@
 		const nodes = panel.querySelectorAll(
 			'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 		);
-		// Only those actually rendered (visible) — disabled input during loading is excluded above.
+		// Only those actually rendered (visible), disabled input during loading is excluded above.
 		// The `|| el === document.activeElement` fallback is defensive: an element can only
 		// be document.activeElement while it is rendered (offsetParent !== null), so the
-		// right-hand operand is never the deciding branch — unreachable in practice.
+		// right-hand operand is never the deciding branch, unreachable in practice.
 		/* v8 ignore next */
 		return Array.prototype.filter.call(nodes, el => el.offsetParent !== null || el === document.activeElement);
 	}
@@ -168,7 +168,7 @@
 	function trapFocus(e) {
 		const focusable = focusableInPanel();
 		// defensive: the dialog always contains at least the (never-disabled) close button,
-		// so the focusable set is never empty while the panel is open — unreachable in practice.
+		// so the focusable set is never empty while the panel is open, unreachable in practice.
 		/* v8 ignore next 5 */
 		if (!focusable.length) {
 			e.preventDefault();
@@ -220,8 +220,8 @@
 	}
 
 	// ── Proactive, consented, value-gated nudge (issue #65) ─────────────────────
-	// A SINGLE, dismissible message offering REAL help. The decision to show one — and
-	// the message itself — is made SERVER-SIDE (Fahad_AI_Proactive): cfg.proactive is
+	// A SINGLE, dismissible message offering REAL help. The decision to show one, and
+	// the message itself, is made SERVER-SIDE (Fahad_AI_Proactive): cfg.proactive is
 	// present ONLY when the merchant enabled it AND a grounded value signal exists right
 	// now (a coupon that actually applies, or unused store credit). The widget therefore
 	// can never invent a nudge or fabricate urgency; it only renders the grounded text
@@ -251,13 +251,13 @@
 			try {
 				const raw = window.sessionStorage.getItem(storageKey);
 				if (raw) return JSON.parse(raw);
-			} catch (e) { /* storage blocked — fall through */ }
+			} catch (e) { /* storage blocked, fall through */ }
 			return memFallback || { shown: 0, dismissed: false };
 		}
 		function writeState(state) {
 			memFallback = state;
 			try { window.sessionStorage.setItem(storageKey, JSON.stringify(state)); }
-			catch (e) { /* storage blocked — memFallback still enforces the cap this page */ }
+			catch (e) { /* storage blocked, memFallback still enforces the cap this page */ }
 		}
 
 		// Client-side mirror of Fahad_AI_Proactive::is_eligible(): under cap, not
@@ -289,7 +289,7 @@
 			// in another flow, since the trigger was armed.
 			// defensive: every trigger calls cleanupTriggers() on first fire (and opening
 			// the chat retires the nudge), so showNudge cannot re-enter with shown/open/
-			// ineligible state under the current wiring — unreachable in practice.
+			// ineligible state under the current wiring, unreachable in practice.
 			/* v8 ignore next */
 			if (shown || isOpen() || !eligible()) { cleanupTriggers(); return; }
 			shown = true;
@@ -378,7 +378,7 @@
 		}
 		armIdle();
 
-		// Opening the chat (by any path) retires the nudge for this session — the shopper
+		// Opening the chat (by any path) retires the nudge for this session, the shopper
 		// engaged, so a later proactive interruption would be noise.
 		toggle.addEventListener('click', () => dismiss(true), { once: true });
 	})();
@@ -386,12 +386,12 @@
 	// ── Voice input/output (issue #64) ──────────────────────────────────────────
 	// Hands-free input (speech → text) and optional spoken replies (text → speech) via
 	// the browser's Web Speech API. The whole module is GATED THREE ways:
-	//   1. cfg.voice present + enabled — the merchant turned voice on (server-side gate).
-	//   2. the relevant browser API exists — else the control is never built (graceful
+	//   1. cfg.voice present + enabled, the merchant turned voice on (server-side gate).
+	//   2. the relevant browser API exists, else the control is never built (graceful
 	//      degradation: text always works fully, no dead/disabled button is shown).
-	//   3. for spoken replies, cfg.voice.tts — the merchant's voice-OUTPUT sub-toggle.
+	//   3. for spoken replies, cfg.voice.tts, the merchant's voice-OUTPUT sub-toggle.
 	//
-	// HARDENING (#64): the mic permission is the BROWSER's to grant — we call
+	// HARDENING (#64): the mic permission is the BROWSER's to grant, we call
 	// recognition.start() and let the browser prompt; we never bypass it. NO audio is
 	// stored or sent anywhere by this plugin (recognition/synthesis run in-browser; the
 	// only thing that leaves is the SAME transcribed text a shopper could have typed).
@@ -409,7 +409,7 @@
 		let liveRegion = null;
 		function announce(message) {
 			// defensive: every call site passes `i18n.X || 'default'` (always truthy), so
-			// announce is never invoked with an empty message — unreachable in practice.
+			// announce is never invoked with an empty message, unreachable in practice.
 			/* v8 ignore next */
 			if (!message) return;
 			if (!liveRegion) {
@@ -511,7 +511,7 @@
 					recognition.start(); // The BROWSER prompts for mic permission here.
 					setRecording(true);
 				} catch (e) {
-					// start() throws if called while already starting — treat as a no-op.
+					// start() throws if called while already starting, treat as a no-op.
 					setRecording(false);
 				}
 			}
@@ -609,7 +609,7 @@
 
 		// Stream for any OpenAI-compatible provider; the native Anthropic path is
 		// non-streaming. The server localizes `streaming` via wp_localize_script, which
-		// serialises booleans as the strings "1" / "" — so accept "1"/1/true as on, and
+		// serialises booleans as the strings "1" / "", so accept "1"/1/true as on, and
 		// only fall back to the legacy provider check when the flag is entirely absent.
 		var useStreaming = (cfg.streaming === undefined || cfg.streaming === null)
 			? (cfg.provider === 'moonshot')
@@ -791,8 +791,8 @@
 			}
 
 			const botMsg = appendMessage('bot', reply);
-			// Reply feedback (#50): offer thumbs on a REAL answer — the model's own text
-			// OR the generic intro that accompanies rendered cards — but not the
+			// Reply feedback (#50): offer thumbs on a REAL answer, the model's own text
+			// OR the generic intro that accompanies rendered cards, but not the
 			// no-response fallback (rating an empty turn tells us nothing useful).
 			if (isRealAnswer || hasProducts || hasComparison) {
 				attachFeedback(botMsg);
@@ -807,7 +807,7 @@
 
 			// Comparison table (issue #13): a comparison is surfaced as its own
 			// payload (aligned columns + attribute rows) and renders as a table, not
-			// product cards — the two are mutually exclusive server-side.
+			// product cards, the two are mutually exclusive server-side.
 			if (hasComparison) {
 				renderComparison(data.comparison);
 			}
@@ -824,7 +824,7 @@
 	}
 
 	// ── Direct cart add (#48) ───────────────────────────────────────────────────
-	// Card "Add to cart" hits the cart endpoint directly — no agent round-trip — so
+	// Card "Add to cart" hits the cart endpoint directly, no agent round-trip, so
 	// the action is instant and the confirmation reflects the REAL cart result.
 	// Falls back to asking the assistant if the endpoint isn't configured (old config).
 	async function addToCartDirect(productId, variationId, name) {
@@ -891,7 +891,7 @@
 	// decorative, aria-hidden), grouped under a labelled toolbar, and a polite live
 	// region that announces the result. The rating POSTs to the feedback endpoint
 	// with the nonce (same gate as chat: nonce + rate limit) carrying only opaque
-	// refs — never PII. After a choice the controls reflect the pressed state and are
+	// refs, never PII. After a choice the controls reflect the pressed state and are
 	// disabled so a reply is rated once. Silently no-ops if the endpoint isn't
 	// configured (older localized config) so nothing breaks.
 	function attachFeedback(msgEl) {
@@ -955,7 +955,7 @@
 	}
 
 	// Fire-and-forget POST of a rating. No PII: only the rating + opaque conversation
-	// / message refs. Best-effort — a failed POST is swallowed (the UI already
+	// / message refs. Best-effort, a failed POST is swallowed (the UI already
 	// reflected the choice; telemetry loss is acceptable and must never disrupt chat).
 	function sendFeedback(rating, messageRef) {
 		try {
@@ -977,7 +977,7 @@
 
 	// ── Product cards ─────────────────────────────────────────────────────────
 	// Rendered from server-supplied product data (sourced from WooCommerce, not
-	// model text), so fields are trusted — but we still build via DOM APIs and
+	// model text), so fields are trusted, but we still build via DOM APIs and
 	// set text with textContent, never innerHTML.
 	function renderProductCards(products) {
 		if (!Array.isArray(products) || !products.length) return;
@@ -1007,7 +1007,7 @@
 
 	// ── Comparison table (issue #13) ────────────────────────────────────────────
 	// Rendered from the server-supplied comparison payload (sourced from WooCommerce,
-	// not model text), so fields are trusted — but we still build via DOM APIs and set
+	// not model text), so fields are trusted, but we still build via DOM APIs and set
 	// text with textContent, never innerHTML. The result is a REAL <table> with header
 	// cells (scope="col" for the product columns, scope="row" for each attribute) so it
 	// is announced as a data table by assistive tech (WCAG 1.3.1); the View/Add controls
@@ -1046,7 +1046,7 @@
 
 		const corner = document.createElement('td');
 		corner.className = 'chatbot-compare-corner';
-		// A presentational empty corner — hidden from AT so it does not announce a
+		// A presentational empty corner, hidden from AT so it does not announce a
 		// meaningless empty header.
 		corner.setAttribute('aria-hidden', 'true');
 		headRow.appendChild(corner);
@@ -1088,7 +1088,7 @@
 				if (content instanceof Node) {
 					td.appendChild(content);
 				} else {
-					// defensive: every cellFn returns a string or '—' (never null/undefined),
+					// defensive: every cellFn returns a string or ', ' (never null/undefined),
 					// so the `content == null` branch is unreachable in practice.
 					/* v8 ignore next */
 					td.textContent = content == null ? '' : String(content);
@@ -1117,7 +1117,7 @@
 		// column stays aligned (no empty cell ambiguity).
 		addRow(i18n.comparisonRating || 'Rating', p => {
 			const count = Number(p.review_count) || 0;
-			if (count <= 0) return '—';
+			if (count <= 0) return ', ';
 			const avg = Math.max(0, Math.min(5, Number(p.rating) || 0)).toFixed(1);
 			return avg + ' (' + count + ')';
 		});
@@ -1141,7 +1141,7 @@
 			const values = row.values || {};
 			addRow(row.name, p => {
 				const v = values[p.id];
-				return (v === undefined || v === null || v === '') ? '—' : String(v);
+				return (v === undefined || v === null || v === '') ? ', ' : String(v);
 			});
 		});
 
@@ -1206,9 +1206,9 @@
 
 		// Clamp the average to 0–5; render fractional values precisely with a clipped
 		// overlay of filled stars over a base of empty stars (no half-star glyph,
-		// which fonts render inconsistently — only the common ★/☆ are used).
+		// which fonts render inconsistently, only the common ★/☆ are used).
 		const avg     = Math.max(0, Math.min(5, Number(p.rating) || 0));
-		const display = avg.toFixed(1);            // e.g. "4.5" — shown to sighted users
+		const display = avg.toFixed(1);            // e.g. "4.5", shown to sighted users
 		const pct     = (avg / 5) * 100;
 
 		const wrap = document.createElement('div');
@@ -1218,7 +1218,7 @@
 		wrap.setAttribute('role', 'img');
 		wrap.setAttribute('aria-label', fmtPositional(i18n.ratingLabel || 'Rated %1$s out of 5 (%2$d reviews)', [display, count]));
 
-		// Visual stars — decorative (the label above conveys the meaning).
+		// Visual stars, decorative (the label above conveys the meaning).
 		const stars = document.createElement('span');
 		stars.className = 'chatbot-card-stars';
 		stars.setAttribute('aria-hidden', 'true');
@@ -1363,7 +1363,7 @@
 					variationId = opt.value;
 				}
 
-				// Direct, verified cart add (#48) — calls the cart endpoint, no agent
+				// Direct, verified cart add (#48), calls the cart endpoint, no agent
 				// round-trip; the confirmation reflects the real cart result.
 				addToCartDirect(p.id, variationId, p.name);
 			});
@@ -1416,7 +1416,7 @@
 			opt.value = String(v.variation_id);
 			opt.dataset.label = v.label || '';
 			// Append the price when present so the option text is informative.
-			const base = (v.label || '') + (v.price ? ' — ' + v.price : '');
+			const base = (v.label || '') + (v.price ? ', ' + v.price : '');
 			if (v.in_stock) {
 				opt.textContent = base;
 			} else {
@@ -1434,11 +1434,11 @@
 
 	// Repair an obviously-malformed numeric currency entity before decoding (issue #66).
 	// The model occasionally emits a corrupted numeric character reference for a
-	// currency symbol — the canonical case is the rupee sign &#8360; (U+20A8) arriving
+	// currency symbol, the canonical case is the rupee sign &#8360; (U+20A8) arriving
 	// as &#836; (a dropped digit), which decodes to U+0344 (a COMBINING mark) and paints
 	// a stray accent over the next digit. We can't decode-to-symbol on the client (the
 	// store's symbol isn't localized here), so we STRIP any numeric reference whose
-	// codepoint is a combining mark or a control character — never letting the artifact
+	// codepoint is a combining mark or a control character, never letting the artifact
 	// render. Well-formed references (e.g. &#8360;) are left for decodeEntities to decode
 	// normally. The server-side normalize_currency_entities() is the primary, tested
 	// guard (it repairs to the real symbol on the non-stream path); this is the parallel
@@ -1463,8 +1463,8 @@
 	}
 
 	// Decode HTML entities (e.g. &#8360; for the ₨ sign) to their real characters.
-	// Uses a textarea, which decodes its content as TEXT only — no markup is parsed
-	// or executed — so the result is safe to pass through the HTML escaping below.
+	// Uses a textarea, which decodes its content as TEXT only, no markup is parsed
+	// or executed, so the result is safe to pass through the HTML escaping below.
 	function decodeEntities(str) {
 		const ta = document.createElement('textarea');
 		ta.innerHTML = String(str);
@@ -1473,14 +1473,14 @@
 
 	// Safely render markdown links and bold from AI responses.
 	// 1. Escape all HTML first so no raw markup can slip through.
-	// 2. Convert [text](url) — same-origin URLs only — to <a> elements.
+	// 2. Convert [text](url), same-origin URLs only, to <a> elements.
 	// 3. Convert **text** to <strong>.
 	// 4. Convert newlines to <br>.
 	function renderMarkdown(text) {
 		// Repair a malformed numeric currency entity (issue #66) BEFORE decoding, so a
 		// corrupted reference like &#836; (a dropped-digit &#8360;) can never decode to a
 		// stray combining glyph. Then decode well-formed entities (currency symbols, etc.)
-		// and escape HTML below — so a model-emitted &#8360; renders as ₨ while staying
+		// and escape HTML below, so a model-emitted &#8360; renders as ₨ while staying
 		// XSS-safe.
 		text = stripMalformedCurrencyEntities(String(text));
 		text = decodeEntities(text);
@@ -1493,7 +1493,7 @@
 			.replace(/"/g,  '&quot;')
 			.replace(/'/g,  '&#39;');
 
-		// Step 2: markdown links — same-origin only
+		// Step 2: markdown links, same-origin only
 		html = html.replace(
 			/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
 			(_, linkText, url) => {
@@ -1549,7 +1549,7 @@
 
 	// ── Live-demo deep link ───────────────────────────────────────────────────
 	// Arriving via ?fahad_demo=<question> (or =1 for the built-in default) opens
-	// the panel, types the question with a typewriter effect, then sends it — a
+	// the panel, types the question with a typewriter effect, then sends it, a
 	// hands-free live demo, e.g. a "Try the live demo" link that lands a visitor
 	// on a store with the assistant already answering. Runs once per page load.
 	function maybeRunDemo() {

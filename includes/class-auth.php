@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
  * Privacy / authorization BOUNDARY for personal-data tools.
  *
  * The public chat endpoints are intentionally open to guests (see
- * Fahad_AI_Chatbot::authorize_request) — the nonce + rate limit there are
+ * Fahad_AI_Chatbot::authorize_request), the nonce + rate limit there are
  * CSRF / abuse protection, NOT an authorization boundary. This class is the
  * reusable mechanism that tools exposing PERSONAL data (order status #17,
  * wallet #18, cross-session memory #20) use to decide WHO may see WHAT.
@@ -49,7 +49,7 @@ final class Fahad_AI_Auth {
 	 *
 	 * Returns boolean true when the caller is logged in, otherwise a STANDARD
 	 * error array a tool (or the registry) can return to the model directly. We
-	 * return an array — not a WP_Error — because tool results are arrays; the
+	 * return an array, not a WP_Error, because tool results are arrays; the
 	 * `requires_login` flag lets the widget/model distinguish "please sign in"
 	 * from a generic failure and steer the user to log in (a grounded escalate).
 	 *
@@ -72,8 +72,8 @@ final class Fahad_AI_Auth {
 	/**
 	 * Generic per-record ownership primitive.
 	 *
-	 * True iff `$owner_id` (e.g. an order's customer id) equals the current — or
-	 * explicitly supplied — user id AND that user id is a real, logged-in user
+	 * True iff `$owner_id` (e.g. an order's customer id) equals the current, or
+	 * explicitly supplied, user id AND that user id is a real, logged-in user
 	 * (> 0). A guest (id 0) never owns anything, even a record whose owner id is
 	 * also 0, which prevents an unauthenticated request from matching orphaned /
 	 * guest-owned rows.
@@ -101,7 +101,7 @@ final class Fahad_AI_Auth {
 	 * string; input without a single clear `local@domain` shape is fully masked to
 	 * `***` rather than echoed back, so a malformed value can never leak verbatim.
 	 *
-	 * This is deliberately minimal — a helper, not a redaction framework.
+	 * This is deliberately minimal, a helper, not a redaction framework.
 	 */
 	public static function mask_email( string $email ): string {
 		$email = trim( $email );

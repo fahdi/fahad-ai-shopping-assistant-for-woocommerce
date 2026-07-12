@@ -1,6 +1,6 @@
 <?php
 /**
- * Fixture: greeting — no tool use.
+ * Fixture: greeting, no tool use.
  *
  * The user says "hi"; the model replies with plain text and calls no tools.
  * Asserts the loop runs zero tools and returns a non-empty reply.

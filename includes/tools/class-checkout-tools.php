@@ -6,29 +6,29 @@ defined( 'ABSPATH' ) || exit;
  *
  * Removes the "what's in my order / which shipping / is there a better deal?"
  * blockers right before purchase by letting the agent ground its answers in the
- * REAL session cart, shipping options and coupon savings — then hand the shopper
+ * REAL session cart, shipping options and coupon savings, then hand the shopper
  * off to the WooCommerce checkout. A drop-in feature pack following the reference
  * pattern in Fahad_AI_Catalog_Tools / Fahad_AI_Shipping_Tools: a self-contained
  * class in its own file under includes/tools/ that self-registers a provider at
- * file scope via Fahad_AI_Tool_Registry::register_pack() — no bootstrap,
+ * file scope via Fahad_AI_Tool_Registry::register_pack(), no bootstrap,
  * test-bootstrap, or harness edits.
  *
  * Tools provided (all operate on the SHARED session cart, so NONE is personal /
- * login-gated — a guest mid-checkout must get grounded answers):
- *   - get_checkout_summary — echo the real cart (items, subtotal, discount,
+ * login-gated, a guest mid-checkout must get grounded answers):
+ *   - get_checkout_summary, echo the real cart (items, subtotal, discount,
  *     total, applied coupon), the destination's real shipping methods + which is
  *     chosen, and the checkout handoff URL. Empty cart → an honest empty state
  *     with no fabricated items/total. No invented numbers, ever.
- *   - set_shipping_method  — select a shipping method WooCommerce genuinely
+ *   - set_shipping_method , select a shipping method WooCommerce genuinely
  *     OFFERS for this cart/destination and recalculate the total. A method id the
  *     store doesn't offer is rejected (the model can't mis-state shipping).
- *   - apply_best_coupon    — find the genuinely best (largest real saving) valid +
+ *   - apply_best_coupon   , find the genuinely best (largest real saving) valid +
  *     applicable coupon and, WITHOUT consent, RECOMMEND it; WITH `confirm` apply
  *     it. Surfaces a WooCommerce rejection honestly, never invents a code, and
  *     respects a stated budget by surfacing the projected total.
  *
  * PCI BOUNDARY (absolute): the conversational loop ENDS at the WooCommerce
- * checkout handoff — a URL from wc_get_checkout_url(), nothing more. No tool here
+ * checkout handoff, a URL from wc_get_checkout_url(), nothing more. No tool here
  * accepts, returns, stores, or even names card / payment data. Payment is handled
  * by WooCommerce's own (PCI-scoped) checkout, never by the assistant.
  *
@@ -39,8 +39,8 @@ defined( 'ABSPATH' ) || exit;
  * TESTABILITY: like the shipping pack, EVERY WooCommerce cart / shipping / coupon
  * touch is isolated behind a small set of overridable `protected static` seams
  * (read_cart, resolve_shipping, select_shipping_method, candidate_coupons,
- * apply_coupon_code). Those WC surfaces — WC()->cart, WC()->session,
- * WC()->shipping(), WC_Shipping_Zones, WC_Discounts — are concrete classes /
+ * apply_coupon_code). Those WC surfaces, WC()->cart, WC()->session,
+ * WC()->shipping(), WC_Shipping_Zones, WC_Discounts, are concrete classes /
  * singletons that Brain\Monkey (a FUNCTION mocker) cannot intercept, so the unit
  * suite drives a tiny subclass (Fahad_AI_Checkout_Tools_Stub) that overrides the
  * seams with canned data. Everything else is pure array shaping / decision logic
@@ -56,12 +56,12 @@ class Fahad_AI_Checkout_Tools {
 	 * Append the checkout-assist tools to the registry's tool list.
 	 *
 	 * Registered as a pack provider (see the register_pack() call at file scope).
-	 * Static because the pack holds no per-instance state — its tools query the
+	 * Static because the pack holds no per-instance state, its tools query the
 	 * shared session cart / shipping / coupons directly.
 	 *
 	 * The callbacks capture `static::class` (the late-static / called class) and
 	 * route every seam call through it, so a test subclass that overrides the
-	 * seams is honoured — inside an arrow-fn `static::` would instead resolve to
+	 * seams is honoured, inside an arrow-fn `static::` would instead resolve to
 	 * the DEFINING (parent) class, hence the explicit capture.
 	 *
 	 * @param array $tools Existing tool definitions.
@@ -72,7 +72,7 @@ class Fahad_AI_Checkout_Tools {
 
 		$tools[] = [
 			'name'        => 'get_checkout_summary',
-			'description' => 'Summarise the order the customer is about to place: the real cart items, subtotal, any discount and the current total, the shipping methods available for their destination and which one is selected, and a link to the secure checkout. Use this when the customer asks "what\'s in my order", "what\'s my total", "how do I check out", or wants to review before paying. Every number comes from the live cart — never invent items, totals or shipping. Payment itself happens on the WooCommerce checkout page (this tool only returns its URL); never ask for card details.',
+			'description' => 'Summarise the order the customer is about to place: the real cart items, subtotal, any discount and the current total, the shipping methods available for their destination and which one is selected, and a link to the secure checkout. Use this when the customer asks "what\'s in my order", "what\'s my total", "how do I check out", or wants to review before paying. Every number comes from the live cart, never invent items, totals or shipping. Payment itself happens on the WooCommerce checkout page (this tool only returns its URL); never ask for card details.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => new stdClass(),
@@ -82,7 +82,7 @@ class Fahad_AI_Checkout_Tools {
 
 		$tools[] = [
 			'name'        => 'set_shipping_method',
-			'description' => 'Choose a shipping method for the current cart and recalculate the total. Pass the method_id of a method WooCommerce actually offers for this destination (get_checkout_summary lists them). A method that is not offered is rejected — do not select one the store does not list. Returns the recalculated total so you can state a grounded figure. This never touches payment or card data.',
+			'description' => 'Choose a shipping method for the current cart and recalculate the total. Pass the method_id of a method WooCommerce actually offers for this destination (get_checkout_summary lists them). A method that is not offered is rejected, do not select one the store does not list. Returns the recalculated total so you can state a grounded figure. This never touches payment or card data.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -95,7 +95,7 @@ class Fahad_AI_Checkout_Tools {
 
 		$tools[] = [
 			'name'        => 'apply_best_coupon',
-			'description' => 'Find the single best discount code for the current cart (the one giving the largest REAL saving among codes that are valid and applicable right now) and either recommend it or apply it. WITHOUT confirm the tool only RECOMMENDS the code and asks the customer if they want it applied — it does NOT change the cart. WITH confirm:true it applies the code, reporting an honest error if WooCommerce rejects it. If no valid code applies, it says so and never invents one. Optionally pass the customer\'s budget to surface the projected total. Never claim a discount this tool did not actually apply.',
+			'description' => 'Find the single best discount code for the current cart (the one giving the largest REAL saving among codes that are valid and applicable right now) and either recommend it or apply it. WITHOUT confirm the tool only RECOMMENDS the code and asks the customer if they want it applied, it does NOT change the cart. WITH confirm:true it applies the code, reporting an honest error if WooCommerce rejects it. If no valid code applies, it says so and never invents one. Optionally pass the customer\'s budget to surface the projected total. Never claim a discount this tool did not actually apply.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -118,7 +118,7 @@ class Fahad_AI_Checkout_Tools {
 	 * checkout handoff URL.
 	 *
 	 * Returns one of:
-	 *   - empty cart : { empty:true, message, checkout_url, cart_url } — NO items,
+	 *   - empty cart : { empty:true, message, checkout_url, cart_url }, NO items,
 	 *                  NO total (nothing to total, so nothing is fabricated).
 	 *   - otherwise  : { empty:false, items[], subtotal, discount_total, total,
 	 *                    applied_coupon|null, shipping{ needed, methods[],
@@ -226,7 +226,7 @@ class Fahad_AI_Checkout_Tools {
 	 * cart) → WITHOUT consent return a recommendation that ASKS to apply → WITH
 	 * `confirm` apply it, surfacing a WooCommerce rejection as an honest error. A
 	 * stated `budget` adds a projected-total figure so the agent can reason about
-	 * the spend ceiling — it never hides a real saving.
+	 * the spend ceiling, it never hides a real saving.
 	 *
 	 * @param array  $input { confirm?: bool, budget?: number }
 	 * @param string $class The class register() was called on.
@@ -292,7 +292,7 @@ class Fahad_AI_Checkout_Tools {
 				'applied' => false,
 				'error'   => sprintf(
 					/* translators: %s: the coupon code that WooCommerce rejected at apply time */
-					__( 'I tried to apply %s but the store rejected it — it may have just expired or stopped being applicable. No discount was added.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					__( 'I tried to apply %s but the store rejected it, it may have just expired or stopped being applicable. No discount was added.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 					$base['code']
 				),
 			] );
@@ -305,7 +305,7 @@ class Fahad_AI_Checkout_Tools {
 			'applied' => true,
 			'message' => sprintf(
 				/* translators: 1: coupon code, 2: formatted saving amount */
-				__( 'Applied %1$s — you saved about %2$s.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				__( 'Applied %1$s, you saved about %2$s.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 				$base['code'],
 				self::money( (string) $saving )
 			),
@@ -437,7 +437,7 @@ class Fahad_AI_Checkout_Tools {
 		return $symbol . $number;
 	}
 
-	/** The secure checkout handoff URL — the PCI boundary stops here. */
+	/** The secure checkout handoff URL, the PCI boundary stops here. */
 	private static function checkout_url(): string {
 		return function_exists( 'wc_get_checkout_url' ) ? (string) wc_get_checkout_url() : '';
 	}
@@ -448,7 +448,7 @@ class Fahad_AI_Checkout_Tools {
 	}
 
 	// -------------------------------------------------------------------------
-	// WooCommerce SEAMS (the only WC-touching methods — overridable in tests)
+	// WooCommerce SEAMS (the only WC-touching methods, overridable in tests)
 	// -------------------------------------------------------------------------
 	//
 	// These five `protected static` methods are the SINGLE point of contact with
@@ -500,7 +500,7 @@ class Fahad_AI_Checkout_Tools {
 	 * Resolve the shipping context for the current cart: whether shipping is
 	 * needed, the methods WooCommerce offers for the destination, and which is
 	 * chosen. Returns null when no cart/shipping context exists; a not-needed
-	 * cart (e.g. all-virtual) yields needed=false with no methods — the caller
+	 * cart (e.g. all-virtual) yields needed=false with no methods, the caller
 	 * never invents a method or cost.
 	 *
 	 * @return array{needed:bool, chosen_method:?string, methods:array<int,array>}|null
@@ -552,7 +552,7 @@ class Fahad_AI_Checkout_Tools {
 	 *
 	 * Mirrors WooCommerce's own chosen-method storage (the
 	 * `chosen_shipping_methods` session array) and persists the session so the
-	 * change survives the REST request — the same cart-session handling the cart
+	 * change survives the REST request, the same cart-session handling the cart
 	 * paths use (live-QA finding #31), since this endpoint can't rely on the
 	 * shutdown hook firing.
 	 *
@@ -586,7 +586,7 @@ class Fahad_AI_Checkout_Tools {
 	 * The coupons that are genuinely valid + applicable to the current cart, each
 	 * normalised to { code, saving, description }. The `saving` is WooCommerce's
 	 * OWN computed discount for the cart (via WC_Discounts), so "best" reflects a
-	 * real number — we never re-implement restriction/saving logic.
+	 * real number, we never re-implement restriction/saving logic.
 	 *
 	 * @return array<int, array{code:string, saving:float, description:string}>
 	 */
@@ -692,7 +692,7 @@ class Fahad_AI_Checkout_Tools {
 
 	/**
 	 * Persist the session immediately so a cart mutation survives this REST
-	 * request — mirrors the cart-session handling in the cart paths (#31); we
+	 * request, mirrors the cart-session handling in the cart paths (#31); we
 	 * don't rely on the shutdown hook firing for a REST context.
 	 */
 	private static function persist_session(): void {
@@ -704,7 +704,7 @@ class Fahad_AI_Checkout_Tools {
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this
-// file in is the ONLY wiring needed — no bootstrap or harness edits.
+// file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test PCOV coverage window opens.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Checkout_Tools', 'register' ] );

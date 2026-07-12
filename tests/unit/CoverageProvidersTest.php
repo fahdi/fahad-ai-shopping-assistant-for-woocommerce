@@ -1,6 +1,6 @@
 <?php
 /**
- * Supplemental coverage tests for Fahad_AI_Providers::catalog() — the two defensive
+ * Supplemental coverage tests for Fahad_AI_Providers::catalog(), the two defensive
  * fallbacks that the primary ProvidersTest does not exercise:
  *
  *   - line 238: the filter returns a NON-array → catalog() ignores it and rebuilds
@@ -59,7 +59,7 @@ class CoverageProvidersTest extends TestCase {
 
 	public function test_catalog_falls_back_to_presets_when_filter_returns_a_non_array(): void {
 		// A broken/hostile add-on replaces the whole catalog with a scalar. catalog()
-		// must NOT trust it — it returns the built-in presets unchanged.
+		// must NOT trust it, it returns the built-in presets unchanged.
 		Functions\when( 'apply_filters' )->alias(
 			static function ( $hook, $value = null ) {
 				if ( 'fahad_ai_providers' === $hook ) {
@@ -159,7 +159,7 @@ class CoverageProvidersTest extends TestCase {
 
 	public function test_a_single_valid_filter_entry_prevents_the_empty_fallback(): void {
 		// Contrast case: if even ONE entry survives sanitising, $clean is non-empty, so
-		// line 256 is NOT taken — only the surviving entry is returned (the filter is
+		// line 256 is NOT taken, only the surviving entry is returned (the filter is
 		// authoritative once it yields a usable catalog). This pins that the fallback is
 		// strictly the empty-catalog floor, not "always merge in the built-ins".
 		Functions\when( 'apply_filters' )->alias(

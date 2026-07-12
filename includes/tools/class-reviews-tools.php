@@ -5,11 +5,11 @@ defined( 'ABSPATH' ) || exit;
  * Reviews & ratings tool pack (issue #11).
  *
  * Ratings and reviews are the strongest trust lever a store already owns, built
- * entirely from LOCAL WooCommerce data — no external service. This pack adds one
+ * entirely from LOCAL WooCommerce data, no external service. This pack adds one
  * tool, get_product_reviews, so the assistant can answer "is this any good?" with
  * the store's own average rating, review count, and a few recent APPROVED review
  * snippets. The model is expected to SUMMARISE those returned snippets (a one-line
- * sentiment read) and never to invent review content — the tool returns the real
+ * sentiment read) and never to invent review content, the tool returns the real
  * text so any summary is grounded.
  *
  * WooCommerce reviews are WordPress comments: each approved review is a comment of
@@ -23,7 +23,7 @@ defined( 'ABSPATH' ) || exit;
  * self-contained class in its own file that self-registers a provider at file
  * scope via Fahad_AI_Tool_Registry::register_pack(). The plugin bootstrap (and the
  * test bootstrap) glob-require includes/tools/*.php, so adding this file is the
- * ONLY wiring needed — no edits to the bootstrap, the test bootstrap, or the eval
+ * ONLY wiring needed, no edits to the bootstrap, the test bootstrap, or the eval
  * harness.
  */
 final class Fahad_AI_Reviews_Tools {
@@ -50,7 +50,7 @@ final class Fahad_AI_Reviews_Tools {
 	public static function register( array $tools ): array {
 		$tools[] = [
 			'name'        => 'get_product_reviews',
-			'description' => 'Get the customer ratings and reviews for a product: the average star rating, the total number of reviews, and a few recent approved review snippets (author, star rating, a short excerpt, and date). Use this when the customer asks whether a product is good, what people think of it, or about its ratings/reviews. You may briefly summarise the overall sentiment from the returned snippets — but only ever reflect what the snippets actually say; never invent reviews, quotes, or ratings.',
+			'description' => 'Get the customer ratings and reviews for a product: the average star rating, the total number of reviews, and a few recent approved review snippets (author, star rating, a short excerpt, and date). Use this when the customer asks whether a product is good, what people think of it, or about its ratings/reviews. You may briefly summarise the overall sentiment from the returned snippets, but only ever reflect what the snippets actually say; never invent reviews, quotes, or ratings.',
 			'parameters'  => [
 				'type'       => 'object',
 				'properties' => [
@@ -73,8 +73,8 @@ final class Fahad_AI_Reviews_Tools {
 	 * Average rating, review count, and recent approved review snippets.
 	 *
 	 * The aggregate rating/count come from the product object
-	 * (get_average_rating / get_review_count) — WooCommerce's own cached
-	 * aggregates over approved reviews — while the snippets are pulled fresh from
+	 * (get_average_rating / get_review_count), WooCommerce's own cached
+	 * aggregates over approved reviews, while the snippets are pulled fresh from
 	 * the approved review comments so the model has real text to summarise.
 	 *
 	 * Graceful empty state: a product with no reviews returns review_count 0,
@@ -107,7 +107,7 @@ final class Fahad_AI_Reviews_Tools {
 	 * Up to $limit recent APPROVED review snippets for a product.
 	 *
 	 * Reviews are comments: query the product's review-type comments with
-	 * status `approve` only (moderation gate — pending/spam never surface),
+	 * status `approve` only (moderation gate, pending/spam never surface),
 	 * newest first. Each snippet is { author, rating, excerpt, date }; the rating
 	 * is the per-review `rating` comment meta (0 when a review left no stars).
 	 *
@@ -145,7 +145,7 @@ final class Fahad_AI_Reviews_Tools {
 
 // Self-register this feature pack the moment the file is loaded. The bootstrap
 // (and the test bootstrap) glob-require includes/tools/*.php, so dropping this
-// file in is the ONLY wiring needed — no bootstrap or harness edits.
+// file in is the ONLY wiring needed, no bootstrap or harness edits.
 // @codeCoverageIgnoreStart
 // Reason: file-scope self-registration runs once at bootstrap require time, before PHPUnit's per-test pcov window opens, so it is unmeasurable; its target (the callable register provider) is asserted by CoverageReviewsToolsTest.
 Fahad_AI_Tool_Registry::register_pack( [ 'Fahad_AI_Reviews_Tools', 'register' ] );

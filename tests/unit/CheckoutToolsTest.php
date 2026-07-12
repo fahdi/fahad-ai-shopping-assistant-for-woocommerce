@@ -12,14 +12,14 @@
  * Like the shipping pack, the checkout pack isolates EVERY WooCommerce cart /
  * shipping / coupon touch behind a small set of overridable `protected static`
  * seams (read_cart, resolve_shipping, select_shipping_method, candidate_coupons,
- * apply_coupon_code). Those WC surfaces — WC()->cart, WC()->session,
- * WC()->shipping(), WC_Shipping_Zones, WC_Discounts — are concrete classes /
+ * apply_coupon_code). Those WC surfaces, WC()->cart, WC()->session,
+ * WC()->shipping(), WC_Shipping_Zones, WC_Discounts, are concrete classes /
  * singletons that Brain\Monkey (a FUNCTION mocker) cannot intercept. So these tests
  * drive a tiny subclass (Fahad_AI_Checkout_Tools_Stub) that overrides the seams with
  * canned data, exercising the summary-shaping, best-coupon selection, consent gate,
  * and PCI-boundary logic WITHOUT a live WooCommerce stack. Two seam-internal helpers
  * (best_candidate, money) are also hit directly through reflection on the REAL class
- * (private members are reflection-accessible since PHP 8.1 — no setAccessible(),
+ * (private members are reflection-accessible since PHP 8.1, no setAccessible(),
  * which is a deprecated no-op on PHP 8.5).
  */
 
@@ -55,7 +55,7 @@ class CheckoutToolsTest extends TestCase {
 			'wp_strip_all_tags'   => fn( $s ) => strip_tags( (string) $s ),
 			'wc_format_decimal'   => fn( $n ) => (string) $n,
 			'get_woocommerce_currency_symbol' => fn() => '$',
-			// The handoff URL — the PCI boundary stops here; we never go past checkout.
+			// The handoff URL, the PCI boundary stops here; we never go past checkout.
 			'wc_get_checkout_url' => fn() => 'https://shop.test/checkout/',
 			'wc_get_cart_url'     => fn() => 'https://shop.test/cart/',
 			// Registry get_tools() reads the merchant tool-gating option (issue #56);
@@ -113,7 +113,7 @@ class CheckoutToolsTest extends TestCase {
 
 	/**
 	 * Fresh registry whose built tool list includes the checkout tools, registered
-	 * via the pack's REAL provider — exactly what the file-scope self-registration
+	 * via the pack's REAL provider, exactly what the file-scope self-registration
 	 * does in production (used for the spec/registration assertions).
 	 */
 	private function registry(): Fahad_AI_Tool_Registry {
@@ -139,7 +139,7 @@ class CheckoutToolsTest extends TestCase {
 		$this->assertContains( 'get_checkout_summary', $names );
 		$this->assertContains( 'set_shipping_method', $names );
 		$this->assertContains( 'apply_best_coupon', $names );
-		// Additive — the five built-ins remain.
+		// Additive, the five built-ins remain.
 		$this->assertContains( 'search_products', $names );
 		$this->assertContains( 'add_to_cart', $names );
 		$this->assertCount( 8, $names );
@@ -162,7 +162,7 @@ class CheckoutToolsTest extends TestCase {
 
 	public function test_checkout_tools_are_not_personal(): void {
 		// They operate on the SHARED session cart (not customer-specific records), so
-		// they must NOT be login-gated — a guest checking out must get answers.
+		// they must NOT be login-gated, a guest checking out must get answers.
 		$map = ( new ReflectionMethod( Fahad_AI_Tool_Registry::class, 'get_tools' ) )->invoke( $this->registry() );
 
 		foreach ( [ 'get_checkout_summary', 'set_shipping_method', 'apply_best_coupon' ] as $name ) {
@@ -220,7 +220,7 @@ class CheckoutToolsTest extends TestCase {
 
 		$this->assertTrue( $result['empty'] );
 		$this->assertArrayHasKey( 'message', $result );
-		// Nothing to total — must not fabricate items or a price.
+		// Nothing to total, must not fabricate items or a price.
 		$this->assertArrayNotHasKey( 'items', $result );
 		$this->assertArrayNotHasKey( 'total', $result );
 	}
@@ -275,7 +275,7 @@ class CheckoutToolsTest extends TestCase {
 
 	public function test_set_shipping_method_rejects_a_method_not_offered(): void {
 		// The model must NOT be able to select a method WooCommerce doesn't offer for
-		// this destination — that would mis-state shipping.
+		// this destination, that would mis-state shipping.
 		Fahad_AI_Checkout_Tools_Stub::$cart     = $this->cartSnapshot();
 		Fahad_AI_Checkout_Tools_Stub::$shipping = $this->shippingSnapshot(
 			[ [ 'id' => 'flat_rate:1', 'label' => 'Flat rate', 'cost' => '5.00' ] ],
@@ -392,7 +392,7 @@ class CheckoutToolsTest extends TestCase {
 		// If the shopper stated a budget and applying the best coupon would still keep
 		// the total within it, we proceed; but a coupon must never PUSH a recommendation
 		// that contradicts a budget cap. Here the best coupon's saving brings the total
-		// under budget — it should still be the recommended code (the budget is a ceiling
+		// under budget, it should still be the recommended code (the budget is a ceiling
 		// on spend, not a reason to hide a real saving). This guards the budget plumbing.
 		Fahad_AI_Checkout_Tools_Stub::$cart       = $this->cartSnapshot( [ 'subtotal' => '60.00', 'total' => '60.00' ] );
 		Fahad_AI_Checkout_Tools_Stub::$candidates = [
@@ -421,7 +421,7 @@ class CheckoutToolsTest extends TestCase {
 		// The loop ENDS at the WooCommerce checkout handoff: a URL, nothing more.
 		$this->assertSame( 'https://shop.test/checkout/', $result['checkout_url'] );
 
-		// Absolutely no payment / card fields anywhere in the result — the PCI boundary.
+		// Absolutely no payment / card fields anywhere in the result, the PCI boundary.
 		$this->assertResultHasNoCardData( $result );
 	}
 
@@ -462,7 +462,7 @@ class CheckoutToolsTest extends TestCase {
 				$this->assertDoesNotMatchRegularExpression(
 					'/(card_number|cardholder|\bcvc\b|\bcvv\b|\bpan\b|expir|payment_method_token|account_number)/i',
 					(string) $key,
-					"Result key '{$key}' looks like card/payment data — the PCI boundary forbids it."
+					"Result key '{$key}' looks like card/payment data, the PCI boundary forbids it."
 				);
 			}
 		);
@@ -503,7 +503,7 @@ class CheckoutToolsTest extends TestCase {
 /**
  * Test seam: overrides the WC-touching methods so the summary / shipping-selection /
  * best-coupon / consent logic runs without a live WooCommerce stack. This is the
- * "injectable seam" the shipping pack established — production code stays decoupled
+ * "injectable seam" the shipping pack established, production code stays decoupled
  * from WC internals behind these protected-static methods; no production code
  * subclasses Fahad_AI_Checkout_Tools.
  */

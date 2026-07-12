@@ -16,7 +16,7 @@ website/
   tests/            # zero-dependency Node checks (link integrity + on-page SEO)
 ```
 
-Design: dark "engineered trust" editorial — Fraunces display + JetBrains Mono receipts
+Design: dark "engineered trust" editorial, Fraunces display + JetBrains Mono receipts
 + a highlighter-lime accent. The positioning leads with the product's thesis: a grounded,
 open-source, 100%-test-covered assistant that "shows its work."
 
