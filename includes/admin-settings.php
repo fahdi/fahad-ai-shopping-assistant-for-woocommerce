@@ -13,6 +13,46 @@ function fahad_ai_settings_capability(): string {
 }
 
 /**
+ * True when the AI provider selected in settings has an API key stored.
+ *
+ * Drives the activation nudge (issue #190): with no key the widget cannot answer, so
+ * the store owner should be prompted to finish setup.
+ */
+function fahad_ai_is_provider_configured(): bool {
+	$provider = (string) get_option( 'fahad_ai_provider', 'anthropic' );
+	$key      = trim( (string) get_option( 'fahad_ai_' . $provider . '_api_key', '' ) );
+	return '' !== $key;
+}
+
+/**
+ * Admin activation nudge (issue #190): when the plugin is active but the selected
+ * provider has no key, the assistant cannot reply, so show a dismissible notice with a
+ * one-click link to the settings page. Shown only to users who can manage the assistant
+ * and never on the settings page itself. The notice is state-driven, so it disappears
+ * once a key is saved (no persistent dismissal to track).
+ */
+function fahad_ai_setup_notice(): void {
+	if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+		return;
+	}
+	if ( fahad_ai_is_provider_configured() ) {
+		return;
+	}
+	if ( isset( $_GET['page'] ) && 'fahad-ai-shopping-assistant-for-woocommerce' === sanitize_key( wp_unslash( $_GET['page'] ) ) ) {
+		return;
+	}
+
+	$url = admin_url( 'options-general.php?page=fahad-ai-shopping-assistant-for-woocommerce' );
+	printf(
+		'<div class="notice notice-warning is-dismissible"><p><strong>%s</strong> %s <a href="%s" class="button button-primary" style="margin-left:8px">%s</a></p></div>',
+		esc_html__( 'Dukandar AI Shopping Assistant', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		esc_html__( 'is active but has no AI provider set up yet, so it cannot answer customers. Add your API key to switch it on.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+		esc_url( $url ),
+		esc_html__( 'Set up Dukandar', 'fahad-ai-shopping-assistant-for-woocommerce' )
+	);
+}
+
+/**
  * Sanitize the merchant tone/persona setting to the fixed allowlist (issue #56).
  *
  * The tone maps to a vetted instruction line in the system prompt, so only the known
