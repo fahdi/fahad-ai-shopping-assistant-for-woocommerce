@@ -905,6 +905,14 @@ Writing style, follow exactly:
 			$lines[] = '- Free shipping: this store offers free shipping on orders over ' . $this->format_localized_amount( $free_shipping ) . '. When a shopper is genuinely close, you may helpfully mention how much more they need to add to qualify; state it as a fact, never as pressure, and never invent a threshold that is not set here.';
 		}
 
+		// Return / refund policy (issue #204): a grounded fact so the assistant can answer
+		// return questions accurately instead of deflecting or inventing terms (a real
+		// liability). Answer ONLY from this; anything it does not cover escalates to a human.
+		$returns = trim( (string) get_option( 'fahad_ai_return_policy', '' ) );
+		if ( '' !== $returns ) {
+			$lines[] = '- Returns & refunds: answer return, refund, and exchange questions using only this stated policy; never invent terms, and if a shopper asks something it does not cover, say you are not certain and offer human support. Policy: ' . $returns;
+		}
+
 		if ( empty( $lines ) ) {
 			return '';
 		}

@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.12
+Stable tag: 2.14.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.13 =
+Fewer abandoned carts: the assistant can now answer return-policy questions accurately from your own words.
+
+* Added a "Return &amp; Refund Policy" setting. When you enter your policy, the assistant answers return, refund, and exchange questions using only what you wrote, one of the biggest sources of pre-purchase hesitation, so a shopper gets a clear answer instead of a shrug. It never invents terms and refers anything your policy does not cover to human support.
 
 = 2.14.12 =
 Sell more per order: the assistant can now nudge shoppers toward your free-shipping threshold.
@@ -503,6 +508,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.13 =
+Adds a Return &amp; Refund Policy setting so the assistant can answer return questions accurately from your own words, never inventing terms. No breaking changes.
 
 = 2.14.12 =
 Adds a Free Shipping Threshold setting so the assistant can nudge shoppers toward free shipping and lift order value. No breaking changes.

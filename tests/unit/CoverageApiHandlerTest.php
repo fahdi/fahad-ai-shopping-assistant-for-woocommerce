@@ -595,6 +595,22 @@ class CoverageApiHandlerTest extends TestCase {
 		$this->assertStringNotContainsString( 'Free shipping', $block );
 	}
 
+	public function test_merchant_config_block_includes_return_policy(): void {
+		$this->set_option_alias( [ 'fahad_ai_return_policy' => '30-day returns on unworn items with receipt.' ] );
+
+		$block = (string) $this->invoke( 'merchant_config_block' );
+
+		$this->assertStringContainsString( 'Returns', $block );
+		$this->assertStringContainsString( '30-day returns on unworn items with receipt.', $block );
+		$this->assertStringContainsString( 'Store preferences', $block );
+	}
+
+	public function test_merchant_config_block_omits_return_policy_when_blank(): void {
+		$this->set_option_alias( [ 'fahad_ai_return_policy' => '   ' ] );
+		$block = (string) $this->invoke( 'merchant_config_block' );
+		$this->assertStringNotContainsString( 'Returns', $block );
+	}
+
 	// =========================================================================
 	// language_directive(), specific (non-auto) value (line 918)
 	// =========================================================================

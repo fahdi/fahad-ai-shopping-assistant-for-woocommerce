@@ -612,6 +612,7 @@ function fahad_ai_settings_page(): void {
 		update_option( 'fahad_ai_off_limits',     sanitize_textarea_field( wp_unslash( $_POST['off_limits']      ?? '' ) ) );
 		update_option( 'fahad_ai_promo_emphasis', sanitize_textarea_field( wp_unslash( $_POST['promo_emphasis']  ?? '' ) ) );
 		update_option( 'fahad_ai_free_shipping_threshold', max( 0, (float) ( $_POST['free_shipping_threshold'] ?? 0 ) ) );
+		update_option( 'fahad_ai_return_policy', sanitize_textarea_field( wp_unslash( $_POST['return_policy'] ?? '' ) ) );
 		update_option( 'fahad_ai_disabled_tools', fahad_ai_sanitize_tool_list( array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['disabled_tools'] ?? [] ) ) ) );
 
 		// Multilingual: default/allowed languages (issue #61). Default 'auto' = detect and
@@ -668,6 +669,7 @@ function fahad_ai_settings_page(): void {
 	$off_limits         = get_option( 'fahad_ai_off_limits',           '' );
 	$promo_emphasis     = get_option( 'fahad_ai_promo_emphasis',       '' );
 	$free_shipping_threshold = (float) get_option( 'fahad_ai_free_shipping_threshold', 0 );
+	$return_policy      = get_option( 'fahad_ai_return_policy',          '' );
 	$languages          = get_option( 'fahad_ai_languages',            'auto' ); // multilingual (#61)
 	$disabled_tools     = (array) get_option( 'fahad_ai_disabled_tools', [] );
 	$token_budget       = (int) get_option( 'fahad_ai_token_budget',   0 );
@@ -975,6 +977,15 @@ function fahad_ai_settings_page(): void {
 							value="<?php echo esc_attr( (string) $free_shipping_threshold ); ?>" class="small-text">
 						<p class="description">
 							<?php esc_html_e( 'Order amount that unlocks free shipping at your store. When set, the assistant can helpfully tell a shopper how much more they need to add to qualify, to lift order value, stated as a fact and never as pressure. 0 = do not mention.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="return_policy"><?php esc_html_e( 'Return &amp; Refund Policy', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<td>
+						<textarea id="return_policy" name="return_policy" class="large-text" rows="3"><?php echo esc_textarea( $return_policy ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Your returns, refunds, and exchange policy in plain words, e.g. "30-day returns on unworn items with a receipt." The assistant answers return questions using only what you enter here, never invents terms, and refers anything it does not cover to human support. Leave blank to have it decline return questions.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>

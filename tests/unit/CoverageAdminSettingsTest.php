@@ -633,6 +633,7 @@ class CoverageAdminSettingsTest extends TestCase {
 			'tone'                  => 'professional',
 			'off_limits'            => 'politics',
 			'promo_emphasis'        => 'Footwear: clearance',
+			'return_policy'         => '14-day returns, unopened only.',
 			'disabled_tools'        => [ 'track_order' ],
 			'languages'             => 'English, Urdu',
 			'token_budget'          => '8000',
@@ -667,6 +668,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertSame( 8000, $this->options['fahad_ai_token_budget'] );
 		$this->assertSame( 250, $this->options['fahad_ai_daily_message_cap'] );
 		$this->assertSame( 50.0, $this->options['fahad_ai_free_shipping_threshold'] );
+		$this->assertSame( '14-day returns, unopened only.', $this->options['fahad_ai_return_policy'] );
 		$this->assertSame( 1, $this->options['fahad_ai_fast_model_routing'] );
 		$this->assertSame( 1, $this->options['fahad_ai_proactive_enabled'] );
 		$this->assertSame( 2, $this->options['fahad_ai_proactive_frequency'] );
