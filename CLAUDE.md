@@ -33,7 +33,9 @@ No exceptions for code/feature PRs:
 ## Quick commands
 ```bash
 # Tests (from the repo root)
-vendor/bin/phpunit
+composer test            # FAST: parallel unit run (paratest, all cores, ~8x faster than serial)
+composer test:serial     # single-process, clearer output when debugging one failure
+composer test:coverage   # serial run + strict 100% coverage gate (parallel coverage drops lines)
 
 # Build a release zip (set <version>), allow-list: ONLY runtime files ship.
 # WP.org's scanner rejects zips containing dev files (it bounced 2.14.2 over phpcs.xml.dist),
