@@ -77,23 +77,29 @@
 <script>
   const b=[document.getElementById('b1'),document.getElementById('b2'),document.getElementById('b3'),document.getElementById('b4')];
   const cta=document.getElementById('cta');
-  // reveal thresholds within the 0..1 loop; each bubble fades + rises over RAMP.
-  const START=[0.06,0.22,0.42,0.56], RAMP=0.09, CTA_AT=0.68;
+  // Each message fades + rises + gently pops in sequence. The layout is fully
+  // reserved from the start (bubbles just fade in place) so nothing jumps.
+  // After the full exchange holds, everything fades out gracefully so the loop
+  // back to the empty state is smooth instead of a hard snap.
+  const START=[0.05,0.24,0.45,0.61], RAMP=0.10, CTA_AT=0.76, CTA_RAMP=0.08;
+  const HOLD_END=0.90, FADE=0.10;           // fade the whole scene out over the last 10%
   const clamp=(x)=>x<0?0:x>1?1:x;
-  const ease=(x)=>1-Math.pow(1-x,3);
+  const ease=(x)=>1-Math.pow(1-x,3);        // easeOutCubic for the reveal
+  const easeIO=(x)=>x<0.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
   window.__draw=function(t){
+    const gout = t<HOLD_END ? 1 : 1-easeIO(clamp((t-HOLD_END)/FADE));
     b.forEach((el,i)=>{
       const p=ease(clamp((t-START[i])/RAMP));
-      el.style.opacity=p.toFixed(3);
-      el.style.transform=`translateY(${(12*(1-p)).toFixed(2)}px)`;
+      el.style.opacity=(p*gout).toFixed(3);
+      el.style.transform=`translateY(${(16*(1-p)).toFixed(2)}px) scale(${(0.965+0.035*p).toFixed(3)})`;
     });
-    const cp=ease(clamp((t-CTA_AT)/0.10));
-    cta.style.opacity=cp.toFixed(3);
-    cta.style.transform=`translateX(-50%) translateY(${(10*(1-cp)).toFixed(2)}px)`;
+    const cp=ease(clamp((t-CTA_AT)/CTA_RAMP));
+    cta.style.opacity=(cp*gout).toFixed(3);
+    cta.style.transform=`translateX(-50%) translateY(${(12*(1-cp)).toFixed(2)}px) scale(${(0.9+0.1*cp).toFixed(3)})`;
   };
   window.__ready=true;
   let s=performance.now();
-  (function loop(now){window.__draw(((now-s)/5200)%1);requestAnimationFrame(loop);})(performance.now());
+  (function loop(now){window.__draw(((now-s)/6400)%1);requestAnimationFrame(loop);})(performance.now());
 </script>
 </body>
 </html>

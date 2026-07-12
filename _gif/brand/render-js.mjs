@@ -15,6 +15,10 @@ const page = await browser.newPage({ viewport: { width, height }, deviceScaleFac
 await page.goto('file://' + htmlPath);
 await page.evaluate(async () => { await document.fonts.ready; });
 await page.waitForFunction(() => window.__ready === true, null, { timeout: 5000 });
+// Kill any live requestAnimationFrame preview loop so it cannot overwrite our
+// explicit __draw(t) calls between the evaluate and the screenshot. Frames must
+// be driven ONLY by the stepped t below, or the GIF captures wall-clock states.
+await page.evaluate(() => { window.requestAnimationFrame = () => 0; });
 await page.waitForTimeout(300); // ensure webfonts painted
 
 for (let i = 0; i < frames; i++) {

@@ -8,9 +8,11 @@ Works with **13+ AI providers** (Anthropic Claude, OpenAI, Google Gemini, Moonsh
 
 ## See it in action
 
-![A shopper asks about a product; the assistant answers from your real catalogue with an in-stock price card, then declines to invent a discount when there is no sale](.github/demo.gif)
+[![A shopper asks about a product; the assistant answers from your real catalogue with an in-stock price card, then declines to invent a discount when there is no sale](.github/demo.gif)](https://woo.isupercoder.com/?fahad_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F)
 
 A shopper asks about a product, and the assistant answers from your real catalogue with an in-stock price card. When asked for a discount that does not exist, it refuses to invent one. Grounded, honest, and auditable.
+
+**[Try it live on a real store &rarr;](https://woo.isupercoder.com/?fahad_demo=What%20wireless%20headphones%20do%20you%20have%20and%20how%20much%3F)**
 
 ---
 
