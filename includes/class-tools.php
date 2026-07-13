@@ -598,6 +598,11 @@ final class Fahad_AI_Tools {
 				'cart_total'    => wp_strip_all_tags( WC()->cart->get_cart_total() ),
 				'cart_url'      => wc_get_cart_url(),
 				'checkout_url'  => wc_get_checkout_url(),
+				// Scarcity at the peak-commitment moment (issue #269): reuse the grounded low-stock
+				// signal for the exact item added so the assistant can honestly say "only N left,
+				// best to check out soon" and reduce abandonment on nearly sold-out items.
+				'low_stock'     => self::low_stock_flag( $item->is_in_stock(), $item->get_stock_quantity(), (int) get_option( 'woocommerce_notify_low_stock_amount', 2 ) ),
+				'stock_qty'     => $item->get_stock_quantity(),
 			];
 
 			// Precise free-shipping nudge at the highest-leverage moment (issue #220): right

@@ -485,6 +485,32 @@ class ToolsTest extends TestCase {
         $this->assertArrayHasKey( 'checkout_url', $result );
         // No free-shipping threshold configured (get_option default 0) => no nudge field.
         $this->assertArrayNotHasKey( 'free_shipping', $result );
+        // A well-stocked item (qty 10) must not read as low stock.
+        $this->assertFalse( $result['low_stock'] );
+        $this->assertSame( 10, $result['stock_qty'] );
+    }
+
+    public function test_add_to_cart_flags_low_stock_at_commitment(): void {
+        // The exact item added is nearly sold out (2 left, default threshold): the response must
+        // carry a grounded scarcity signal so the assistant can say "only 2 left, check out soon".
+        $product = Mockery::mock( WC_Product::class );
+        $product->shouldReceive( 'get_id' )->andReturn( 10 );
+        $product->shouldReceive( 'get_name' )->andReturn( 'Headphones' );
+        $product->shouldReceive( 'get_price' )->andReturn( '149.99' );
+        $product->shouldReceive( 'is_visible' )->andReturn( true );
+        $product->shouldReceive( 'is_in_stock' )->andReturn( true );
+        $product->shouldReceive( 'get_stock_quantity' )->andReturn( 2 );
+        Functions\when( 'wc_get_product' )->justReturn( $product );
+
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldReceive( 'add_to_cart' )->andReturn( 'cart_key_abc' );
+        $mockCart->shouldReceive( 'get_cart_total' )->andReturn( '$149.99' );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+
+        $result = $this->tools()->execute( 'add_to_cart', [ 'product_id' => 10, 'quantity' => 1 ] );
+
+        $this->assertTrue( $result['low_stock'] );
+        $this->assertSame( 2, $result['stock_qty'] );
     }
 
     public function test_add_to_cart_includes_free_shipping_progress_when_threshold_set(): void {
@@ -863,6 +889,7 @@ class ToolsTest extends TestCase {
         $v->shouldReceive( 'get_sale_price' )->andReturn( '' );
         $v->shouldReceive( 'is_on_sale' )->andReturn( false );
         $v->shouldReceive( 'is_in_stock' )->andReturn( $inStock );
+        $v->shouldReceive( 'get_stock_quantity' )->andReturn( 10 )->byDefault();
         $v->shouldReceive( 'is_visible' )->andReturn( true )->byDefault();
         $v->shouldReceive( 'get_type' )->andReturn( 'variation' );
         $v->shouldReceive( 'is_type' )->with( 'variable' )->andReturn( false );

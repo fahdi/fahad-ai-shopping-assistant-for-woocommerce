@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.44
+Stable tag: 2.14.45
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -219,6 +219,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 
 == Changelog ==
 
+= 2.14.45 =
+Scarcity at the right moment: the assistant can now reinforce low stock right after an add to cart.
+
+* Adding an item to the cart now returns a grounded low-stock signal (and the remaining quantity) for the exact item added, so when something is nearly sold out the assistant can honestly say "added, and only 2 left, best to check out soon" at the peak-intent moment. Shown only when stock is genuinely low, from real inventory.
+
 = 2.14.44 =
 No more dead ends: when a search finds nothing, the assistant can offer real browse paths.
 
@@ -420,6 +425,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.45 =
+Adds a grounded low-stock signal to the add-to-cart response so the assistant can reinforce scarcity at the peak-intent moment. No breaking changes.
 
 = 2.14.44 =
 Suggests real store categories when a search finds nothing, so the assistant can redirect shoppers instead of hitting a dead end. No breaking changes.
