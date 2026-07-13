@@ -179,6 +179,16 @@ final class Fahad_AI_Feedback {
 	}
 
 	/**
+	 * Shopper-judged helpfulness (issue #233): the share of thumbs ratings that were positive,
+	 * as a 0..1 float. This is the shoppers' own verdict on answer quality, complementing the
+	 * system-judged resolution rate. 0 when there are no ratings yet (no divide-by-zero).
+	 */
+	public function helpfulness_rate(): float {
+		$agg = $this->aggregates();
+		return $agg['total'] > 0 ? $agg['up'] / $agg['total'] : 0.0;
+	}
+
+	/**
 	 * The most recent down-rated rows (newest first), capped at $limit. These are the
 	 * low-rated replies a reviewer / eval-export pass wants to inspect.
 	 *

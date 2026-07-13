@@ -214,6 +214,23 @@ class FeedbackTest extends TestCase {
 		$this->assertSame( 0, $agg['total'] );
 	}
 
+	// ── helpfulness_rate(): shopper-judged answer quality ────────────────────────
+
+	public function test_helpfulness_rate_is_up_over_total(): void {
+		$store = $this->store();
+		$store->record( 'up',   '', 'c1', 'm1' );
+		$store->record( 'up',   '', 'c2', 'm2' );
+		$store->record( 'up',   '', 'c3', 'm3' );
+		$store->record( 'down', '', 'c4', 'm4' );
+
+		// 3 up of 4 ratings.
+		$this->assertEqualsWithDelta( 0.75, $store->helpfulness_rate(), 0.0001 );
+	}
+
+	public function test_helpfulness_rate_is_zero_with_no_ratings(): void {
+		$this->assertSame( 0.0, $this->store()->helpfulness_rate() );
+	}
+
 	// ── guardrail flag: a down-rating is flagged + retrievable ──────────────────
 
 	public function test_a_down_rating_is_flagged_for_review(): void {

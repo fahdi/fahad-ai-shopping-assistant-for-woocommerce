@@ -501,6 +501,9 @@ function fahad_ai_analytics_page(): void {
 	$funnel      = $analytics->funnel( $window, 'fahad_ai_attribute_orders' );
 	$cost        = $analytics->cost_summary( $window );
 	$resolution  = $analytics->resolution_rate( $window );
+	$feedback    = Fahad_AI_Feedback::instance();
+	$fb          = $feedback->aggregates();
+	$helpful     = $feedback->helpfulness_rate();
 	$export_url  = admin_url( 'admin-post.php' );
 	$page_slug   = 'fahad-ai-analytics';
 	$currency    = function_exists( 'get_woocommerce_currency_symbol' ) ? get_woocommerce_currency_symbol() : '';
@@ -541,6 +544,7 @@ function fahad_ai_analytics_page(): void {
 				<tr><td><?php esc_html_e( 'Chat-to-cart rate', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( round( $funnel['cart_rate'] * 100 ) . '%' ); ?></strong></td></tr>
 				<tr><td><?php esc_html_e( 'Chat-attributed orders', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo null === $funnel['orders'] ? esc_html__( 'n/a', 'fahad-ai-shopping-assistant-for-woocommerce' ) : esc_html( (string) $funnel['orders'] ); ?></strong></td></tr>
 				<tr><td><?php esc_html_e( 'Resolution rate', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( round( $resolution * 100 ) . '%' ); ?></strong></td></tr>
+				<tr><td><?php esc_html_e( 'Shopper helpfulness', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></td><td><strong><?php echo esc_html( round( $helpful * 100 ) . '% (' . (int) $fb['up'] . ' up, ' . (int) $fb['down'] . ' down)' ); ?></strong></td></tr>
 			</tbody>
 		</table>
 

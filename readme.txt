@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.26
+Stable tag: 2.14.27
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.27 =
+Your shoppers' verdict: the analytics now show the helpfulness rate from thumbs up/down.
+
+* The plugin already collected shopper thumbs up/down on replies; now the analytics surface it as a "Shopper helpfulness" rate with the up/down counts. It is your customers' own judgement of answer quality, next to the system's resolution rate, so you can see how well the assistant is really landing.
 
 = 2.14.26 =
 An off switch: pause the assistant in one click without deactivating the plugin.
@@ -573,6 +578,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.27 =
+Adds a shopper helpfulness rate (from thumbs up/down) to the analytics. No breaking changes.
 
 = 2.14.26 =
 Adds an Enable Assistant toggle to pause the assistant in one click without deactivating the plugin. No breaking changes.
