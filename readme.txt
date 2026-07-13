@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.22
+Stable tag: 2.14.23
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.23 =
+Know if it is working: the analytics now show your assistant's resolution rate.
+
+* Added a "Resolution rate" to the analytics: the share of questions the assistant actually answered, rather than escalating, abstaining, or erroring. A low rate is your cue to enrich Store Information so the assistant handles more on its own, the same gaps the weekly digest already lists.
 
 = 2.14.22 =
 Honest urgency: the assistant can now say "only a few left" when a product really is low in stock.
@@ -553,6 +558,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.23 =
+Adds a resolution rate to the analytics so you can see what share of questions the assistant answers on its own. No breaking changes.
 
 = 2.14.22 =
 Adds an honest low-stock signal from real WooCommerce data so the assistant can nudge genuine urgency, never fabricated. No breaking changes.

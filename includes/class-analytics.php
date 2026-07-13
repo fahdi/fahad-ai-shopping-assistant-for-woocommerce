@@ -351,6 +351,26 @@ final class Fahad_AI_Analytics {
 	}
 
 	/**
+	 * Answer-quality signal (issue #224): the share of recorded turns that ended in an ANSWERED
+	 * outcome over the window, as a 0..1 float. The complement is turns the assistant escalated,
+	 * abstained on, had no tool for, or errored on. 0 when there are no turns (no divide-by-zero).
+	 */
+	public function resolution_rate( array $range = [] ): float {
+		$rows  = $this->in_range( $range );
+		$total = count( $rows );
+		if ( 0 === $total ) {
+			return 0.0;
+		}
+		$answered = 0;
+		foreach ( $rows as $row ) {
+			if ( self::OUTCOME_ANSWERED === ( $row['outcome'] ?? '' ) ) {
+				++$answered;
+			}
+		}
+		return $answered / $total;
+	}
+
+	/**
 	 * Cost / token totals and a per-conversation average over an optional date range.
 	 * Cost per conversation = total cost / number of distinct conversations (the
 	 * metric the issue asks for). An empty window yields zeros (no divide-by-zero).

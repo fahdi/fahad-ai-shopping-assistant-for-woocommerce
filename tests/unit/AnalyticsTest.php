@@ -348,6 +348,23 @@ class AnalyticsTest extends TestCase {
 		$this->assertSame( 0, $this->store()->error_count_since( 0 ) );
 	}
 
+	// ── answer quality: resolution rate ──────────────────────────────────────────
+
+	public function test_resolution_rate_is_answered_over_all_turns(): void {
+		$store = $this->store();
+		$store->record( $this->event( [ 'outcome' => Fahad_AI_Analytics::OUTCOME_ANSWERED ] ) );
+		$store->record( $this->event( [ 'outcome' => Fahad_AI_Analytics::OUTCOME_ANSWERED ] ) );
+		$store->record( $this->event( [ 'outcome' => Fahad_AI_Analytics::OUTCOME_ABSTAINED ] ) );
+		$store->record( $this->event( [ 'outcome' => Fahad_AI_Analytics::OUTCOME_ESCALATED ] ) );
+
+		// 2 answered of 4 total.
+		$this->assertEqualsWithDelta( 0.5, $store->resolution_rate(), 0.0001 );
+	}
+
+	public function test_resolution_rate_is_zero_with_no_turns(): void {
+		$this->assertSame( 0.0, $this->store()->resolution_rate() );
+	}
+
 	// ── aggregates: cost per conversation ────────────────────────────────────────
 
 	public function test_cost_summary_totals_and_averages_per_conversation(): void {
