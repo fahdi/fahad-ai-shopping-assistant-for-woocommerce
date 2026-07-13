@@ -247,11 +247,13 @@ class ToolsTest extends TestCase {
 
         $this->assertSame( 5, $result['id'] );
         $this->assertSame( 'Sneakers', $result['name'] );
-        foreach ( [ 'sku', 'in_stock', 'categories', 'url', 'low_stock' ] as $key ) {
+        foreach ( [ 'sku', 'in_stock', 'categories', 'url', 'low_stock', 'highly_rated' ] as $key ) {
             $this->assertArrayHasKey( $key, $result );
         }
         // qty 10 vs default threshold 2 => not low.
         $this->assertFalse( $result['low_stock'] );
+        // rating 4.5 with 8 reviews meets the 4.5 / 5 bar => highly rated (#255).
+        $this->assertTrue( $result['highly_rated'] );
     }
 
     public function test_get_product_details_flags_low_stock_from_real_data(): void {

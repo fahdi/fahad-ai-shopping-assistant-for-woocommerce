@@ -338,6 +338,16 @@ final class Fahad_AI_Tools {
 		return $stock_qty <= max( 1, $threshold );
 	}
 
+	/**
+	 * Whether a product is genuinely well-reviewed (issue #255), so the assistant can offer honest
+	 * social proof ("one of our top-rated") from real review data, never a fabricated claim. True
+	 * only when the average rating meets the bar AND there are enough reviews for it to be
+	 * meaningful (min reviews floored at 1, so a single 5-star review never reads as "top-rated").
+	 */
+	public static function highly_rated_flag( float $rating, int $reviews, float $min_rating, int $min_reviews ): bool {
+		return $reviews >= max( 1, $min_reviews ) && $rating >= $min_rating;
+	}
+
 	private function get_product_details( array $input ): array {
 		$product_id = absint( $input['product_id'] ?? 0 );
 		$product    = wc_get_product( $product_id );
@@ -364,6 +374,7 @@ final class Fahad_AI_Tools {
 			'url'               => get_permalink( $product->get_id() ),
 			'rating'            => round( (float) $product->get_average_rating(), 2 ),
 			'review_count'      => (int) $product->get_review_count(),
+			'highly_rated'      => self::highly_rated_flag( (float) $product->get_average_rating(), (int) $product->get_review_count(), 4.5, 5 ),
 			'categories'        => wp_list_pluck(
 				get_the_terms( $product_id, 'product_cat' ) ?: [],
 				'name'

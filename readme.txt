@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.37
+Stable tag: 2.14.38
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -219,6 +219,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 
 == Changelog ==
 
+= 2.14.38 =
+Honest social proof: the assistant can now highlight your genuinely top-rated products.
+
+* Product details now include a "highly rated" signal computed from your real average rating and review count (4.5 stars with at least 5 reviews). The assistant can use it to point shoppers to well-reviewed products, a strong and honest conversion nudge, while never inventing popularity.
+
 = 2.14.37 =
 Send the assistant's emails to the right person, not just the site admin.
 
@@ -385,6 +390,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.38 =
+Adds an honest "highly rated" signal from your real reviews so the assistant can highlight top-rated products. No breaking changes.
 
 = 2.14.37 =
 Adds a Notifications Email setting so the assistant's emails reach whoever manages the store, not just the site admin. No breaking changes.
