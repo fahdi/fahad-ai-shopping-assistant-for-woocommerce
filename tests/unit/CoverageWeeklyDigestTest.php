@@ -103,6 +103,23 @@ class CoverageWeeklyDigestTest extends TestCase {
 		$this->assertStringNotContainsString( 'Top questions', fahad_ai_build_weekly_digest( $stats ) );
 	}
 
+	// ── chat-to-cart week-over-week trend (issue #291) ──────────────────────────
+
+	public function test_build_appends_cart_rate_trend_when_previous_supplied(): void {
+		$stats                   = $this->stats(); // cart_rate = 11/42 ~= 26%
+		$stats['prev_cart_rate'] = 0.20;           // 20% last week => up ~6 points
+		$body                    = fahad_ai_build_weekly_digest( $stats );
+		$this->assertStringContainsString( 'from last week', $body );
+		$this->assertStringContainsString( 'chat-to-cart', $body );
+	}
+
+	public function test_build_omits_trend_when_previous_is_zero(): void {
+		$stats                   = $this->stats();
+		$stats['prev_cart_rate'] = 0.0; // no basis => no trend note
+		$body                    = fahad_ai_build_weekly_digest( $stats );
+		$this->assertStringNotContainsString( 'from last week', $body );
+	}
+
 	// ── unmet searches section (issue #283) ─────────────────────────────────────
 
 	public function test_build_lists_unmet_searches_with_a_pointer(): void {

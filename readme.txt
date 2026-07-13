@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.55
+Stable tag: 2.14.56
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.56 =
+Know if it's working: the weekly email now shows whether your chat-to-cart rate is rising or falling.
+
+* The weekly summary's chat-to-cart line now includes a week-over-week trend, for example "(26% chat-to-cart, up 5 points from last week)", so you can see at a glance whether the assistant is improving or slipping and act on it. Shown only once there is a prior week to compare against.
 
 = 2.14.55 =
 Consistency: search now respects your "hide out of stock items" setting.
@@ -475,6 +480,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.56 =
+Adds a week-over-week trend to the weekly email's chat-to-cart rate so you can see if the assistant is improving. No breaking changes.
 
 = 2.14.55 =
 Search now respects your "hide out of stock items" catalog setting, so the assistant does not recommend products shoppers cannot buy. No breaking changes.

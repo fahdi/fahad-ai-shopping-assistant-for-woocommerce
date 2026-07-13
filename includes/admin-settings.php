@@ -209,6 +209,28 @@ function fahad_ai_should_send_weekly_digest( bool $enabled, int $conversations )
 }
 
 /**
+ * Week-over-week trend note for the digest's chat-to-cart rate (issue #291). Both inputs are
+ * 0..1 fractions; the note is in whole percentage points so it reads plainly. Returns an empty
+ * string when last week has no basis (rate 0), so a first-ever week never shows "up from nothing".
+ */
+function fahad_ai_cart_rate_trend( float $current, float $previous ): string {
+	if ( $previous <= 0.0 ) {
+		return '';
+	}
+
+	$delta = (int) round( ( $current - $previous ) * 100 );
+
+	if ( $delta > 0 ) {
+		return 'up ' . $delta . ' points from last week';
+	}
+	if ( $delta < 0 ) {
+		return 'down ' . abs( $delta ) . ' points from last week';
+	}
+
+	return 'level with last week';
+}
+
+/**
  * Build the plain-text body of the weekly owner digest (issue #206) from a pre-gathered
  * stats array. Pure and side-effect free so it is trivially testable; the caller supplies
  * the analytics and the currency/settings URL. Turns the numbers we already record into a
@@ -233,7 +255,17 @@ function fahad_ai_build_weekly_digest( array $stats ): string {
 	$lines[] = 'Your Dukandar shopping assistant, last 7 days';
 	$lines[] = '';
 	$lines[] = 'Conversations: ' . $conversations;
-	$lines[] = 'Added to cart: ' . $cart . ' (' . $rate . '% chat-to-cart)';
+
+	// Chat-to-cart rate, with a week-over-week trend when a prior rate is supplied (issue #291),
+	// so the owner sees direction of travel, not just a static number.
+	$cart_line = 'Added to cart: ' . $cart . ' (' . $rate . '% chat-to-cart';
+	if ( isset( $stats['prev_cart_rate'] ) ) {
+		$trend = fahad_ai_cart_rate_trend( (float) ( $stats['cart_rate'] ?? 0 ), (float) $stats['prev_cart_rate'] );
+		if ( '' !== $trend ) {
+			$cart_line .= ', ' . $trend;
+		}
+	}
+	$lines[] = $cart_line . ')';
 	$lines[] = 'Resolution rate: ' . (int) round( ( (float) ( $stats['resolution_rate'] ?? 0 ) ) * 100 ) . '%';
 	$lines[] = 'Chat-attributed orders: ' . ( null === $orders ? 'n/a' : (int) $orders );
 	$lines[] = 'AI cost: ' . $currency . number_format( $cost, 2 );

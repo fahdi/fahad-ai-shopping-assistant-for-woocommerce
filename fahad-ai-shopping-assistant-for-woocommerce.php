@@ -3,7 +3,7 @@
  * Plugin Name: Dukandar AI Shopping Assistant for WooCommerce
  * Plugin URI:  https://github.com/fahdi/dukandar-shopping-assistant-for-woocommerce
  * Description: AI-powered shopping assistant for WooCommerce, answers questions and manages the cart using OpenAI, Claude, Gemini, Moonshot, and other major AI providers.
- * Version:           2.14.55
+ * Version:           2.14.56
  * Author:      Fahdi Murtaza
  * Author URI:  https://github.com/fahdi
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FAHAD_AI_VERSION', '2.14.55' );
+define( 'FAHAD_AI_VERSION', '2.14.56' );
 define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -175,10 +175,17 @@ final class Fahad_AI_Chatbot {
 		}
 
 		$cost = $store->cost_summary( $range );
+
+		// Prior 7-day window (days 8..14 back) for the chat-to-cart trend (#291); the store keeps
+		// 90 days, so last week's rate is available for a week-over-week comparison.
+		$prev_range  = [ 'from' => time() - 14 * DAY_IN_SECONDS, 'to' => time() - 7 * DAY_IN_SECONDS ];
+		$prev_funnel = $store->funnel( $prev_range, 'fahad_ai_attribute_orders' );
+
 		$body = fahad_ai_build_weekly_digest( [
 			'conversations' => (int) $funnel['conversations'],
 			'added_to_cart' => (int) $funnel['added_to_cart'],
 			'cart_rate'     => (float) $funnel['cart_rate'],
+			'prev_cart_rate' => (float) $prev_funnel['cart_rate'],
 			'resolution_rate' => $store->resolution_rate( $range ),
 			'orders'        => $funnel['orders'],
 			'total_cost'    => (float) $cost['total_cost'],
