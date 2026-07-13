@@ -745,6 +745,9 @@ final class Fahad_AI_Tools {
 			'regular_price'     => $this->plain_price( $product->get_regular_price() ),
 			'sale_price'        => $product->is_on_sale() ? $this->plain_price( $product->get_sale_price() ) : null,
 			'on_sale'           => $product->is_on_sale(),
+			'discount_percent'  => $product->is_on_sale()
+				? self::discount_percent( (float) $product->get_regular_price(), (float) $product->get_sale_price() )
+				: null,
 			'in_stock'          => $product->is_in_stock(),
 			'short_description' => wp_strip_all_tags( $product->get_short_description() ),
 			'image'             => $this->product_image_url( $product ),

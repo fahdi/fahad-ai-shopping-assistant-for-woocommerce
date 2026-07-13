@@ -217,6 +217,18 @@ class ToolsTest extends TestCase {
         $this->assertSame( 1, $result['found'], 'Only the on-sale product must be returned.' );
         $this->assertSame( 1, $result['products'][0]['id'] );
         $this->assertTrue( $result['products'][0]['on_sale'] );
+        // The grounded deal magnitude must be present in list results (49.99 -> 34.99 = 30% off),
+        // so the assistant can lead with "30% off" without a separate product-details call.
+        $this->assertSame( 30, $result['products'][0]['discount_percent'] );
+    }
+
+    public function test_search_summary_discount_percent_is_null_when_not_on_sale(): void {
+        $normal = $this->mockProduct( 2, 'Full Price Tee', '34.99' );
+        Functions\when( 'wc_get_products' )->justReturn( [ $normal ] );
+
+        $result = $this->tools()->execute( 'search_products', [ 'query' => 'tee' ] );
+
+        $this->assertNull( $result['products'][0]['discount_percent'] );
     }
 
     public function test_search_on_sale_with_none_returns_zero_and_a_sale_message(): void {

@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.42
+Stable tag: 2.14.43
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -219,6 +219,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 
 == Changelog ==
 
+= 2.14.43 =
+Deals visible at first glance: the assistant can now lead shoppers to the best deal while listing options.
+
+* Product list results (search, recommendations, best-sellers, bundles, comparisons) now include the same grounded "discount_percent" as the product detail view, so the assistant can say "the blue one is 30% off" the moment it presents options, without a separate lookup. Computed from your real prices, and null when a product is not on sale.
+
 = 2.14.42 =
 Bestseller social proof: the assistant can now point shoppers to your proven best-sellers.
 
@@ -410,6 +415,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.43 =
+Surfaces the grounded discount percentage in product list results so the assistant can lead shoppers to the best deal while listing options. No breaking changes.
 
 = 2.14.42 =
 Adds an opt-in Bestseller Threshold and a grounded per-product bestseller signal so the assistant can highlight proven best-sellers as honest social proof. No breaking changes.
