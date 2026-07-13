@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.47
+Stable tag: 2.14.48
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.48 =
+Social proof at first glance: the assistant can now flag top-rated products while listing options.
+
+* Product list results (search, recommendations, best-sellers, bundles, comparisons) now include the same grounded "highly_rated" flag as the product detail view, so the assistant can lead with "the top two are highly rated" the moment it presents options. Based on your real reviews (4.5+ stars with at least 5 reviews), never invented.
 
 = 2.14.47 =
 Recover sold-out moments: the assistant can now offer alternatives when a shopper tries to buy an out-of-stock item.
@@ -435,6 +440,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.48 =
+Surfaces the grounded highly-rated flag in product list results so the assistant can lead with social proof while listing options. No breaking changes.
 
 = 2.14.47 =
 Offers the product's categories when an out-of-stock item can't be added, so the assistant can steer shoppers to in-stock alternatives. No breaking changes.

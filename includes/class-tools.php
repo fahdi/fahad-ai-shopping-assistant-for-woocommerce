@@ -823,6 +823,7 @@ final class Fahad_AI_Tools {
 			'url'               => get_permalink( $product->get_id() ),
 			'rating'            => round( (float) $product->get_average_rating(), 2 ),
 			'review_count'      => (int) $product->get_review_count(),
+			'highly_rated'      => self::highly_rated_flag( (float) $product->get_average_rating(), (int) $product->get_review_count(), 4.5, 5 ),
 		];
 	}
 

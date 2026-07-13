@@ -194,6 +194,29 @@ class ToolsTest extends TestCase {
         }
     }
 
+    public function test_search_summary_flags_highly_rated_from_real_data(): void {
+        // A well-reviewed product (4.5 stars, 8 reviews via mockProduct defaults) must carry the
+        // decision-ready social-proof flag in list results, so the assistant can lead with it.
+        $product = $this->mockProduct( 7, 'Beloved Tee', '29.99' );
+        Functions\when( 'wc_get_products' )->justReturn( [ $product ] );
+
+        $result = $this->tools()->execute( 'search_products', [ 'query' => 'tee' ] );
+
+        $this->assertTrue( $result['products'][0]['highly_rated'] );
+    }
+
+    public function test_search_summary_highly_rated_false_without_enough_reviews(): void {
+        // A perfect score with too few reviews must not read as top-rated (same bar as details).
+        $product = $this->mockProduct( 8, 'New Tee', '19.99' );
+        $product->shouldReceive( 'get_average_rating' )->andReturn( '5.0' );
+        $product->shouldReceive( 'get_review_count' )->andReturn( 2 );
+        Functions\when( 'wc_get_products' )->justReturn( [ $product ] );
+
+        $result = $this->tools()->execute( 'search_products', [ 'query' => 'tee' ] );
+
+        $this->assertFalse( $result['products'][0]['highly_rated'] );
+    }
+
     // ── on-sale filter (issue #137) ─────────────────────────────────────────────
     // A grounded "what is on sale" needs a real filter, so the assistant can never
     // claim sale status from memory and the cards always match the claim.
