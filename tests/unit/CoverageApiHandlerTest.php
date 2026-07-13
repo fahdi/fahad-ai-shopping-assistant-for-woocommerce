@@ -627,6 +627,22 @@ class CoverageApiHandlerTest extends TestCase {
 		$this->assertStringNotContainsString( 'Human support', $block );
 	}
 
+	public function test_merchant_config_block_includes_store_knowledge(): void {
+		$this->set_option_alias( [ 'fahad_ai_store_knowledge' => 'Orders ship in 1-2 business days. Sizes run small.' ] );
+
+		$block = (string) $this->invoke( 'merchant_config_block' );
+
+		$this->assertStringContainsString( 'Store information', $block );
+		$this->assertStringContainsString( 'Orders ship in 1-2 business days. Sizes run small.', $block );
+		$this->assertStringContainsString( 'Store preferences', $block );
+	}
+
+	public function test_merchant_config_block_omits_store_knowledge_when_blank(): void {
+		$this->set_option_alias( [ 'fahad_ai_store_knowledge' => '   ' ] );
+		$block = (string) $this->invoke( 'merchant_config_block' );
+		$this->assertStringNotContainsString( 'Store information', $block );
+	}
+
 	// =========================================================================
 	// language_directive(), specific (non-auto) value (line 918)
 	// =========================================================================

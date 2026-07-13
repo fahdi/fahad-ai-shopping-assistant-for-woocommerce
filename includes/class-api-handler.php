@@ -921,6 +921,15 @@ Writing style, follow exactly:
 			$lines[] = '- Human support: when a shopper needs a person (you cannot help, they ask for a human, or the request is outside what you can do), direct them to this exact contact and never invent another: ' . $support;
 		}
 
+		// Store information / FAQ (issue #214): owner-supplied facts about the store (shipping
+		// times, sizing/fit, materials, care, brand, common questions) that product data does
+		// not cover. Treat as authoritative facts about THIS store: answer from it when
+		// relevant, but never invent details beyond what it states.
+		$knowledge = trim( (string) get_option( 'fahad_ai_store_knowledge', '' ) );
+		if ( '' !== $knowledge ) {
+			$lines[] = '- Store information: use the following owner-provided facts about this store to answer shopper questions when relevant (shipping times, sizing, materials, policies, and similar). Treat it as authoritative for this store, but never invent details beyond what it states: ' . $knowledge;
+		}
+
 		if ( empty( $lines ) ) {
 			return '';
 		}

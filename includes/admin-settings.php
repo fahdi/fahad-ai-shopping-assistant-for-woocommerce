@@ -733,6 +733,7 @@ function fahad_ai_settings_page(): void {
 		update_option( 'fahad_ai_free_shipping_threshold', max( 0, (float) ( $_POST['free_shipping_threshold'] ?? 0 ) ) );
 		update_option( 'fahad_ai_return_policy', sanitize_textarea_field( wp_unslash( $_POST['return_policy'] ?? '' ) ) );
 		update_option( 'fahad_ai_support_contact', sanitize_text_field( wp_unslash( $_POST['support_contact'] ?? '' ) ) );
+		update_option( 'fahad_ai_store_knowledge', sanitize_textarea_field( wp_unslash( $_POST['store_knowledge'] ?? '' ) ) );
 		update_option( 'fahad_ai_weekly_digest', empty( $_POST['weekly_digest'] ) ? 0 : 1 );
 		update_option( 'fahad_ai_disabled_tools', fahad_ai_sanitize_tool_list( array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['disabled_tools'] ?? [] ) ) ) );
 
@@ -792,6 +793,7 @@ function fahad_ai_settings_page(): void {
 	$free_shipping_threshold = (float) get_option( 'fahad_ai_free_shipping_threshold', 0 );
 	$return_policy      = get_option( 'fahad_ai_return_policy',          '' );
 	$support_contact    = get_option( 'fahad_ai_support_contact',        '' );
+	$store_knowledge    = get_option( 'fahad_ai_store_knowledge',        '' );
 	$weekly_digest      = fahad_ai_weekly_digest_enabled();
 	$languages          = get_option( 'fahad_ai_languages',            'auto' ); // multilingual (#61)
 	$disabled_tools     = (array) get_option( 'fahad_ai_disabled_tools', [] );
@@ -1119,6 +1121,15 @@ function fahad_ai_settings_page(): void {
 							value="<?php echo esc_attr( $support_contact ); ?>">
 						<p class="description">
 							<?php esc_html_e( 'How a shopper reaches a human, e.g. an email, phone number, or contact page URL. The assistant shares this exactly when someone needs a person or it cannot help, and never invents a contact. Leave blank to give no contact.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="store_knowledge"><?php esc_html_e( 'Store Information / FAQ', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<td>
+						<textarea id="store_knowledge" name="store_knowledge" class="large-text" rows="5"><?php echo esc_textarea( $store_knowledge ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Facts about your store the assistant can share, beyond product data: shipping and delivery times, sizing and fit, materials and care, brand or warranty info, and other common questions. The assistant answers from this when relevant and never invents details beyond it. Leave blank to skip.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>

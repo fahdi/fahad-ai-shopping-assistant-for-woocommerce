@@ -635,6 +635,7 @@ class CoverageAdminSettingsTest extends TestCase {
 			'promo_emphasis'        => 'Footwear: clearance',
 			'return_policy'         => '14-day returns, unopened only.',
 			'support_contact'       => 'help@store.example',
+			'store_knowledge'       => 'Free gift wrapping on request. Ships worldwide.',
 			'disabled_tools'        => [ 'track_order' ],
 			'languages'             => 'English, Urdu',
 			'token_budget'          => '8000',
@@ -672,6 +673,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertSame( 50.0, $this->options['fahad_ai_free_shipping_threshold'] );
 		$this->assertSame( '14-day returns, unopened only.', $this->options['fahad_ai_return_policy'] );
 		$this->assertSame( 'help@store.example', $this->options['fahad_ai_support_contact'] );
+		$this->assertSame( 'Free gift wrapping on request. Ships worldwide.', $this->options['fahad_ai_store_knowledge'] );
 		$this->assertSame( 1, $this->options['fahad_ai_fast_model_routing'] );
 		$this->assertSame( 1, $this->options['fahad_ai_proactive_enabled'] );
 		$this->assertSame( 2, $this->options['fahad_ai_proactive_frequency'] );

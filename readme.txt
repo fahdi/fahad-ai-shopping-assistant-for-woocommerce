@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.17
+Stable tag: 2.14.18
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.18 =
+Teach the assistant your store: answer shipping, sizing, and FAQ questions, not just product data.
+
+* Added a "Store Information / FAQ" setting. Enter facts about your store, delivery times, sizing and fit, materials and care, brand or warranty details, common questions, and the assistant answers from them when relevant instead of deflecting. It treats your information as authoritative for your store and never invents details beyond it. Turns the assistant from a product-catalogue helper into a store expert.
 
 = 2.14.17 =
 No more dead ends: give the assistant your support contact so "talk to a human" leads somewhere.
@@ -528,6 +533,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.18 =
+Adds a Store Information / FAQ setting so the assistant can answer shipping, sizing, and other store questions from your own words. No breaking changes.
 
 = 2.14.17 =
 Adds a Support Contact setting so the assistant can hand shoppers to a real person instead of a vague "contact support". No breaking changes.
