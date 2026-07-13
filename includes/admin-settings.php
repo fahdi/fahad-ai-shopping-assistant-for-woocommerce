@@ -83,8 +83,26 @@ function fahad_ai_dashboard_widget(): void {
 		echo '<tr><td>' . esc_html( $label ) . '</td><td style="text-align:right"><strong>' . esc_html( $value ) . '</strong></td></tr>';
 	}
 	echo '</table>';
+
+	// Setup-completion nudge (#245 + #247, issue #251): show progress on the screen owners
+	// see every login, so the high-value setup actually gets finished. Branch-free.
+	$checklist = fahad_ai_setup_checklist();
+	$done      = count( array_filter( $checklist, static fn( $item ) => ! empty( $item['done'] ) ) );
 	printf(
-		'<p style="margin:10px 0 0"><a href="%s">%s</a></p>',
+		'<p style="margin:10px 0 0">%s <a href="%s">%s</a></p>',
+		esc_html(
+			sprintf(
+				/* translators: 1: completed setup steps, 2: total setup steps. */
+				esc_html__( 'Setup: %1$d of %2$d steps complete.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				$done,
+				count( $checklist )
+			)
+		),
+		esc_url( $settings ),
+		esc_html__( 'Finish setup', 'fahad-ai-shopping-assistant-for-woocommerce' )
+	);
+	printf(
+		'<p style="margin:6px 0 0"><a href="%s">%s</a></p>',
 		esc_url( $settings ),
 		esc_html__( 'View full analytics and settings', 'fahad-ai-shopping-assistant-for-woocommerce' )
 	);

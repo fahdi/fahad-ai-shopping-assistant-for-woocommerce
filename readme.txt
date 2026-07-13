@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.35
+Stable tag: 2.14.36
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -219,6 +219,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 
 == Changelog ==
 
+= 2.14.36 =
+The dashboard widget now nudges you to finish setup, on the screen you see every login.
+
+* The Dukandar dashboard widget now shows your setup progress ("X of Y steps complete") with a link to finish, so the prompt to complete the high-value setup appears where you actually look, not buried in Settings.
+
 = 2.14.35 =
 Tune abuse protection without code: the per-visitor request limit is now a setting.
 
@@ -375,6 +380,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.36 =
+The dashboard widget now shows setup progress with a link to finish. No breaking changes.
 
 = 2.14.35 =
 Adds a Requests Per Minute setting so you can tune per-visitor abuse protection without code. No breaking changes.
