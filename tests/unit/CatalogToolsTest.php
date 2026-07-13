@@ -146,6 +146,35 @@ class CatalogToolsTest extends TestCase {
         }
     }
 
+    public function test_get_top_products_hides_out_of_stock_when_store_hides_them(): void {
+        // A sold-out best-seller must be dropped when the store hides out-of-stock items, so the
+        // assistant never recommends a popular product the shopper cannot buy.
+        $inStock = $this->mockProduct( 1, 'Available Bestseller', '29.99' );
+        $soldOut = $this->mockProduct( 2, 'Sold Out Bestseller', '29.99' );
+        $soldOut->shouldReceive( 'is_in_stock' )->andReturn( false );
+        Functions\when( 'wc_get_products' )->justReturn( [ $inStock, $soldOut ] );
+        Functions\when( 'get_option' )->alias(
+            fn( $k, $d = '' ) => 'woocommerce_hide_out_of_stock_items' === $k ? 'yes' : $d
+        );
+
+        $result = $this->registry()->dispatch( 'get_top_products', [] );
+
+        $this->assertSame( 1, $result['found'] );
+        $this->assertSame( 1, $result['products'][0]['id'] );
+    }
+
+    public function test_get_top_products_keeps_out_of_stock_when_store_does_not_hide_them(): void {
+        // Default (setting off): out-of-stock best-sellers remain, behaviour unchanged.
+        $inStock = $this->mockProduct( 1, 'Available Bestseller', '29.99' );
+        $soldOut = $this->mockProduct( 2, 'Sold Out Bestseller', '29.99' );
+        $soldOut->shouldReceive( 'is_in_stock' )->andReturn( false );
+        Functions\when( 'wc_get_products' )->justReturn( [ $inStock, $soldOut ] );
+
+        $result = $this->registry()->dispatch( 'get_top_products', [] );
+
+        $this->assertSame( 2, $result['found'] );
+    }
+
     public function test_get_top_products_orders_by_total_sales_descending(): void {
         // "Best seller" is defined as highest total_sales, assert the query asks
         // for that ordering so the definition is enforced, not just documented.

@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.56
+Stable tag: 2.14.57
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.57 =
+Consistency: best-sellers also respect your "hide out of stock items" setting.
+
+* Extends the 2.14.55 fix to the best-sellers list: if your store hides out-of-stock products, the assistant no longer recommends a sold-out best-seller either. Popular products are the most likely to sell out, so this closes the most visible gap. When the setting is off (the default), results are unchanged.
 
 = 2.14.56 =
 Know if it's working: the weekly email now shows whether your chat-to-cart rate is rising or falling.
@@ -480,6 +485,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.57 =
+Best-sellers now respect your "hide out of stock items" setting too, so the assistant does not recommend sold-out popular products. No breaking changes.
 
 = 2.14.56 =
 Adds a week-over-week trend to the weekly email's chat-to-cart rate so you can see if the assistant is improving. No breaking changes.

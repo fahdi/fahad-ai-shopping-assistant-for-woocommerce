@@ -98,6 +98,17 @@ final class Fahad_AI_Catalog_Tools {
 
 		$products = wc_get_products( $args );
 
+		// Respect the store's hide-out-of-stock catalog policy (issue #293), consistent with
+		// search_products: never recommend a sold-out best-seller the merchant has hidden from
+		// the shop. Reuses the shared stock_visible() guard; a no-hide store keeps everything.
+		$hide_out_of_stock = ( 'yes' === get_option( 'woocommerce_hide_out_of_stock_items' ) );
+		$products          = array_values(
+			array_filter(
+				$products,
+				static fn( $p ) => $p instanceof WC_Product && Fahad_AI_Tools::stock_visible( $p->is_in_stock(), $hide_out_of_stock )
+			)
+		);
+
 		if ( empty( $products ) ) {
 			return [
 				'found'    => 0,
