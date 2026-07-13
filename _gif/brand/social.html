@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b0c0f; --ink-2:#131519; --ink-3:#191c22;
+    --paper:#f4f0e7; --paper-soft:#c8c4ba; --paper-dim:#8f8c84;
+    --lime:#d6fb4f; --lime-deep:#aee02a; --rose:#ff6b5e;
+    --line:rgba(244,240,231,.10); --line-2:rgba(244,240,231,.055);
+    --serif:'Fraunces',Georgia,serif; --sans:'Hanken Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1280px;height:640px;overflow:hidden}
+  .stage{position:relative;width:1280px;height:640px;overflow:hidden;color:var(--paper);font-family:var(--sans);
+    background:
+      radial-gradient(60% 110% at 82% 8%, rgba(214,251,79,.14), transparent 55%),
+      radial-gradient(80% 120% at 8% 100%, #16181d 0%, #0e0f13 52%, #0b0c0f 100%);
+  }
+  .grid{position:absolute;inset:0;
+    background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);
+    background-size:56px 56px;mask-image:radial-gradient(120% 120% at 20% 40%,#000 30%,transparent 78%)}
+  .grain{position:absolute;inset:0;opacity:.045;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
+
+  .wrap{position:absolute;inset:0;display:grid;grid-template-columns:1.02fr .98fr;align-items:center;gap:20px;padding:64px 70px}
+
+  /* left column */
+  .brand{display:flex;align-items:center;gap:14px;font-family:var(--serif);font-weight:600;font-size:30px;letter-spacing:-.02em}
+  .brand .dot{width:16px;height:16px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 6px rgba(214,251,79,.16)}
+  .eyebrow{margin-top:34px;font-family:var(--mono);font-size:16px;letter-spacing:.22em;text-transform:uppercase;color:var(--lime-deep);display:flex;align-items:center;gap:14px}
+  .eyebrow::before{content:"";width:34px;height:2px;background:var(--lime-deep)}
+  h1{font-family:var(--serif);font-weight:600;font-size:66px;line-height:1.0;letter-spacing:-.025em;margin-top:20px;max-width:12ch}
+  .mark{position:relative;z-index:0;color:var(--ink);white-space:nowrap;padding:0 .1em}
+  .mark::before{content:"";position:absolute;left:-.02em;right:-.02em;top:.1em;bottom:.14em;background:var(--lime);border-radius:8px;z-index:-1;box-shadow:0 8px 26px rgba(214,251,79,.30)}
+  .chips{display:flex;gap:12px;margin-top:34px;flex-wrap:wrap;max-width:26em}
+  .chip{font-family:var(--mono);font-size:15px;color:var(--paper-soft);border:1px solid var(--line);border-radius:999px;padding:9px 16px;background:rgba(255,255,255,.02)}
+  .chip b{color:var(--lime);font-weight:500}
+
+  /* right column: grounded chat card */
+  .card{justify-self:end;width:452px;border-radius:22px;padding:22px;position:relative;
+    background:linear-gradient(180deg,rgba(28,31,37,.96),rgba(17,19,23,.96));
+    border:1px solid var(--line);
+    box-shadow:0 40px 90px -30px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.05)}
+  .card::before{content:"";position:absolute;inset:0;border-radius:22px;padding:1px;
+    background:linear-gradient(150deg,rgba(214,251,79,.5),transparent 42%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+  .chead{display:flex;align-items:center;gap:9px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+  .chead .d{width:11px;height:11px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(214,251,79,.16)}
+  .chead .t{font-weight:600;font-size:15px}
+  .chead .live{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--paper-dim);text-transform:uppercase}
+  .q{margin-left:auto;max-width:74%;background:var(--lime);color:var(--ink);font-weight:600;font-size:16px;line-height:1.3;padding:12px 15px;border-radius:15px 15px 5px 15px}
+  .a{max-width:88%;margin-top:14px;background:var(--ink-3);border:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--paper-soft);padding:13px 15px;border-radius:15px 15px 15px 5px}
+  /* product card inside the reply */
+  .prod{display:flex;gap:13px;align-items:center;margin-top:13px;background:#0e1014;border:1px solid var(--line);border-radius:13px;padding:12px}
+  .thumb{width:56px;height:56px;border-radius:10px;flex-shrink:0;position:relative;overflow:hidden;
+    background:radial-gradient(120% 120% at 30% 20%,#2a2f16,#0f1206);border:1px solid rgba(214,251,79,.22)}
+  .thumb::after{content:"";position:absolute;inset:0;background:
+    radial-gradient(60% 60% at 50% 42%, rgba(214,251,79,.85), rgba(214,251,79,.15) 55%, transparent 72%)}
+  .pmeta{flex:1;min-width:0}
+  .pname{font-family:var(--sans);font-weight:600;font-size:15px;color:var(--paper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .prow{display:flex;align-items:center;gap:10px;margin-top:5px}
+  .price{font-family:var(--mono);font-weight:700;font-size:16px;color:var(--paper)}
+  .stock{font-family:var(--mono);font-size:12px;color:var(--lime-deep);display:flex;align-items:center;gap:5px}
+  .stock .s{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime)}
+  .grounded{display:flex;align-items:center;gap:8px;margin-top:13px;font-family:var(--mono);font-size:12.5px;letter-spacing:.02em;color:var(--paper-dim)}
+  .grounded .tick{width:18px;height:18px;border-radius:50%;background:rgba(214,251,79,.14);border:1px solid rgba(214,251,79,.4);color:var(--lime);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+
+  .host{position:absolute;left:70px;bottom:40px;font-family:var(--mono);font-size:17px;color:var(--paper-dim);letter-spacing:.02em}
+  .host b{color:var(--paper-soft);font-weight:500}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="grid"></div>
+    <div class="wrap">
+      <div class="col">
+        <div class="brand"><span class="dot"></span>Dukandar</div>
+        <div class="eyebrow">WooCommerce shopping assistant</div>
+        <h1>Answers from your <span class="mark">real</span> catalogue.</h1>
+        <div class="chips">
+          <span class="chip"><b>0</b> invented prices</span>
+          <span class="chip"><b>100%</b> test coverage</span>
+          <span class="chip">grounded, not guessed</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chead"><span class="d"></span><span class="t">Store Assistant</span><span class="live">grounded</span></div>
+        <div class="q">Do you have wireless headphones?</div>
+        <div class="a">
+          Yes, here is a great match from your store:
+          <div class="prod">
+            <div class="thumb"></div>
+            <div class="pmeta">
+              <div class="pname">Wireless Noise-Cancelling Headphones</div>
+              <div class="prow">
+                <span class="price">$249.00</span>
+                <span class="stock"><span class="s"></span>In stock</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grounded"><span class="tick">&#10003;</span> Every price and stock level is read live from WooCommerce</div>
+      </div>
+    </div>
+    <div class="host"><b>getdukandar.com</b> &nbsp;/&nbsp; open source &middot; GPL</div>
+    <div class="grain"></div>
+  </div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-![Fahad AI: the honest WooCommerce shopping assistant](.github/banner.gif)
+![Dukandar: the honest WooCommerce shopping assistant](.github/banner.gif)
 
 # Fahad AI Shopping Assistant for WooCommerce
 

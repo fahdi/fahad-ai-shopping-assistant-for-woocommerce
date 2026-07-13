@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b0c0f; --ink-3:#191c22; --paper:#f4f0e7; --paper-soft:#c8c4ba; --paper-dim:#8f8c84;
+    --lime:#d6fb4f; --lime-deep:#aee02a;
+    --line:rgba(244,240,231,.10); --line-2:rgba(244,240,231,.05);
+    --serif:'Fraunces',Georgia,serif; --sans:'Hanken Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1544px;height:500px;overflow:hidden;background:#000}
+  .stage{position:relative;width:1544px;height:500px;overflow:hidden;color:var(--paper);font-family:var(--sans);
+    background:
+      radial-gradient(50% 120% at 84% 12%, rgba(214,251,79,.13), transparent 55%),
+      radial-gradient(80% 130% at 10% 100%, #16181d 0%, #0e0f13 52%, #0b0c0f 100%);}
+  .grid{position:absolute;inset:0;background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);background-size:52px 52px;mask-image:radial-gradient(120% 120% at 18% 50%,#000 26%,transparent 76%)}
+  .grain{position:absolute;inset:0;opacity:.05;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
+
+  /* left lockup */
+  .lock{position:absolute;left:96px;top:50%;transform:translateY(-50%);width:760px}
+  .brand{display:flex;align-items:center;gap:13px;font-family:var(--serif);font-weight:600;font-size:38px;letter-spacing:-.02em}
+  .brand .dot{width:17px;height:17px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 6px rgba(214,251,79,.16)}
+  .tag{font-family:var(--serif);font-weight:600;font-size:62px;line-height:1.02;letter-spacing:-.025em;margin-top:22px}
+  .mark{position:relative;z-index:0;color:var(--ink);white-space:nowrap;padding:0 .1em}
+  .mark .sw{position:absolute;left:-.02em;right:-.02em;top:.1em;bottom:.16em;background:var(--lime);border-radius:8px;z-index:-1;box-shadow:0 8px 24px rgba(214,251,79,.3);transform-origin:left center}
+  .kick{font-family:var(--mono);font-weight:500;font-size:19px;letter-spacing:2.5px;text-transform:uppercase;color:var(--paper-soft);margin-top:30px}
+  .kick b{color:var(--lime);font-weight:500}
+
+  /* right grounded product card */
+  .card{position:absolute;right:96px;top:50%;transform:translateY(-50%);width:560px;border-radius:20px;padding:22px 22px 20px;
+    background:linear-gradient(180deg,rgba(28,31,37,.97),rgba(16,18,22,.97));border:1px solid var(--line);overflow:hidden;
+    box-shadow:0 40px 90px -30px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.05)}
+  .card::before{content:"";position:absolute;inset:0;border-radius:20px;padding:1px;background:linear-gradient(150deg,rgba(214,251,79,.5),transparent 40%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+  .chead{display:flex;align-items:center;gap:9px;padding-bottom:14px;margin-bottom:15px;border-bottom:1px solid var(--line)}
+  .chead .d{width:12px;height:12px;border-radius:50%;background:var(--lime)}
+  .chead .t{font-weight:600;font-size:16px}
+  .chead .live{margin-left:auto;font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--paper-dim);text-transform:uppercase}
+  .prod{display:flex;gap:15px;align-items:center;background:#0e1014;border:1px solid var(--line);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+  .thumb{width:64px;height:64px;border-radius:11px;flex-shrink:0;position:relative;overflow:hidden;background:radial-gradient(120% 120% at 30% 20%,#2a2f16,#0f1206);border:1px solid rgba(214,251,79,.22)}
+  .thumb::after{content:"";position:absolute;inset:0;background:radial-gradient(60% 60% at 50% 42%, rgba(214,251,79,.85), rgba(214,251,79,.15) 55%, transparent 72%)}
+  .pname{font-weight:600;font-size:17px;color:var(--paper)}
+  .prow{display:flex;align-items:center;gap:12px;margin-top:7px}
+  .price{font-family:var(--mono);font-weight:700;font-size:18px;color:var(--paper)}
+  .stock{font-family:var(--mono);font-size:13px;color:var(--lime-deep);display:flex;align-items:center;gap:6px}
+  .stock .s{width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime)}
+  .scan{position:absolute;top:0;bottom:0;width:120px;pointer-events:none;
+    background:linear-gradient(90deg,transparent,rgba(214,251,79,.16),rgba(214,251,79,.42),rgba(214,251,79,.16),transparent);mix-blend-mode:screen}
+  .grounded{display:flex;align-items:center;gap:9px;margin-top:15px;font-family:var(--mono);font-size:13px;color:var(--paper-dim)}
+  .grounded .tick{width:19px;height:19px;border-radius:50%;background:rgba(214,251,79,.14);border:1px solid rgba(214,251,79,.4);color:var(--lime);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="grid"></div>
+    <div class="lock">
+      <div class="brand"><span class="dot" id="bdot"></span>Dukandar</div>
+      <div class="tag">The assistant that<br><span class="mark">shows its work<span class="sw" id="sw"></span></span></div>
+      <div class="kick">Grounded in your store data <b>&middot;</b> 13+ AI providers</div>
+    </div>
+
+    <div class="card" id="card">
+      <div class="chead"><span class="d" id="hdot"></span><span class="t">Store Assistant</span><span class="live">grounded</span></div>
+      <div class="prod">
+        <div class="thumb"></div>
+        <div class="pmeta">
+          <div class="pname">Wireless Noise-Cancelling Headphones</div>
+          <div class="prow"><span class="price">$249.00</span><span class="stock"><span class="s" id="sdot"></span>In stock</span></div>
+        </div>
+        <div class="scan" id="scan"></div>
+      </div>
+      <div class="grounded"><span class="tick">&#10003;</span> Price and stock read live from WooCommerce</div>
+    </div>
+
+    <div class="grain"></div>
+  </div>
+<script>
+  const TAU = Math.PI * 2;
+  const sw   = document.getElementById('sw');
+  const scan = document.getElementById('scan');
+  const bdot = document.getElementById('bdot');
+  const hdot = document.getElementById('hdot');
+  const sdot = document.getElementById('sdot');
+  const easeOut = x => 1 - Math.pow(1 - x, 3);
+
+  window.__draw = function (t) {
+    // Highlight swipe fills in over the first third, holds, seam-safe (starts + ends full).
+    const fill = easeOut(Math.min(1, t / 0.34));
+    sw.style.transform = 'scaleX(' + (0.06 + 0.94 * fill) + ')';
+
+    // Lime scan sweeps the product card once; opacity fades to 0 at both ends so the
+    // loop is seamless (invisible at t=0 and t=1).
+    const x = -140 + t * (560 - 44 + 140);      // travel across the card interior
+    scan.style.left = x + 'px';
+    scan.style.opacity = Math.sin(t * Math.PI).toFixed(3);
+
+    // Gentle breathing on the brand + header dots; the stock dot pulses a touch faster.
+    const b = 0.5 + 0.5 * Math.sin(t * TAU);
+    bdot.style.boxShadow = '0 0 0 ' + (5 + 4 * b) + 'px rgba(214,251,79,' + (0.10 + 0.12 * b) + ')';
+    hdot.style.boxShadow = '0 0 ' + (6 + 8 * b) + 'px rgba(214,251,79,' + (0.4 + 0.4 * b) + ')';
+    const p = 0.5 + 0.5 * Math.sin(t * TAU * 2);
+    sdot.style.boxShadow = '0 0 ' + (6 + 8 * p) + 'px var(--lime)';
+  };
+  window.__draw(0);
+  window.__ready = true;
+</script>
+</body>
+</html>
