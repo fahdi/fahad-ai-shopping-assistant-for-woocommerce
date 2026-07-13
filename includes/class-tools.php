@@ -710,6 +710,22 @@ final class Fahad_AI_Tools {
 			return $response;
 		}
 
+		// Honest stock-limit message (issue #295): the item is in stock but the shopper asked for
+		// more than is available. Use WooCommerce's own has_enough_stock (which respects managed
+		// stock and backorders) so we give a clear "only N left" answer instead of falling through
+		// to the generic "may require a variation" error, and never touch the cart.
+		if ( ! $item->has_enough_stock( $quantity ) ) {
+			return [
+				'success' => false,
+				'error'   => sprintf(
+					/* translators: 1: available quantity, 2: product (or selected variation) name */
+					__( 'Only %1$d left of %2$s, so I could not add that many. Please choose %1$d or fewer.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					(int) $item->get_stock_quantity(),
+					$item->get_name()
+				),
+			];
+		}
+
 		$cart_item_key = WC()->cart->add_to_cart( $product_id, $quantity, $variation_id );
 
 		if ( $cart_item_key ) {

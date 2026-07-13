@@ -101,6 +101,7 @@ if ( ! class_exists( 'WC_Product' ) ) {
         public function get_short_description(): string   { return ''; }
         public function get_sku(): string                 { return ''; }
         public function is_in_stock(): bool               { return true; }
+        public function has_enough_stock( $qty ): bool    { return true; }
         public function get_stock_quantity(): ?int        { return null; }
         public function get_type(): string                { return 'simple'; }
         public function is_visible(): bool                { return true; }
