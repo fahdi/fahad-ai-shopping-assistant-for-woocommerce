@@ -80,6 +80,28 @@ function fahad_ai_dashboard_widget(): void {
 }
 
 /**
+ * The key setup steps and whether each is done (issue #247). Most of the assistant's value
+ * depends on these being filled in, so the settings page shows this as an at-a-glance
+ * "what is left to do" list. Pure over the stored options; each item carries a plain-text
+ * marker ('done' or 'to do') so the render stays branch-free.
+ *
+ * @return array<int, array{label: string, done: bool, mark: string}>
+ */
+function fahad_ai_setup_checklist(): array {
+	$items = [
+		[ 'label' => 'Connect an AI provider', 'done' => fahad_ai_is_provider_configured() ],
+		[ 'label' => 'Add Store Information / FAQ (shipping times, sizing, policies)', 'done' => '' !== trim( (string) get_option( 'fahad_ai_store_knowledge', '' ) ) ],
+		[ 'label' => 'Set a support contact for handoffs', 'done' => '' !== trim( (string) get_option( 'fahad_ai_support_contact', '' ) ) ],
+		[ 'label' => 'Set a free-shipping threshold to lift order value', 'done' => (float) get_option( 'fahad_ai_free_shipping_threshold', 0 ) > 0 ],
+	];
+	foreach ( $items as &$item ) {
+		$item['mark'] = $item['done'] ? 'done' : 'to do';
+	}
+	unset( $item );
+	return $items;
+}
+
+/**
  * The WooCommerce features this plugin declares compatibility with (issue #208). Single
  * source of truth, iterated by the before_woocommerce_init hook in the main file. HPOS
  * (`custom_order_tables`) is safe here because every order access goes through CRUD
@@ -1050,6 +1072,13 @@ function fahad_ai_settings_page(): void {
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Dukandar AI Shopping Assistant Settings', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h1>
+
+		<h2 class="title"><?php esc_html_e( 'Setup progress', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<ul style="max-width:46em;margin:0 0 8px;list-style:none;padding:0">
+			<?php foreach ( fahad_ai_setup_checklist() as $step ) : ?>
+				<li style="padding:4px 0"><code style="margin-right:8px"><?php echo esc_html( $step['mark'] ); ?></code><?php echo esc_html( $step['label'] ); ?></li>
+			<?php endforeach; ?>
+		</ul>
 
 		<form method="post">
 			<?php wp_nonce_field( 'fahad_ai_settings' ); ?>
