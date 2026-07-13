@@ -753,7 +753,7 @@ final class Fahad_AI_Tools {
 		$product_name = $cart_contents[ $key ]['data']->get_name();
 
 		if ( WC()->cart->remove_cart_item( $key ) ) {
-			return [
+			$response = [
 				'success'   => true,
 				'message'   => sprintf(
 					/* translators: %s: product name */
@@ -762,6 +762,16 @@ final class Fahad_AI_Tools {
 				),
 				'new_total' => wp_strip_all_tags( WC()->cart->get_cart_total() ),
 			];
+
+			// Re-surface free-shipping progress (issue #271): removing an item can drop the cart
+			// below the threshold, so tell the shopper how much they are now away, from the real
+			// updated total, and give them a reason to re-add. Only when a threshold is configured.
+			$threshold = (float) get_option( 'fahad_ai_free_shipping_threshold', 0 );
+			if ( $threshold > 0 ) {
+				$response['free_shipping'] = self::free_shipping_progress( (float) WC()->cart->get_cart_contents_total(), $threshold );
+			}
+
+			return $response;
 		}
 
 		return [

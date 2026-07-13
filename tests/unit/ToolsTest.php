@@ -772,6 +772,30 @@ class ToolsTest extends TestCase {
 
         $this->assertTrue( $result['success'] );
         $this->assertStringContainsString( 'Jeans', $result['message'] );
+        // No threshold configured (get_option default 0) => no free-shipping nudge.
+        $this->assertArrayNotHasKey( 'free_shipping', $result );
+    }
+
+    public function test_remove_from_cart_resurfaces_free_shipping_progress(): void {
+        // Removing an item can drop the cart below the free-shipping bar; the assistant must be
+        // able to say "you're now $X away from free shipping" so the shopper can re-add.
+        $product  = $this->mockProduct( 5, 'Jeans', '59' );
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldReceive( 'get_cart' )->andReturn( [ 'key_xyz' => [ 'data' => $product ] ] );
+        $mockCart->shouldReceive( 'remove_cart_item' )->with( 'key_xyz' )->andReturn( true );
+        $mockCart->shouldReceive( 'get_cart_total' )->andReturn( '$41.00' );
+        $mockCart->shouldReceive( 'get_cart_contents_total' )->andReturn( 41.0 );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+        Functions\when( 'get_option' )->alias(
+            fn( $k, $d = '' ) => 'fahad_ai_free_shipping_threshold' === $k ? 50.0 : $d
+        );
+
+        $result = $this->tools()->execute( 'remove_from_cart', [ 'cart_item_key' => 'key_xyz' ] );
+
+        $this->assertArrayHasKey( 'free_shipping', $result );
+        $this->assertSame( 50.0, $result['free_shipping']['threshold'] );
+        $this->assertEqualsWithDelta( 9.0, $result['free_shipping']['remaining'], 0.001 );
+        $this->assertFalse( $result['free_shipping']['qualified'] );
     }
 
     public function test_remove_from_cart_fails_for_unknown_key(): void {
