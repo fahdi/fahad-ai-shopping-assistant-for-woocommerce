@@ -366,6 +366,7 @@ class ToolsTest extends TestCase {
         $p->shouldReceive( 'get_average_rating' )->andReturn( '4.5' )->byDefault();
         $p->shouldReceive( 'get_review_count' )->andReturn( 8 )->byDefault();
         $p->shouldReceive( 'get_total_sales' )->andReturn( 0 )->byDefault();
+        $p->shouldReceive( 'has_enough_stock' )->andReturn( true )->byDefault();
         return $p;
     }
 
@@ -647,6 +648,7 @@ class ToolsTest extends TestCase {
         $product->shouldReceive( 'get_price' )->andReturn( '149.99' );
         $product->shouldReceive( 'is_visible' )->andReturn( true );
         $product->shouldReceive( 'is_in_stock' )->andReturn( true );
+        $product->shouldReceive( 'has_enough_stock' )->andReturn( true );
         $product->shouldReceive( 'get_stock_quantity' )->andReturn( 2 );
         Functions\when( 'wc_get_product' )->justReturn( $product );
 
@@ -680,6 +682,30 @@ class ToolsTest extends TestCase {
         $this->assertSame( 50.0, $result['free_shipping']['threshold'] );
         $this->assertEqualsWithDelta( 15.0, $result['free_shipping']['remaining'], 0.001 );
         $this->assertFalse( $result['free_shipping']['qualified'] );
+    }
+
+    public function test_add_to_cart_gives_honest_message_when_not_enough_stock(): void {
+        // In stock, but the shopper asked for more than is available (WC has_enough_stock=false).
+        // The response must name the real available count, not the misleading "may require a
+        // variation" fallback, and must not touch the cart.
+        $product = Mockery::mock( WC_Product::class );
+        $product->shouldReceive( 'is_visible' )->andReturn( true );
+        $product->shouldReceive( 'is_in_stock' )->andReturn( true );
+        $product->shouldReceive( 'has_enough_stock' )->with( 5 )->andReturn( false );
+        $product->shouldReceive( 'get_stock_quantity' )->andReturn( 2 );
+        $product->shouldReceive( 'get_name' )->andReturn( 'Headphones' );
+        Functions\when( 'wc_get_product' )->justReturn( $product );
+
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldNotReceive( 'add_to_cart' );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+
+        $result = $this->tools()->execute( 'add_to_cart', [ 'product_id' => 10, 'quantity' => 5 ] );
+
+        $this->assertFalse( $result['success'] );
+        $this->assertStringContainsString( '2', $result['error'] );
+        $this->assertStringContainsString( 'Headphones', $result['error'] );
+        $this->assertStringNotContainsString( 'variation', strtolower( $result['error'] ) );
     }
 
     public function test_add_to_cart_fails_for_out_of_stock_product(): void {
@@ -1011,6 +1037,7 @@ class ToolsTest extends TestCase {
         $p->shouldReceive( 'get_average_rating' )->andReturn( '4.5' )->byDefault();
         $p->shouldReceive( 'get_review_count' )->andReturn( 8 )->byDefault();
         $p->shouldReceive( 'get_total_sales' )->andReturn( 0 )->byDefault();
+        $p->shouldReceive( 'has_enough_stock' )->andReturn( true )->byDefault();
         return $p;
     }
 
@@ -1082,6 +1109,7 @@ class ToolsTest extends TestCase {
         $v->shouldReceive( 'get_sale_price' )->andReturn( '' );
         $v->shouldReceive( 'is_on_sale' )->andReturn( false );
         $v->shouldReceive( 'is_in_stock' )->andReturn( $inStock );
+        $v->shouldReceive( 'has_enough_stock' )->andReturn( true )->byDefault();
         $v->shouldReceive( 'get_stock_quantity' )->andReturn( 10 )->byDefault();
         $v->shouldReceive( 'is_visible' )->andReturn( true )->byDefault();
         $v->shouldReceive( 'get_type' )->andReturn( 'variation' );

@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.57
+Stable tag: 2.14.58
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.58 =
+Clearer stock limits: asking for more than is available now gets an honest answer.
+
+* When a shopper tries to add more of a product than is in stock, the assistant now says exactly how many are left ("only 2 left, please choose 2 or fewer") instead of a confusing "may require a variation" error. Uses WooCommerce's own stock check, so backorder-enabled products are unaffected and normal adds still work as before.
 
 = 2.14.57 =
 Consistency: best-sellers also respect your "hide out of stock items" setting.
@@ -485,6 +490,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.58 =
+Gives an honest "only N left" message when a shopper asks for more than is in stock, instead of a misleading error. No breaking changes.
 
 = 2.14.57 =
 Best-sellers now respect your "hide out of stock items" setting too, so the assistant does not recommend sold-out popular products. No breaking changes.
