@@ -507,6 +507,27 @@ final class Fahad_AI_Tools {
 		];
 	}
 
+	/**
+	 * Free-shipping progress for a cart total (issue #218). Returns the configured threshold,
+	 * the exact remaining amount to qualify (floored at 0), and whether the cart already
+	 * qualifies, or null when no threshold is set. Pure: the caller supplies the numbers, so
+	 * the assistant can state a grounded "you are $X away from free shipping" from real cart
+	 * data instead of estimating.
+	 *
+	 * @return array{threshold: float, remaining: float, qualified: bool}|null
+	 */
+	public static function free_shipping_progress( float $cart_total, float $threshold ): ?array {
+		if ( $threshold <= 0 ) {
+			return null;
+		}
+		$remaining = max( 0.0, $threshold - $cart_total );
+		return [
+			'threshold' => $threshold,
+			'remaining' => $remaining,
+			'qualified' => $remaining <= 0.0,
+		];
+	}
+
 	private function view_cart(): array {
 		$cart = WC()->cart;
 
@@ -531,7 +552,7 @@ final class Fahad_AI_Tools {
 			];
 		}
 
-		return [
+		$response = [
 			'empty'        => false,
 			'items'        => $items,
 			'item_count'   => $cart->get_cart_contents_count(),
@@ -540,6 +561,16 @@ final class Fahad_AI_Tools {
 			'cart_url'     => wc_get_cart_url(),
 			'checkout_url' => wc_get_checkout_url(),
 		];
+
+		// Precise free-shipping nudge (issue #218): when a threshold is configured, add the
+		// exact remaining amount from the real cart total so the assistant can say "you are
+		// $X away from free shipping" without guessing.
+		$threshold = (float) get_option( 'fahad_ai_free_shipping_threshold', 0 );
+		if ( $threshold > 0 ) {
+			$response['free_shipping'] = self::free_shipping_progress( (float) $cart->get_cart_contents_total(), $threshold );
+		}
+
+		return $response;
 	}
 
 	private function remove_from_cart( array $input ): array {

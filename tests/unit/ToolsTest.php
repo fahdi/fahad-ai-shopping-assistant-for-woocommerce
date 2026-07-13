@@ -581,6 +581,32 @@ class ToolsTest extends TestCase {
         $this->assertSame( 'key_abc', $result['items'][0]['cart_item_key'] );
         $this->assertSame( 2,         $result['items'][0]['quantity'] );
         $this->assertArrayHasKey( 'checkout_url', $result );
+        // No free-shipping threshold configured (get_option default 0) => no nudge field.
+        $this->assertArrayNotHasKey( 'free_shipping', $result );
+    }
+
+    public function test_view_cart_includes_free_shipping_progress_when_threshold_set(): void {
+        $product  = $this->mockProduct( 3, 'Bottle', '34.99' );
+        $cartItem = [ 'product_id' => 3, 'quantity' => 1, 'line_total' => 34.99, 'data' => $product ];
+
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldReceive( 'is_empty' )->andReturn( false );
+        $mockCart->shouldReceive( 'get_cart' )->andReturn( [ 'key_abc' => $cartItem ] );
+        $mockCart->shouldReceive( 'get_cart_contents_count' )->andReturn( 1 );
+        $mockCart->shouldReceive( 'get_cart_subtotal' )->andReturn( '$34.99' );
+        $mockCart->shouldReceive( 'get_cart_total' )->andReturn( '$34.99' );
+        $mockCart->shouldReceive( 'get_cart_contents_total' )->andReturn( 34.99 );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+        Functions\when( 'get_option' )->alias(
+            fn( $k, $d = '' ) => 'fahad_ai_free_shipping_threshold' === $k ? 50.0 : $d
+        );
+
+        $result = $this->tools()->execute( 'view_cart', [] );
+
+        $this->assertArrayHasKey( 'free_shipping', $result );
+        $this->assertSame( 50.0, $result['free_shipping']['threshold'] );
+        $this->assertEqualsWithDelta( 15.01, $result['free_shipping']['remaining'], 0.001 );
+        $this->assertFalse( $result['free_shipping']['qualified'] );
     }
 
     // ── remove_from_cart ──────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.19
+Stable tag: 2.14.20
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.20 =
+Exact free-shipping nudge in the cart: "you are $X away from free shipping", from real cart data.
+
+* When a free-shipping threshold is set, the assistant now knows the exact amount left to qualify from the real cart total, so it can say precisely how much more to add instead of estimating. One of the most reliable ways to lift order value, now grounded in actual numbers rather than a guess.
 
 = 2.14.19 =
 Your weekly email now tells you what to fix: the questions the assistant could not answer.
@@ -538,6 +543,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.20 =
+The assistant can now tell shoppers the exact amount left to reach free shipping, from the real cart total. No breaking changes.
 
 = 2.14.19 =
 The weekly digest now lists the questions the assistant could not answer, so you know exactly what to add to Store Information. No breaking changes.
