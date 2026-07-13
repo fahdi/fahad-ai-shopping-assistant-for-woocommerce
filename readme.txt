@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.50
+Stable tag: 2.14.51
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.51 =
+See lost demand: the analytics dashboard now shows searches that returned no results.
+
+* A new "Searches with no results" panel on the analytics dashboard lists what shoppers searched for but found nothing, real demand your catalogue did not meet. Use it to decide what to stock, rename products so they are findable, or add synonyms. Built from data already recorded (no new tracking), privacy-safe and range-filtered like the rest of the dashboard.
 
 = 2.14.50 =
 Sort it your way: shoppers can now ask for cheapest first, best-rated, or most popular.
@@ -450,6 +455,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.51 =
+Adds a "Searches with no results" panel to the analytics dashboard so you can see and act on demand your catalogue is missing. No breaking changes.
 
 = 2.14.50 =
 Adds opt-in result sorting (cheapest, most expensive, best-rated, most popular) to product search. No breaking changes.

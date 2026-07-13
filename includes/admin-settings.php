@@ -676,6 +676,7 @@ function fahad_ai_analytics_page(): void {
 	$window  = [ 'from' => $range['from'], 'to' => $range['to'] ];
 
 	$top         = $analytics->top_questions( 20, $window );
+	$unmet       = $analytics->unmet_searches( 20, $window );
 	$unanswered  = $analytics->unanswered( 50, $window );
 	$funnel      = $analytics->funnel( $window, 'fahad_ai_attribute_orders' );
 	$cost        = $analytics->cost_summary( $window );
@@ -751,6 +752,28 @@ function fahad_ai_analytics_page(): void {
 				</tr></thead>
 				<tbody>
 					<?php foreach ( $top as $item ) : ?>
+						<tr>
+							<td><?php echo esc_html( $item['question'] ); ?></td>
+							<td><?php echo esc_html( (string) $item['count'] ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
+
+		<!-- Unmet searches: shoppers searched and got nothing back (demand signal). -->
+		<h2><?php esc_html_e( 'Searches with no results', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></h2>
+		<p class="description" style="max-width:55em;"><?php esc_html_e( 'What shoppers searched for but found nothing. This is real demand your catalogue did not meet, consider stocking these, renaming products so they are findable, or adding synonyms.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+		<?php if ( empty( $unmet ) ) : ?>
+			<p class="description"><?php esc_html_e( 'No empty-result searches for this range, shoppers found products for everything they searched.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></p>
+		<?php else : ?>
+			<table class="widefat striped" style="max-width:55em;">
+				<thead><tr>
+					<th><?php esc_html_e( 'Search', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<th style="width:6em;"><?php esc_html_e( 'Count', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+				</tr></thead>
+				<tbody>
+					<?php foreach ( $unmet as $item ) : ?>
 						<tr>
 							<td><?php echo esc_html( $item['question'] ); ?></td>
 							<td><?php echo esc_html( (string) $item['count'] ); ?></td>

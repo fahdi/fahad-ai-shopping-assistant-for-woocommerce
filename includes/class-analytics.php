@@ -211,6 +211,44 @@ final class Fahad_AI_Analytics {
 	 * @param array $range { from?: int, to?: int } inclusive unix-timestamp window; omit for all time.
 	 * @return array<int, array{question:string, count:int}>
 	 */
+	/**
+	 * The most frequent product searches that surfaced NO product, distinct demand the catalogue
+	 * did not meet. A row counts only when it ran the product-search tool AND surfaced nothing, so
+	 * this is the shopper-searched-and-found-nothing signal, not the same as an unanswered question
+	 * (a no-result search can be answered perfectly well with "we don't have that"). Reuses the same
+	 * privacy-safe, range-filtered store as every other aggregate.
+	 *
+	 * @return array<int, array{question: string, count: int}> Sorted by count, highest first.
+	 */
+	public function unmet_searches( int $limit = 10, array $range = [] ): array {
+		$counts = [];
+		foreach ( $this->in_range( $range ) as $row ) {
+			if ( ! empty( $row['product_surfaced'] ) ) {
+				continue;
+			}
+			if ( ! in_array( 'search_products', (array) ( $row['tools'] ?? [] ), true ) ) {
+				continue;
+			}
+			$q = trim( (string) ( $row['question'] ?? '' ) );
+			if ( '' === $q ) {
+				continue;
+			}
+			$counts[ $q ] = ( $counts[ $q ] ?? 0 ) + 1;
+		}
+
+		arsort( $counts );
+
+		$out = [];
+		foreach ( $counts as $question => $count ) {
+			$out[] = [
+				'question' => $question,
+				'count'    => $count,
+			];
+		}
+
+		return array_slice( $out, 0, max( 0, $limit ) );
+	}
+
 	public function top_questions( int $limit = 10, array $range = [] ): array {
 		$counts = [];
 		foreach ( $this->in_range( $range ) as $row ) {

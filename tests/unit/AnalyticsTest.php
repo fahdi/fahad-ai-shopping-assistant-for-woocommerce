@@ -297,6 +297,27 @@ class AnalyticsTest extends TestCase {
 		$this->assertCount( 3, $unanswered );
 	}
 
+	// ── aggregates: unmet searches (shoppers searched, found nothing) ────────────
+
+	public function test_unmet_searches_counts_searches_that_surfaced_no_product(): void {
+		$store = $this->store();
+		// Two shoppers searched the same thing and got nothing → demand signal, count 2.
+		$store->record( $this->event( [ 'question' => 'purple wombat hoodie', 'product_surfaced' => false ] ) );
+		$store->record( $this->event( [ 'question' => 'purple wombat hoodie', 'product_surfaced' => false ] ) );
+		// A search that DID surface a product is met demand → excluded.
+		$store->record( $this->event( [ 'question' => 'running shoes', 'product_surfaced' => true ] ) );
+		// A no-product turn that never ran a search tool → not an unmet search.
+		$store->record( $this->event( [ 'question' => 'what are your hours', 'tools' => [], 'product_surfaced' => false ] ) );
+		// A blank question is dropped.
+		$store->record( $this->event( [ 'question' => '', 'product_surfaced' => false ] ) );
+
+		$unmet = $store->unmet_searches( 10 );
+
+		$this->assertCount( 1, $unmet );
+		$this->assertSame( 'purple wombat hoodie', $unmet[0]['question'] );
+		$this->assertSame( 2, $unmet[0]['count'] );
+	}
+
 	// ── aggregates: chat → add-to-cart → order funnel ────────────────────────────
 
 	public function test_funnel_counts_conversations_surfaced_and_added_to_cart(): void {

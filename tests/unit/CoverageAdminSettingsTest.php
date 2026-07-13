@@ -444,6 +444,26 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertStringContainsString( 'down)', $out );
 	}
 
+	// ── fahad_ai_analytics_page (unmet-searches list renders) ────────────────────
+
+	public function test_analytics_page_renders_unmet_searches(): void {
+		$this->grant_cap( true );
+		// A product search that surfaced nothing must appear in "Searches with no results" (#281).
+		$this->seed_analytics(
+			[
+				'u' => $this->row( [ 'question' => 'purple wombat hoodie', 'tools' => [ 'search_products' ], 'product_surfaced' => false, 'created' => 1700000000 ] ),
+			],
+			true
+		);
+
+		ob_start();
+		fahad_ai_analytics_page();
+		$out = ob_get_clean();
+
+		$this->assertStringContainsString( 'Searches with no results', $out );
+		$this->assertStringContainsString( 'purple wombat hoodie', $out );
+	}
+
 	// ── fahad_ai_analytics_page (save the opt-out toggle) ────────────────────────
 
 	public function test_analytics_page_saves_opt_out_toggle(): void {
