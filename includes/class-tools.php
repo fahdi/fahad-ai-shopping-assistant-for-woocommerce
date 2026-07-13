@@ -198,13 +198,28 @@ final class Fahad_AI_Tools {
 		}
 
 		if ( empty( $products ) ) {
-			return [
+			$response = [
 				'found'    => 0,
 				'products' => [],
 				'message'  => $only_sale
 					? __( 'No products are currently on sale.', 'fahad-ai-shopping-assistant-for-woocommerce' )
 					: __( 'No products found matching your search.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 			];
+
+			// Dead-end recovery (issue #267): on a general no-match, offer real store categories so
+			// the assistant can redirect the shopper ("browse Shoes or Bags") instead of losing them.
+			// Skipped for an on-sale browse, where "nothing is on sale" needs no category detour.
+			if ( ! $only_sale ) {
+				$suggested = self::suggested_categories(
+					get_terms( [ 'taxonomy' => 'product_cat', 'hide_empty' => true ] ),
+					5
+				);
+				if ( ! empty( $suggested ) ) {
+					$response['suggested_categories'] = $suggested;
+				}
+			}
+
+			return $response;
 		}
 
 		return [
@@ -357,6 +372,35 @@ final class Fahad_AI_Tools {
 	 */
 	public static function bestseller_flag( int $total_sales, int $threshold ): bool {
 		return $threshold > 0 && $total_sales >= $threshold;
+	}
+
+	/**
+	 * Up to $limit real product-category names for redirecting a shopper after a search finds
+	 * nothing, so a dead-end "no results" becomes "we don't have that, but browse X or Y." Pure:
+	 * takes the get_terms() result and returns only non-empty string names, skipping a WP_Error
+	 * (non-array input) or a malformed term, so the assistant only ever offers categories that
+	 * genuinely exist.
+	 *
+	 * @param mixed $terms The get_terms() result: an array of term objects, or a WP_Error.
+	 * @return array<int, string>
+	 */
+	public static function suggested_categories( $terms, int $limit ): array {
+		if ( ! is_array( $terms ) || $limit < 1 ) {
+			return [];
+		}
+
+		$names = [];
+		foreach ( $terms as $term ) {
+			$name = ( is_object( $term ) && isset( $term->name ) ) ? trim( (string) $term->name ) : '';
+			if ( '' !== $name ) {
+				$names[] = $name;
+			}
+			if ( count( $names ) >= $limit ) {
+				break;
+			}
+		}
+
+		return $names;
 	}
 
 	/**

@@ -35,6 +35,7 @@ class ToolsTest extends TestCase {
             'wc_get_checkout_url' => fn() => 'http://example.com/checkout',
             'wp_list_pluck'       => fn( $list, $field ) => array_column( (array) $list, $field ),
             'get_the_terms'       => fn() => [],
+            'get_terms'           => fn() => [],
         ] );
     }
 
@@ -154,6 +155,31 @@ class ToolsTest extends TestCase {
         $result = $this->tools()->execute( 'search_products', [ 'query' => 'zzzznope' ] );
 
         $this->assertSame( 0, $result['found'] );
+    }
+
+    public function test_search_no_match_suggests_real_store_categories(): void {
+        // A genuine dead-end search must offer real browse paths so the shopper is not lost.
+        $this->aliasCatalogSearch( [ 38 => 'Premium Pullover Hoodie', 14 => 'Running Sneakers' ] );
+        Functions\when( 'get_terms' )->justReturn( [
+            (object) [ 'name' => 'Shoes' ],
+            (object) [ 'name' => 'Bags' ],
+        ] );
+
+        $result = $this->tools()->execute( 'search_products', [ 'query' => 'zzzznope' ] );
+
+        $this->assertSame( 0, $result['found'] );
+        $this->assertSame( [ 'Shoes', 'Bags' ], $result['suggested_categories'] );
+    }
+
+    public function test_search_on_sale_no_match_does_not_suggest_categories(): void {
+        // The "nothing on sale" case needs no category detour.
+        Functions\when( 'wc_get_products' )->justReturn( [] );
+        Functions\when( 'get_terms' )->justReturn( [ (object) [ 'name' => 'Shoes' ] ] );
+
+        $result = $this->tools()->execute( 'search_products', [ 'on_sale' => true ] );
+
+        $this->assertSame( 0, $result['found'] );
+        $this->assertArrayNotHasKey( 'suggested_categories', $result );
     }
 
     public function test_search_product_summary_contains_required_fields(): void {

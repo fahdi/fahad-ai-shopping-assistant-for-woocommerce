@@ -27,6 +27,7 @@ final class AgentGatewayTest extends TestCase {
 		Functions\when( 'wp_strip_all_tags' )->alias( static fn ( $s ) => trim( (string) strip_tags( (string) $s ) ) );
 		Functions\when( 'sanitize_text_field' )->alias( static fn ( $s ) => trim( (string) $s ) );
 		Functions\when( 'get_option' )->alias( static fn ( $key, $default = '' ) => $default );
+		Functions\when( 'get_terms' )->justReturn( [] );
 		Functions\when( 'is_user_logged_in' )->justReturn( true );
 		Functions\when( 'get_current_user_id' )->justReturn( 0 );
 	}

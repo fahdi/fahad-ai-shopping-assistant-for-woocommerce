@@ -51,6 +51,7 @@ class SemanticSearchTest extends TestCase {
 			'wc_get_checkout_url' => fn() => 'http://example.com/checkout',
 			'wp_list_pluck'       => fn( $list, $field ) => array_column( (array) $list, $field ),
 			'get_the_terms'       => fn() => [],
+			'get_terms'           => fn() => [],
 		] );
 	}
 

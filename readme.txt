@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.43
+Stable tag: 2.14.44
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -219,6 +219,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 
 == Changelog ==
 
+= 2.14.44 =
+No more dead ends: when a search finds nothing, the assistant can offer real browse paths.
+
+* When a product search turns up no matches, the results now include a short list of your real store categories, so the assistant can say "I could not find that, but you could browse Shoes or Bags" instead of leaving the shopper at a dead end. Only genuine categories are ever suggested.
+
 = 2.14.43 =
 Deals visible at first glance: the assistant can now lead shoppers to the best deal while listing options.
 
@@ -415,6 +420,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.44 =
+Suggests real store categories when a search finds nothing, so the assistant can redirect shoppers instead of hitting a dead end. No breaking changes.
 
 = 2.14.43 =
 Surfaces the grounded discount percentage in product list results so the assistant can lead shoppers to the best deal while listing options. No breaking changes.
