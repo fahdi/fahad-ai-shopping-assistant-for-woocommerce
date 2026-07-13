@@ -95,6 +95,27 @@ function fahad_ai_build_weekly_digest( array $stats ): string {
 		}
 	}
 
+	// Content-gap list (issue #216): the questions the assistant could not answer. This is
+	// the actionable half of the digest, the owner can add answers under Store Information
+	// so next week the assistant handles them. Distinct, non-blank questions only.
+	$unanswered = (array) ( $stats['unanswered'] ?? [] );
+	$gaps       = [];
+	foreach ( $unanswered as $row ) {
+		$question = trim( (string) ( $row['question'] ?? '' ) );
+		if ( '' !== $question && ! in_array( $question, $gaps, true ) ) {
+			$gaps[] = $question;
+		}
+	}
+	if ( ! empty( $gaps ) ) {
+		$lines[] = '';
+		$lines[] = 'Questions the assistant could not answer (add answers under Settings > Store Information so it can next time):';
+		$rank    = 1;
+		foreach ( $gaps as $question ) {
+			$lines[] = $rank . '. ' . $question;
+			++$rank;
+		}
+	}
+
 	$lines[] = '';
 	$lines[] = 'Manage or turn this weekly email off in your store admin: ' . $settings_url;
 

@@ -100,4 +100,42 @@ class CoverageWeeklyDigestTest extends TestCase {
 		$stats['top_questions'] = [];
 		$this->assertStringNotContainsString( 'Top questions', fahad_ai_build_weekly_digest( $stats ) );
 	}
+
+	// ── unanswered questions section (issue #216) ────────────────────────────────
+
+	public function test_build_lists_unanswered_questions_with_a_pointer(): void {
+		$stats                = $this->stats();
+		$stats['unanswered']  = [
+			[ 'question' => 'Do you offer gift wrapping?' ],
+			[ 'question' => 'When will the black hoodie be back?' ],
+		];
+
+		$body = fahad_ai_build_weekly_digest( $stats );
+
+		$this->assertStringContainsString( 'could not answer', $body );
+		$this->assertStringContainsString( 'Do you offer gift wrapping?', $body );
+		$this->assertStringContainsString( 'When will the black hoodie be back?', $body );
+		$this->assertStringContainsString( 'Store Information', $body ); // pointer to the fix
+		$this->assertStringNotContainsString( "\u{2014}", $body );
+		$this->assertStringNotContainsString( "\u{2013}", $body );
+	}
+
+	public function test_build_dedupes_and_skips_blank_unanswered_questions(): void {
+		$stats               = $this->stats();
+		$stats['unanswered'] = [
+			[ 'question' => 'Do you restock sold-out items?' ],
+			[ 'question' => '' ],                              // blank, skipped
+			[ 'question' => 'Do you restock sold-out items?' ], // duplicate, collapsed
+		];
+
+		$body  = fahad_ai_build_weekly_digest( $stats );
+		$count = substr_count( $body, 'Do you restock sold-out items?' );
+		$this->assertSame( 1, $count, 'Duplicate unanswered questions collapse to one line.' );
+	}
+
+	public function test_build_omits_unanswered_section_when_none(): void {
+		$stats               = $this->stats();
+		$stats['unanswered'] = [];
+		$this->assertStringNotContainsString( 'could not answer', fahad_ai_build_weekly_digest( $stats ) );
+	}
 }
