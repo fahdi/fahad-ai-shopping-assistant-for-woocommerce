@@ -25,6 +25,17 @@ function fahad_ai_is_provider_configured(): bool {
 }
 
 /**
+ * The per-visitor request limit within the rate-limit window (issue #249). Base is the
+ * owner-set fahad_ai_rate_limit option (default 20 requests); the fahad_ai_rate_limit filter
+ * still overrides it for code-level users. Floored at 1 so a misconfigured 0 cannot switch off
+ * abuse/cost protection. Consumed by the widget's rate-limit check.
+ */
+function fahad_ai_rate_limit_value(): int {
+	$configured = (int) get_option( 'fahad_ai_rate_limit', 20 );
+	return max( 1, (int) apply_filters( 'fahad_ai_rate_limit', $configured ) );
+}
+
+/**
  * Whether the assistant is switched on (issue #231). Default ON; a soft pause an owner can
  * toggle for maintenance, a cost scare, or while changing settings, without deactivating the
  * plugin (which would lose no settings but is a heavier, all-or-nothing action). When off,
@@ -978,6 +989,7 @@ function fahad_ai_settings_page(): void {
 		update_option( 'fahad_ai_token_budget',        absint( $_POST['token_budget'] ?? 0 ) );
 		update_option( 'fahad_ai_daily_message_cap',   absint( $_POST['daily_message_cap'] ?? 0 ) );
 		update_option( 'fahad_ai_monthly_budget',      max( 0, (float) ( $_POST['monthly_budget'] ?? 0 ) ) );
+		update_option( 'fahad_ai_rate_limit',          max( 1, absint( $_POST['rate_limit'] ?? 20 ) ) );
 		update_option( 'fahad_ai_fast_model_routing',  empty( $_POST['fast_model_routing'] ) ? 0 : 1 );
 		update_option( 'fahad_ai_fast_model',          sanitize_text_field( wp_unslash( $_POST['fast_model'] ?? '' ) ) );
 
@@ -1035,6 +1047,7 @@ function fahad_ai_settings_page(): void {
 	$token_budget       = (int) get_option( 'fahad_ai_token_budget',   0 );
 	$daily_message_cap  = (int) get_option( 'fahad_ai_daily_message_cap', 0 );
 	$monthly_budget     = (float) get_option( 'fahad_ai_monthly_budget', 0 );
+	$rate_limit         = fahad_ai_rate_limit_value();
 
 	// Month-to-date AI spend (issue #235): read-only context shown next to the cost limits so
 	// the owner sets the token budget / daily cap against what they are actually spending.
@@ -1481,6 +1494,16 @@ function fahad_ai_settings_page(): void {
 							value="<?php echo esc_attr( (string) $monthly_budget ); ?>" class="small-text">
 						<p class="description">
 							<?php esc_html_e( 'A monthly AI spend budget, in your store currency. When this calendar month\'s spend reaches it, you get an admin warning so there are no surprises on the provider invoice. 0 = no budget.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="rate_limit"><?php esc_html_e( 'Requests Per Minute', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<td>
+						<input type="number" id="rate_limit" name="rate_limit" min="1" step="1"
+							value="<?php echo esc_attr( (string) $rate_limit ); ?>" class="small-text">
+						<p class="description">
+							<?php esc_html_e( 'How many messages a single visitor may send per minute before being asked to slow down. Protects against a single client spamming the assistant and running up cost. Lower it if you see abuse. Default 20.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>

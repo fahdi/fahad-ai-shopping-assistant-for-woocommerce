@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.34
+Stable tag: 2.14.35
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.35 =
+Tune abuse protection without code: the per-visitor request limit is now a setting.
+
+* Added a "Requests Per Minute" setting controlling how many messages a single visitor can send before being asked to slow down. Lower it if you see a client spamming the assistant and running up cost. Previously this was only tunable in code. The fahad_ai_rate_limit filter still overrides it for developers.
 
 = 2.14.34 =
 Get more from the assistant: a setup-progress checklist shows what is done and what to finish.
@@ -613,6 +618,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.35 =
+Adds a Requests Per Minute setting so you can tune per-visitor abuse protection without code. No breaking changes.
 
 = 2.14.34 =
 Adds a Setup progress checklist to the settings page so you can finish setup and get the full benefit. No breaking changes.
