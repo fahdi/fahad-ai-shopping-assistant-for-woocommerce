@@ -357,6 +357,41 @@ class CoverageToolsTest extends TestCase {
 		$this->assertSame( 'Finish: Matte', $result['variations'][0]['label'] );
 	}
 
+	// ── get_product_details: on-sale discount_percent wiring (issue #257) ───────
+
+	/**
+	 * A simple product that is on sale must surface a grounded discount_percent computed
+	 * from its real regular vs sale price, exercising the on-sale true-branch of the
+	 * details wiring that every other details test (all is_on_sale=false) leaves uncovered.
+	 */
+	public function test_product_details_surfaces_discount_percent_when_on_sale(): void {
+		$product = Mockery::mock( WC_Product::class );
+		$product->shouldReceive( 'get_id' )->andReturn( 8 );
+		$product->shouldReceive( 'get_name' )->andReturn( 'Winter Jacket' );
+		$product->shouldReceive( 'get_price' )->andReturn( '70' );
+		$product->shouldReceive( 'get_regular_price' )->andReturn( '100' );
+		$product->shouldReceive( 'get_sale_price' )->andReturn( '70' );
+		$product->shouldReceive( 'is_on_sale' )->andReturn( true );
+		$product->shouldReceive( 'is_visible' )->andReturn( true );
+		$product->shouldReceive( 'is_in_stock' )->andReturn( true );
+		$product->shouldReceive( 'get_description' )->andReturn( '' );
+		$product->shouldReceive( 'get_short_description' )->andReturn( '' );
+		$product->shouldReceive( 'get_sku' )->andReturn( '' );
+		$product->shouldReceive( 'get_stock_quantity' )->andReturn( 5 );
+		$product->shouldReceive( 'get_type' )->andReturn( 'simple' );
+		$product->shouldReceive( 'is_type' )->with( 'variable' )->andReturn( false );
+		$product->shouldReceive( 'get_image_id' )->andReturn( 0 );
+		$product->shouldReceive( 'get_average_rating' )->andReturn( '0' );
+		$product->shouldReceive( 'get_review_count' )->andReturn( 0 );
+
+		Functions\when( 'wc_get_product' )->justReturn( $product );
+
+		$result = $this->tools()->execute( 'get_product_details', [ 'product_id' => 8 ] );
+
+		$this->assertTrue( $result['on_sale'] );
+		$this->assertSame( 30, $result['discount_percent'] );
+	}
+
 	// ── remove_from_cart: hard failure path (lines 548-551) ─────────────────────
 
 	/**

@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.38
+Stable tag: 2.14.39
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -219,6 +219,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 
 == Changelog ==
 
+= 2.14.39 =
+Honest urgency: the assistant can now tell shoppers exactly how big a discount is.
+
+* Product details now include a "discount_percent" value computed from your real regular and sale prices, so on a genuinely discounted product the assistant can say "20% off right now" and create real urgency. It stays null whenever there is no true reduction, so a shopper is never shown a fabricated or zero deal.
+
 = 2.14.38 =
 Honest social proof: the assistant can now highlight your genuinely top-rated products.
 
@@ -390,6 +395,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.39 =
+Adds a grounded "X% off" discount signal from your real prices so the assistant can create honest urgency on genuine sale items. No breaking changes.
 
 = 2.14.38 =
 Adds an honest "highly rated" signal from your real reviews so the assistant can highlight top-rated products. No breaking changes.

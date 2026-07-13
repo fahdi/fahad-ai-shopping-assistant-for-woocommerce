@@ -348,6 +348,21 @@ final class Fahad_AI_Tools {
 		return $reviews >= max( 1, $min_reviews ) && $rating >= $min_rating;
 	}
 
+	/**
+	 * Whole-number percent off, computed from a product's real regular vs sale price, so the
+	 * assistant can create honest urgency ("30% off right now"). Returns null whenever there is
+	 * no genuine discount, so a shopper is never shown a fabricated, zero, or negative deal:
+	 * regular price must be positive, sale price non-negative, and the sale a real reduction
+	 * below regular. Rounds to the nearest whole percent.
+	 */
+	public static function discount_percent( float $regular_price, float $sale_price ): ?int {
+		if ( $regular_price <= 0 || $sale_price < 0 || $sale_price >= $regular_price ) {
+			return null;
+		}
+
+		return (int) round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
+	}
+
 	private function get_product_details( array $input ): array {
 		$product_id = absint( $input['product_id'] ?? 0 );
 		$product    = wc_get_product( $product_id );
@@ -363,6 +378,9 @@ final class Fahad_AI_Tools {
 			'regular_price'     => $this->plain_price( $product->get_regular_price() ),
 			'sale_price'        => $product->is_on_sale() ? $this->plain_price( $product->get_sale_price() ) : null,
 			'on_sale'           => $product->is_on_sale(),
+			'discount_percent'  => $product->is_on_sale()
+				? self::discount_percent( (float) $product->get_regular_price(), (float) $product->get_sale_price() )
+				: null,
 			'description'       => wp_strip_all_tags( $product->get_description() ),
 			'short_description' => wp_strip_all_tags( $product->get_short_description() ),
 			'sku'               => $product->get_sku(),
