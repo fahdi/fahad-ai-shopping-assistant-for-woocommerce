@@ -3,7 +3,7 @@
  * Plugin Name: Dukandar AI Shopping Assistant for WooCommerce
  * Plugin URI:  https://github.com/fahdi/dukandar-shopping-assistant-for-woocommerce
  * Description: AI-powered shopping assistant for WooCommerce, answers questions and manages the cart using OpenAI, Claude, Gemini, Moonshot, and other major AI providers.
- * Version:           2.14.34
+ * Version:           2.14.35
  * Author:      Fahdi Murtaza
  * Author URI:  https://github.com/fahdi
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FAHAD_AI_VERSION', '2.14.34' );
+define( 'FAHAD_AI_VERSION', '2.14.35' );
 define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -332,7 +332,7 @@ final class Fahad_AI_Chatbot {
 	 * filters. Returns true when the caller has exhausted its window.
 	 */
 	private function is_rate_limited(): bool {
-		$limit  = (int) apply_filters( 'fahad_ai_rate_limit', 20 );
+		$limit  = fahad_ai_rate_limit_value();
 		$window = (int) apply_filters( 'fahad_ai_rate_window', MINUTE_IN_SECONDS );
 
 		if ( $limit <= 0 ) {
