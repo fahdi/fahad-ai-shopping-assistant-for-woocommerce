@@ -872,6 +872,19 @@ final class Fahad_AI_Tools {
 			$response['cart_savings'] = $cart_savings;
 		}
 
+		// Reflect applied coupons at cart review (issue #297): show the active codes and the money
+		// they took off (via the same guard as apply_coupon), so a shopper can confirm their code
+		// is still working before checkout. Omitted when no coupon is applied or it reduced nothing.
+		$applied_coupons = array_values( array_filter( array_map( 'strval', (array) $cart->get_applied_coupons() ) ) );
+		if ( ! empty( $applied_coupons ) ) {
+			$response['applied_coupons'] = $applied_coupons;
+
+			$discount_total = Fahad_AI_Coupon_Tools::coupon_discount_amount( (float) $cart->get_discount_total() );
+			if ( null !== $discount_total ) {
+				$response['discount_total'] = $discount_total;
+			}
+		}
+
 		return $response;
 	}
 

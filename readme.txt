@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.58
+Stable tag: 2.14.59
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.59 =
+Coupons stay visible: reviewing your cart now confirms an applied discount code.
+
+* Viewing the cart now shows any applied coupon codes and how much they took off, so a shopper can confirm their code is still working right before checkout instead of wondering if it applied. When no coupon is applied, nothing changes.
 
 = 2.14.58 =
 Clearer stock limits: asking for more than is available now gets an honest answer.
@@ -490,6 +495,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.59 =
+Shows applied coupon codes and their discount when reviewing the cart, so shoppers can confirm their code is active before checkout. No breaking changes.
 
 = 2.14.58 =
 Gives an honest "only N left" message when a shopper asks for more than is in stock, instead of a misleading error. No breaking changes.
