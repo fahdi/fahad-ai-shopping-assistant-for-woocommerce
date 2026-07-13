@@ -270,6 +270,27 @@ function fahad_ai_build_weekly_digest( array $stats ): string {
 		}
 	}
 
+	// Unmet-demand list (issue #283): the searches shoppers ran that returned no products.
+	// The merchandising companion to the content gaps above, what to stock, rename, or add
+	// synonyms for so next week these turn into sales. Distinct, non-blank searches only.
+	$unmet         = (array) ( $stats['unmet_searches'] ?? [] );
+	$unmet_queries = [];
+	foreach ( $unmet as $row ) {
+		$query = trim( (string) ( $row['question'] ?? '' ) );
+		if ( '' !== $query && ! in_array( $query, $unmet_queries, true ) ) {
+			$unmet_queries[] = $query;
+		}
+	}
+	if ( ! empty( $unmet_queries ) ) {
+		$lines[] = '';
+		$lines[] = 'Searches with no results (real demand to act on: stock these, rename products so they are findable, or add synonyms):';
+		$rank    = 1;
+		foreach ( $unmet_queries as $query ) {
+			$lines[] = $rank . '. ' . $query;
+			++$rank;
+		}
+	}
+
 	// Quality-gap list (issue #239): the reasons shoppers gave when they rated a reply
 	// unhelpful. The feedback companion to the unanswered questions above; both point the
 	// owner at concrete fixes. Distinct, non-blank reasons only.

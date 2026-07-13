@@ -103,6 +103,30 @@ class CoverageWeeklyDigestTest extends TestCase {
 		$this->assertStringNotContainsString( 'Top questions', fahad_ai_build_weekly_digest( $stats ) );
 	}
 
+	// ── unmet searches section (issue #283) ─────────────────────────────────────
+
+	public function test_build_lists_unmet_searches_with_a_pointer(): void {
+		$stats                   = $this->stats();
+		$stats['unmet_searches'] = [
+			[ 'question' => 'purple wombat hoodie', 'count' => 4 ],
+			[ 'question' => 'size 14 running shoes', 'count' => 2 ],
+		];
+
+		$body = fahad_ai_build_weekly_digest( $stats );
+
+		$this->assertStringContainsString( 'no results', $body );
+		$this->assertStringContainsString( 'purple wombat hoodie', $body );
+		$this->assertStringContainsString( 'size 14 running shoes', $body );
+		$this->assertStringNotContainsString( "\u{2014}", $body );
+		$this->assertStringNotContainsString( "\u{2013}", $body );
+	}
+
+	public function test_build_omits_unmet_searches_when_none(): void {
+		$stats                   = $this->stats();
+		$stats['unmet_searches'] = [];
+		$this->assertStringNotContainsString( 'no results', fahad_ai_build_weekly_digest( $stats ) );
+	}
+
 	// ── unanswered questions section (issue #216) ────────────────────────────────
 
 	public function test_build_lists_unanswered_questions_with_a_pointer(): void {

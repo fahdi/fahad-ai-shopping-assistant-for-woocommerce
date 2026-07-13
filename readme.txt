@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.51
+Stable tag: 2.14.52
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.52 =
+Lost demand, delivered to your inbox: the weekly email now includes searches that found nothing.
+
+* The weekly summary email now carries the same "searches with no results" list added to the dashboard in 2.14.51, so the demand your catalogue is missing reaches you even if you never open the dashboard, with a pointer on what to do (stock it, rename for findability, add synonyms). Omitted when there is nothing to report.
 
 = 2.14.51 =
 See lost demand: the analytics dashboard now shows searches that returned no results.
@@ -455,6 +460,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.52 =
+Adds the "searches with no results" demand list to the weekly summary email so it reaches you without opening the dashboard. No breaking changes.
 
 = 2.14.51 =
 Adds a "Searches with no results" panel to the analytics dashboard so you can see and act on demand your catalogue is missing. No breaking changes.
