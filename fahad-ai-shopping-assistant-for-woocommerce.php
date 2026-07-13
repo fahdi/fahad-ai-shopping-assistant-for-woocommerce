@@ -3,7 +3,7 @@
  * Plugin Name: Dukandar AI Shopping Assistant for WooCommerce
  * Plugin URI:  https://github.com/fahdi/dukandar-shopping-assistant-for-woocommerce
  * Description: AI-powered shopping assistant for WooCommerce, answers questions and manages the cart using OpenAI, Claude, Gemini, Moonshot, and other major AI providers.
- * Version:           2.14.32
+ * Version:           2.14.33
  * Author:      Fahdi Murtaza
  * Author URI:  https://github.com/fahdi
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FAHAD_AI_VERSION', '2.14.32' );
+define( 'FAHAD_AI_VERSION', '2.14.33' );
 define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -113,6 +113,18 @@ final class Fahad_AI_Chatbot {
 		// One-time welcome email (#229): confirm the assistant is live and guide next steps the
 		// first time a provider is configured. Gated + de-duplicated; the send is thin wiring.
 		add_action( 'admin_init',                [ $this, 'maybe_send_welcome' ] );
+
+		// Dashboard glance (#245): put the assistant's headline numbers on the WordPress
+		// dashboard the owner sees on every login. The render is unit-tested; this is wiring.
+		add_action( 'wp_dashboard_setup',        [ $this, 'register_dashboard_widget' ] );
+	}
+
+	/** Register the at-a-glance dashboard widget for users who can manage the assistant (#245). */
+	public function register_dashboard_widget(): void {
+		if ( ! current_user_can( fahad_ai_settings_capability() ) ) {
+			return;
+		}
+		wp_add_dashboard_widget( 'fahad_ai_dashboard', 'Dukandar Assistant', 'fahad_ai_dashboard_widget' );
 	}
 
 	/**

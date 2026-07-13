@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.32
+Stable tag: 2.14.33
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.33 =
+See your assistant's results on every login: a WordPress dashboard widget.
+
+* Added a "Dukandar Assistant" widget to the WordPress dashboard, the screen you land on at every login. It shows the last 7 days of conversations, chat-to-cart rate, and resolution rate, plus this month's AI spend, with a link to the full analytics. The plugin's value is now visible without opening anything.
 
 = 2.14.32 =
 No more invoice surprises: set a monthly AI budget and get warned when you reach it.
@@ -603,6 +608,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.33 =
+Adds a WordPress dashboard widget with the assistant's key stats, visible on every login. No breaking changes.
 
 = 2.14.32 =
 Adds a Monthly Budget setting that warns you when this month's AI spend reaches it, before the provider invoice. No breaking changes.

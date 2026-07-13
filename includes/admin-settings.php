@@ -45,6 +45,41 @@ function fahad_ai_hide_on_checkout_enabled(): bool {
 }
 
 /**
+ * Render the WordPress dashboard widget (issue #245): the assistant's headline numbers on the
+ * screen owners see on every login, last 7 days of conversations / chat-to-cart / resolution
+ * plus this calendar month's AI spend, with a link to the full analytics. Reuses the existing
+ * analytics aggregates; renders zeros cleanly on a fresh install.
+ */
+function fahad_ai_dashboard_widget(): void {
+	$analytics  = Fahad_AI_Analytics::instance();
+	$week       = [ 'from' => time() - 7 * DAY_IN_SECONDS ];
+	$funnel     = $analytics->funnel( $week );
+	$resolution = $analytics->resolution_rate( $week );
+	$mtd        = $analytics->cost_summary( [ 'from' => (int) strtotime( gmdate( 'Y-m-01 00:00:00' ) ) ] );
+
+	$symbol   = function_exists( 'get_woocommerce_currency_symbol' ) ? get_woocommerce_currency_symbol() : '';
+	$settings = admin_url( 'options-general.php?page=fahad-ai-shopping-assistant-for-woocommerce' );
+
+	$rows = [
+		esc_html__( 'Conversations (7 days)', 'fahad-ai-shopping-assistant-for-woocommerce' ) => (string) (int) $funnel['conversations'],
+		esc_html__( 'Chat-to-cart rate', 'fahad-ai-shopping-assistant-for-woocommerce' )     => round( (float) $funnel['cart_rate'] * 100 ) . '%',
+		esc_html__( 'Resolution rate', 'fahad-ai-shopping-assistant-for-woocommerce' )       => round( (float) $resolution * 100 ) . '%',
+		esc_html__( 'This month\'s AI spend', 'fahad-ai-shopping-assistant-for-woocommerce' ) => $symbol . number_format( (float) $mtd['total_cost'], 2 ),
+	];
+
+	echo '<table class="widefat striped" style="border:none">';
+	foreach ( $rows as $label => $value ) {
+		echo '<tr><td>' . esc_html( $label ) . '</td><td style="text-align:right"><strong>' . esc_html( $value ) . '</strong></td></tr>';
+	}
+	echo '</table>';
+	printf(
+		'<p style="margin:10px 0 0"><a href="%s">%s</a></p>',
+		esc_url( $settings ),
+		esc_html__( 'View full analytics and settings', 'fahad-ai-shopping-assistant-for-woocommerce' )
+	);
+}
+
+/**
  * The WooCommerce features this plugin declares compatibility with (issue #208). Single
  * source of truth, iterated by the before_woocommerce_init hook in the main file. HPOS
  * (`custom_order_tables`) is safe here because every order access goes through CRUD
