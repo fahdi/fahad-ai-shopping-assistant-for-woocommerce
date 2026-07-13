@@ -42,6 +42,8 @@ class CoverageDashboardWidgetTest extends TestCase {
 		$this->assertStringContainsString( 'Chat-to-cart', $out );
 		$this->assertStringContainsString( 'Resolution', $out );
 		$this->assertStringContainsString( 'This month', $out );
+		// Setup-completion nudge (#251): fresh install has 0 of 4 steps done.
+		$this->assertStringContainsString( 'Setup: 0 of 4 steps complete', $out );
 		$this->assertStringContainsString( 'options-general.php?page=fahad-ai-shopping-assistant-for-woocommerce', $out );
 		$this->assertStringNotContainsString( "\u{2014}", $out );
 		$this->assertStringNotContainsString( "\u{2013}", $out );
