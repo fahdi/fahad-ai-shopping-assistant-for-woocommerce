@@ -349,6 +349,17 @@ final class Fahad_AI_Tools {
 	}
 
 	/**
+	 * Grounded per-product "bestseller" signal from real lifetime units sold, so the assistant
+	 * can honestly point to a proven best-seller. Opt-in and owner-gated: true only when a
+	 * positive units-sold threshold is configured AND the product's sales meet or exceed it, so
+	 * with no threshold set (default 0) no product is ever falsely badged and the owner decides
+	 * what "bestseller" means for their catalogue.
+	 */
+	public static function bestseller_flag( int $total_sales, int $threshold ): bool {
+		return $threshold > 0 && $total_sales >= $threshold;
+	}
+
+	/**
 	 * Whole-number percent off, computed from a product's real regular vs sale price, so the
 	 * assistant can create honest urgency ("30% off right now"). Returns null whenever there is
 	 * no genuine discount, so a shopper is never shown a fabricated, zero, or negative deal:
@@ -393,6 +404,7 @@ final class Fahad_AI_Tools {
 			'rating'            => round( (float) $product->get_average_rating(), 2 ),
 			'review_count'      => (int) $product->get_review_count(),
 			'highly_rated'      => self::highly_rated_flag( (float) $product->get_average_rating(), (int) $product->get_review_count(), 4.5, 5 ),
+			'bestseller'        => self::bestseller_flag( (int) $product->get_total_sales(), (int) get_option( 'fahad_ai_bestseller_threshold', 0 ) ),
 			'categories'        => wp_list_pluck(
 				get_the_terms( $product_id, 'product_cat' ) ?: [],
 				'name'

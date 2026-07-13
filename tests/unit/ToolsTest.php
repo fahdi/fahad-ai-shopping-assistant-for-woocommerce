@@ -191,6 +191,7 @@ class ToolsTest extends TestCase {
         $p->shouldReceive( 'get_image_id' )->andReturn( 0 );
         $p->shouldReceive( 'get_average_rating' )->andReturn( '4.5' )->byDefault();
         $p->shouldReceive( 'get_review_count' )->andReturn( 8 )->byDefault();
+        $p->shouldReceive( 'get_total_sales' )->andReturn( 0 )->byDefault();
         return $p;
     }
 
@@ -752,6 +753,7 @@ class ToolsTest extends TestCase {
         $p->shouldReceive( 'get_image_id' )->andReturn( 0 );
         $p->shouldReceive( 'get_average_rating' )->andReturn( '4.5' )->byDefault();
         $p->shouldReceive( 'get_review_count' )->andReturn( 8 )->byDefault();
+        $p->shouldReceive( 'get_total_sales' )->andReturn( 0 )->byDefault();
         return $p;
     }
 
@@ -806,6 +808,7 @@ class ToolsTest extends TestCase {
         $p->shouldReceive( 'get_image_id' )->andReturn( 0 );
         $p->shouldReceive( 'get_average_rating' )->andReturn( '0' )->byDefault();
         $p->shouldReceive( 'get_review_count' )->andReturn( 0 )->byDefault();
+        $p->shouldReceive( 'get_total_sales' )->andReturn( 0 )->byDefault();
         return $p;
     }
 

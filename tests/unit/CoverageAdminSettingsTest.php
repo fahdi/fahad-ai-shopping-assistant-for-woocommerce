@@ -663,6 +663,7 @@ class CoverageAdminSettingsTest extends TestCase {
 			'monthly_budget'        => '75',
 			'rate_limit'            => '30',
 			'free_shipping_threshold' => '50',
+			'bestseller_threshold'  => '100',
 			'fast_model_routing'    => '1',
 			'fast_model'            => 'claude-haiku-4-5-20251001',
 			'proactive_enabled'     => '1',
@@ -698,6 +699,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertSame( 75.0, $this->options['fahad_ai_monthly_budget'] );
 		$this->assertSame( 30, $this->options['fahad_ai_rate_limit'] );
 		$this->assertSame( 50.0, $this->options['fahad_ai_free_shipping_threshold'] );
+		$this->assertSame( 100, $this->options['fahad_ai_bestseller_threshold'] );
 		$this->assertSame( '14-day returns, unopened only.', $this->options['fahad_ai_return_policy'] );
 		$this->assertSame( 'help@store.example', $this->options['fahad_ai_support_contact'] );
 		$this->assertSame( 'Free gift wrapping on request. Ships worldwide.', $this->options['fahad_ai_store_knowledge'] );
