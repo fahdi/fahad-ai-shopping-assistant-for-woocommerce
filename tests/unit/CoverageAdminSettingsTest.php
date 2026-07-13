@@ -595,6 +595,8 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertStringContainsString( 'fahad_ai_save', $out );
 		// Month-to-date spend context, right where the cost limits are set (#235).
 		$this->assertStringContainsString( 'AI Spend This Month', $out );
+		// Setup-progress checklist (#247).
+		$this->assertStringContainsString( 'Setup progress', $out );
 	}
 
 	// ── fahad_ai_settings_page (index-queued notice + gateable tools list) ───────

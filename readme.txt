@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.33
+Stable tag: 2.14.34
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.34 =
+Get more from the assistant: a setup-progress checklist shows what is done and what to finish.
+
+* Added a "Setup progress" checklist at the top of the settings page. It shows which high-value steps are done (provider connected, Store Information added, support contact set, free-shipping threshold set) and which are still to do, so you can quickly finish setting up and get the full benefit of the assistant.
 
 = 2.14.33 =
 See your assistant's results on every login: a WordPress dashboard widget.
@@ -608,6 +613,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.34 =
+Adds a Setup progress checklist to the settings page so you can finish setup and get the full benefit. No breaking changes.
 
 = 2.14.33 =
 Adds a WordPress dashboard widget with the assistant's key stats, visible on every login. No breaking changes.
