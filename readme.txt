@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.40
+Stable tag: 2.14.41
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -219,6 +219,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 
 == Changelog ==
 
+= 2.14.41 =
+Coupon confirmation: the assistant can now tell shoppers exactly how much a code saved them.
+
+* Applying a discount code now returns a "discount_amount" computed from WooCommerce's real cart discount, so the assistant can confirm "that code saved you $8.50" right after it is applied. It is omitted when a code reduces nothing (for example a free-shipping-only code), so a shopper is never told about a $0 saving.
+
 = 2.14.40 =
 Savings reassurance at cart review: the assistant can now tell shoppers how much they are saving.
 
@@ -400,6 +405,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.41 =
+Adds a grounded confirmation of how much an applied coupon saved so the assistant can reassure shoppers right after they redeem a code. No breaking changes.
 
 = 2.14.40 =
 Adds a grounded total-savings figure at cart review so the assistant can reassure shoppers how much they are saving. No breaking changes.

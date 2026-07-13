@@ -324,6 +324,7 @@ class CouponToolsTest extends TestCase {
         $cart = Mockery::mock( WC_Cart::class );
         $cart->shouldReceive( 'apply_coupon' )->with( 'SAVE10' )->once()->andReturn( true );
         $cart->shouldReceive( 'get_cart_total' )->andReturn( '$45.00' );
+        $cart->shouldReceive( 'get_discount_total' )->andReturn( 5.0 );
         Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $cart ] );
 
         $result = $this->registry()->dispatch( 'apply_coupon', [ 'code' => 'SAVE10' ] );
@@ -331,6 +332,34 @@ class CouponToolsTest extends TestCase {
         $this->assertTrue( $result['success'] );
         $this->assertStringContainsString( 'SAVE10', $result['message'] );
         $this->assertSame( '$45.00', $result['cart_total'] );
+    }
+
+    public function test_apply_coupon_confirms_the_real_saving(): void {
+        // A code that takes $5.50 off must surface a grounded discount_amount the assistant
+        // can confirm ("that saved you $5.50"), sourced from WC's real cart discount.
+        $cart = Mockery::mock( WC_Cart::class );
+        $cart->shouldReceive( 'apply_coupon' )->with( 'SAVE10' )->once()->andReturn( true );
+        $cart->shouldReceive( 'get_cart_total' )->andReturn( '$44.50' );
+        $cart->shouldReceive( 'get_discount_total' )->andReturn( 5.5 );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $cart ] );
+
+        $result = $this->registry()->dispatch( 'apply_coupon', [ 'code' => 'SAVE10' ] );
+
+        $this->assertSame( 5.5, $result['discount_amount'] );
+    }
+
+    public function test_apply_coupon_omits_discount_when_code_reduces_nothing(): void {
+        // A free-shipping-only code applies successfully but reduces no line: no "$0 off".
+        $cart = Mockery::mock( WC_Cart::class );
+        $cart->shouldReceive( 'apply_coupon' )->with( 'FREESHIP' )->once()->andReturn( true );
+        $cart->shouldReceive( 'get_cart_total' )->andReturn( '$50.00' );
+        $cart->shouldReceive( 'get_discount_total' )->andReturn( 0.0 );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $cart ] );
+
+        $result = $this->registry()->dispatch( 'apply_coupon', [ 'code' => 'FREESHIP' ] );
+
+        $this->assertTrue( $result['success'] );
+        $this->assertArrayNotHasKey( 'discount_amount', $result );
     }
 
     public function test_apply_coupon_invalid_code_returns_error_not_fabricated_success(): void {
@@ -363,6 +392,7 @@ class CouponToolsTest extends TestCase {
         $cart = Mockery::mock( WC_Cart::class );
         $cart->shouldReceive( 'apply_coupon' )->with( 'SAVE10' )->once()->andReturn( true );
         $cart->shouldReceive( 'get_cart_total' )->andReturn( '$45.00' );
+        $cart->shouldReceive( 'get_discount_total' )->andReturn( 5.0 );
         Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $cart ] );
 
         $result = $this->registry()->dispatch( 'apply_coupon', [ 'code' => '  SAVE10  ' ] );

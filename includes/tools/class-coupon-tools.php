@@ -167,7 +167,7 @@ final class Fahad_AI_Coupon_Tools {
 			];
 		}
 
-		return [
+		$response = [
 			'success'    => true,
 			'message'    => sprintf(
 				/* translators: %s: the coupon code that was applied */
@@ -176,6 +176,26 @@ final class Fahad_AI_Coupon_Tools {
 			),
 			'cart_total' => wp_strip_all_tags( (string) $cart->get_cart_total() ),
 		];
+
+		// Confirm the realized saving (issue #261): surface how much the code actually took off,
+		// from WooCommerce's real cart discount, so the assistant can say "that saved you $8.50".
+		// Omitted when the discount is zero (e.g. a free-shipping-only code) so we never claim $0.
+		$discount = self::coupon_discount_amount( (float) $cart->get_discount_total() );
+		if ( null !== $discount ) {
+			$response['discount_amount'] = $discount;
+		}
+
+		return $response;
+	}
+
+	/**
+	 * The money a successfully-applied coupon actually took off the cart, so the assistant can
+	 * confirm "that saved you $8.50" from the real cart discount instead of guessing. Returns null
+	 * when the discount is zero or negative (e.g. a free-shipping-only code that reduces no line),
+	 * so the assistant never claims a "$0 off" saving. Rounds to 2 decimals.
+	 */
+	public static function coupon_discount_amount( float $discount_total ): ?float {
+		return $discount_total > 0 ? round( $discount_total, 2 ) : null;
 	}
 
 	// -------------------------------------------------------------------------
