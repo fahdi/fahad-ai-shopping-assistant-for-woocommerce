@@ -665,6 +665,7 @@ class CoverageAdminSettingsTest extends TestCase {
 			'voice_tts'             => '1',
 			'weekly_digest'         => '1',
 			'enabled'               => '1',
+			'hide_on_checkout'      => '1',
 			'whatsapp_enabled'      => '1',
 			'whatsapp_verify_token' => 'verify123',
 			'whatsapp_app_secret'   => 'secret456',
@@ -697,6 +698,7 @@ class CoverageAdminSettingsTest extends TestCase {
 		$this->assertSame( 1, $this->options['fahad_ai_voice_enabled'] );
 		$this->assertSame( 1, $this->options['fahad_ai_weekly_digest'] );
 		$this->assertSame( 1, $this->options['fahad_ai_enabled'] );
+		$this->assertSame( 1, $this->options['fahad_ai_hide_on_checkout'] );
 		$this->assertSame( 1, $this->options['fahad_ai_whatsapp_enabled'] );
 		$this->assertSame( 'verify123', $this->options['fahad_ai_whatsapp_verify_token'] );
 		// disabled_tools is run through the slug sanitizer.

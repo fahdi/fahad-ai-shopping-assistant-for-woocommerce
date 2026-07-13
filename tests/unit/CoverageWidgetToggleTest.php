@@ -41,4 +41,15 @@ class CoverageWidgetToggleTest extends TestCase {
 		$this->options['fahad_ai_enabled'] = '1';
 		$this->assertTrue( fahad_ai_widget_enabled() );
 	}
+
+	// ── hide on cart / checkout (issue #241) ─────────────────────────────────────
+
+	public function test_hide_on_checkout_off_by_default(): void {
+		$this->assertFalse( fahad_ai_hide_on_checkout_enabled() );
+	}
+
+	public function test_hide_on_checkout_on_when_set(): void {
+		$this->options['fahad_ai_hide_on_checkout'] = '1';
+		$this->assertTrue( fahad_ai_hide_on_checkout_enabled() );
+	}
 }

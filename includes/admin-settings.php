@@ -35,6 +35,16 @@ function fahad_ai_widget_enabled(): bool {
 }
 
 /**
+ * Whether to hide the assistant on the cart and checkout pages (issue #241). Default OFF, so
+ * behaviour is unchanged unless the owner opts in. The assistant is a browsing/discovery aid;
+ * some stores prefer a distraction-free checkout, so this keeps it on the storefront while
+ * removing it from the cart/checkout flow. The page check itself lives in render_widget.
+ */
+function fahad_ai_hide_on_checkout_enabled(): bool {
+	return (bool) get_option( 'fahad_ai_hide_on_checkout', '' );
+}
+
+/**
  * The WooCommerce features this plugin declares compatibility with (issue #208). Single
  * source of truth, iterated by the before_woocommerce_init hook in the main file. HPOS
  * (`custom_order_tables`) is safe here because every order access goes through CRUD
@@ -851,6 +861,7 @@ function fahad_ai_settings_page(): void {
 		update_option( 'fahad_ai_store_knowledge', sanitize_textarea_field( wp_unslash( $_POST['store_knowledge'] ?? '' ) ) );
 		update_option( 'fahad_ai_weekly_digest', empty( $_POST['weekly_digest'] ) ? 0 : 1 );
 		update_option( 'fahad_ai_enabled', empty( $_POST['enabled'] ) ? 0 : 1 );
+		update_option( 'fahad_ai_hide_on_checkout', empty( $_POST['hide_on_checkout'] ) ? 0 : 1 );
 		update_option( 'fahad_ai_disabled_tools', fahad_ai_sanitize_tool_list( array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['disabled_tools'] ?? [] ) ) ) );
 
 		// Multilingual: default/allowed languages (issue #61). Default 'auto' = detect and
@@ -912,6 +923,7 @@ function fahad_ai_settings_page(): void {
 	$store_knowledge    = get_option( 'fahad_ai_store_knowledge',        '' );
 	$weekly_digest      = fahad_ai_weekly_digest_enabled();
 	$assistant_enabled  = fahad_ai_widget_enabled();
+	$hide_on_checkout   = fahad_ai_hide_on_checkout_enabled();
 	$languages          = get_option( 'fahad_ai_languages',            'auto' ); // multilingual (#61)
 	$disabled_tools     = (array) get_option( 'fahad_ai_disabled_tools', [] );
 	$token_budget       = (int) get_option( 'fahad_ai_token_budget',   0 );
@@ -1316,6 +1328,15 @@ function fahad_ai_settings_page(): void {
 						<label>
 							<input type="checkbox" name="enabled" value="1" <?php checked( $assistant_enabled ); ?>>
 							<?php esc_html_e( 'Show the assistant and answer shoppers. Untick to pause it everywhere without deactivating the plugin: the widget disappears and no AI calls are made, but all your settings are kept.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Hide at Checkout', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="hide_on_checkout" value="1" <?php checked( $hide_on_checkout ); ?>>
+							<?php esc_html_e( 'Do not show the assistant on the cart and checkout pages, for a distraction-free checkout. It stays available everywhere else.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 						</label>
 					</td>
 				</tr>
