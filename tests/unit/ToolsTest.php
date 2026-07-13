@@ -208,6 +208,47 @@ class ToolsTest extends TestCase {
         $this->assertSame( 1, $result['products'][0]['id'] );
     }
 
+    public function test_search_sort_applies_woocommerce_ordering_to_the_query(): void {
+        // "Cheapest first" must reach the product query as WooCommerce price-ascending ordering.
+        $captured = null;
+        Functions\when( 'wc_get_products' )->alias( function ( array $args ) use ( &$captured ) {
+            $captured = $args;
+            return [];
+        } );
+
+        $this->tools()->execute( 'search_products', [ 'query' => 'jacket', 'sort' => 'price_low' ] );
+
+        $this->assertSame( 'price', $captured['orderby'] );
+        $this->assertSame( 'ASC', $captured['order'] );
+    }
+
+    public function test_search_without_sort_keeps_relevance_order(): void {
+        $captured = null;
+        Functions\when( 'wc_get_products' )->alias( function ( array $args ) use ( &$captured ) {
+            $captured = $args;
+            return [];
+        } );
+
+        $this->tools()->execute( 'search_products', [ 'query' => 'jacket' ] );
+
+        $this->assertSame( 'relevance', $captured['orderby'] );
+        $this->assertArrayNotHasKey( 'order', $captured );
+    }
+
+    public function test_search_sort_param_exposed_in_schema(): void {
+        $defs   = $this->tools()->builtin_definitions();
+        $search = null;
+        foreach ( $defs as $d ) {
+            if ( 'search_products' === $d['name'] ) {
+                $search = $d;
+                break;
+            }
+        }
+        $props = $search['parameters']['properties'] ?? [];
+        $this->assertArrayHasKey( 'sort', $props );
+        $this->assertContains( 'price_low', $props['sort']['enum'] ?? [] );
+    }
+
     public function test_search_min_rating_param_exposed_in_schema(): void {
         $defs  = $this->tools()->builtin_definitions();
         $search = null;

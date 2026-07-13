@@ -41,6 +41,7 @@ final class Fahad_AI_Tools {
 						'max_price' => [ 'type' => 'number',  'description' => 'Maximum price' ],
 						'on_sale'   => [ 'type' => 'boolean', 'description' => 'When true, return ONLY products that are currently on sale (a reduced price). Use this whenever the customer asks what is on sale, about deals, discounts, or clearance, it composes with category and price.' ],
 						'min_rating' => [ 'type' => 'number', 'description' => 'When set (e.g. 4), return ONLY products whose average customer rating is at least this many stars. Use whenever the customer asks for well-rated, top-rated, best-reviewed, or highly rated products; it composes with query, category, price, and on_sale.' ],
+						'sort'      => [ 'type' => 'string', 'enum' => [ 'price_low', 'price_high', 'rating', 'popularity' ], 'description' => 'Order the results. Use price_low for cheapest first, price_high for most expensive first, rating for best-rated first, popularity for best-sellers first. Omit to keep the default best-match order.' ],
 						'limit'     => [ 'type' => 'integer', 'description' => 'Max results (default 5, max 10)' ],
 					],
 				],
@@ -132,6 +133,13 @@ final class Fahad_AI_Tools {
 			'limit'   => $widen ? 50 : $limit,
 			'orderby' => 'relevance',
 		];
+
+		// Optional result sorting (issue #279): when the shopper asks for a specific order
+		// (cheapest first, best-rated, etc.), override relevance with WooCommerce's own ordering.
+		$sort_args = self::sort_args( isset( $input['sort'] ) ? sanitize_text_field( $input['sort'] ) : '' );
+		if ( ! empty( $sort_args ) ) {
+			$base = array_merge( $base, $sort_args );
+		}
 
 		if ( ! empty( $input['category'] ) ) {
 			$base['category'] = [ sanitize_text_field( $input['category'] ) ];
@@ -402,6 +410,29 @@ final class Fahad_AI_Tools {
 	 */
 	public static function rating_passes( float $rating, float $min_rating ): bool {
 		return $min_rating <= 0.0 || $rating >= $min_rating;
+	}
+
+	/**
+	 * Map a shopper-friendly sort value to WooCommerce's own orderby/order for search, so a
+	 * shopper can ask for "cheapest first" or "best-rated" and get a correctly ordered, grounded
+	 * result. Returns an empty array for anything unknown or empty, so the sort is strictly
+	 * opt-in and search keeps its relevance order unless a real sort is requested.
+	 *
+	 * @return array{orderby: string, order: string}|array{}
+	 */
+	public static function sort_args( string $sort ): array {
+		switch ( $sort ) {
+			case 'price_low':
+				return [ 'orderby' => 'price', 'order' => 'ASC' ];
+			case 'price_high':
+				return [ 'orderby' => 'price', 'order' => 'DESC' ];
+			case 'rating':
+				return [ 'orderby' => 'rating', 'order' => 'DESC' ];
+			case 'popularity':
+				return [ 'orderby' => 'popularity', 'order' => 'DESC' ];
+			default:
+				return [];
+		}
 	}
 
 	/**
