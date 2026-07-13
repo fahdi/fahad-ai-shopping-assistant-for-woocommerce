@@ -1004,6 +1004,7 @@ function fahad_ai_settings_page(): void {
 		update_option( 'fahad_ai_off_limits',     sanitize_textarea_field( wp_unslash( $_POST['off_limits']      ?? '' ) ) );
 		update_option( 'fahad_ai_promo_emphasis', sanitize_textarea_field( wp_unslash( $_POST['promo_emphasis']  ?? '' ) ) );
 		update_option( 'fahad_ai_free_shipping_threshold', max( 0, (float) ( $_POST['free_shipping_threshold'] ?? 0 ) ) );
+		update_option( 'fahad_ai_bestseller_threshold', max( 0, (int) ( $_POST['bestseller_threshold'] ?? 0 ) ) );
 		update_option( 'fahad_ai_return_policy', sanitize_textarea_field( wp_unslash( $_POST['return_policy'] ?? '' ) ) );
 		update_option( 'fahad_ai_support_contact', sanitize_text_field( wp_unslash( $_POST['support_contact'] ?? '' ) ) );
 		update_option( 'fahad_ai_store_knowledge', sanitize_textarea_field( wp_unslash( $_POST['store_knowledge'] ?? '' ) ) );
@@ -1069,6 +1070,7 @@ function fahad_ai_settings_page(): void {
 	$off_limits         = get_option( 'fahad_ai_off_limits',           '' );
 	$promo_emphasis     = get_option( 'fahad_ai_promo_emphasis',       '' );
 	$free_shipping_threshold = (float) get_option( 'fahad_ai_free_shipping_threshold', 0 );
+	$bestseller_threshold    = (int) get_option( 'fahad_ai_bestseller_threshold', 0 );
 	$return_policy      = get_option( 'fahad_ai_return_policy',          '' );
 	$support_contact    = get_option( 'fahad_ai_support_contact',        '' );
 	$store_knowledge    = get_option( 'fahad_ai_store_knowledge',        '' );
@@ -1397,6 +1399,16 @@ function fahad_ai_settings_page(): void {
 							value="<?php echo esc_attr( (string) $free_shipping_threshold ); ?>" class="small-text">
 						<p class="description">
 							<?php esc_html_e( 'Order amount that unlocks free shipping at your store. When set, the assistant can helpfully tell a shopper how much more they need to add to qualify, to lift order value, stated as a fact and never as pressure. 0 = do not mention.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="bestseller_threshold"><?php esc_html_e( 'Bestseller Threshold', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?></label></th>
+					<td>
+						<input type="number" id="bestseller_threshold" name="bestseller_threshold" min="0" step="1"
+							value="<?php echo esc_attr( (string) $bestseller_threshold ); ?>" class="small-text">
+						<p class="description">
+							<?php esc_html_e( 'Lifetime units sold at which a product counts as a bestseller. When set, the assistant can point shoppers to proven best-sellers as honest social proof, grounded in real sales. 0 = do not mention.', 'fahad-ai-shopping-assistant-for-woocommerce' ); ?>
 						</p>
 					</td>
 				</tr>

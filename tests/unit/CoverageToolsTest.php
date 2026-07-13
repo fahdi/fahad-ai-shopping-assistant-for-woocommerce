@@ -67,6 +67,7 @@ class CoverageToolsTest extends TestCase {
 		$p->shouldReceive( 'get_image_id' )->andReturn( 0 );
 		$p->shouldReceive( 'get_average_rating' )->andReturn( '0' )->byDefault();
 		$p->shouldReceive( 'get_review_count' )->andReturn( 0 )->byDefault();
+		$p->shouldReceive( 'get_total_sales' )->andReturn( 0 )->byDefault();
 		return $p;
 	}
 
@@ -278,6 +279,7 @@ class CoverageToolsTest extends TestCase {
 		$parent->shouldReceive( 'get_image_id' )->andReturn( 0 );
 		$parent->shouldReceive( 'get_average_rating' )->andReturn( '0' );
 		$parent->shouldReceive( 'get_review_count' )->andReturn( 0 );
+		$parent->shouldReceive( 'get_total_sales' )->andReturn( 0 );
 		$parent->shouldReceive( 'get_available_variations' )->andReturn( [
 			[ 'variation_id' => 51, 'attributes' => [ 'attribute_size' => 'M' ] ],
 			[ 'variation_id' => 99, 'attributes' => [ 'attribute_size' => 'L' ] ], // gone.
@@ -331,6 +333,7 @@ class CoverageToolsTest extends TestCase {
 		$parent->shouldReceive( 'get_image_id' )->andReturn( 0 );
 		$parent->shouldReceive( 'get_average_rating' )->andReturn( '0' );
 		$parent->shouldReceive( 'get_review_count' )->andReturn( 0 );
+		$parent->shouldReceive( 'get_total_sales' )->andReturn( 0 );
 		$parent->shouldReceive( 'get_available_variations' )->andReturn( [
 			[
 				'variation_id' => 61,
@@ -383,6 +386,7 @@ class CoverageToolsTest extends TestCase {
 		$product->shouldReceive( 'get_image_id' )->andReturn( 0 );
 		$product->shouldReceive( 'get_average_rating' )->andReturn( '0' );
 		$product->shouldReceive( 'get_review_count' )->andReturn( 0 );
+		$product->shouldReceive( 'get_total_sales' )->andReturn( 0 );
 
 		Functions\when( 'wc_get_product' )->justReturn( $product );
 
