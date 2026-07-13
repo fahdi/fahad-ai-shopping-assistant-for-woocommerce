@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.45
+Stable tag: 2.14.46
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -219,6 +219,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 
 == Changelog ==
 
+= 2.14.46 =
+Keep free shipping in view: the assistant now updates free-shipping progress after an item is removed.
+
+* Removing an item from the cart now returns the same grounded free-shipping progress already shown when adding or viewing the cart, so if the removal drops the order below your threshold the assistant can say "you're now $9 away from free shipping" and invite the shopper to re-add. Only when a threshold is configured.
+
 = 2.14.45 =
 Scarcity at the right moment: the assistant can now reinforce low stock right after an add to cart.
 
@@ -425,6 +430,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.46 =
+Re-surfaces free-shipping progress after an item is removed so the assistant can nudge shoppers who drop below the threshold. No breaking changes.
 
 = 2.14.45 =
 Adds a grounded low-stock signal to the add-to-cart response so the assistant can reinforce scarcity at the peak-intent moment. No breaking changes.
