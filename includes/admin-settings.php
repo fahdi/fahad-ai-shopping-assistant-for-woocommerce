@@ -81,6 +81,7 @@ function fahad_ai_build_weekly_digest( array $stats ): string {
 	$lines[] = '';
 	$lines[] = 'Conversations: ' . $conversations;
 	$lines[] = 'Added to cart: ' . $cart . ' (' . $rate . '% chat-to-cart)';
+	$lines[] = 'Resolution rate: ' . (int) round( ( (float) ( $stats['resolution_rate'] ?? 0 ) ) * 100 ) . '%';
 	$lines[] = 'Chat-attributed orders: ' . ( null === $orders ? 'n/a' : (int) $orders );
 	$lines[] = 'AI cost: ' . $currency . number_format( $cost, 2 );
 

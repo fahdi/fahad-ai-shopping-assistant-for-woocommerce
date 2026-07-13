@@ -61,9 +61,10 @@ class CoverageWeeklyDigestTest extends TestCase {
 
 	private function stats(): array {
 		return [
-			'conversations' => 42,
-			'added_to_cart' => 11,
-			'cart_rate'     => 11 / 42,
+			'conversations'   => 42,
+			'added_to_cart'   => 11,
+			'cart_rate'       => 11 / 42,
+			'resolution_rate' => 0.8,
 			'orders'        => 3,
 			'total_cost'    => 1.2,
 			'currency'      => '$',
@@ -81,6 +82,7 @@ class CoverageWeeklyDigestTest extends TestCase {
 		$this->assertStringContainsString( 'last 7 days', $body );
 		$this->assertStringContainsString( 'Conversations: 42', $body );
 		$this->assertStringContainsString( '26% chat-to-cart', $body ); // 11 of 42
+		$this->assertStringContainsString( 'Resolution rate: 80%', $body );
 		$this->assertStringContainsString( '$1.20', $body );
 		$this->assertStringContainsString( 'Do you ship to Canada?', $body );
 		$this->assertStringContainsString( 'http://example.com/wp-admin/options-general.php?page=fahad-ai', $body );
