@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  html,body{margin:0;width:512px;height:512px;background:#0b0c0f}
+  .frame{display:flex;align-items:center;justify-content:center;width:512px;height:512px}
+</style></head>
+<body>
+  <div class="frame">
+    <!-- Dukandar mark: a shopkeeper (cap + mustache) inside a chat bubble. Lime bubble on ink,
+         ink figure. viewBox 0 0 120 120. Kept bold + geometric so it reads at 32px. -->
+    <svg id="mark" width="440" height="440" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- chat bubble: rounded body + tail at bottom-left -->
+      <path d="M26 14 h68 a16 16 0 0 1 16 16 v40 a16 16 0 0 1 -16 16 h-40 l-20 18 v-18 h-8 a16 16 0 0 1 -16 -16 v-40 a16 16 0 0 1 16 -16 z"
+            fill="#d6fb4f"/>
+      <!-- shopkeeper, ink, centred in the bubble body (cx 60) -->
+      <g fill="#0b0c0f">
+        <!-- head -->
+        <circle cx="60" cy="52" r="13"/>
+        <!-- shoulders / body -->
+        <path d="M38 84 q0 -18 22 -18 t22 18 q0 2 -2 2 h-40 q-2 0 -2 -2 z"/>
+        <!-- topi (skullcap): a modest dome over the top of the head -->
+        <path d="M48 45 a12 11 0 0 1 24 0 z"/>
+      </g>
+      <!-- cap band: a slim lime rim where the cap meets the forehead (reads as headwear) -->
+      <rect x="47" y="43.6" width="26" height="3" rx="1.5" fill="#d6fb4f"/>
+      <!-- friendly face: two eyes + a mustache, in lime -->
+      <circle cx="55" cy="51.5" r="1.7" fill="#d6fb4f"/>
+      <circle cx="65" cy="51.5" r="1.7" fill="#d6fb4f"/>
+      <path d="M53.5 56.5 q3 1.4 6.5 1.4 t6.5 -1.4 q-1.4 3 -6.5 2.9 t-6.5 -2.9 z" fill="#d6fb4f"/>
+      <!-- collar V in lime -->
+      <path d="M54.5 67 l5.5 5.5 l5.5 -5.5 q-5.5 2.6 -11 0 z" fill="#d6fb4f"/>
+    </svg>
+  </div>
+</body></html>
