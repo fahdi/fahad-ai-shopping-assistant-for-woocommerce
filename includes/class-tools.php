@@ -485,7 +485,7 @@ final class Fahad_AI_Tools {
 		$cart_item_key = WC()->cart->add_to_cart( $product_id, $quantity, $variation_id );
 
 		if ( $cart_item_key ) {
-			return [
+			$response = [
 				'success'       => true,
 				'message'       => sprintf(
 					/* translators: 1: quantity, 2: product (or selected variation) name */
@@ -499,6 +499,16 @@ final class Fahad_AI_Tools {
 				'cart_url'      => wc_get_cart_url(),
 				'checkout_url'  => wc_get_checkout_url(),
 			];
+
+			// Precise free-shipping nudge at the highest-leverage moment (issue #220): right
+			// after an add, tell the shopper the exact amount left to unlock free shipping so
+			// they can top up now. Only when a threshold is configured; grounded, not guessed.
+			$threshold = (float) get_option( 'fahad_ai_free_shipping_threshold', 0 );
+			if ( $threshold > 0 ) {
+				$response['free_shipping'] = self::free_shipping_progress( (float) WC()->cart->get_cart_contents_total(), $threshold );
+			}
+
+			return $response;
 		}
 
 		return [

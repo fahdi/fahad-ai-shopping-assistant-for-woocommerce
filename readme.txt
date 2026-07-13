@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.20
+Stable tag: 2.14.21
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.21 =
+Free-shipping nudge at the perfect moment: right after a shopper adds to cart.
+
+* The assistant now knows the exact amount left to reach free shipping the instant an item is added, the classic "add a little more to unlock free shipping" moment. Combined with the cart view added in 2.14.20, it can prompt at the two highest-impact points in the buying flow. Only when a free-shipping threshold is set, and always from real cart numbers.
 
 = 2.14.20 =
 Exact free-shipping nudge in the cart: "you are $X away from free shipping", from real cart data.
@@ -543,6 +548,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.21 =
+The assistant now shows free-shipping progress right after add-to-cart, the best moment to lift order value. No breaking changes.
 
 = 2.14.20 =
 The assistant can now tell shoppers the exact amount left to reach free shipping, from the real cart total. No breaking changes.

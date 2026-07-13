@@ -427,6 +427,29 @@ class ToolsTest extends TestCase {
         $this->assertSame( 'cart_key_abc', $result['cart_item_key'] );
         $this->assertArrayHasKey( 'cart_url',     $result );
         $this->assertArrayHasKey( 'checkout_url', $result );
+        // No free-shipping threshold configured (get_option default 0) => no nudge field.
+        $this->assertArrayNotHasKey( 'free_shipping', $result );
+    }
+
+    public function test_add_to_cart_includes_free_shipping_progress_when_threshold_set(): void {
+        $product = $this->mockProduct( 10, 'Headphones', '35.00' );
+        Functions\when( 'wc_get_product' )->justReturn( $product );
+
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldReceive( 'add_to_cart' )->andReturn( 'cart_key_abc' );
+        $mockCart->shouldReceive( 'get_cart_total' )->andReturn( '$35.00' );
+        $mockCart->shouldReceive( 'get_cart_contents_total' )->andReturn( 35.0 );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+        Functions\when( 'get_option' )->alias(
+            fn( $k, $d = '' ) => 'fahad_ai_free_shipping_threshold' === $k ? 50.0 : $d
+        );
+
+        $result = $this->tools()->execute( 'add_to_cart', [ 'product_id' => 10, 'quantity' => 1 ] );
+
+        $this->assertArrayHasKey( 'free_shipping', $result );
+        $this->assertSame( 50.0, $result['free_shipping']['threshold'] );
+        $this->assertEqualsWithDelta( 15.0, $result['free_shipping']['remaining'], 0.001 );
+        $this->assertFalse( $result['free_shipping']['qualified'] );
     }
 
     public function test_add_to_cart_fails_for_out_of_stock_product(): void {
