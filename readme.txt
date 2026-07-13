@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.24
+Stable tag: 2.14.25
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.25 =
+A friendly welcome: confirm the assistant is live and get set up for success from day one.
+
+* The first time you connect an AI provider, Dukandar emails the store admin a one-time welcome: confirmation that the assistant is live, how to test it, and the few settings that make it most effective (Store Information, free-shipping threshold, support contact, analytics). Sent once, so it never nags.
 
 = 2.14.24 =
 Your weekly email now includes the resolution rate, the "is it working?" number, at a glance.
@@ -563,6 +568,9 @@ Under the hood:
 * Optional custom system prompt
 
 == Upgrade Notice ==
+
+= 2.14.25 =
+Sends a one-time welcome email when you first connect a provider, confirming the assistant is live and guiding setup. No breaking changes.
 
 = 2.14.24 =
 The weekly digest now includes the assistant's resolution rate. No breaking changes.

@@ -39,6 +39,39 @@ function fahad_ai_wc_compatible_features(): array {
 }
 
 /**
+ * Whether to send the one-time welcome email (issue #229): only once a provider is actually
+ * configured (activation has genuinely succeeded) and only if it has not already been sent.
+ * The "sent" flag is written by the caller after a successful send, so this stays pure.
+ */
+function fahad_ai_should_send_welcome(): bool {
+	return ! get_option( 'fahad_ai_welcome_sent' ) && fahad_ai_is_provider_configured();
+}
+
+/**
+ * Build the plain-text welcome email (issue #229). Confirms the assistant is live and points
+ * the owner at the highest-value next steps so activation turns into real use. Pure and
+ * side-effect free; the caller supplies the settings URL and does the sending.
+ */
+function fahad_ai_build_welcome_email( string $settings_url ): string {
+	$lines   = [];
+	$lines[] = 'Your Dukandar shopping assistant is live';
+	$lines[] = '';
+	$lines[] = 'Nice work. Your AI provider is connected, so the assistant is now answering shoppers on your store.';
+	$lines[] = '';
+	$lines[] = 'Try it: open your storefront and ask the chat widget a product question.';
+	$lines[] = '';
+	$lines[] = 'Get the most out of it:';
+	$lines[] = '1. Fill in Store Information / FAQ (shipping times, sizing, returns) so it can answer more on its own.';
+	$lines[] = '2. Set a Free Shipping Threshold so it can nudge shoppers toward free shipping.';
+	$lines[] = '3. Add a Support Contact so it can hand off to a person when needed.';
+	$lines[] = '4. Watch the analytics to see conversations, chat-to-cart, and resolution rate.';
+	$lines[] = '';
+	$lines[] = 'Open your settings: ' . $settings_url;
+
+	return implode( "\n", $lines );
+}
+
+/**
  * Whether the weekly owner digest is enabled (issue #206). Default ON: the recurring
  * summary is the main way an owner keeps seeing the plugin's value, so it is opt-out.
  */

@@ -3,7 +3,7 @@
  * Plugin Name: Dukandar AI Shopping Assistant for WooCommerce
  * Plugin URI:  https://github.com/fahdi/dukandar-shopping-assistant-for-woocommerce
  * Description: AI-powered shopping assistant for WooCommerce, answers questions and manages the cart using OpenAI, Claude, Gemini, Moonshot, and other major AI providers.
- * Version:           2.14.24
+ * Version:           2.14.25
  * Author:      Fahdi Murtaza
  * Author URI:  https://github.com/fahdi
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FAHAD_AI_VERSION', '2.14.24' );
+define( 'FAHAD_AI_VERSION', '2.14.25' );
 define( 'FAHAD_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAHAD_AI_URL', plugin_dir_url( __FILE__ ) );
 
@@ -109,6 +109,27 @@ final class Fahad_AI_Chatbot {
 		add_filter( 'cron_schedules',            [ $this, 'register_weekly_schedule' ] );
 		add_action( 'fahad_ai_weekly_digest',    [ $this, 'run_weekly_digest' ] );
 		add_action( 'init',                      [ $this, 'schedule_weekly_digest' ] );
+
+		// One-time welcome email (#229): confirm the assistant is live and guide next steps the
+		// first time a provider is configured. Gated + de-duplicated; the send is thin wiring.
+		add_action( 'admin_init',                [ $this, 'maybe_send_welcome' ] );
+	}
+
+	/**
+	 * Send the one-time welcome email once a provider is configured (#229). Gated by
+	 * fahad_ai_should_send_welcome so it fires at most once; marks itself sent immediately
+	 * (before the send) so a slow mailer cannot double-fire. Gate + body are unit-tested.
+	 */
+	public function maybe_send_welcome(): void {
+		if ( ! fahad_ai_should_send_welcome() ) {
+			return;
+		}
+		update_option( 'fahad_ai_welcome_sent', '1' );
+		wp_mail(
+			get_option( 'admin_email' ),
+			'Your Dukandar assistant is live',
+			fahad_ai_build_welcome_email( admin_url( 'options-general.php?page=fahad-ai-shopping-assistant-for-woocommerce' ) )
+		);
 	}
 
 	/** Add a 'fahad_ai_weekly' cron interval (WordPress core has no guaranteed weekly). */
