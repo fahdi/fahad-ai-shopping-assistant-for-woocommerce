@@ -122,7 +122,7 @@ final class Fahad_AI_Tools {
 		// first few by relevance), then cap to the display limit below.
 		$only_sale  = ! empty( $input['on_sale'] );
 		$min_rating = isset( $input['min_rating'] ) ? max( 0.0, (float) $input['min_rating'] ) : 0.0;
-		$limit      = min( (int) ( $input['limit'] ?? 5 ), 10 );
+		$limit      = self::clamp_search_limit( (int) ( $input['limit'] ?? 5 ) );
 
 		// Widen the fetch when a post-query filter (on-sale or min-rating) will thin the results,
 		// so enough candidates survive to fill the display limit; capped back down after filtering.
@@ -410,6 +410,16 @@ final class Fahad_AI_Tools {
 	 */
 	public static function rating_passes( float $rating, float $min_rating ): bool {
 		return $min_rating <= 0.0 || $rating >= $min_rating;
+	}
+
+	/**
+	 * Clamp a model-supplied search limit into a safe 1..10 range. The high cap bounds the result
+	 * set; the low floor of 1 is the important guard, without it a supplied 0 returns an empty
+	 * result and a negative value makes WooCommerce fetch the ENTIRE catalogue (limit -1 is
+	 * "unbounded"), dumping every product into the LLM context.
+	 */
+	public static function clamp_search_limit( int $requested ): int {
+		return max( 1, min( $requested, 10 ) );
 	}
 
 	/**

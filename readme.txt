@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.52
+Stable tag: 2.14.53
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.53 =
+Reliability fix: product search now safely handles an out-of-range result limit.
+
+* Fixed an edge case where a zero or negative result limit could make product search return the entire catalogue (spiking token cost and slowing responses) or no results at all. The limit is now always clamped to a safe 1 to 10 range. No change for normal searches.
 
 = 2.14.52 =
 Lost demand, delivered to your inbox: the weekly email now includes searches that found nothing.
@@ -460,6 +465,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.53 =
+Reliability fix: clamps an out-of-range search limit so a bad value can never dump the whole catalogue or return nothing. No breaking changes.
 
 = 2.14.52 =
 Adds the "searches with no results" demand list to the weekly summary email so it reaches you without opening the dashboard. No breaking changes.
