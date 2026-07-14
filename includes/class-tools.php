@@ -868,6 +868,9 @@ final class Fahad_AI_Tools {
 			'items'        => $items,
 			'item_count'   => $cart->get_cart_contents_count(),
 			'subtotal'     => wp_strip_all_tags( $cart->get_cart_subtotal() ),
+			// Tax at cart review (issue #313), consistent with the checkout summary, so the shopper
+			// sees the tax portion before checkout. Grounded in WooCommerce's own tax calculation.
+			'tax_total'    => wp_strip_all_tags( (string) $cart->get_cart_tax() ),
 			'total'        => wp_strip_all_tags( $cart->get_cart_total() ),
 			'cart_url'     => wc_get_cart_url(),
 			'checkout_url' => wc_get_checkout_url(),
