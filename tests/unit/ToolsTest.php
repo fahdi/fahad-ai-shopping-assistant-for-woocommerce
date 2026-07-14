@@ -319,6 +319,32 @@ class ToolsTest extends TestCase {
         $this->assertSame( 'number', $props['min_rating']['type'] ?? null );
     }
 
+    public function test_search_summary_flags_bestseller_from_real_data(): void {
+        // With an owner-set bestseller threshold, a high-selling product must carry the badge in
+        // list results so the assistant can steer shoppers to proven best-sellers at discovery.
+        $product = $this->mockProduct( 7, 'Alpine Jacket', '129.99' );
+        $product->shouldReceive( 'get_total_sales' )->andReturn( 500 );
+        Functions\when( 'wc_get_products' )->justReturn( [ $product ] );
+        Functions\when( 'get_option' )->alias(
+            fn( $k, $d = '' ) => 'fahad_ai_bestseller_threshold' === $k ? 100 : $d
+        );
+
+        $result = $this->tools()->execute( 'search_products', [ 'query' => 'jacket' ] );
+
+        $this->assertTrue( $result['products'][0]['bestseller'] );
+    }
+
+    public function test_search_summary_bestseller_false_without_threshold(): void {
+        // Default (no threshold): nothing is badged, behaviour unchanged.
+        $product = $this->mockProduct( 8, 'Regular Jacket', '99.99' );
+        $product->shouldReceive( 'get_total_sales' )->andReturn( 5000 );
+        Functions\when( 'wc_get_products' )->justReturn( [ $product ] );
+
+        $result = $this->tools()->execute( 'search_products', [ 'query' => 'jacket' ] );
+
+        $this->assertFalse( $result['products'][0]['bestseller'] );
+    }
+
     public function test_search_summary_flags_highly_rated_from_real_data(): void {
         // A well-reviewed product (4.5 stars, 8 reviews via mockProduct defaults) must carry the
         // decision-ready social-proof flag in list results, so the assistant can lead with it.

@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.63
+Stable tag: 2.14.64
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.64 =
+Bestseller badge while browsing: the assistant can now point out best-sellers in a list of options.
+
+* Product list results (search, recommendations, bundles, comparisons) now include the same grounded bestseller signal as the product detail view, so the assistant can say "the Alpine Jacket is one of our best-sellers" the moment it presents options. Opt-in via your Bestseller Threshold setting, based on real sales; off by default.
 
 = 2.14.63 =
 Recover sold-out sales: the assistant now offers a back-in-stock alert when an item is out of stock.
@@ -515,6 +520,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.64 =
+Surfaces the grounded bestseller signal in product list results (opt-in via Bestseller Threshold) so the assistant can highlight best-sellers while listing options. No breaking changes.
 
 = 2.14.63 =
 The assistant now offers a back-in-stock alert when a shopper tries to buy an out-of-stock item, recovering otherwise-lost sales. No breaking changes.

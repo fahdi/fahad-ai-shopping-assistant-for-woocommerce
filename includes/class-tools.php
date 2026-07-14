@@ -1037,6 +1037,8 @@ final class Fahad_AI_Tools {
 	 * Fahad_AI_API_Handler::tool_result_cards() keeps working uniformly.
 	 */
 	public function format_product_summary( WC_Product $product ): array {
+		$bestseller_threshold = (int) get_option( 'fahad_ai_bestseller_threshold', 0 );
+
 		return [
 			'id'                => $product->get_id(),
 			'name'              => $product->get_name(),
@@ -1054,6 +1056,12 @@ final class Fahad_AI_Tools {
 			'rating'            => round( (float) $product->get_average_rating(), 2 ),
 			'review_count'      => (int) $product->get_review_count(),
 			'highly_rated'      => self::highly_rated_flag( (float) $product->get_average_rating(), (int) $product->get_review_count(), 4.5, 5 ),
+			// Bestseller badge in list results (issue #307). Opt-in: only read the product's sales
+			// when the owner has set a threshold, so the signal is off (and free of the extra lookup)
+			// by default. Same grounded bar as get_product_details.
+			'bestseller'        => $bestseller_threshold > 0
+				? self::bestseller_flag( (int) $product->get_total_sales(), $bestseller_threshold )
+				: false,
 		];
 	}
 
