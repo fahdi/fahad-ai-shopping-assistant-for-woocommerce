@@ -95,11 +95,11 @@ class ToolRegistryTest extends TestCase {
 
     // ── built-in registration ───────────────────────────────────────────────
 
-    public function test_builtin_registry_contains_exactly_the_five_tools(): void {
+    public function test_builtin_registry_contains_exactly_the_six_tools(): void {
         $names = array_column( $this->registry()->specs(), 'name' );
 
         sort( $names );
-        $expected = [ 'add_to_cart', 'get_product_details', 'remove_from_cart', 'search_products', 'view_cart' ];
+        $expected = [ 'add_to_cart', 'get_product_details', 'remove_from_cart', 'search_products', 'update_cart_quantity', 'view_cart' ];
         sort( $expected );
 
         $this->assertSame( $expected, $names );
@@ -249,7 +249,7 @@ class ToolRegistryTest extends TestCase {
 
         // Built-ins still present alongside the new tool.
         $this->assertContains( 'search_products', $names );
-        $this->assertCount( 6, $names );
+        $this->assertCount( 7, $names );
     }
 
     // ── first-party packs: register_pack() (drop-in feature packs) ────────────
@@ -292,7 +292,7 @@ class ToolRegistryTest extends TestCase {
         $names = array_column( $registry->specs(), 'name' );
         $this->assertContains( 'pack_tool', $names );
         $this->assertContains( 'search_products', $names );
-        $this->assertCount( 6, $names );
+        $this->assertCount( 7, $names );
         $spec = array_column( $registry->specs(), null, 'name' )['pack_tool'];
         $this->assertArrayNotHasKey( 'callback', $spec );
 
@@ -376,12 +376,12 @@ class ToolRegistryTest extends TestCase {
 
         $registry = $this->registry();
 
-        // Both tools advertised next to the five built-ins (5 + 2 = 7).
+        // Both tools advertised next to the six built-ins (5 + 2 = 7).
         $names = array_column( $registry->specs(), 'name' );
         $this->assertContains( 'pack_tool', $names );
         $this->assertContains( 'wallet_balance', $names );
         $this->assertContains( 'search_products', $names );
-        $this->assertCount( 7, $names );
+        $this->assertCount( 8, $names );
 
         // Both are independently dispatchable.
         $this->assertSame( 'pack', $registry->dispatch( 'pack_tool', [] )['source'] );
@@ -440,7 +440,7 @@ class ToolRegistryTest extends TestCase {
         } );
 
         // Only the 5 built-ins survive; the anonymous entry is dropped.
-        $this->assertCount( 5, $this->registry()->specs() );
+        $this->assertCount( 6, $this->registry()->specs() );
     }
 
     public function test_entry_with_invalid_parameters_schema_is_skipped(): void {

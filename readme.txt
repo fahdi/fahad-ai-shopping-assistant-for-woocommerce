@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.61
+Stable tag: 2.14.62
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.62 =
+Adjust quantities in chat: the assistant can now change how many of an item are in the cart.
+
+* Adds cart quantity editing. A shopper can ask to change the quantity of something already in their cart ("make it 3") without removing and re-adding it, and the cart total updates. If they ask for more than is in stock, the assistant honestly says how many are available instead.
 
 = 2.14.61 =
 Change your mind about a code: the assistant can now remove an applied coupon.
@@ -505,6 +510,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.62 =
+Adds cart quantity editing so shoppers can change how many of an item they want without removing and re-adding it. No breaking changes.
 
 = 2.14.61 =
 Adds a remove-coupon capability so shoppers can undo an applied discount code in the chat. No breaking changes.

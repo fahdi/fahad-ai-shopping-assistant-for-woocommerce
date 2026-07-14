@@ -100,8 +100,8 @@ class MerchantConfigTest extends TestCase {
 		return Fahad_AI_Tool_Registry::instance();
 	}
 
-	/** The five built-in tool names that the registry must never let a merchant disable. */
-	private const BUILTINS = [ 'add_to_cart', 'get_product_details', 'remove_from_cart', 'search_products', 'view_cart' ];
+	/** The six built-in tool names that the registry must never let a merchant disable. */
+	private const BUILTINS = [ 'add_to_cart', 'get_product_details', 'remove_from_cart', 'search_products', 'update_cart_quantity', 'view_cart' ];
 
 	// ── tone / persona folds into the prompt ─────────────────────────────────────
 

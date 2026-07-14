@@ -1186,7 +1186,9 @@ function fahad_ai_settings_page(): void {
 	// disable-able. Everything else advertised to the model (packs + add-ons) can be
 	// gated. Derive the gateable list from the live registry so a new pack appears
 	// automatically with no edits here.
-	$builtin_tools  = [ 'search_products', 'get_product_details', 'add_to_cart', 'view_cart', 'remove_from_cart' ];
+	// Derive the protected built-in names from the live definitions (not a hardcoded list) so a
+	// new core tool, like update_cart_quantity, is never mistakenly shown as disableable here.
+	$builtin_tools  = array_column( Fahad_AI_Tools::instance()->builtin_definitions(), 'name' );
 	$gateable_tools = [];
 	foreach ( Fahad_AI_Tool_Registry::instance()->specs() as $spec ) {
 		if ( ! in_array( $spec['name'], $builtin_tools, true ) ) {

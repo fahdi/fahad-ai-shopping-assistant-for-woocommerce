@@ -74,6 +74,19 @@ final class Fahad_AI_Tools {
 				'callback'    => fn( array $input ) => $this->add_to_cart( $input ),
 			],
 			[
+				'name'        => 'update_cart_quantity',
+				'description' => "Change the quantity of an item already in the customer's cart. Pass the cart_item_key (from view_cart) and the new quantity. Use when the customer wants more or fewer of something already in their cart, for example \"make it 3\" or \"just one of those\".",
+				'parameters'  => [
+					'type'       => 'object',
+					'properties' => [
+						'cart_item_key' => [ 'type' => 'string',  'description' => 'The cart item key from view_cart identifying the line to change.' ],
+						'quantity'      => [ 'type' => 'integer', 'description' => 'The new quantity (at least 1).' ],
+					],
+					'required' => [ 'cart_item_key', 'quantity' ],
+				],
+				'callback'    => fn( array $input ) => $this->update_cart_quantity( $input ),
+			],
+			[
 				'name'        => 'view_cart',
 				'description' => "View the current contents of the customer's cart, totals, and checkout URL.",
 				'parameters'  => [
@@ -883,6 +896,72 @@ final class Fahad_AI_Tools {
 			if ( null !== $discount_total ) {
 				$response['discount_total'] = $discount_total;
 			}
+		}
+
+		return $response;
+	}
+
+	/**
+	 * Change the quantity of an item already in the cart (issue #303), the "make it 3" companion
+	 * to add/remove. Validates the line exists and that WooCommerce reports enough stock for the
+	 * new amount (has_enough_stock, so backorders are honoured) before setting it, then returns
+	 * the updated total and re-surfaces free-shipping progress like remove_from_cart.
+	 */
+	private function update_cart_quantity( array $input ): array {
+		$key      = sanitize_text_field( $input['cart_item_key'] ?? '' );
+		$quantity = max( 1, absint( $input['quantity'] ?? 0 ) );
+
+		if ( '' === $key ) {
+			return [
+				'success' => false,
+				'error'   => __( 'Cart item key is required.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			];
+		}
+
+		$cart_contents = WC()->cart->get_cart();
+
+		if ( ! isset( $cart_contents[ $key ] ) ) {
+			return [
+				'success' => false,
+				'error'   => __( 'Item not found in cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+			];
+		}
+
+		/** @var WC_Product $item */
+		$item = $cart_contents[ $key ]['data'];
+
+		// Honest stock-limit message (mirrors add_to_cart, issue #295): never set a quantity the
+		// store cannot fulfil; tell the shopper how many are actually available instead.
+		if ( ! $item->has_enough_stock( $quantity ) ) {
+			return [
+				'success' => false,
+				'error'   => sprintf(
+					/* translators: 1: available quantity, 2: product name */
+					__( 'Only %1$d left of %2$s, so I could not set that many. Please choose %1$d or fewer.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+					(int) $item->get_stock_quantity(),
+					$item->get_name()
+				),
+			];
+		}
+
+		WC()->cart->set_quantity( $key, $quantity );
+
+		$response = [
+			'success'   => true,
+			'message'   => sprintf(
+				/* translators: 1: product name, 2: new quantity */
+				__( 'Updated %1$s to %2$d in your cart.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
+				$item->get_name(),
+				$quantity
+			),
+			'new_total' => wp_strip_all_tags( WC()->cart->get_cart_total() ),
+		];
+
+		// Keep the free-shipping goal in view (issue #271): a quantity change moves the cart total,
+		// so re-surface how far the shopper is from free shipping when a threshold is configured.
+		$threshold = (float) get_option( 'fahad_ai_free_shipping_threshold', 0 );
+		if ( $threshold > 0 ) {
+			$response['free_shipping'] = self::free_shipping_progress( (float) WC()->cart->get_cart_contents_total(), $threshold );
 		}
 
 		return $response;

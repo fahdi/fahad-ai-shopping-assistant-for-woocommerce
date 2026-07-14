@@ -980,6 +980,81 @@ class ToolsTest extends TestCase {
 
     // ── remove_from_cart ──────────────────────────────────────────────────────
 
+    // ── update_cart_quantity (issue #303) ───────────────────────────────────────
+
+    public function test_update_cart_quantity_sets_new_quantity(): void {
+        $product = $this->mockProduct( 5, 'Jeans', '59' );
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldReceive( 'get_cart' )->andReturn( [ 'key_xyz' => [ 'data' => $product ] ] );
+        $mockCart->shouldReceive( 'set_quantity' )->with( 'key_xyz', 3 )->once()->andReturn( true );
+        $mockCart->shouldReceive( 'get_cart_total' )->andReturn( '$177.00' );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+
+        $result = $this->tools()->execute( 'update_cart_quantity', [ 'cart_item_key' => 'key_xyz', 'quantity' => 3 ] );
+
+        $this->assertTrue( $result['success'] );
+        $this->assertStringContainsString( 'Jeans', $result['message'] );
+        $this->assertStringContainsString( '3', $result['message'] );
+        $this->assertSame( '$177.00', $result['new_total'] );
+        // No threshold configured => no free-shipping nudge.
+        $this->assertArrayNotHasKey( 'free_shipping', $result );
+    }
+
+    public function test_update_cart_quantity_requires_a_key(): void {
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => Mockery::mock( WC_Cart::class ) ] );
+
+        $result = $this->tools()->execute( 'update_cart_quantity', [ 'quantity' => 2 ] );
+
+        $this->assertFalse( $result['success'] );
+        $this->assertArrayHasKey( 'error', $result );
+    }
+
+    public function test_update_cart_quantity_errors_for_unknown_key(): void {
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldReceive( 'get_cart' )->andReturn( [] );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+
+        $result = $this->tools()->execute( 'update_cart_quantity', [ 'cart_item_key' => 'nope', 'quantity' => 2 ] );
+
+        $this->assertFalse( $result['success'] );
+        $this->assertArrayNotHasKey( 'new_total', $result );
+    }
+
+    public function test_update_cart_quantity_honest_message_when_not_enough_stock(): void {
+        $product = Mockery::mock( WC_Product::class );
+        $product->shouldReceive( 'get_name' )->andReturn( 'Jeans' );
+        $product->shouldReceive( 'has_enough_stock' )->with( 9 )->andReturn( false );
+        $product->shouldReceive( 'get_stock_quantity' )->andReturn( 4 );
+
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldReceive( 'get_cart' )->andReturn( [ 'key_xyz' => [ 'data' => $product ] ] );
+        $mockCart->shouldNotReceive( 'set_quantity' );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+
+        $result = $this->tools()->execute( 'update_cart_quantity', [ 'cart_item_key' => 'key_xyz', 'quantity' => 9 ] );
+
+        $this->assertFalse( $result['success'] );
+        $this->assertStringContainsString( '4', $result['error'] );
+    }
+
+    public function test_update_cart_quantity_surfaces_free_shipping_progress(): void {
+        $product = $this->mockProduct( 5, 'Jeans', '59' );
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldReceive( 'get_cart' )->andReturn( [ 'key_xyz' => [ 'data' => $product ] ] );
+        $mockCart->shouldReceive( 'set_quantity' )->with( 'key_xyz', 1 )->once()->andReturn( true );
+        $mockCart->shouldReceive( 'get_cart_total' )->andReturn( '$59.00' );
+        $mockCart->shouldReceive( 'get_cart_contents_total' )->andReturn( 59.0 );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+        Functions\when( 'get_option' )->alias(
+            fn( $k, $d = '' ) => 'fahad_ai_free_shipping_threshold' === $k ? 75.0 : $d
+        );
+
+        $result = $this->tools()->execute( 'update_cart_quantity', [ 'cart_item_key' => 'key_xyz', 'quantity' => 1 ] );
+
+        $this->assertArrayHasKey( 'free_shipping', $result );
+        $this->assertEqualsWithDelta( 16.0, $result['free_shipping']['remaining'], 0.001 );
+    }
+
     public function test_remove_from_cart_success(): void {
         $product  = $this->mockProduct( 5, 'Jeans', '59' );
         $mockCart = Mockery::mock( WC_Cart::class );

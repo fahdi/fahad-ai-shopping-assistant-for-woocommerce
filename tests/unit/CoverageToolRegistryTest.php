@@ -78,7 +78,7 @@ class CoverageToolRegistryTest extends TestCase {
     /**
      * A non-array entry returned by the filter (e.g. a scalar or null injected by
      * a buggy add-on) must be skipped by validate() WITHOUT fataling, leaving the
-     * five built-ins intact. This drives the `! is_array( $tool )` guard.
+     * six built-ins intact. This drives the `! is_array( $tool )` guard.
      */
     public function test_non_array_entry_is_skipped(): void {
         Functions\when( 'apply_filters' )->alias( function ( $hook, $tools ) {
@@ -93,8 +93,8 @@ class CoverageToolRegistryTest extends TestCase {
 
         $names = array_column( $this->registry()->specs(), 'name' );
 
-        // None of the junk entries can become a tool; only the five built-ins remain.
-        $this->assertCount( 5, $names );
+        // None of the junk entries can become a tool; only the six built-ins remain.
+        $this->assertCount( 6, $names );
         $this->assertContains( 'search_products', $names );
         $this->assertNotContains( 'not-an-array', $names );
     }
@@ -122,7 +122,7 @@ class CoverageToolRegistryTest extends TestCase {
 
         $this->assertContains( 'good_tool', $names );
         $this->assertNotContains( 7, $names, true );
-        $this->assertCount( 6, $names );
+        $this->assertCount( 7, $names );
     }
 
     // ── validate(): bad/absent description is skipped (line 289) ──────────────
@@ -267,9 +267,9 @@ class CoverageToolRegistryTest extends TestCase {
         $names = array_column( $this->registry()->specs(), 'name' );
 
         $this->assertNotContains( 'wallet_balance', $names );
-        // The five built-ins are untouched by gating.
+        // The six built-ins are untouched by gating.
         $this->assertContains( 'search_products', $names );
-        $this->assertCount( 5, $names );
+        $this->assertCount( 6, $names );
         // And the gated tool is no longer dispatchable.
         $this->assertArrayHasKey( 'error', $this->registry()->dispatch( 'wallet_balance', [] ) );
     }
@@ -289,7 +289,7 @@ class CoverageToolRegistryTest extends TestCase {
 
         // search_products is a protected built-in; it survives the gating attempt.
         $this->assertContains( 'search_products', $names );
-        $this->assertCount( 5, $names );
+        $this->assertCount( 6, $names );
     }
 
     /**
@@ -322,7 +322,7 @@ class CoverageToolRegistryTest extends TestCase {
         // The int 42 and the unknown name are no-ops; the real disabled tool is gone.
         $this->assertNotContains( 'loyalty_points', $names );
         $this->assertContains( 'search_products', $names );
-        $this->assertCount( 5, $names );
+        $this->assertCount( 6, $names );
     }
 
     /**
@@ -338,6 +338,6 @@ class CoverageToolRegistryTest extends TestCase {
         $names = array_column( $this->registry()->specs(), 'name' );
 
         $this->assertContains( 'search_products', $names );
-        $this->assertCount( 5, $names );
+        $this->assertCount( 6, $names );
     }
 }

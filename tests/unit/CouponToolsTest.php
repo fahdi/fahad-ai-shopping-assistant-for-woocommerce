@@ -132,7 +132,7 @@ class CouponToolsTest extends TestCase {
 
         $this->assertContains( 'list_active_coupons', $names );
         $this->assertContains( 'apply_coupon', $names );
-        // Additive, the five built-ins remain.
+        // Additive, the six built-ins remain.
         $this->assertContains( 'search_products', $names );
         $this->assertContains( 'add_to_cart', $names );
     }

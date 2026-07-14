@@ -184,7 +184,7 @@ class ReturnsToolsTest extends TestCase {
 
         $this->assertContains( 'check_return_eligibility', $names );
         $this->assertContains( 'request_return', $names );
-        // Additive: the five built-ins remain.
+        // Additive: the six built-ins remain.
         $this->assertContains( 'search_products', $names );
     }
 

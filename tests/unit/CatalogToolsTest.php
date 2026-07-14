@@ -111,9 +111,9 @@ class CatalogToolsTest extends TestCase {
 
         $this->assertContains( 'get_top_products', $names );
         $this->assertContains( 'list_categories', $names );
-        // They are additive, the five built-ins remain.
+        // They are additive, the six built-ins remain.
         $this->assertContains( 'search_products', $names );
-        $this->assertCount( 7, $names );
+        $this->assertCount( 8, $names );
     }
 
     public function test_catalog_tool_specs_never_leak_a_callback(): void {

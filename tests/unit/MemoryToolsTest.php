@@ -132,7 +132,7 @@ class MemoryToolsTest extends TestCase {
         $this->assertContains( 'remember_preference', $names );
         $this->assertContains( 'get_preferences', $names );
         $this->assertContains( 'forget_preferences', $names );
-        // Additive: the five built-ins remain.
+        // Additive: the six built-ins remain.
         $this->assertContains( 'search_products', $names );
     }
 

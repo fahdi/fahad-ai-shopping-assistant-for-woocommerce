@@ -141,7 +141,7 @@ class OrderToolsTest extends TestCase {
 
         $this->assertContains( 'get_my_orders', $names );
         $this->assertContains( 'get_order_status', $names );
-        // Additive: the five built-ins remain.
+        // Additive: the six built-ins remain.
         $this->assertContains( 'search_products', $names );
     }
 

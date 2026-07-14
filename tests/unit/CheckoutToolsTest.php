@@ -139,10 +139,10 @@ class CheckoutToolsTest extends TestCase {
 		$this->assertContains( 'get_checkout_summary', $names );
 		$this->assertContains( 'set_shipping_method', $names );
 		$this->assertContains( 'apply_best_coupon', $names );
-		// Additive, the five built-ins remain.
+		// Additive, the six built-ins remain.
 		$this->assertContains( 'search_products', $names );
 		$this->assertContains( 'add_to_cart', $names );
-		$this->assertCount( 8, $names );
+		$this->assertCount( 9, $names );
 	}
 
 	public function test_checkout_tool_specs_never_leak_a_callback(): void {

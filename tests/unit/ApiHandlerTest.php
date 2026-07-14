@@ -19,7 +19,7 @@ class ApiHandlerTest extends TestCase {
     /**
      * Snapshot of the registry's static first-party pack providers, restored in
      * tearDown. The tool_specs() contract tests below assert on the BARE built-in
-     * set (exactly five tools). Feature packs (the catalog pack, …) self-register
+     * set (exactly six tools). Feature packs (the catalog pack, …) self-register
      * into that static list at file load, so we clear it for the duration of each
      * test, proving the built-in contract independent of however many packs ship , 
      * and restore it afterwards so other suites keep their packs.
@@ -569,9 +569,9 @@ class ApiHandlerTest extends TestCase {
 
     // ── tool_specs() contract ─────────────────────────────────────────────────
 
-    public function test_exactly_five_tools_are_defined(): void {
+    public function test_exactly_six_tools_are_defined(): void {
         $specs = $this->handler()->tool_specs();
-        $this->assertCount( 5, $specs );
+        $this->assertCount( 6, $specs );
     }
 
     public function test_every_tool_has_name_description_and_parameters(): void {

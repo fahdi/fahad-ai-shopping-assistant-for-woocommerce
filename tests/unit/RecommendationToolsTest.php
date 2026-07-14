@@ -117,9 +117,9 @@ class RecommendationToolsTest extends TestCase {
 
         $this->assertContains( 'get_recommendations', $names );
         $this->assertContains( 'get_cross_sells', $names );
-        // They are additive, the five built-ins remain.
+        // They are additive, the six built-ins remain.
         $this->assertContains( 'search_products', $names );
-        $this->assertCount( 7, $names );
+        $this->assertCount( 8, $names );
     }
 
     public function test_recommendation_tool_specs_never_leak_a_callback(): void {

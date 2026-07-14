@@ -107,9 +107,9 @@ class ReviewsToolsTest extends TestCase {
         $names = array_column( $this->registry()->specs(), 'name' );
 
         $this->assertContains( 'get_product_reviews', $names );
-        // Additive, the five built-ins remain.
+        // Additive, the six built-ins remain.
         $this->assertContains( 'search_products', $names );
-        $this->assertCount( 6, $names );
+        $this->assertCount( 7, $names );
     }
 
     public function test_reviews_tool_spec_requires_product_id_and_hides_callback(): void {

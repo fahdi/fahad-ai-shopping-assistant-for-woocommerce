@@ -125,7 +125,7 @@ class ComparisonToolsTest extends TestCase {
         $names = array_column( $this->registry()->specs(), 'name' );
 
         $this->assertContains( 'compare_products', $names );
-        // Additive, the five built-ins remain.
+        // Additive, the six built-ins remain.
         $this->assertContains( 'search_products', $names );
     }
 
