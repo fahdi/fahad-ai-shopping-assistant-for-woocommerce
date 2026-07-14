@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.67
+Stable tag: 2.14.68
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.68 =
+Checkout summary now includes the item count.
+
+* The order summary the assistant gives now includes how many items are in the cart, matching the cart view, so the assistant can say "your 3 items come to $X" at checkout. Grounded in the real cart.
 
 = 2.14.67 =
 Tax at cart review too: viewing the cart now shows the tax amount.
@@ -535,6 +540,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.68 =
+Adds the item count to the checkout summary for parity with the cart view. No breaking changes.
 
 = 2.14.67 =
 Shows the tax amount when viewing the cart, consistent with the checkout summary, so shoppers see tax earlier. No breaking changes.

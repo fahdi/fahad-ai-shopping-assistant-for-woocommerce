@@ -146,6 +146,7 @@ class Fahad_AI_Checkout_Tools {
 		$result = [
 			'empty'          => false,
 			'items'          => self::shape_items( $cart['items'] ?? [] ),
+			'item_count'     => (int) ( $cart['item_count'] ?? 0 ),
 			'subtotal'       => (string) ( $cart['subtotal'] ?? '' ),
 			'discount_total' => (string) ( $cart['discount_total'] ?? '0' ),
 			// Surface tax so the shopper is not surprised at checkout (issue #309); grounded in
@@ -492,6 +493,8 @@ class Fahad_AI_Checkout_Tools {
 		return [
 			'empty'           => false,
 			'items'           => $items,
+			// Total quantity across the cart (issue #315), for parity with view_cart.
+			'item_count'      => array_sum( array_column( $items, 'quantity' ) ),
 			'subtotal'        => wp_strip_all_tags( (string) $cart->get_cart_subtotal() ),
 			'discount_total'  => method_exists( $cart, 'get_discount_total' ) ? (string) $cart->get_discount_total() : '0',
 			'tax_total'       => method_exists( $cart, 'get_cart_tax' ) ? wp_strip_all_tags( (string) $cart->get_cart_tax() ) : '0',

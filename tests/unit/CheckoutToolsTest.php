@@ -79,6 +79,7 @@ class CheckoutToolsTest extends TestCase {
 			'items'           => [
 				[ 'name' => 'Blue Hoodie', 'quantity' => 1, 'line_total' => '40.00' ],
 			],
+			'item_count'      => 1,
 			'subtotal'        => '40.00',
 			'discount_total'  => '0.00',
 			'tax_total'       => '0.00',
@@ -230,6 +231,15 @@ class CheckoutToolsTest extends TestCase {
 		$result = $this->dispatch( 'get_checkout_summary' );
 
 		$this->assertSame( [ 'SAVE10', 'EXTRA' ], $result['applied_coupons'] );
+	}
+
+	public function test_summary_includes_item_count(): void {
+		Fahad_AI_Checkout_Tools_Stub::$cart     = $this->cartSnapshot( [ 'item_count' => 4 ] );
+		Fahad_AI_Checkout_Tools_Stub::$shipping = $this->shippingSnapshot( [], null, false );
+
+		$result = $this->dispatch( 'get_checkout_summary' );
+
+		$this->assertSame( 4, $result['item_count'] );
 	}
 
 	public function test_summary_empty_cart_returns_empty_state_with_no_totals(): void {
