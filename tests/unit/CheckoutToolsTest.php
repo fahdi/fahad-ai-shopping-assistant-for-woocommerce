@@ -223,6 +223,15 @@ class CheckoutToolsTest extends TestCase {
 		$this->assertSame( '6.40', $result['tax_total'] );
 	}
 
+	public function test_summary_lists_all_applied_coupons(): void {
+		Fahad_AI_Checkout_Tools_Stub::$cart     = $this->cartSnapshot( [ 'applied_coupons' => [ 'SAVE10', 'EXTRA' ] ] );
+		Fahad_AI_Checkout_Tools_Stub::$shipping = $this->shippingSnapshot( [], null, false );
+
+		$result = $this->dispatch( 'get_checkout_summary' );
+
+		$this->assertSame( [ 'SAVE10', 'EXTRA' ], $result['applied_coupons'] );
+	}
+
 	public function test_summary_empty_cart_returns_empty_state_with_no_totals(): void {
 		Fahad_AI_Checkout_Tools_Stub::$cart = [ 'empty' => true ];
 

@@ -156,6 +156,7 @@ class Fahad_AI_Checkout_Tools {
 			'applied_coupon' => isset( $cart['applied_coupon'] ) && '' !== (string) $cart['applied_coupon']
 				? (string) $cart['applied_coupon']
 				: null,
+			'applied_coupons' => array_values( array_map( 'strval', (array) ( $cart['applied_coupons'] ?? [] ) ) ),
 			'shipping'       => self::shape_shipping( call_user_func( [ $class, 'resolve_shipping' ] ) ),
 			'checkout_url'   => self::checkout_url(),
 			'cart_url'       => self::cart_url(),
@@ -496,6 +497,9 @@ class Fahad_AI_Checkout_Tools {
 			'tax_total'       => method_exists( $cart, 'get_cart_tax' ) ? wp_strip_all_tags( (string) $cart->get_cart_tax() ) : '0',
 			'total'           => wp_strip_all_tags( (string) $cart->get_cart_total() ),
 			'applied_coupon'  => $applied[0] ?? null,
+			// All applied codes (issue #311): a cart can hold several stacked coupons, so the
+			// summary must not hide the rest behind the first. Real codes only, never invented.
+			'applied_coupons' => array_values( array_map( 'strval', $applied ) ),
 			'currency_symbol' => function_exists( 'get_woocommerce_currency_symbol' ) ? get_woocommerce_currency_symbol() : '',
 		];
 	}

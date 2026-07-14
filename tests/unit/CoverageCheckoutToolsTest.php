@@ -254,6 +254,8 @@ class CoverageCheckoutToolsTest extends TestCase {
 		$this->assertSame( '$110.00', $snap['total'] );
 		// Tax is stripped of tags and surfaced from the real cart (issue #309).
 		$this->assertSame( '$9.60', $snap['tax_total'] );
+		// ALL applied coupons are surfaced, not just the first (issue #311).
+		$this->assertSame( [ 'SAVE10', 'EXTRA' ], $snap['applied_coupons'] );
 		// Real discount + first applied coupon are surfaced (never fabricated).
 		$this->assertSame( '10.00', $snap['discount_total'] );
 		$this->assertSame( 'SAVE10', $snap['applied_coupon'] );
