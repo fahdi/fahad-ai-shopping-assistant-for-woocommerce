@@ -710,6 +710,10 @@ final class Fahad_AI_Tools {
 					__( '%s is currently out of stock.', 'fahad-ai-shopping-assistant-for-woocommerce' ),
 					$item->get_name()
 				),
+				// Surface the recovery path (issue #305): the shopper actively tried to buy, so
+				// signal that a back-in-stock alert can be set up (subscribe_stock_alert) and the
+				// assistant can offer "want me to email you when it's back?" instead of dead-ending.
+				'back_in_stock_available' => true,
 			];
 
 			// Recover a high-intent dead end (issue #273): a sold-out add is an active buy attempt,
