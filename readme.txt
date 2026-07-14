@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.66
+Stable tag: 2.14.67
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.67 =
+Tax at cart review too: viewing the cart now shows the tax amount.
+
+* Following the checkout-summary tax added in 2.14.65, viewing the cart now also shows the tax total from your real cart, so a shopper sees the tax one step earlier while reviewing their cart, not just at checkout. Grounded in WooCommerce's own tax calculation.
 
 = 2.14.66 =
 Every coupon counted: the checkout summary now lists all applied discount codes.
@@ -530,6 +535,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.67 =
+Shows the tax amount when viewing the cart, consistent with the checkout summary, so shoppers see tax earlier. No breaking changes.
 
 = 2.14.66 =
 The checkout summary now lists all applied coupon codes, not just the first, so shoppers can confirm every discount before checkout. No breaking changes.

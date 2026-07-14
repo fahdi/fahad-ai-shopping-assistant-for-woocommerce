@@ -899,6 +899,7 @@ class ToolsTest extends TestCase {
         $mockCart = Mockery::mock( WC_Cart::class );
         $mockCart->shouldReceive( 'is_empty' )->andReturn( false );
         $mockCart->shouldReceive( 'get_applied_coupons' )->andReturn( [] )->byDefault();
+        $mockCart->shouldReceive( 'get_cart_tax' )->andReturn( '$0.00' )->byDefault();
         $mockCart->shouldReceive( 'get_cart' )->andReturn( [ 'key_abc' => $cartItem ] );
         $mockCart->shouldReceive( 'get_cart_contents_count' )->andReturn( 2 );
         $mockCart->shouldReceive( 'get_cart_subtotal' )->andReturn( '$69.98' );
@@ -923,6 +924,7 @@ class ToolsTest extends TestCase {
         $mockCart = Mockery::mock( WC_Cart::class );
         $mockCart->shouldReceive( 'is_empty' )->andReturn( false );
         $mockCart->shouldReceive( 'get_applied_coupons' )->andReturn( [] )->byDefault();
+        $mockCart->shouldReceive( 'get_cart_tax' )->andReturn( '$0.00' )->byDefault();
         $mockCart->shouldReceive( 'get_cart' )->andReturn( [ 'key_abc' => $cartItem ] );
         $mockCart->shouldReceive( 'get_cart_contents_count' )->andReturn( 1 );
         $mockCart->shouldReceive( 'get_cart_subtotal' )->andReturn( '$34.99' );
@@ -941,6 +943,27 @@ class ToolsTest extends TestCase {
         $this->assertFalse( $result['free_shipping']['qualified'] );
     }
 
+    public function test_view_cart_surfaces_tax_from_the_real_cart(): void {
+        // Cart review shows the tax portion (issue #313), consistent with the checkout summary.
+        $product  = $this->mockProduct( 3, 'Bottle', '34.99' );
+        $cartItem = [ 'product_id' => 3, 'quantity' => 1, 'line_total' => 34.99, 'data' => $product ];
+
+        $mockCart = Mockery::mock( WC_Cart::class );
+        $mockCart->shouldReceive( 'is_empty' )->andReturn( false );
+        $mockCart->shouldReceive( 'get_applied_coupons' )->andReturn( [] );
+        $mockCart->shouldReceive( 'get_cart' )->andReturn( [ 'key_abc' => $cartItem ] );
+        $mockCart->shouldReceive( 'get_cart_contents_count' )->andReturn( 1 );
+        $mockCart->shouldReceive( 'get_cart_subtotal' )->andReturn( '$34.99' );
+        $mockCart->shouldReceive( 'get_cart_tax' )->andReturn( '<span>$2.80</span>' );
+        $mockCart->shouldReceive( 'get_cart_total' )->andReturn( '$37.79' );
+        Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
+
+        $result = $this->tools()->execute( 'view_cart', [] );
+
+        // Tags stripped from the real cart tax figure.
+        $this->assertSame( '$2.80', $result['tax_total'] );
+    }
+
     public function test_view_cart_reflects_applied_coupons_and_discount(): void {
         // A coupon is applied; reviewing the cart must show the code and the money it took off,
         // so the assistant can reassure "SAVE10 is applied, taking $5 off" before checkout.
@@ -955,6 +978,7 @@ class ToolsTest extends TestCase {
         $mockCart->shouldReceive( 'get_cart_total' )->andReturn( '$29.99' );
         $mockCart->shouldReceive( 'get_applied_coupons' )->andReturn( [ 'SAVE10' ] );
         $mockCart->shouldReceive( 'get_discount_total' )->andReturn( 5.0 );
+        $mockCart->shouldReceive( 'get_cart_tax' )->andReturn( '$0.00' );
         Functions\when( 'WC' )->justReturn( (object) [ 'cart' => $mockCart ] );
 
         $result = $this->tools()->execute( 'view_cart', [] );
@@ -978,6 +1002,7 @@ class ToolsTest extends TestCase {
         $mockCart = Mockery::mock( WC_Cart::class );
         $mockCart->shouldReceive( 'is_empty' )->andReturn( false );
         $mockCart->shouldReceive( 'get_applied_coupons' )->andReturn( [] )->byDefault();
+        $mockCart->shouldReceive( 'get_cart_tax' )->andReturn( '$0.00' )->byDefault();
         $mockCart->shouldReceive( 'get_cart' )->andReturn( [ 'key_abc' => $cartItem ] );
         $mockCart->shouldReceive( 'get_cart_contents_count' )->andReturn( 2 );
         $mockCart->shouldReceive( 'get_cart_subtotal' )->andReturn( '$80.00' );
@@ -997,6 +1022,7 @@ class ToolsTest extends TestCase {
         $mockCart = Mockery::mock( WC_Cart::class );
         $mockCart->shouldReceive( 'is_empty' )->andReturn( false );
         $mockCart->shouldReceive( 'get_applied_coupons' )->andReturn( [] )->byDefault();
+        $mockCart->shouldReceive( 'get_cart_tax' )->andReturn( '$0.00' )->byDefault();
         $mockCart->shouldReceive( 'get_cart' )->andReturn( [ 'key_abc' => $cartItem ] );
         $mockCart->shouldReceive( 'get_cart_contents_count' )->andReturn( 1 );
         $mockCart->shouldReceive( 'get_cart_subtotal' )->andReturn( '$34.99' );
