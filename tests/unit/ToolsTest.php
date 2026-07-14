@@ -637,6 +637,8 @@ class ToolsTest extends TestCase {
         // A well-stocked item (qty 10) must not read as low stock.
         $this->assertFalse( $result['low_stock'] );
         $this->assertSame( 10, $result['stock_qty'] );
+        // A successful add is not a dead end, so no back-in-stock offer.
+        $this->assertArrayNotHasKey( 'back_in_stock_available', $result );
     }
 
     public function test_add_to_cart_flags_low_stock_at_commitment(): void {
@@ -722,6 +724,8 @@ class ToolsTest extends TestCase {
         $this->assertStringContainsString( 'out of stock', strtolower( $result['error'] ) );
         // No categories resolvable (get_the_terms default []) => no suggestions field.
         $this->assertArrayNotHasKey( 'suggested_categories', $result );
+        // The dead end must surface the back-in-stock recovery so the assistant offers it.
+        $this->assertTrue( $result['back_in_stock_available'] );
     }
 
     public function test_add_to_cart_out_of_stock_offers_category_alternatives(): void {

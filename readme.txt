@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Requires Plugins: woocommerce
-Stable tag: 2.14.62
+Stable tag: 2.14.63
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ Used when the optional WhatsApp channel is enabled (off by default). The plugin 
 * [WhatsApp Business Terms of Service](https://www.whatsapp.com/legal/business-terms/) | [Meta Privacy Policy](https://www.facebook.com/privacy/policy/)
 
 == Changelog ==
+
+= 2.14.63 =
+Recover sold-out sales: the assistant now offers a back-in-stock alert when an item is out of stock.
+
+* When a shopper tries to add an out-of-stock product, the response now flags that a back-in-stock alert is available, so the assistant reliably offers "want me to email you when it's back?" instead of leaving at a dead end. This turns a lost sale into a captured lead and a likely future purchase.
 
 = 2.14.62 =
 Adjust quantities in chat: the assistant can now change how many of an item are in the cart.
@@ -510,6 +515,9 @@ Only recent releases are listed here to stay within the changelog length WordPre
 
 
 == Upgrade Notice ==
+
+= 2.14.63 =
+The assistant now offers a back-in-stock alert when a shopper tries to buy an out-of-stock item, recovering otherwise-lost sales. No breaking changes.
 
 = 2.14.62 =
 Adds cart quantity editing so shoppers can change how many of an item they want without removing and re-adding it. No breaking changes.
